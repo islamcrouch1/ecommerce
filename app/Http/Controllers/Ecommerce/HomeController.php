@@ -1,0 +1,87 @@
+<?php
+
+namespace App\Http\Controllers\Ecommerce;
+
+use App\Http\Controllers\Controller;
+use App\Models\CartItem;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductCombination;
+use App\Models\ProductCombinationDtl;
+use App\Models\Slide;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class HomeController extends Controller
+{
+    public function index(Request $request)
+    {
+
+
+        if (Auth::check()) {
+            $cart_items = CartItem::where('user_id', Auth::id())->get();
+        } else {
+            $cart_items = CartItem::where('session_id', $request->session()->token())->get();
+        }
+
+        $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
+        $slides = Slide::orderBy('sort_order', 'asc')->get();
+
+        // $products = Product::whereHas('stocks', function ($query) {
+        //     $query->where('qty', '!=', '0');
+        // })
+        //     ->where('status', "active")
+        //     ->whenSearch(request()->search)
+        //     ->latest()
+        //     ->paginate(20);
+
+
+        $products = Product::whereHas('stocks', function ($query) {
+            $query->where('warehouse_id', '=', setting('warehouse_id'))
+                ->where('qty', '!=', '0');
+        })
+
+            ->where('country_id', setting('country_id'))
+            ->where('status', "active")
+            ->orWhere('product_type', 'digital')
+            ->orWhere('product_type', 'service')
+            ->latest()
+            ->get();
+
+
+        return view('ecommerce.home', compact('categories', 'slides', 'products', 'cart_items'));
+    }
+
+
+    public function getProductPrice(Request $request)
+    {
+
+        $request->validate([
+            'variations' => "required|string",
+            'product_id' => "required|string",
+        ]);
+
+
+
+        $product = Product::findOrFail($request->product_id);
+        $attributes_count = $product->attributes->count();
+        $variations = explode(",", $request->variations);
+        $selected_attributes_count = count($variations);
+
+        if ($selected_attributes_count < $attributes_count) {
+            return 1;
+        } elseif ($selected_attributes_count = $attributes_count) {
+            $combinations = ProductCombination::where('product_id', $product->id)->get();
+
+            foreach ($combinations as $combination) {
+                $count = $combination->variations->whereIn('variation_id', $variations);
+                $count =  count($count);
+                if ($count == $selected_attributes_count) {
+                    return $combination;
+                }
+            }
+        } else {
+            return 2;
+        }
+    }
+}
