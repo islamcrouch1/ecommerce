@@ -15,7 +15,9 @@ use App\Models\Setting;
 use App\Models\User;
 use Carbon\Carbon;
 use App\Models\Media;
+use App\Models\Product;
 use App\Models\ProductCombination;
+use App\Models\Warehouse;
 use App\Models\WebsiteSetting;
 use Illuminate\Support\Facades\Auth;
 use Twilio\Rest\Client;
@@ -199,6 +201,35 @@ if (!function_exists('shippingWithWeight')) {
 
 
 
+if (!function_exists('getProductName')) {
+    function getProductName($product, $combination = null)
+    {
+
+        $text = '';
+
+        $text = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
+
+        if ($combination) {
+
+            foreach ($combination->variations as $index => $variation) {
+                if ($index == 0) {
+                    $text .= ' (';
+                }
+                $text .= app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en;
+                if ($index == $combination->variations->count() - 1) {
+                    $text .= ') ';
+                } else {
+                    $text .= ' - ';
+                }
+            }
+
+            return $text;
+        } else {
+            return $text;
+        }
+    }
+}
+
 
 if (!function_exists('getCProductVariations')) {
     function getCProductVariations($combination = null)
@@ -221,6 +252,18 @@ if (!function_exists('getCProductVariations')) {
     }
 }
 
+
+if (!function_exists('getCombination')) {
+    function getCombination($combination_id = null)
+    {
+        if ($combination_id == null) {
+            return null;
+        } else {
+            $combination = ProductCombination::findOrFail($combination_id);
+            return $combination;
+        }
+    }
+}
 
 
 
@@ -595,71 +638,28 @@ if (!function_exists('checkSizeForTrash')) {
 
 
 if (!function_exists('productQuantity')) {
-    function productQuantity($product)
+    function productQuantity($product_id, $combination_id = null, $warehouse_id = null)
     {
+
         $quantity_in = 0;
         $quantity_out = 0;
         $quantity = 0;
 
+        $product = Product::findOrFail($product_id);
 
-        if ($product->product_type == 'simple' || $product->product_type == 'variable') {
-            foreach ($product->stocks->where('stock_status', 'IN') as $stock) {
-                $quantity_in += $stock->qty;
-            }
-            foreach ($product->stocks->where('stock_status', 'OUT') as $stock) {
-                $quantity_out += $stock->qty;
-            }
-        }
-
-        $quantity = $quantity_in - $quantity_out;
-
-        return $quantity;
-    }
-}
-
-if (!function_exists('combinationQuantity')) {
-    function combinationQuantity($combination)
-    {
-        $quantity_in = 0;
-        $quantity_out = 0;
-        $quantity = 0;
-
-        foreach ($combination->stocks->where('stock_status', 'IN') as $stock) {
+        foreach ($product->stocks->where('product_combination_id', $combination_id ? '==' : '!=', $combination_id)->where('stock_status', 'IN')->where('warehouse_id', $warehouse_id ? '==' : '!=', $warehouse_id) as $stock) {
             $quantity_in += $stock->qty;
         }
-
-        foreach ($combination->stocks->where('stock_status', 'OUT') as $stock) {
-            $quantity_out += $stock->qty;
-        }
-
-
-        $quantity = $quantity_in - $quantity_out;
-        return $quantity;
-    }
-}
-
-if (!function_exists('combinationQuantityFromWarehouse')) {
-    function combinationQuantityFromWarehouse($combination, $warehouse_id)
-    {
-
-        $quantity_in = 0;
-        $quantity_out = 0;
-        $quantity = 0;
-
-        $stocks = $combination->stocks->where('warehouse_id', $warehouse_id);
-
-        foreach ($stocks->where('stock_status', 'IN') as $stock) {
-            $quantity_in += $stock->qty;
-        }
-
-        foreach ($stocks->where('stock_status', 'OUT') as $stock) {
+        foreach ($product->stocks->where('product_combination_id', $combination_id ? '==' : '!=', $combination_id)->where('stock_status', 'OUT')->where('warehouse_id', $warehouse_id ? '==' : '!=', $warehouse_id) as $stock) {
             $quantity_out += $stock->qty;
         }
 
         $quantity = $quantity_in - $quantity_out;
+
         return $quantity;
     }
 }
+
 
 
 
@@ -684,11 +684,20 @@ if (!function_exists('addFinanceRequest')) {
 if (!function_exists('addNoty')) {
     function addNoty($user, $sender, $url, $tEn, $tAr, $bEn, $bAr)
     {
+
+        if (Auth::check()) {
+            $media = asset('storage/images/users/' . $sender->profile);
+            $sender_id = $sender->id;
+        } else {
+            $media = asset(websiteSettingMedia('header_icon'));
+            $sender_id = $sender;
+        }
+
         $notification = Notification::create([
             'user_id' => $user->id,
-            'sender_id' => $sender->id,
+            'sender_id' => $sender_id,
             'sender_name'  => $sender->name,
-            'sender_image' => asset('storage/images/users/' . $sender->profile),
+            'sender_image' => $media,
             'title_ar' => $tAr,
             'body_ar' => $bAr,
             'title_en' => $tEn,
@@ -705,9 +714,9 @@ if (!function_exists('addNoty')) {
 
             'notification_id' => $notification->id,
             'user_id' => $user->id,
-            'sender_id' => $sender->id,
+            'sender_id' => $sender_id,
             'sender_name'  => $sender->name,
-            'sender_image' => asset('storage/images/users/' . $sender->profile),
+            'sender_image' => $media,
             'title_ar' => $tAr,
             'body_ar' => $bAr,
             'title_en' => $tEn,

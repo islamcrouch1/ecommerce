@@ -32,6 +32,9 @@
                                 <li class="nav-item"><a class="nav-link" id="footer-tab" data-bs-toggle="tab"
                                         href="#tab-footer" role="tab" aria-controls="tab-footer"
                                         aria-selected="false">{{ __('footer setting') }}</a></li>
+                                <li class="nav-item"><a class="nav-link" id="order-tab" data-bs-toggle="tab"
+                                        href="#tab-order" role="tab" aria-controls="tab-order"
+                                        aria-selected="false">{{ __('order setting') }}</a></li>
                             </ul>
                             <div class="tab-content border-x border-bottom p-3" id="myTabContent">
                                 <div class="tab-pane fade show active" id="tab-home" role="tabpanel"
@@ -220,7 +223,6 @@
                                     @endif
 
                                 </div>
-
 
                                 <div class="tab-pane fade" id="tab-contact" role="tabpanel"
                                     aria-labelledby="contact-tab">
@@ -729,12 +731,6 @@
 
                                 </div>
 
-
-
-
-
-
-
                                 <div class="tab-pane fade" id="tab-footer" role="tabpanel" aria-labelledby="footer-tab">
 
 
@@ -917,6 +913,33 @@
 
 
 
+                                </div>
+
+                                <div class="tab-pane fade" id="tab-order" role="tabpanel" aria-labelledby="footer-tab">
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="order_success_ar">{{ __('order success text') . ' ' . __('arabic') }}</label>
+                                        <input name="order_success_ar"
+                                            class="form-control @error('order_success_ar') is-invalid @enderror"
+                                            value="{{ websiteSettingAr('order_success') }}" type="text"
+                                            autocomplete="on" id="order_success_ar" />
+                                        @error('order_success_ar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="order_success_en">{{ __('order success text') . ' ' . __('english') }}</label>
+                                        <input name="order_success_en"
+                                            class="form-control @error('order_success_en') is-invalid @enderror"
+                                            value="{{ websiteSettingEn('order_success') }}" type="text"
+                                            autocomplete="on" id="order_success_en" />
+                                        @error('order_success_en')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
                                 </div>
 
                                 {{-- data here  --}}

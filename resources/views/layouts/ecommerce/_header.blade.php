@@ -832,6 +832,22 @@
 
                                                 @if (getCartItems()->count() == 0)
                                                     <h4 class="cart-empty">{{ __('Cart is empty!') }}</h4>
+
+                                                    <li class="cart-buttons" style="display: none;">
+                                                        <div class="total">
+                                                            <h5>{{ __('subtotal') }} :
+                                                                <span
+                                                                    class="cart-subtotal">{{ getCartSubtotal(getCartItems()) . getCurrency() }}</span>
+                                                            </h5>
+                                                        </div>
+                                                    </li>
+                                                    <li class="cart-buttons" style="display: none;">
+                                                        <div class="buttons"><a href="{{ route('ecommerce.cart') }}"
+                                                                class="view-cart">{{ __('view cart') }}</a> <a
+                                                                href="{{ route('ecommerce.checkout') }}"
+                                                                class="checkout">{{ __('checkout') }}</a>
+                                                        </div>
+                                                    </li>
                                                 @else
                                                     @foreach (getCartItems() as $item)
                                                         <li>

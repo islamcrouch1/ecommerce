@@ -19,6 +19,7 @@ return new class extends Migration
 
             $table->integer('affiliate_id')->nullable();
             $table->integer('customer_id')->nullable();
+            $table->integer('branch_id')->nullable();
             $table->integer('warehouse_id')->nullable();
             $table->enum('order_from', ['androidapp', 'iosapp', 'web', 'pos', 'addsale', 'affiliate'])->default('web');
             $table->string('full_name');
@@ -50,7 +51,7 @@ return new class extends Migration
 
             $table->string('payment_status')->default('Pending');
             $table->enum('payment_method', [
-                'cod', 'cash_on_delivery', 'e_wallet', 'paypal', 'authorize_net', 'stripe', 'banktransfer', 'mollie', 'instamojo', 'braintree', 'hyperpay', 'razorpay', 'paytm', 'paystack', 'midtrans', 'wallet', 'fygaro'
+                'cod', 'cash_on_delivery', 'e_wallet', 'paypal', 'authorize_net', 'stripe', 'banktransfer', 'mollie', 'instamojo', 'braintree', 'hyperpay', 'razorpay', 'paytm', 'paystack', 'midtrans', 'wallet', 'fygaro', 'card'
             ])->default('cash_on_delivery');
             $table->string('transaction_id')->nullable();
 

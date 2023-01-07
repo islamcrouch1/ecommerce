@@ -13,8 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('stocks', function (Blueprint $table) {
-            // $table->integer('limit')->default(0);
+        Schema::table('orders', function (Blueprint $table) {
+            $table->string('session_id')->nullable();
         });
     }
 
@@ -25,8 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('stocks', function (Blueprint $table) {
-            // $table->dropColumn('limit');
+        Schema::table('orders', function (Blueprint $table) {
+            $table->dropColumn('session_id');
         });
     }
 };

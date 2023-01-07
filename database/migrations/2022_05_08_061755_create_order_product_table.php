@@ -26,6 +26,7 @@ return new class extends Migration
             $table->float('product_discount')->nullable();
             $table->float('total')->nullable();
             $table->integer('qty')->nullable();
+            $table->enum('product_type', ['simple', 'variable', 'digital', 'service']);
 
             $table->double('affiliate_price', 8, 2)->nullable();
             $table->double('total_affiliate_price', 8, 2)->nullable();

@@ -868,10 +868,16 @@
     <!-- Quick-view modal popup end-->
 
 
-
     <!-- added to cart notification -->
+    <div class="added-notification cart-noty">
+        <h3>{{ __('added to cart') }}</h3>
+    </div>
+    <!-- added to cart notification -->
+
+
+    <!-- added to fav notification -->
     <div class="added-notification fav-noty">
         <h3>{{ __('added to wishlist') }}</h3>
     </div>
-    <!-- added to cart notification -->
+    <!-- added to fav notification -->
 @endsection

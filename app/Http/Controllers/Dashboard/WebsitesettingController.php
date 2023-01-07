@@ -76,10 +76,26 @@ class WebsitesettingController extends Controller
             'footer_phone' => "nullable|string",
             'copyright_text_ar' => "nullable|string",
             'copyright_text_en' => "nullable|string",
-
+            'order_success_ar' => "nullable|string",
+            'order_success_en' => "nullable|string",
 
         ]);
 
+
+
+        $setting = WebsiteSetting::where('type', 'order_success')->first();
+        if ($setting == null) {
+            WebsiteSetting::create([
+                'type' => 'order_success',
+                'value_ar' => $request['order_success_ar'],
+                'value_en' => $request['order_success_en'],
+            ]);
+        } else {
+            $setting->update([
+                'value_ar' => $request['order_success_ar'],
+                'value_en' => $request['order_success_en'],
+            ]);
+        }
 
 
         $setting = WebsiteSetting::where('type', 'icon_1')->first();

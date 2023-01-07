@@ -197,7 +197,7 @@
                                         <td class="phone align-middle white-space-nowrap py-2">
                                             {{ __($product->product_type) }}</td>
                                         <td class="phone align-middle white-space-nowrap py-2">
-                                            {{ productQuantity($product) }}
+                                            {{ productQuantity($product->id) }}
                                         </td>
                                         <td class="phone align-middle white-space-nowrap py-2">
                                             @switch($product->status)

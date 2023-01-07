@@ -24,9 +24,14 @@
     <!-- breadcrumb End -->
 
 
+
+
     <!-- section start -->
     <section class="section-b-space">
         <div class="container">
+
+            @include('layouts.ecommerce._flash')
+
             <div class="checkout-page">
                 <div class="checkout-form">
                     <form method="POST" action="{{ route('ecommerce.order.store') }}">
@@ -248,9 +253,16 @@
                                                     </li> --}}
                                                     <li>
                                                         <div class="radio-option">
-                                                            <input type="radio" value="cash" name="payment-method"
+                                                            <input type="radio" value="cash" name="payment_method"
+                                                                id="payment-1" required>
+                                                            <label for="payment-1">{{ __('Cash On Delivery') }}</label>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="radio-option">
+                                                            <input type="radio" value="card" name="payment_method"
                                                                 id="payment-2" required>
-                                                            <label for="payment-2">{{ __('Cash On Delivery') }}</label>
+                                                            <label for="payment-2">{{ __('Visa and MasterCard') }}</label>
                                                         </div>
                                                     </li>
                                                     {{-- <li>
@@ -267,6 +279,7 @@
                                         <div class="text-end"><button type="submit"
                                                 class="btn-solid btn">{{ __('Place Order') }}</button>
                                         </div>
+
                                     </div>
                                 </div>
                             </div>

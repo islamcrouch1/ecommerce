@@ -49,11 +49,10 @@ class ProductController extends Controller
 
         $brand = request()->brand;
 
-        $products = Product::where('country_id', setting('country_id'))
-            ->whereHas('stocks', function ($query) {
-                $query->where('warehouse_id', '=', setting('warehouse_id'))
-                    ->where('qty', '!=', '0');
-            })
+        $products = Product::whereHas('stocks', function ($query) {
+            $query->where('warehouse_id', '=', setting('warehouse_id'))
+                ->where('qty', '!=', '0');
+        })
 
             ->whereHas('brands', function ($query) use ($brand) {
                 $brand ? $query->where('brand_id', 'like', $brand) : $query;
@@ -63,35 +62,36 @@ class ProductController extends Controller
                 $cat ? $query->where('category_id', 'like', $cat) : $query;
             })
 
-            ->where('status', "active")
             ->orWhere('product_type', 'digital')
             ->orWhere('product_type', 'service')
+            ->where('status', "active")
+            ->where('country_id', setting('country_id'))
             ->whenSearch(request()->search)
             ->latest()
             ->paginate(request()->pagination);
 
-        $top_collection = Product::where('top_collection', '1')
-            ->where('country_id', setting('country_id'))
-            ->whereHas('stocks', function ($query) {
-                $query->where('warehouse_id', '=', setting('warehouse_id'))
-                    ->where('qty', '!=', '0');
-            })
+        $top_collection = Product::whereHas('stocks', function ($query) {
+            $query->where('warehouse_id', '=', setting('warehouse_id'))
+                ->where('qty', '!=', '0');
+        })
             ->orWhere('product_type', 'digital')
             ->orWhere('product_type', 'service')
+            ->where('top_collection', '1')
+            ->where('country_id', setting('country_id'))
             ->where('status', "active")
             ->latest()
             ->get();
 
 
-        $best_selling = Product::where('best_selling', '1')
-            ->where('country_id', setting('country_id'))
-            ->whereHas('stocks', function ($query) {
+        $best_selling = Product::whereHas('stocks', function ($query) {
                 $query->where('warehouse_id', '=', setting('warehouse_id'))
                     ->where('qty', '!=', '0');
             })
             ->orWhere('product_type', 'digital')
             ->orWhere('product_type', 'service')
+            ->where('country_id', setting('country_id'))
             ->where('status', "active")
+            ->where('best_selling', '1')
             ->latest()
             ->get();
 
@@ -156,7 +156,7 @@ class ProductController extends Controller
             }
 
 
-            $av_qty = combinationQuantityFromWarehouse($com, setting('warehouse_id'));
+            $av_qty = productQuantity($product->id, $com->id, setting('warehouse_id'));
 
             if ($request->qty > $av_qty || $request->qty <= 0) {
                 $data['status'] = 2;
@@ -206,7 +206,7 @@ class ProductController extends Controller
             return $data;
         } elseif ($product->product_type == 'simple') {
 
-            $av_qty = productQuantity($product);
+            $av_qty = productQuantity($product->id, null, setting('warehouse_id'));
 
 
 

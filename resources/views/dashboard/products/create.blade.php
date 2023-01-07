@@ -183,6 +183,8 @@
 
 
 
+
+
                             <div class="row product-weight" style="display:none">
                                 <div class="col-md-3">
                                     <div class="mb-3">
@@ -266,8 +268,8 @@
                                             for="shipping_amount">{{ __('extra fee for shipping') }}</label>
                                         <input name="shipping_amount"
                                             class="form-control @error('shipping_amount') is-invalid @enderror"
-                                            value="{{ old('shipping_amount') }}" type="number" min="0"
-                                            autocomplete="on" id="shipping_amount" />
+                                            value="0" type="number" min="0" autocomplete="on"
+                                            id="shipping_amount" />
                                         @error('shipping_amount')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror

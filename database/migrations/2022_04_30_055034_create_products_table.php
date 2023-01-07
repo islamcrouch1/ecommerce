@@ -40,7 +40,7 @@ return new class extends Migration
             $table->double('product_height', 8, 2)->nullable();
             $table->double('product_width', 8, 2)->nullable();
             $table->double('product_length', 8, 2)->nullable();
-            $table->double('shipping_amount', 8, 2)->default(0);
+            $table->double('shipping_amount', 8, 2)->nullable()->default(0);
             $table->integer('shipping_method_id')->nullable();
 
 

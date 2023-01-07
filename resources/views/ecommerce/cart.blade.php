@@ -129,9 +129,11 @@
                     </div>
                 </div>
             </div>
+
             <div class="row cart-buttons">
-                <div class="col-6"><a href="#" class="btn btn-solid">{{ __('continue shopping') }}</a></div>
-                <div class="col-6"><a href="{{ route('ecommerce.checkout') }}"
+                <div class="col-6"><a href="{{ route('ecommerce.products') }}"
+                        class="btn btn-solid">{{ __('continue shopping') }}</a></div>
+                <div class="col-6"><a href="{{ getCartItems()->count() <= 0 ? '#' : route('ecommerce.checkout') }}"
                         class="btn btn-solid">{{ __('check out') }}</a></div>
             </div>
         </div>

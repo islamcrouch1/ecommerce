@@ -209,14 +209,16 @@ $('.add-to-cart').on('click', function (e) {
             $('.cart-empty').text(' ');
 
 
-            $('.added-notification').addClass("show");
             $(cart_added).show()
             $(cart_text).hide()
+            $('.cart-noty').addClass("show");
             setTimeout(function () {
-                $('.added-notification').removeClass("show");
                 $(cart_added).hide()
                 $(cart_text).show()
+                $('.cart-noty').removeClass("show");
             }, 5000);
+
+
 
 
 
@@ -265,9 +267,21 @@ $('.add-to-cart').on('click', function (e) {
         </li>`;
 
 
+
         $('.shopping-cart').prepend(append_data);
 
+
+        var count = parseInt($(".cart-count").text());
+
+        if(count == 1){
+            $('.cart-buttons').show()
+        }
+
+
         $(".cart-subtotal").text(parseInt($(".cart-subtotal").text()) + (parseInt(data.qty) * parseInt(data.product_price)));
+
+
+
 
 
         $('.add-to-cart').removeClass( "disabled" )

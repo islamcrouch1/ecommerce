@@ -75,6 +75,8 @@ $(document).ready(function(){
             $('.product-attributes').hide();
         }
 
+
+
     });
 
 
@@ -324,66 +326,23 @@ function downloadWithName(uri, name) {
 
 
 $('.country-select').on('change' , function(e){
-
     e.preventDefault();
-
-
-    var country_id = $(this).find(":selected").data('country_id');
-    var url = $(this).data('url');
-    var locale = $(this).data('locale');
-
-
-    console.log(country_id , url, locale);
-
-
-    var formData = new FormData();
-
-    formData.append('country_id' , country_id );
-
-    $.ajax({
-        url: url,
-        data: formData,
-        method: 'POST',
-        processData: false,
-        contentType: false,
-        cache: false,
-        success: function(data) {
-
-            console.log(data);
-
-            if(data.status == 1){
-
-                $('.state-select').children().remove().end()
-
-                var array = data.states;
-                array.forEach(element => {
-                    $('.state-select').append(
-                        `<option value="`+ element.id +`">`+ (locale == 'ar' ? element.name_ar : element.name_en) +`</option>`
-                    )
-                });
-
-            }else{
-                $('.state-select').children().remove().end()
-            }
-
-        }
-    });
+    getStates();
 });
 
 
 
 $(document).ready(function(){
+    getStates();
+});
 
 
 
+function getStates(){
 
     var country_id = $('.country-select').find(":selected").data('country_id');
     var url = $('.country-select').data('url');
     var locale = $('.country-select').data('locale');
-
-
-    console.log(country_id , url, locale);
-
 
     var formData = new FormData();
 
@@ -417,7 +376,4 @@ $(document).ready(function(){
 
         }
     });
-
-
-
-});
+}

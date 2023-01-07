@@ -108,10 +108,10 @@
                                 <label class="form-label" for="commission">{{ __('Website warehouse') }}</label>
                                 <select class="form-select @error('warehouse_id') is-invalid @enderror" aria-label=""
                                     name="warehouse_id" id="warehouse_id">
+                                    <option value="">
+                                        {{ __('select warehouse') }}
+                                    </option>
                                     @foreach ($warehouses as $warehouse)
-                                        <option value="">
-                                            {{ __('select warehouse') }}
-                                        </option>
                                         <option value="{{ $warehouse->id }}"
                                             {{ setting('warehouse_id') == $warehouse->id ? 'selected' : '' }}>
                                             {{ app()->getLocale() == 'ar' ? $warehouse->name_ar : $warehouse->name_en }}

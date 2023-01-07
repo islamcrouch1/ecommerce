@@ -114,7 +114,7 @@ class User extends Authenticatable
 
     public function vendor_orders()
     {
-        return $this->hasMany(VendorOrder::class);
+        return $this->hasMany(VendorOrder::class, 'created_by');
     }
 
     public function orders()

@@ -291,6 +291,13 @@ class ProductsController extends Controller
                     ]);
                 }
             }
+        } elseif ($product_type == 'simple') {
+            $com = ProductCombination::create([
+                'product_id' => $product->id,
+                'sku' => $product->sku,
+                'discount_price' => $product->discount_price,
+                'sale_price' => $product->sale_price,
+            ]);
         }
 
 
@@ -510,6 +517,16 @@ class ProductsController extends Controller
             'digital_file' => $product_type == 'digital' ? $path : null,
         ]);
 
+        if ($product->product_type == 'simple') {
+            foreach ($product->combinations as $combination) {
+                $combination->update([
+                    'sku' => $request['sku'],
+                    'sale_price' => $request['sale_price'],
+                    'discount_price' => $request['discount_price'],
+                ]);
+            }
+        }
+
 
         $product->categories()->detach();
         $product->brands()->detach();
@@ -617,126 +634,87 @@ class ProductsController extends Controller
     public function stockStore(Request $request, Product $product)
     {
 
-        if ($product->product_type == 'variable') {
-            $request->validate([
-                'warehouse_id' => "nullable|array",
-                'sku' => "required|array",
-                'qty' => "required|array",
-                'purchase_price' => "required|array",
-                'sale_price' => "required|array",
-                'discount_price' => "required|array",
-                'limit' => "required|array",
-                'images' => "nullable|array",
-                'stock_status' => "required|array",
-            ]);
 
-            foreach ($product->combinations as $index => $combination) {
+        $request->validate([
+            'warehouse_id' => "nullable|array",
+            'sku' => "required|array",
+            'qty' => "required|array",
+            'purchase_price' => "required|array",
+            'sale_price' => "required|array",
+            'discount_price' => "required|array",
+            'limit' => "required|array",
+            'images' => "nullable|array",
+            'stock_status' => "required|array",
+        ]);
 
 
-                if ($request->has('images')) {
-                    if (array_key_exists($combination->id, $request->images)) {
-                        $media_id = saveMedia('image', $request->images[$combination->id][0], 'combinations');
-                        if ($combination->media_id != null) {
-                            deleteImage($combination->media_id);
-                        }
-                        $combination->update([
-                            'media_id' => $media_id,
-                        ]);
+        foreach ($product->combinations as $index => $combination) {
+
+
+            if ($request->has('images')) {
+                if (array_key_exists($combination->id, $request->images)) {
+                    $media_id = saveMedia('image', $request->images[$combination->id][0], 'combinations');
+                    if ($combination->media_id != null) {
+                        deleteImage($combination->media_id);
                     }
-                }
-            }
-
-
-            foreach ($product->combinations as $index => $combination) {
-
-                if ($request->qty[$index] > 0) {
-
-
-                    if ($request->sale_price[$index] <= $request->discount_price[$index]) {
-                        alertError('discount price must be lower than regular price', 'يجب ان يكون سعر الخصم اقل من السعر العادي');
-                        return redirect()->back();
-                    }
-
-                    if ($request->warehouse_id[$index] == null) {
-                        alertError('Please select the store to add stock quantities', 'يرجى تحديد المخزن لاضافة كميات المخزون');
-                        return redirect()->back();
-                    }
-
-
-
-
-                    if ($request->stock_status[$index] == 'OUT') {
-                        if ($request->qty[$index] > combinationQuantityFromWarehouse($combination, $request->warehouse_id[$index])) {
-                            alertError('There are not enough quantities in the specified warehouse for stock exchange', 'لا توجد كميات كافية في المخزن المحدد لصرف المخزون');
-                            return redirect()->back();
-                        }
-                    }
-
                     $combination->update([
-                        'warehouse_id' => $request->warehouse_id[$index],
-                        'sku' => $request->sku[$index],
-                        'qty' => $request->qty[$index],
-                        'sale_price' => $request->sale_price[$index],
-                        'discount_price' => $request->discount_price[$index],
-                        'limit' => $request->limit[$index],
-                    ]);
-
-                    Stock::create([
-                        'product_combination_id' => $combination->id,
-                        'product_id' => $product->id,
-                        'warehouse_id' => $request->warehouse_id[$index],
-                        'qty' => $request->qty[$index],
-                        'stock_status' => $request->stock_status[$index],
-                        'stock_type' => 'StockAdjustment',
-                        'reference_price' => $request->purchase_price[$index],
-                        'created_by' => Auth::id()
+                        'media_id' => $media_id,
                     ]);
                 }
             }
         }
 
 
-        if ($product->product_type == 'simple') {
+        foreach ($product->combinations as $index => $combination) {
 
-            $request->validate([
-                'warehouse_id' => "required|string",
-                'qty' => "required|string",
-                'purchase_price' => "required|string",
-                'limit' => "required|string",
-                'stock_status' => "required|string",
-            ]);
+            if ($request->qty[$index] > 0) {
 
 
-            if ($request->qty > 0) {
+                if ($request->sale_price[$index] <= $request->discount_price[$index]) {
+                    alertError('discount price must be lower than regular price', 'يجب ان يكون سعر الخصم اقل من السعر العادي');
+                    return redirect()->back();
+                }
 
+                if ($request->warehouse_id[$index] == null) {
+                    alertError('Please select the store to add stock quantities', 'يرجى تحديد المخزن لاضافة كميات المخزون');
+                    return redirect()->back();
+                }
 
-                if ($request->stock_status == 'OUT') {
-                    if ($request->qty > productQuantity($product)) {
+                if ($request->stock_status[$index] == 'OUT') {
+                    if ($request->qty[$index] > productQuantity($product->id, $combination->id, $request->warehouse_id[$index])) {
                         alertError('There are not enough quantities in the specified warehouse for stock exchange', 'لا توجد كميات كافية في المخزن المحدد لصرف المخزون');
                         return redirect()->back();
                     }
                 }
 
+                $combination->update([
+                    'warehouse_id' => $request->warehouse_id[$index],
+                    'sku' => $request->sku[$index],
+                    'qty' => $request->qty[$index],
+                    'sale_price' => $request->sale_price[$index],
+                    'discount_price' => $request->discount_price[$index],
+                    'limit' => $request->limit[$index],
+                ]);
+
                 Stock::create([
+                    'product_combination_id' => $combination->id,
                     'product_id' => $product->id,
-                    'warehouse_id' => $request->warehouse_id,
-                    'qty' => $request->qty,
-                    'stock_status' => $request->stock_status,
+                    'warehouse_id' => $request->warehouse_id[$index],
+                    'qty' => $request->qty[$index],
+                    'stock_status' => $request->stock_status[$index],
                     'stock_type' => 'StockAdjustment',
-                    'reference_price' => $request->purchase_price,
-                    'limit' => $request->limit,
+                    'reference_price' => $request->purchase_price[$index],
                     'created_by' => Auth::id()
                 ]);
+
+                if ($product->product_type == 'simple') {
+                    $product->update([
+                        'sale_price' => $request->sale_price[$index],
+                        'discount_price' => $request->discount_price[$index],
+                    ]);
+                }
             }
         }
-
-
-
-
-
-
-
-
 
 
         alertSuccess('Product stock updated successfully', 'تم تحديث مخزون المنتج بنجاح');

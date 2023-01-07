@@ -10,7 +10,7 @@ class Stock extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_combination_id', 'warehouse_id', 'product_id', 'qty', 'customer_id', 'stock_status', 'reference_id', 'stock_type', 'created_by', 'updated_by', 'reference_price', 'limit'
+        'product_combination_id', 'warehouse_id', 'product_id', 'qty', 'customer_id', 'stock_status', 'reference_id', 'stock_type', 'created_by', 'updated_by', 'reference_price'
     ];
 
     public function product()
@@ -23,9 +23,6 @@ class Stock extends Model
     {
         return $this->belongsTo(Warehouse::class);
     }
-
-
-
 
     public function scopeWhenSearch($query, $search)
     {

@@ -13,14 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('vendor_orders', function (Blueprint $table) {
+        Schema::create('website_options', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id');
-            $table->integer('order_id');
-            $table->string('user_name');
-            $table->integer('country_id');
-            $table->double('total_price', 8, 2)->nullable();
-            $table->string('status')->default('pending');
+            $table->string('type');
+            $table->longText('value_ar')->nullable();
+            $table->longText('description_ar')->nullable();
+            $table->longText('value_en')->nullable();
+            $table->longText('description_en')->nullable();
+            $table->integer('media_id')->nullable();
             $table->timestamps();
         });
     }
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('vendor_orders');
+        Schema::dropIfExists('website_options');
     }
 };

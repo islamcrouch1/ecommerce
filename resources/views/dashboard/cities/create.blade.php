@@ -43,7 +43,7 @@
 
                                 <select class="form-select country-select @error('country_id') is-invalid @enderror"
                                     aria-label="" name="country_id" id="country_id" data-locale="{{ app()->getLocale() }}"
-                                    data-url="{{ route('cities.states') }}" required>
+                                    data-url="{{ route('country.states') }}" required>
                                     @foreach ($countries as $country)
                                         <option data-country_id="{{ $country->id }}" value="{{ $country->id }}"
                                             {{ old('country') == $country->id ? 'selected' : '' }}>

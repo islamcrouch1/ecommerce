@@ -3,6 +3,7 @@
 
 use App\Http\Controllers\Ecommerce\HomeController;
 use App\Http\Controllers\Ecommerce\OrdersController;
+use App\Http\Controllers\Ecommerce\PaymentController;
 use App\Http\Controllers\Ecommerce\ProductController;
 use App\Http\Controllers\Ecommerce\UserController;
 use Illuminate\Support\Facades\Route;
@@ -49,7 +50,19 @@ Route::group(['prefix' => 'ecommerce'], function () {
 
 
     Route::post('/shipping-calculate', [ProductController::class, 'shipping'])->name('ecommerce.shipping');
-
+    Route::post('/country/states', [OrdersController::class, 'getStates'])->name('country.states');
+    Route::post('/states/cities', [OrdersController::class, 'getCities'])->name('state.cities');
     // add new order
     Route::post('order', [OrdersController::class, 'store'])->name('ecommerce.order.store');
+
+    Route::get('order-success', [OrdersController::class, 'orderSuccess'])->name('ecommerce.order.success');
+
+
+    Route::get('payment/{orderId}', [PaymentController::class, 'checkingOut'])->name('ecommerce.payment');
+
+
+    Route::get('/payment-success', [PaymentController::class, 'paymentSuccess'])->name('ecommerce.payment.success');
+
+
+    Route::post('payment/callback', [PaymentController::class, 'processedCallback'])->name('ecommerce.payment.callback');
 });

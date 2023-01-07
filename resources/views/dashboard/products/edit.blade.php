@@ -153,6 +153,8 @@
                                 @enderror
                             </div>
 
+
+
                             @if ($product->product_type == 'simple' || $product->product_type == 'variable')
                                 <div class="row product-weight">
                                     <div class="col-md-3">

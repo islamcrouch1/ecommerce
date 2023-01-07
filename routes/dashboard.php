@@ -58,8 +58,7 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::resource('cities', CitiesController::class)->middleware('auth', 'checkverified', 'checkstatus');
     Route::get('/trashed-cities', [CitiesController::class, 'trashed'])->name('cities.trashed')->middleware('auth', 'checkverified', 'checkstatus');
     Route::get('/trashed-cities/{city}', [CitiesController::class, 'restore'])->name('cities.restore')->middleware('auth', 'checkverified', 'checkstatus');
-    Route::post('/country/states', [CitiesController::class, 'getStates'])->name('country.states');
-    Route::post('/states/cities', [CitiesController::class, 'getCities'])->name('state.cities');
+
 
 
 
@@ -106,7 +105,7 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
 
     // website settings route
     Route::get('/website-setting', [WebsitesettingController::class, 'index'])->name('website-setting.index')->middleware('auth', 'checkverified', 'checkstatus');
-    Route::post('/website-setting', [WebsitesettingController::class, 'store'])->name('website-setting.store')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('/website-setting-store', [WebsitesettingController::class, 'store'])->name('website-setting.store')->middleware('auth', 'checkverified', 'checkstatus');
 
 
 

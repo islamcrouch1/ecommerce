@@ -41,10 +41,10 @@ class HomeController extends Controller
                 ->where('qty', '!=', '0');
         })
 
-            ->where('country_id', setting('country_id'))
-            ->where('status', "active")
             ->orWhere('product_type', 'digital')
             ->orWhere('product_type', 'service')
+            ->where('country_id', setting('country_id'))
+            ->where('status', "active")
             ->latest()
             ->get();
 
