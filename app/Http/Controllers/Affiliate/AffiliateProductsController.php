@@ -25,7 +25,7 @@ class AffiliateProductsController extends Controller
 
         $products = Product::where('country_id', $country->id)
             ->whereHas('stocks', function ($query) {
-                $query->where('quantity', '!=', '0');
+                $query->where('qty', '!=', '0');
             })
             ->where('status', "active")
             ->whenSearch(request()->search)
@@ -61,7 +61,7 @@ class AffiliateProductsController extends Controller
             $query->where('category_id', 'like', $cat);
         })
             ->whereHas('stocks', function ($query) {
-                $query->where('quantity', '!=', '0');
+                $query->where('qty', '!=', '0');
             })
             ->where('country_id', $country->id)
             ->where('status', "active")

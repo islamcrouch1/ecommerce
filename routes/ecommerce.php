@@ -39,8 +39,8 @@ Route::group(['prefix' => 'ecommerce'], function () {
     Route::post('cart/change', [ProductController::class, 'changeQuantity'])->name('ecommerce.cart.change');
 
     // favorite routes
-    Route::get('wishlist', [ProductController::class, 'fav'])->name('ecommerce.fav');
     Route::get('wishlist/{product}', [ProductController::class, 'addFav'])->name('ecommerce.fav.add');
+    Route::get('wishlist', [ProductController::class, 'wishlist'])->name('ecommerce.wishlist');
 
 
     Route::get('checkout', [ProductController::class, 'checkout'])->name('ecommerce.checkout');
@@ -61,8 +61,20 @@ Route::group(['prefix' => 'ecommerce'], function () {
     Route::get('payment/{orderId}', [PaymentController::class, 'checkingOut'])->name('ecommerce.payment');
 
 
+    Route::get('download', [ProductController::class, 'download'])->name('ecommerce.download');
+
+
     Route::get('/payment-success', [PaymentController::class, 'paymentSuccess'])->name('ecommerce.payment.success');
 
 
-    Route::post('payment/callback', [PaymentController::class, 'processedCallback'])->name('ecommerce.payment.callback');
+    Route::post('/payment-callback', [PaymentController::class, 'processedCallback'])->name('ecommerce.payment.callback');
+
+    Route::get('/payment-test', [PaymentController::class, 'test'])->name('ecommerce.payment.test');
+
+
+    Route::post('review-product/{product}', [ProductController::class, 'storeReview'])->name('ecommerce.product.review');
+
+    Route::post('/change-password', [UserController::class, 'changePassword'])->name('ecommerce.password.change')->middleware('auth');
+
+    Route::get('invoice/{order}', [PaymentController::class, 'invoice'])->name('ecommerce.invoice');
 });

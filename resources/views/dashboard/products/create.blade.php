@@ -142,7 +142,8 @@
                                 <label class="form-label" for="brands">{{ __('brands') }}</label>
 
                                 <select class="form-select js-choice @error('brands') is-invalid @enderror" aria-label=""
-                                    multiple="multiple" name="brands[]" id="brands" required>
+                                    multiple="multiple" name="brands[]" id="brands"
+                                    data-options='{"removeItemButton":true,"placeholder":true}'>
                                     @foreach ($brands as $brand)
                                         <option value="{{ $brand->id }}"
                                             {{ old('brands') == $brand->id ? 'selected' : '' }}>
@@ -436,8 +437,8 @@
                                     <option value="rejected">
                                         {{ __('Rejected') }}
                                     </option>
-                                    <option value="paused">
-                                        {{ __('Paused') }}
+                                    <option value="pause">
+                                        {{ __('pause') }}
                                     </option>
                                 </select>
                                 @error('status')

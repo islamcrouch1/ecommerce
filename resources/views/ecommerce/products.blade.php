@@ -42,11 +42,12 @@
                                 <div class="collection-collapse-block-content">
                                     <div class="collection-brand-filter">
                                         <form action="">
+
                                             @foreach ($brands as $brand)
                                                 <div class="form-check collection-filter-checkbox">
-                                                    <input onchange="this.form.submit()" name="brand" type="checkbox"
+                                                    <input onchange="this.form.submit()" name="brand[]" type="checkbox"
                                                         value="{{ $brand->id }}"
-                                                        {{ request()->brand == $brand->id ? 'checked' : '' }}
+                                                        {{ in_array($brand->id, request()->brand) ? 'checked' : '' }}
                                                         class="form-check-input" id="zara">
                                                     <label class="form-check-label"
                                                         for="zara">{{ app()->getLocale() == 'ar' ? $brand->name_ar : $brand->name_en }}</label>
@@ -100,16 +101,20 @@
                                 </div>
                             </div> --}}
                             <!-- price filter start here -->
-                            {{-- <div class="collection-collapse-block border-0 open">
-                                <h3 class="collapse-block-title">price</h3>
+                            <div class="collection-collapse-block border-0 open">
+                                <h3 class="collapse-block-title">{{ __('price') }}</h3>
                                 <div class="collection-collapse-block-content">
                                     <div class="wrapper mt-3">
-                                        <div class="range-slider">
-                                            <input type="text" class="js-range-slider" value="" />
-                                        </div>
+                                        <form action="">
+                                            <div class="range-slider price-range" data-currency="{{ getCurrency() }}"
+                                                data-max="{{ $max_price }}" data-min="{{ $min_price }}">
+                                                <input name="range" onmouseup="mouseUp()" type="text"
+                                                    class="js-range-slider" value="" />
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
-                            </div> --}}
+                            </div>
                         </div>
                         <!-- silde-bar colleps block end here -->
                         <!-- side-bar single product slider start -->
@@ -133,9 +138,9 @@
                                                 src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
                                                 alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                                         <div class="media-body align-self-center">
-                                            <div class="rating"><i class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                                    class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                                    class="fa fa-star"></i></div>
+                                            <div class="">
+                                                {!! getAverageRatingWithStars($product) !!}
+                                            </div>
                                             <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                                 <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
                                                 </h6>
@@ -187,9 +192,7 @@
                                             src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
                                             alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                                     <div class="media-body align-self-center">
-                                        <div class="rating"><i class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                                class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                                class="fa fa-star"></i>
+                                        <div class=""> {!! getAverageRatingWithStars($product) !!}
                                         </div>
                                         <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                             <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
@@ -343,9 +346,8 @@
                                                     </div>
                                                     <div class="product-detail">
                                                         <div>
-                                                            <div class="rating"><i class="fa fa-star"></i> <i
-                                                                    class="fa fa-star"></i> <i class="fa fa-star"></i>
-                                                                <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                                                            <div class=""> {!! getAverageRatingWithStars($product) !!}
+
                                                             </div>
                                                             <a
                                                                 href="{{ route('ecommerce.product', ['product' => $product->id]) }}">

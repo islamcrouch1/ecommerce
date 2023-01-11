@@ -15,9 +15,11 @@ return new class extends Migration
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
-            $table->integer('product_id');
-            $table->integer('user_id');
-            $table->double('rating');
+            $table->integer('product_id')->nullable();
+            $table->integer('user_id')->nullable();
+            $table->string('session_id')->nullable();
+            $table->string('phone')->nullable();
+            $table->double('rating')->nullable();
             $table->string('review')->nullable();
             $table->integer('status')->default(0);
             $table->timestamps();

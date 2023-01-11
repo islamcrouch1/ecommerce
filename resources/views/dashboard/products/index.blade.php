@@ -33,8 +33,8 @@
                                         {{ __('Active') }}</option>
                                     <option value="rejected">
                                         {{ __('Rejected') }}</option>
-                                    <option value="paused">
-                                        {{ __('Paused') }}</option>
+                                    <option value="pause">
+                                        {{ __('pause') }}</option>
                                 </select>
 
                                 <button class="btn btn-falcon-default btn-sm ms-2"
@@ -76,8 +76,8 @@
                                             {{ __('Pending') }}</option>
                                         <option value="rejected" {{ request()->status == 'rejected' ? 'selected' : '' }}>
                                             {{ __('Rejected') }}</option>
-                                        <option value="paused" {{ request()->status == 'paused' ? 'selected' : '' }}>
-                                            {{ __('Paused') }}</option>
+                                        <option value="pause" {{ request()->status == 'pause' ? 'selected' : '' }}>
+                                            {{ __('pause') }}</option>
                                     </select>
                                 </div>
 
@@ -213,8 +213,8 @@
                                                     <span class='badge badge-soft-danger'>{{ __('Rejected') }}</span>
                                                 @break
 
-                                                @case('paused')
-                                                    <span class='badge badge-soft-warning'>{{ __('Paused') }}</span>
+                                                @case('pause')
+                                                    <span class='badge badge-soft-warning'>{{ __('pause') }}</span>
                                                 @break
 
                                                 @default
@@ -307,9 +307,9 @@
                                                                         <option value="rejected"
                                                                             {{ $product->status == 'rejected' ? 'selected' : '' }}>
                                                                             {{ __('Rejected') }}</option>
-                                                                        <option value="paused"
-                                                                            {{ $product->status == 'paused' ? 'selected' : '' }}>
-                                                                            {{ __('Paused') }}</option>
+                                                                        <option value="pause"
+                                                                            {{ $product->status == 'pause' ? 'selected' : '' }}>
+                                                                            {{ __('pause') }}</option>
                                                                     </select>
                                                                     @error('status')
                                                                         <div class="alert alert-danger">{{ $message }}

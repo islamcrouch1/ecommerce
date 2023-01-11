@@ -86,6 +86,12 @@
                                         <h5>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
                                             {{ getCProductVariations(getCombination($product->pivot->product_combination_id)) }}
                                         </h5>
+                                        @if ($product->product_type == 'digital')
+                                            <a href="{{ route('ecommerce.download', ['product_file' => $product->digital_file]) }}"
+                                                class="btn btn-solid btn-sm btn-xs me-3 m-2"
+                                                type="button">{{ __('Download files') }}
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="col-3 order_detail">
@@ -139,6 +145,8 @@
                                     @if ($order->shipping_method_id == '2')
                                         <li>{{ __('Local Pickup') . ': ' }} {{ $order->branch_id }}</li>
                                     @else
+                                        <li>{{ $order->phone }}
+                                        </li>
                                         <li>{{ app()->getLocale() == 'ar' ? $order->country->name_ar : $order->country->name_en }}
                                         </li>
                                         <li>{{ app()->getLocale() == 'ar' ? $order->state->name_ar : $order->state->name_en }}

@@ -139,7 +139,8 @@
                                 <label class="form-label" for="brands">{{ __('brands') }}</label>
 
                                 <select class="form-select js-choice @error('brands') is-invalid @enderror" aria-label=""
-                                    multiple="multiple" name="brands[]" id="brands" required>
+                                    multiple="multiple" name="brands[]" id="brands"
+                                    data-options='{"removeItemButton":true,"placeholder":true}'>
                                     @foreach ($brands as $brand)
                                         <option value="{{ $brand->id }}"
                                             @foreach ($product->brands as $product_brand)
@@ -268,9 +269,9 @@
 
                                 <div class="mb-3">
                                     <div class="col-md-12" id="gallery">
-                                        <a href="{{ asset($product->digital_file) }}"
-                                            class="btn btn-falcon-primary me-1 mb-1" type="button"
-                                            target="_blank">{{ __('Download file') }}
+                                        <a href="{{ route('ecommerce.download', ['product_file' => $product->digital_file]) }}"
+                                            class="btn btn-falcon-primary me-1 mb-1"
+                                            type="button">{{ __('Download file') }}
                                         </a>
                                     </div>
                                 </div>
@@ -327,8 +328,8 @@
                                     <option value="rejected" {{ $product->status == 'rejected' ? 'selected' : '' }}>
                                         {{ __('Rejected') }}
                                     </option>
-                                    <option value="paused" {{ $product->status == 'paused' ? 'selected' : '' }}>
-                                        {{ __('Paused') }}
+                                    <option value="pause" {{ $product->status == 'pause' ? 'selected' : '' }}>
+                                        {{ __('pause') }}
                                     </option>
                                 </select>
                                 @error('status')

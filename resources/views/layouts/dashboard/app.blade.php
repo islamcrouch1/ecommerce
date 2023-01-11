@@ -117,6 +117,8 @@
 
                 @yield('adminContent')
 
+
+
                 @include('layouts.Dashboard._footer')
 
 

@@ -112,7 +112,36 @@ $(document).ready(function(){
         }
     });
 
+
+
 });
+
+
+$('.review-btn').on('click' , function(e){
+
+    e.preventDefault
+
+    var rating = $('#rate').attr('data-rating');
+    $('#rating').val(rating)
+
+    var check = 0;
+
+    $(this).closest('form').find('input').each(function() {
+        if ($(this).prop('required') && $(this).val() == '' ) {
+            check++;
+        }
+    });
+
+      if(check == 0){
+        $(this).closest('form').submit(function () {
+            $('.btn').attr("disabled", true);
+        });
+    }
+
+
+});
+
+
 
 
 $('.quantity-right-plus').on('click', function () {
@@ -207,6 +236,9 @@ $('.add-to-cart').on('click', function (e) {
             $(loader).hide();
             $(cart_icon).show()
             $('.cart-empty').text(' ');
+
+            $('.pay-now').show();
+
 
 
             $(cart_added).show()
@@ -451,7 +483,7 @@ $('input[name="shipping_option"]').on('change' , function(e){
 
 
 
-$('input[name="create-account"]').on('change' , function(e){
+$('input[name="create_account"]').on('change' , function(e){
 
     e.preventDefault();
     if(this.checked) {
@@ -473,6 +505,9 @@ $('input[name="create-account"]').on('change' , function(e){
 
 $(document).ready(function(){
     getStates()
+
+
+
 });
 
 function calculateShipping(){
@@ -641,6 +676,14 @@ function getCities(){
 
 
 
+function mouseDown() {
+    $('.price-range').closest('form').submit();
+    console.log(35354454334535);
+}
 
 
 
+$(".price-range").mouseup(function() {
+    $('.price-range').closest('form').submit();
+    console.log(35354454334535);
+  });

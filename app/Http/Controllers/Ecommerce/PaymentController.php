@@ -7,15 +7,17 @@ use Illuminate\Http\Request;
 use App\Http\Classes\PayMob;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\Stock;
 use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
 
 
+
+
     public function paymentSuccess(Request $request)
     {
-
 
 
         if (!isset($request->order) || $request->order == null) {
@@ -27,9 +29,38 @@ class PaymentController extends Controller
         $isRefunded  = $request->is_refunded;
 
 
-        $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
-        $order = Order::where('orderId', $request->order)->first();
+        $amount_cents = $request->amount_cents;
+        $created_at = $request->created_at;
+        $currency = $request->currency;
+        $error_occured = $request->error_occured;
+        $has_parent_transaction = $request->has_parent_transaction;
+        $id = $request->id;
+        $integration_id = $request->integration_id;
+        $is_3d_secure = $request->is_3d_secure;
+        $is_auth = $request->is_auth;
+        $is_capture = $request->is_capture;
+        $is_refunded = $request->is_refunded;
+        $is_standalone_payment = $request->is_standalone_payment;
+        $is_voided = $request->is_voided;
+        $order = $request->order;
+        $owner = $request->owner;
+        $pending = $request->pending;
+        $source_data_pan = $request->source_data_pan;
+        $source_data_sub_type = $request->source_data_sub_type;
+        $source_data_type = $request->source_data_type;
+        $success = $request->success;
 
+        $string = $amount_cents . $created_at . $currency . $error_occured . $has_parent_transaction . $id . $integration_id . $is_3d_secure . $is_auth . $is_capture . $is_refunded . $is_standalone_payment . $is_voided . $order . $owner . $pending . $source_data_pan . $source_data_sub_type . $source_data_type . $success;
+
+        $hmac = $request->hmac;
+
+        $hashed = hash_hmac('SHA512', $string, '6241DBBDF619E22A4F21A91ED9055302');
+
+        if ($hmac != $hashed) {
+            $this->failed($order);
+        }
+
+        $order = Order::where('orderId', $request->order)->first();
 
         if (Auth::check() && $order->customer_id != Auth::id()) {
             return redirect()->route('ecommerce.home');
@@ -37,12 +68,15 @@ class PaymentController extends Controller
             return redirect()->route('ecommerce.home');
         }
 
-
-
+        $order->update([
+            'transaction_id' => $id
+        ]);
 
         if ($isSuccess == 'true' && $isVoided == 'false' && $isRefunded == 'false') {
-            return view('ecommerce.order-success', compact('order', 'categories'));
+            $this->succeeded($order);
+            return redirect()->route('ecommerce.order.success', ['order' => $order->id]);
         } else {
+            $this->failed($order);
             alertError('error in payment processing pleasetry again later', 'حدث خطا اثناء عملية الدفع يرجى المحاولة لاحقا');
             return redirect()->route('ecommerce.home');
         }
@@ -160,7 +194,10 @@ class PaymentController extends Controller
 
     protected function succeeded($order)
     {
-        # code...
+
+        $order->update([
+            'payment_status' => 'Paid'
+        ]);
     }
 
 
@@ -178,7 +215,36 @@ class PaymentController extends Controller
 
     protected function failed($order)
     {
-        # code...
+
+        $order->update([
+            'payment_status' => 'Faild',
+            'status' => 'canceled',
+        ]);
+
+        foreach ($order->products as $product) {
+
+            if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+
+                Stock::create([
+                    'product_combination_id' => $product->pivot->product_combination_id,
+                    'product_id' => $product->id,
+                    'warehouse_id' => setting('warehouse_id'),
+                    'qty' => $product->pivot->qty,
+                    'stock_status' => 'IN',
+                    'stock_type' => 'Order',
+                    'reference_id' => $order->id,
+                    'reference_price' => productPrice($product, $product->pivot->product_combination_id),
+                    'created_by' => Auth::check() ? Auth::id() : null,
+                ]);
+            }
+        }
+    }
+
+
+    public function test()
+    {
+        $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
+        return view('ecommerce.test', compact('categories'));
     }
 
 
@@ -186,10 +252,13 @@ class PaymentController extends Controller
     {
 
 
-
-
         $orderId = $request['obj']['order']['id'];
-        $order   = config('paymob.order.model', 'App\Order')::wherePaymobOrderId($orderId)->first();
+        $order = Order::where('orderId', $orderId)->first();
+
+
+        $order->update([
+            'payment_status' => 'Paid'
+        ]);
 
         // Statuses.
         $isSuccess  = $request['obj']['success'];
@@ -210,8 +279,15 @@ class PaymentController extends Controller
     }
 
 
-    public function invoice(Request $request)
+    public function invoice(Order $order)
     {
-        # code...
+
+        if (Auth::check() && $order->customer_id != Auth::id()) {
+            return redirect()->route('ecommerce.home');
+        } else {
+            $user = Auth::user();
+            $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
+            return view('ecommerce.invoice', compact('order', 'user', 'categories'));
+        }
     }
 }

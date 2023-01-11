@@ -50,8 +50,8 @@
                                         {{ __('Pending') }}</option>
                                     <option value="rejected" {{ request()->status == 'rejected' ? 'selected' : '' }}>
                                         {{ __('Rejected') }}</option>
-                                    <option value="paused" {{ request()->status == 'paused' ? 'selected' : '' }}>
-                                        {{ __('Paused') }}</option>
+                                    <option value="pause" {{ request()->status == 'pause' ? 'selected' : '' }}>
+                                        {{ __('pause') }}</option>
                                 </select>
                             </div>
 
@@ -143,8 +143,8 @@
                                                 <span class='badge badge-soft-danger'>{{ __('Rejected') }}</span>
                                             @break
 
-                                            @case('paused')
-                                                <span class='badge badge-soft-warning'>{{ __('Paused') }}</span>
+                                            @case('pause')
+                                                <span class='badge badge-soft-warning'>{{ __('pause') }}</span>
                                             @break
 
                                             @default
@@ -165,7 +165,7 @@
                                             <div class="dropdown-menu dropdown-menu-end border py-0"
                                                 aria-labelledby="customer-dropdown-0">
                                                 <div class="bg-white py-2">
-                                                    @if ($product->status == 'pending' || $product->status == 'paused')
+                                                    @if ($product->status == 'pending' || $product->status == 'pause')
                                                         <a class="dropdown-item"
                                                             href="{{ route('vendor-products.edit', ['vendor_product' => $product->id]) }}">Edit</a>
                                                         <a class="dropdown-item"

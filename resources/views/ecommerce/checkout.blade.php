@@ -30,8 +30,6 @@
     <section class="section-b-space">
         <div class="container">
 
-            @include('layouts.ecommerce._flash')
-
             <div class="checkout-page">
                 <div class="checkout-form">
                     <form method="POST" action="{{ route('ecommerce.order.store') }}">
@@ -128,7 +126,7 @@
 
                                     @if (!Auth::check())
                                         <div class="form-group col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                                            <input type="checkbox" value="create-account" name="create-account"
+                                            <input type="checkbox" value="create_account" name="create_account"
                                                 id="account-option"> &ensp;
                                             <label for="account-option">{{ __('Create An Account?') }}</label>
                                         </div>

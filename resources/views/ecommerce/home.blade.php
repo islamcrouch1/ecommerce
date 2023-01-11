@@ -116,9 +116,7 @@
                             </div>
                         </div>
                         <div class="product-info">
-                            <div class="rating"><i class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                    class="fa fa-star"></i>
-                                <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                            <div class="">{!! getAverageRatingWithStars($product) !!}
                             </div>
                             <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                 <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</h6>
@@ -190,9 +188,7 @@
                                                             src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
                                                             alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                                                     <div class="media-body align-self-center">
-                                                        <div class="rating"><i class="fa fa-star"></i> <i
-                                                                class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                                                class="fa fa-star"></i> <i class="fa fa-star"></i></div>
+                                                        <div class="">{!! getAverageRatingWithStars($product) !!}</div>
                                                         <a
                                                             href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                                             <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
@@ -269,8 +265,7 @@
                                     </div>
                                 </div>
                                 <div class="product-info">
-                                    <div class="rating"><i class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                            class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                                    <div class="">{!! getAverageRatingWithStars($product) !!}
                                     </div>
                                     <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                         <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</h6>
@@ -331,8 +326,7 @@
                                     </div>
                                 </div>
                                 <div class="product-info">
-                                    <div class="rating"><i class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                            class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                                    <div class="">{!! getAverageRatingWithStars($product) !!}
                                     </div>
                                     <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                         <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</h6>
@@ -423,9 +417,7 @@
                                             src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
                                             alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                                     <div class="media-body align-self-center">
-                                        <div class="rating"><i class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                                class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                                class="fa fa-star"></i></div>
+                                        <div class="">{!! getAverageRatingWithStars($product) !!}</div>
                                         <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                             <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
                                             </h6>
@@ -480,8 +472,7 @@
                                         src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
                                         alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                                 <div class="media-body align-self-center">
-                                    <div class="rating"><i class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                            class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                                    <div class="">{!! getAverageRatingWithStars($product) !!}
                                     </div>
                                     <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                         <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
@@ -537,8 +528,7 @@
                                     src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
                                     alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                             <div class="media-body align-self-center">
-                                <div class="rating"><i class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                        class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                                <div class="">{!! getAverageRatingWithStars($product) !!}
                                 </div>
                                 <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                     <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
@@ -594,8 +584,7 @@
                                     src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
                                     alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                             <div class="media-body align-self-center">
-                                <div class="rating"><i class="fa fa-star"></i> <i class="fa fa-star"></i> <i
-                                        class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                                <div class="">{!! getAverageRatingWithStars($product) !!}
                                 </div>
                                 <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                     <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}

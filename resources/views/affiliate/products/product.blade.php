@@ -85,7 +85,7 @@
 
 
                                 <label style="position: relative" class=" btn-falcon-default rounded-circle"
-                                    for="option{{ $index + 1 }}"><span style="color:{{ $stock->color->hex }}"
+                                    for="option{{ $index + 1 }}"><span style="color:{{ $stock->color }}"
                                         class=" fas fa-solid fa-circle fa-2x"></span></label>
                                 {{-- {{ app()->getLocale() == 'ar' ? $stock->color->color_ar : $stock->color->color_en }} --}}
                             @else
@@ -94,7 +94,7 @@
                                     data-stock_id="{{ $stock->id }}" data-color_id="{{ $stock->color_id }}"
                                     data-product_id="{{ $product->id }}">
                                 <label style="position: relative" class="btn-falcon-default rounded-circle"
-                                    for="option{{ $index + 1 }}"><span style="color:{{ $stock->color->hex }}"
+                                    for="option{{ $index + 1 }}"><span style="color:{{ $stock->color }}"
                                         class="fas fa-solid fa-circle fa-2x"></span></label>
                             @endif
                         @endforeach
@@ -112,7 +112,7 @@
                             <label
                                 class="btn btn-falcon-default all-labels-{{ $product->id }} selected-labels-{{ $product->id }}-{{ $stock->color_id }}"
                                 for="options{{ $index + 1 }}"
-                                style="{{ $stock->color_id == $stocks[0]->color_id ? 'display:inline-block;' : 'display:none' }}"><span>{{ app()->getLocale() == 'ar' ? $stock->size->size_ar : $stock->size->size_en }}</span>
+                                style="{{ $stock->color_id == $stocks[0]->color_id ? 'display:inline-block;' : 'display:none' }}"><span></span>
 
                                 <span class="d-block">{{ __('Quantity:') }}<span
                                         class="av-qu-{{ $product->id }}-{{ $stock->id }}"></span></span></label>
@@ -237,8 +237,7 @@
 
                                                 {!! getRatingWithStars($review->rating) !!}
 
-                                                <span
-                                                    class="ms-3 text-dark fw-semi-bold">{{ $review->user->name }}</span>
+                                                <span class="ms-3 text-dark fw-semi-bold">{{ $review->user->name }}</span>
                                             </div>
                                             <p class="fs--1 mb-2 text-600">{{ interval($review->created_at) }}</p>
                                             <p class="mb-0">{{ $review->review }}</p>

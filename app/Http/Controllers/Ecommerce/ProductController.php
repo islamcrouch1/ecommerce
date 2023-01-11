@@ -11,19 +11,41 @@ use App\Models\Country;
 use App\Models\FavItem;
 use App\Models\Product;
 use App\Models\ProductCombination;
+use App\Models\Review;
 use App\Models\ShippingRate;
 use App\Models\State;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use SebastianBergmann\Environment\Console;
 
 class ProductController extends Controller
 {
     public function product(Request $request, Product $product)
     {
+
+        $cat = $product->categories()->inRandomOrder()->limit(1)->first();
+        $cat = $cat->id;
+
+        $products = Product::whereHas('stocks', function ($query) {
+            $query->where('warehouse_id', '=', setting('warehouse_id'))
+                ->where('qty', '!=', '0');
+        })
+
+            ->whereHas('categories', function ($query) use ($cat) {
+                $cat ? $query->where('category_id', 'like', $cat) : $query;
+            })
+
+            ->orWhere('product_type', 'digital')
+            ->orWhere('product_type', 'service')
+            ->where('status', "active")
+            ->where('country_id', setting('country_id'))
+            ->inRandomOrder()->limit(6)->get();
+
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
-        return view('ecommerce.product', compact('product', 'categories'));
+        return view('ecommerce.product', compact('product', 'categories', 'products'));
     }
 
 
@@ -42,64 +64,194 @@ class ProductController extends Controller
         }
 
         if (!$request->has('brand')) {
-            $request->merge(['brand' => null]);
+            $request->merge(['brand' => []]);
         }
 
         $cat = request()->category;
 
         $brand = request()->brand;
 
-        $products = Product::whereHas('stocks', function ($query) {
-            $query->where('warehouse_id', '=', setting('warehouse_id'))
-                ->where('qty', '!=', '0');
-        })
+
+        $digital_products =  !empty($brand) ?
+            Product::whereHas('brands', function ($query) use ($brand) {
+                empty($brand) ? $query : $query->whereIn('brand_id', $brand);
+            })
+
+            ->whereHas('categories', function ($query) use ($cat) {
+                $cat ? $query->where('category_id', 'like', $cat) : $query;
+            })
+            ->Where('product_type', 'digital')
+            ->where('status', "active")
+            ->where('country_id', setting('country_id')) :
+
+            Product::whereHas('categories', function ($query) use ($cat) {
+                $cat ? $query->where('category_id', 'like', $cat) : $query;
+            })
+            ->Where('product_type', 'digital')
+            ->where('status', "active")
+            ->where('country_id', setting('country_id'));
+
+
+        $service_products =  !empty($brand) ?
+            Product::whereHas('brands', function ($query) use ($brand) {
+                empty($brand) ? $query : $query->whereIn('brand_id', $brand);
+            })
+
+            ->whereHas('categories', function ($query) use ($cat) {
+                $cat ? $query->where('category_id', 'like', $cat) : $query;
+            })
+            ->Where('product_type', 'service')
+            ->where('status', "active")
+            ->where('country_id', setting('country_id')) :
+
+            Product::whereHas('categories', function ($query) use ($cat) {
+                $cat ? $query->where('category_id', 'like', $cat) : $query;
+            })
+            ->Where('product_type', 'service')
+            ->where('status', "active")
+            ->where('country_id', setting('country_id'));
+
+
+
+
+        $products = !empty($brand) ?
+            Product::whereHas('stocks', function ($query) {
+                $query->where('warehouse_id', '=', setting('warehouse_id'));
+            })
 
             ->whereHas('brands', function ($query) use ($brand) {
-                $brand ? $query->where('brand_id', 'like', $brand) : $query;
+                !empty($brand) ? $query->whereIn('brand_id', $brand) : $query;
             })
 
             ->whereHas('categories', function ($query) use ($cat) {
                 $cat ? $query->where('category_id', 'like', $cat) : $query;
             })
 
-            ->orWhere('product_type', 'digital')
-            ->orWhere('product_type', 'service')
             ->where('status', "active")
             ->where('country_id', setting('country_id'))
+            ->union($digital_products)
+            ->union($service_products)
+
+            ->whenSearch(request()->search)
+            ->latest()
+            ->paginate(request()->pagination) :
+
+            Product::whereHas('stocks', function ($query) {
+                $query->where('warehouse_id', '=', setting('warehouse_id'));
+            })
+
+            ->whereHas('categories', function ($query) use ($cat) {
+                $cat ? $query->where('category_id', 'like', $cat) : $query;
+            })
+            ->where('status', "active")
+            ->where('country_id', setting('country_id'))
+            ->union($digital_products)
+            ->union($service_products)
             ->whenSearch(request()->search)
             ->latest()
             ->paginate(request()->pagination);
 
-        $top_collection = Product::whereHas('stocks', function ($query) {
-            $query->where('warehouse_id', '=', setting('warehouse_id'))
-                ->where('qty', '!=', '0');
-        })
-            ->orWhere('product_type', 'digital')
-            ->orWhere('product_type', 'service')
-            ->where('top_collection', '1')
+        $products_all = !empty($brand) ?
+            Product::whereHas('stocks', function ($query) {
+                $query->where('warehouse_id', '=', setting('warehouse_id'));
+            })
+
+            ->whereHas('brands', function ($query) use ($brand) {
+                !empty($brand) ? $query->whereIn('brand_id', $brand) : $query;
+            })
+
+            ->whereHas('categories', function ($query) use ($cat) {
+                $cat ? $query->where('category_id', 'like', $cat) : $query;
+            })
+
+            ->union($digital_products)
+            ->union($service_products)
+            ->where('status', "active")
+            ->where('country_id', setting('country_id'))
+            ->whenSearch(request()->search)
+            ->latest()
+            ->paginate(request()->pagination) :
+
+            Product::whereHas('stocks', function ($query) {
+                $query->where('warehouse_id', '=', setting('warehouse_id'));
+            })
+
+            ->whereHas('categories', function ($query) use ($cat) {
+                $cat ? $query->where('category_id', 'like', $cat) : $query;
+            })
+
+            ->union($digital_products)
+            ->union($service_products)
+            ->where('status', "active")
+            ->where('country_id', setting('country_id'))
+            ->whenSearch(request()->search)
+            ->latest()
+            ->get();
+
+        $top_collection =
+            Product::whereHas('stocks', function ($query) {
+                $query->where('warehouse_id', '=', setting('warehouse_id'));
+            })
+
             ->where('country_id', setting('country_id'))
             ->where('status', "active")
+            ->union($digital_products)
+            ->union($service_products)
+            ->where('top_collection', '1')
             ->latest()
             ->get();
 
 
         $best_selling = Product::whereHas('stocks', function ($query) {
-                $query->where('warehouse_id', '=', setting('warehouse_id'))
-                    ->where('qty', '!=', '0');
-            })
-            ->orWhere('product_type', 'digital')
-            ->orWhere('product_type', 'service')
+            $query->where('warehouse_id', '=', setting('warehouse_id'));
+        })
+
+
             ->where('country_id', setting('country_id'))
             ->where('status', "active")
+            ->union($digital_products)
+            ->union($service_products)
             ->where('best_selling', '1')
             ->latest()
             ->get();
 
 
+
+        $min_price = 0;
+        $max_price = 0;
+
+        foreach ($products_all as $index => $product) {
+
+            if ($product->product_type == 'variable') {
+
+                foreach ($product->combinations as $combination) {
+                    if (productPrice($product, $combination->id) >  $max_price) {
+                        $max_price = productPrice($product, $combination->id);
+                    }
+
+                    if ($index == 0) {
+                        $min_price = productPrice($product, $combination->id);
+                    } elseif (productPrice($product, $combination->id) <  $min_price) {
+                        $min_price = productPrice($product, $combination->id);
+                    }
+                }
+            } else {
+                if (productPrice($product) >  $max_price) {
+                    $max_price = productPrice($product);
+                }
+
+                if ($index == 0) {
+                    $min_price = productPrice($product);
+                } elseif (productPrice($product) <  $min_price) {
+                    $min_price = productPrice($product);
+                }
+            }
+        }
+
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         $brands = Brand::where('country_id', setting('country_id'))->where('status', 'active')->get();
 
-        return view('ecommerce.products', compact('categories', 'products', 'brands', 'best_selling', 'top_collection'));
+        return view('ecommerce.products', compact('categories', 'products', 'brands', 'best_selling', 'top_collection', 'min_price', 'max_price'));
     }
 
 
@@ -239,13 +391,18 @@ class ProductController extends Controller
                 return $data;
             }
 
-            CartItem::create([
-                'product_id' => $request->product_id,
-                'warehouse_id' => setting('warehouse_id'),
-                'qty' => $request->qty,
-                'user_id' => $user_id,
-                'session_id' => $session_id
-            ]);
+            foreach ($product->combinations as $com) {
+                CartItem::create([
+                    'product_id' => $request->product_id,
+                    'warehouse_id' => setting('warehouse_id'),
+                    'qty' => $request->qty,
+                    'user_id' => $user_id,
+                    'session_id' => $session_id,
+                    'product_combination_id' => $com->id,
+                ]);
+            }
+
+
 
             $data['status'] = 1;
             $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
@@ -341,24 +498,14 @@ class ProductController extends Controller
     }
 
 
-
-    public function fav()
+    public function wishlist(Request $request)
     {
-        $user = Auth::user();
-        $id = $user->id;
-        $products = Product::whereHas('stocks', function ($query) {
-            $query->where('quantity', '!=', '0');
-        })
-            ->whereHas('fav', function ($query) use ($id) {
-                $query->where('user_id', 'like', $id);
-            })
-            ->where('status', "active")
-            ->whenSearch(request()->search)
-            ->latest()
-            ->paginate(20);
-        // $favs = Favorite::where('user_id', $user->id)->paginate(20);
-        return view('affiliate.products.favorite', compact('user', 'products'));
+
+        $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
+        return view('ecommerce.fav', compact('categories'));
     }
+
+
 
 
     public function addFav(Request $request, $product)
@@ -390,6 +537,11 @@ class ProductController extends Controller
                 'product_id' => $product->id,
                 'session_id' => $session_id
             ]);
+
+            if (url()->previous() == route('ecommerce.wishlist') || url()->previous() == route('ecommerce.account')) {
+                return redirect()->back();
+            }
+
             return 1;
         } else {
             $fav = FavItem::where('product_id', $product->id)
@@ -397,6 +549,11 @@ class ProductController extends Controller
                 ->where('session_id', $session_id)
                 ->first();
             $fav->delete();
+
+            if (url()->previous() == route('ecommerce.wishlist') || url()->previous() == route('ecommerce.account')) {
+                return redirect()->back();
+            }
+
             return 2;
         }
     }
@@ -570,5 +727,67 @@ class ProductController extends Controller
 
 
         return $data;
+    }
+
+
+
+
+    public function storeReview(Request $request, $product)
+    {
+
+        $request->validate([
+            'rating' => "required|numeric",
+            'phone' => "required|numeric",
+            'review' => "required|string|max:255",
+        ]);
+
+
+        if (Auth::check()) {
+            $user = Auth::id();
+            $session = null;
+        } else {
+            $user = null;
+            $session = $request->session()->token();;
+        }
+
+        $product = Product::findOrFail($product);
+
+
+        if (Review::where('product_id', $product->id)->where('user_id', $user)->where('session_id', $session)->get()->count() == 0) {
+            $review = Review::create([
+                'user_id' => $user,
+                'product_id' => $product->id,
+                'rating' => $request->rating,
+                'review' => $request->review,
+                'phone' => $request->phone,
+                'session_id' => $session,
+            ]);
+            alertSuccess('Your review added successfully', 'تم اضافة تقييمك بنجاح');
+        } else {
+            alertError('Sorry, you already reviewd this product', 'ناسف , لقد قمت بتقييم هذا المنتج سابقا');
+        }
+
+        return redirect()->route('ecommerce.product', ['product' => $product->id]);
+    }
+
+
+
+    public function download($order = null)
+    {
+        if (Auth::check()) {
+            if (Auth::user()->hasRole('administrator') || Auth::user()->hasRole('superadministrator')) {
+                return Storage::download(request()->product_file);
+            } elseif ($order != null && $order->customer_id == Auth::id()) {
+                return Storage::download(request()->product_file);
+            } else {
+                alertError('Requested file does not exist on our server!', 'الملف المطلوب غير موجود على السيرفر');
+                return redirect()->route('ecommerce.home');
+            }
+        } elseif ($order != null && $order->session_id == request()->session()->token()) {
+            return Storage::download(request()->product_file);
+        } else {
+            alertError('Requested file does not exist on our server!', 'الملف المطلوب غير موجود على السيرفر');
+            return redirect()->route('ecommerce.home');
+        }
     }
 }

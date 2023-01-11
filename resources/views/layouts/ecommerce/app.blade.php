@@ -42,6 +42,9 @@
     <!-- Bootstrap css -->
     <link rel="stylesheet" type="text/css" href="{{ asset('e-assets/css/vendors/bootstrap.css') }}">
 
+    <!-- Price range icon -->
+    <link rel="stylesheet" type="text/css" href="{{ asset('e-assets/css/vendors/price-range.css') }}">
+
     <!-- Theme css -->
     <link rel="stylesheet" type="text/css" href="{{ asset('e-assets/css/style.css') }}">
 
@@ -93,6 +96,8 @@
 
     @yield('content')
 
+    @include('layouts.ecommerce._flash')
+
     @include('layouts.ecommerce._footer')
 
     @include('layouts.ecommerce._modal')
@@ -109,6 +114,13 @@
         </div>
     </div>
     <!-- tap to top end -->
+
+
+
+
+
+
+
 
 
     <!-- latest jquery-->
@@ -136,12 +148,50 @@
     <!-- Bootstrap Notification js-->
     <script src="{{ asset('e-assets/js/bootstrap-notify.min.js') }}"></script>
 
+
+    <!-- price range js -->
+    <script src="{{ asset('e-assets/js/price-range.js') }}"></script>
+
+
+
     <!-- Theme js-->
     <script src="{{ asset('e-assets/js/theme-setting.js') }}"></script>
     <script src="{{ asset('e-assets/js/script.js') }}"></script>
     <script src="{{ asset('e-assets/js/color-setting.js') }}"></script>
     <script src="{{ asset('e-assets/js/custom-slick-animated.js') }}"></script>
     <script src="{{ asset('assets/js/ecommerce.js') }}"></script>
+
+
+
+
+
+
+
+
+
+    {{-- <script src="{{ asset('vendors/anchorjs/anchor.min.js') }}"></script>
+    <script src="{{ asset('vendors/lodash/lodash.min.js') }}"></script>
+    <script src="{{ asset('assets/js/theme.js') }}"></script>
+    <script src="{{ asset('vendors/rater-js/index.js') }}"></script> --}}
+
+
+
+
+    <script>
+        /* $(window).on('load', function() {
+                                        setTimeout(function() {
+                                            $('#exampleModal').modal('show');
+                                        }, 2500);
+                                    }); */
+
+        function openSearch() {
+            document.getElementById("search-overlay").style.display = "block";
+        }
+
+        function closeSearch() {
+            document.getElementById("search-overlay").style.display = "none";
+        }
+    </script>
 
 
     <script>
@@ -152,21 +202,33 @@
         });
     </script>
 
-    <script>
-        $(window).on('load', function() {
+
+    @if (session()->has('success'))
+        <script>
+            $('.success-noty').addClass("show");
             setTimeout(function() {
-                $('#exampleModal').modal('show');
-            }, 2500);
-        });
+                $('.success-noty').removeClass("show");
+            }, 5000);
+        </script>
+    @endif
 
-        function openSearch() {
-            document.getElementById("search-overlay").style.display = "block";
-        }
+    @if (session()->has('error'))
+        <script>
+            $('.error-noty').addClass("show");
+            setTimeout(function() {
+                $('.error-noty').removeClass("show");
+            }, 5000);
+        </script>
+    @endif
 
-        function closeSearch() {
-            document.getElementById("search-overlay").style.display = "none";
-        }
-    </script>
+
+
+
+
+    @php
+        session()->forget('success');
+        session()->forget('error');
+    @endphp
 
 </body>
 

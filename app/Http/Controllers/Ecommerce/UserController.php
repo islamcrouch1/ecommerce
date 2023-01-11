@@ -17,6 +17,9 @@ use App\Providers\RouteServiceProvider;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\CartItem;
 use App\Models\FavItem;
+use App\Models\Order;
+use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Route as FacadesRoute;
 
 class UserController extends Controller
 {
@@ -29,8 +32,10 @@ class UserController extends Controller
 
     public function account()
     {
+        $user = Auth::user();
+        $orders = Order::where('customer_id', $user->id)->get();
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
-        return view('ecommerce.account', compact('categories'));
+        return view('ecommerce.account', compact('categories', 'orders', 'user'));
     }
 
     public function show(Request $request)
@@ -61,12 +66,61 @@ class UserController extends Controller
             $request->merge(['phone' =>  $phone]);
         }
 
+        $session_id = $request->session()->token();
+
+        $cart_items = CartItem::where('session_id', $session_id)->get();
+        $fav_items = FavItem::where('session_id', $session_id)->get();
+
+        foreach ($cart_items as $item) {
+            $item->update([
+                'user_id' => $user->id,
+                'session_id' => null
+            ]);
+        }
+
+        foreach ($fav_items as $item) {
+            $item->update([
+                'user_id' => $user->id,
+                'session_id' => null
+            ]);
+        }
+
         $request->authenticate();
 
         $request->session()->regenerate();
 
         return redirect()->intended(RouteServiceProvider::ECOMMERCE);
     }
+
+
+    public function changePassword(Request $request)
+    {
+
+
+        $request->validate([
+            'old_password' => ['required', 'string'],
+            'password' => ['required', 'confirmed', 'min:8', Rules\Password::defaults()],
+        ]);
+
+
+        $user = Auth::user();
+
+
+
+        #Match The Old Password
+        if (!Hash::check($request->old_password, $user->password)) {
+            alertError('old password is not correct', 'كلمة المرور القديمة غير صحيحة');
+            return redirect()->back();
+        } else {
+            $user->update([
+                'password' => Hash::make($request->password),
+            ]);
+            alertError('password changed successfully', 'تم تغيير كلمة المرور بنجاح');
+            return redirect()->back();
+        }
+    }
+
+
 
     public function store(Request $request)
     {
@@ -139,6 +193,9 @@ class UserController extends Controller
         Auth::login($user);
         // callToVerify($user);
 
-        return redirect(RouteServiceProvider::ECOMMERCE);
+        if (FacadesRoute::is('ecommerce.order.store')) {
+        } else {
+            return redirect(RouteServiceProvider::ECOMMERCE);
+        }
     }
 }

@@ -1,3 +1,4 @@
+@if (!Route::is('ecommerce.invoice'))
     <!-- loader start -->
     <div class="loader_skeleton">
 
@@ -686,6 +687,8 @@
         @endif
 
 
+
+
     </div>
     <!-- loader end -->
     <!-- header start -->
@@ -738,7 +741,8 @@
                             <form action={{ route('ecommerce.products') }} class="form_search ajax-search the-basics"
                                 role="form">
                                 <input style="{{ app()->getLocale() == 'ar' ? 'direction:rtl;' : '' }}"
-                                    type="search" name="search" placeholder="{{ __('Search any product...') }}"
+                                    type="search" name="search" value="{{ request()->search }}"
+                                    placeholder="{{ __('Search any product...') }}"
                                     class="nav-search nav-search-field typeahead" aria-expanded="true">
                                 <button type="submit" class="btn-search">
                                     <i class="ti-search"></i>
@@ -751,7 +755,7 @@
                             </nav>
                             <div class="top-header d-block">
                                 <ul class="header-dropdown">
-                                    <li class="mobile-wishlist"><a href="{{ route('ecommerce.fav') }}"><img
+                                    <li class="mobile-wishlist"><a href="{{ route('ecommerce.wishlist') }}"><img
                                                 src="{{ asset('e-assets/images/icon/white-icon/heart.png') }}"
                                                 alt=""> </a>
                                     </li>
@@ -1001,3 +1005,4 @@
         </div>
     </header>
     <!-- header end -->
+@endif

@@ -103,7 +103,7 @@ class ProductsController extends Controller
             'sale_price' => "required|numeric",
             'discount_price' => "required|numeric",
             'categories' => "required|array",
-            'brands' => "required|array",
+            'brands' => "nullable|array",
             'product_type' => "required|string",
             'digital_file' => "nullable|file",
             'status' => "required|string",
@@ -129,7 +129,7 @@ class ProductsController extends Controller
         if ($product_type == 'digital') {
             if ($request->hasFile('digital_file')) {
                 $extension = $request->digital_file->extension();
-                $path = $request->digital_file->store('public/files/products');
+                $path = $request->file('digital_file')->store('files/products');
             } else {
                 alertError('please upload digital file', 'يرجى ارفاق الملف الرقمي للمنتج الرقمي');
                 return redirect()->back();
@@ -390,7 +390,7 @@ class ProductsController extends Controller
             'sale_price' => "required|numeric",
             'discount_price' => "required|numeric",
             'categories' => "required|array",
-            'brands' => "required|array",
+            'brands' => "nullable|array",
             'digital_file' => "nullable|file",
             'status' => "required|string",
             'video_url' => "nullable|string",
@@ -420,8 +420,8 @@ class ProductsController extends Controller
 
         if ($request->hasFile('digital_file') && $product_type == 'digital') {
             $extension = $request->digital_file->extension();
-            Storage::disk('public')->delete($product->digital_fil);
-            $path = $request->digital_file->store('public/files/products');
+            Storage::delete($product->digital_file);
+            $path = $request->file('digital_file')->store('files/products');
         } else {
             $path = $product->digital_file;
         }
@@ -470,7 +470,7 @@ class ProductsController extends Controller
                         break;
                     case 'pause':
                         $body_ar = "تم تغيير حالة المنتج الخاص بك الى معطل مؤقتا";
-                        $body_en  = "Your product status has been changed to paused";
+                        $body_en  = "Your product status has been changed to pause";
                         break;
                     case 'pending':
                         $body_ar = "تم تغيير حالة المنتج الخاص بك الى معلق";
@@ -1154,7 +1154,7 @@ class ProductsController extends Controller
                 break;
             case 'pause':
                 $body_ar = "تم تغيير حالة المنتج الخاص بك الى معطل مؤقتا";
-                $body_en  = "Your product status has been changed to paused";
+                $body_en  = "Your product status has been changed to pause";
                 break;
             case 'pending':
                 $body_ar = "تم تغيير حالة المنتج الخاص بك الى معلق";

@@ -24,7 +24,6 @@
     <!-- breadcrumb End -->
 
 
-
     <!--  dashboard section start -->
     <section class="dashboard-section section-b-space user-dashboard-section">
         <div class="container">
@@ -33,35 +32,32 @@
                     <div class="dashboard-sidebar">
                         <div class="profile-top">
                             <div class="profile-image">
-                                <img src="../assets/images/avtar.jpg" alt="" class="img-fluid">
+                                <img src="{{ asset('e-assets/images/avtar.png') }}" alt="" class="img-fluid">
                             </div>
                             <div class="profile-detail">
-                                <h5>Mark Jecno</h5>
-                                <h6>mark.jecno@mail.com</h6>
+                                <h5>{{ $user->name }}</h5>
+                                <h6>{{ $user->phone }}</h6>
                             </div>
                         </div>
                         <div class="faq-tab">
                             <ul class="nav nav-tabs" id="top-tab" role="tablist">
                                 <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#info"
-                                        class="nav-link active">Account Info</a></li>
-                                <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#address"
-                                        class="nav-link">Address Book</a></li>
-                                <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#orders" class="nav-link">My
-                                        Orders</a></li>
-                                <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#wishlist" class="nav-link">My
-                                        Wishlist</a></li>
-                                <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#payment"
-                                        class="nav-link">Saved Cards</a></li>
-                                <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#profile"
-                                        class="nav-link">Profile</a></li>
-                                <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#security"
-                                        class="nav-link">Security</a> </li>
+                                        class="nav-link active">{{ __('My Account') }}</a></li>
+                                {{-- <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#address"
+                                        class="nav-link">Address Book</a></li> --}}
+                                <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#orders"
+                                        class="nav-link">{{ __('My Orders') }}</a></li>
+                                <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#wishlist" class="nav-link">
+                                        {{ __('Wishlist') }}</a></li>
+                                {{-- <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#payment"
+                                        class="nav-link">Saved Cards</a></li> --}}
+                                {{-- <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#profile"
+                                        class="nav-link">Profile</a></li> --}}
+                                {{-- <li class="nav-item"><a data-bs-toggle="tab" data-bs-target="#security"
+                                        class="nav-link">Security</a> </li> --}}
                                 <li class="nav-item"><a data-bs-toggle="modal" data-bs-target="#logout" class="nav-link">
                                         {{ __('Log Out') }}
                                     </a> </li>
-
-
-
 
                             </ul>
                         </div>
@@ -72,60 +68,65 @@
                         <div class="tab-pane fade show active" id="info">
                             <div class="counter-section">
                                 <div class="welcome-msg">
-                                    <h4>Hello, MARK JECNO !</h4>
-                                    <p>From your My Account Dashboard you have the ability to view a snapshot of your
-                                        recent
-                                        account activity and update your account information. Select a link below to
-                                        view or
-                                        edit information.</p>
+                                    <h4>{{ __('Hello,') . ' ' . $user->name }}</h4>
+                                    <p>{{ __('From your account, you have the ability to view your recent account activity and update your account information. ') }}
+                                    </p>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4">
                                         <div class="counter-box">
-                                            <img src="../assets/images/icon/dashboard/sale.png" class="img-fluid">
+                                            <img src="{{ asset('e-assets/images/icon/dashboard/sale.png') }}"
+                                                class="img-fluid">
                                             <div>
-                                                <h3>25</h3>
-                                                <h5>Total Order</h5>
+                                                <h3>{{ $orders->count() }}</h3>
+                                                <h5>{{ __('Total Order') }}</h5>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="counter-box">
-                                            <img src="../assets/images/icon/dashboard/homework.png" class="img-fluid">
+                                            <img src="{{ asset('e-assets/images/icon/dashboard/homework.png') }}"
+                                                class="img-fluid">
                                             <div>
-                                                <h3>5</h3>
-                                                <h5>Pending Orders</h5>
+                                                <h3>{{ $orders->where('status', 'pending')->count() }}</h3>
+                                                <h5>{{ __('Pending Orders') }}</h5>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="counter-box">
-                                            <img src="../assets/images/icon/dashboard/order.png" class="img-fluid">
+                                            <img src="{{ asset('e-assets/images/icon/dashboard/order.png') }}"
+                                                class="img-fluid">
                                             <div>
-                                                <h3>50</h3>
-                                                <h5>Wishlist</h5>
+                                                <h3>{{ getFavs()->count() }}</h3>
+                                                <h5>{{ __('Wishlist') }}</h5>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="box-account box-info">
                                     <div class="box-head">
-                                        <h4>Account Information</h4>
+                                        <h4>{{ __('Account Information') }}</h4>
                                     </div>
                                     <div class="row">
                                         <div class="col-sm-6">
                                             <div class="box">
                                                 <div class="box-title">
-                                                    <h3>Contact Information</h3><a href="#">Edit</a>
+                                                    <h3>{{ __('Login Information') }}</h3>
                                                 </div>
                                                 <div class="box-content">
-                                                    <h6>Mark Jecno</h6>
-                                                    <h6>mark-jecno@gmail.com</h6>
-                                                    <h6><a href="#">Change Password</a></h6>
+                                                    <h6>{{ $user->name }}</h6>
+                                                    <h6>{{ __('phone:') . ' ' . $user->phone }}</h6>
+                                                    <h6>
+                                                        <a href="" data-bs-toggle="modal"
+                                                            data-bs-target="#change_password" class="nav-link">
+                                                            {{ __('Change Password') }}
+                                                        </a>
+                                                    </h6>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-sm-6">
+                                        {{-- <div class="col-sm-6">
                                             <div class="box">
                                                 <div class="box-title">
                                                     <h3>Newsletters</h3><a href="#">Edit</a>
@@ -134,9 +135,9 @@
                                                     <p>You are currently not subscribed to any newsletter.</p>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </div> --}}
                                     </div>
-                                    <div class="box mt-3">
+                                    {{-- <div class="box mt-3">
                                         <div class="box-title">
                                             <h3>Address Book</h3><a href="#">Manage Addresses</a>
                                         </div>
@@ -153,11 +154,11 @@
                                                         href="#">Edit Address</a></address>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="address">
+                        {{-- <div class="tab-pane fade" id="address">
                             <div class="row">
                                 <div class="col-12">
                                     <div class="card mt-0">
@@ -184,9 +185,8 @@
                                                                 </div>
                                                             </div>
                                                             <div class="bottom">
-                                                                <a href="javascript:void(0)"
-                                                                    data-bs-target="#edit-address" data-bs-toggle="modal"
-                                                                    class="bottom_btn">edit</a>
+                                                                <a href="javascript:void(0)" data-bs-target="#edit-address"
+                                                                    data-bs-toggle="modal" class="bottom_btn">edit</a>
                                                                 <a href="#" class="bottom_btn">remove</a>
                                                             </div>
                                                         </div>
@@ -220,189 +220,61 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                         <div class="tab-pane fade" id="orders">
                             <div class="row">
                                 <div class="col-12">
                                     <div class="card dashboard-table mt-0">
                                         <div class="card-body table-responsive-sm">
                                             <div class="top-sec">
-                                                <h3>My Orders</h3>
+                                                <h3>{{ __('My Orders') }}</h3>
                                             </div>
                                             <div class="table-responsive-xl">
                                                 <table class="table cart-table order-table">
                                                     <thead>
                                                         <tr class="table-head">
-                                                            <th scope="col">image</th>
-                                                            <th scope="col">Order Id</th>
-                                                            <th scope="col">Product Details</th>
-                                                            <th scope="col">Status</th>
-                                                            <th scope="col">Price</th>
-                                                            <th scope="col">View</th>
+                                                            {{-- <th scope="col">image</th> --}}
+                                                            <th scope="col">{{ __('Order Id') }}</th>
+                                                            {{-- <th scope="col">Product Details</th> --}}
+                                                            <th scope="col">{{ __('Status') }}</th>
+                                                            <th scope="col">{{ __('Price') }}</th>
+                                                            <th scope="col">{{ __('View') }}</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/1.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <span class="mt-0">#125021</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="fs-6">Purple polo tshirt</span>
-                                                            </td>
-                                                            <td>
-                                                                <span
-                                                                    class="badge rounded-pill bg-success custom-badge">Shipped</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="theme-color fs-6">$49.54</span>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <i class="fa fa-eye text-theme"></i>
-                                                                </a>
-                                                            </td>
-                                                        </tr>
 
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/2.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <span class="mt-0">#125367</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="fs-6">Sleevless white top</span>
-                                                            </td>
-                                                            <td>
-                                                                <span
-                                                                    class="badge rounded-pill bg-danger custom-badge">Pending</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="theme-color fs-6">$49.54</span>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <i class="fa fa-eye text-theme"></i>
-                                                                </a>
-                                                            </td>
-                                                        </tr>
+                                                        @foreach ($orders as $order)
+                                                            <tr>
+                                                                {{-- <td>
+                                                                    <a href="javascript:void(0)">
+                                                                        <img src="../assets/images/pro3/1.jpg"
+                                                                            class="blur-up lazyloaded" alt="">
+                                                                    </a>
+                                                                </td> --}}
+                                                                <td>
+                                                                    <span class="mt-0">#{{ $order->id }}</span>
+                                                                </td>
+                                                                {{-- <td>
+                                                                    <span class="fs-6">Purple polo tshirt</span>
+                                                                </td> --}}
+                                                                <td>
+                                                                    {!! orderStatus($order->status) !!}
+                                                                </td>
+                                                                <td>
+                                                                    <span
+                                                                        class="theme-color fs-6">{{ $order->total_price . $order->country->currency }}</span>
+                                                                </td>
+                                                                <td>
+                                                                    <a href="{{ route('ecommerce.invoice', ['order' => $order->id]) }}"
+                                                                        target="_blank">
+                                                                        <i class="fa fa-eye text-theme"></i>
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
 
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/27.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <p>#125948</p>
-                                                            </td>
-                                                            <td>
-                                                                <p class="fs-6">multi color polo tshirt</p>
-                                                            </td>
-                                                            <td>
-                                                                <span
-                                                                    class="badge rounded-pill bg-success custom-badge">Shipped</span>
-                                                            </td>
-                                                            <td>
-                                                                <p class="theme-color fs-6">$49.54</p>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <i class="fa fa-eye text-theme"></i>
-                                                                </a>
-                                                            </td>
-                                                        </tr>
 
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/28.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <p>#127569</p>
-                                                            </td>
-                                                            <td>
-                                                                <p class="fs-6">Candy red solid tshirt</p>
-                                                            </td>
-                                                            <td>
-                                                                <span
-                                                                    class="badge rounded-pill bg-success custom-badge">Shipped</span>
-                                                            </td>
-                                                            <td>
-                                                                <p class="theme-color fs-6">$49.54</p>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <i class="fa fa-eye text-theme"></i>
-                                                                </a>
-                                                            </td>
-                                                        </tr>
 
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/33.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <p>#125753</p>
-                                                            </td>
-                                                            <td>
-                                                                <p class="fs-6">multicolored polo tshirt</p>
-                                                            </td>
-                                                            <td>
-                                                                <span
-                                                                    class="badge rounded-pill bg-secondary custom-badge">Canceled</span>
-                                                            </td>
-                                                            <td>
-                                                                <p class="theme-color fs-6">$49.54</p>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <i class="fa fa-eye text-theme"></i>
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/34.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <span>#125021</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="fs-6">Men's Sweatshirt</span>
-                                                            </td>
-                                                            <td>
-                                                                <span
-                                                                    class="badge rounded-pill bg-secondary custom-badge">Canceled</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="theme-color fs-6">$49.54</span>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <i class="fa fa-eye text-theme"></i>
-                                                                </a>
-                                                            </td>
-                                                        </tr>
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -417,157 +289,48 @@
                                     <div class="card dashboard-table mt-0">
                                         <div class="card-body table-responsive-sm">
                                             <div class="top-sec">
-                                                <h3>My Wishlist</h3>
+                                                <h3>{{ __('Wishlist') }}</h3>
                                             </div>
                                             <div class="table-responsive-xl">
                                                 <table class="table cart-table wishlist-table">
                                                     <thead>
                                                         <tr class="table-head">
-                                                            <th scope="col">image</th>
-                                                            <th scope="col">Order Id</th>
-                                                            <th scope="col">Product Details</th>
-                                                            <th scope="col">Price</th>
-                                                            <th scope="col">Action</th>
+                                                            <th scope="col">{{ __('image') }}</th>
+                                                            <th scope="col">{{ __('product') }}</th>
+                                                            <th scope="col">{{ __('Action') }}</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/1.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <span class="mt-0">#125021</span>
-                                                            </td>
-                                                            <td>
-                                                                <span>Purple polo tshirt</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="theme-color fs-6">$49.54</span>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)" class="btn btn-xs btn-solid">
-                                                                    Move to Cart
-                                                                </a>
-                                                            </td>
-                                                        </tr>
+                                                        @foreach (getFavs() as $fav)
+                                                            <tr>
+                                                                <td>
+                                                                    <a href="javascript:void(0)">
+                                                                        <img src="{{ asset($fav->product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $fav->product->images[0]->media->path) }}"
+                                                                            class="blur-up lazyloaded" alt="">
+                                                                    </a>
+                                                                </td>
 
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/2.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <span class="mt-0">#125367</span>
-                                                            </td>
-                                                            <td>
-                                                                <span>Sleevless white top</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="theme-color fs-6">$49.54</span>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)" class="btn btn-xs btn-solid">
-                                                                    Move to Cart
-                                                                </a>
-                                                            </td>
-                                                        </tr>
+                                                                <td>
+                                                                    <span>{{ app()->getLocale() == 'ar' ? $fav->product->name_ar : $fav->product->name_en }}
+                                                                    </span>
+                                                                </td>
 
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/27.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <span>#125948</span>
-                                                            </td>
-                                                            <td>
-                                                                <span>multi color polo tshirt</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="theme-color fs-6">$49.54</span>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)" class="btn btn-xs btn-solid">
-                                                                    Move to Cart
-                                                                </a>
-                                                            </td>
-                                                        </tr>
+                                                                <td>
+                                                                    <a href="{{ route('ecommerce.product', ['product' => $fav->product->id]) }}"
+                                                                        class="btn btn-xs btn-solid">
+                                                                        {{ __('View') }}
+                                                                    </a>
+                                                                    <a href="{{ route('ecommerce.fav.add', ['product' => $fav->product->id]) }}"
+                                                                        class="btn btn-xs  btn-danger">
+                                                                        {{ __('remove') }}
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
 
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/28.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <span>#127569</span>
-                                                            </td>
-                                                            <td>
-                                                                <span>Candy red solid tshirt</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="theme-color fs-6">$49.54</span>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)" class="btn btn-xs btn-solid">
-                                                                    Move to Cart
-                                                                </a>
-                                                            </td>
-                                                        </tr>
 
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/33.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <span>#125753</span>
-                                                            </td>
-                                                            <td>
-                                                                <span>multicolored polo tshirt</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="theme-color fs-6">$49.54</span>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)" class="btn btn-xs btn-solid">
-                                                                    Move to Cart
-                                                                </a>
-                                                            </td>
-                                                        </tr>
 
-                                                        <tr>
-                                                            <td>
-                                                                <a href="javascript:void(0)">
-                                                                    <img src="../assets/images/pro3/34.jpg"
-                                                                        class="blur-up lazyloaded" alt="">
-                                                                </a>
-                                                            </td>
-                                                            <td>
-                                                                <span>#125021</span>
-                                                            </td>
-                                                            <td>
-                                                                <span>Men's Sweatshirt</span>
-                                                            </td>
-                                                            <td>
-                                                                <span class="theme-color fs-6">$49.54</span>
-                                                            </td>
-                                                            <td>
-                                                                <a href="javascript:void(0)" class="btn btn-xs btn-solid">
-                                                                    Move to Cart
-                                                                </a>
-                                                            </td>
-                                                        </tr>
+
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -804,7 +567,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="security">
+                        {{-- <div class="tab-pane fade" id="security">
                             <div class="row">
                                 <div class="col-12">
                                     <div class="card mt-0">
@@ -926,7 +689,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>
@@ -961,6 +724,66 @@
                     </form>
                 </div>
             </div>
+        </div>
+    </div>
+    <!-- modal end -->
+
+
+
+    <!-- Modal start -->
+    <div class="modal logout-modal fade" id="change_password" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <form method="POST" action="{{ route('ecommerce.password.change') }}">
+                @csrf
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">{{ __('Change Password') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                            <div class="field-label">{{ __('Old password') }}</div>
+                            <input class="form-control  @error('old_password') is-invalid @enderror" type="password"
+                                autocomplete="on" id="old_password" name="old_password" required />
+                            @error('old_password')
+                                <div class="alert alert-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                            <div class="field-label">{{ __('Password') }}</div>
+                            <input class="form-control  @error('password') is-invalid @enderror" type="password"
+                                autocomplete="on" id="password" name="password" required />
+                            @error('password')
+                                <div class="alert alert-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+
+                        <div class="form-group col-md-12 col-sm-12 col-xs-12 ">
+                            <div class="field-label">{{ __('Confirm Password') }}</div>
+                            <input class="form-control @error('password_confirmation') is-invalid @enderror"
+                                type="password" autocomplete="on" id="password_confirmation"
+                                name="password_confirmation" required />
+                            @error('password_confirmation')
+                                <div class="alert alert-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn btn-dark btn-custom"
+                            data-bs-dismiss="modal">{{ __('close') }}</a>
+
+                        <button type="submit" class="btn btn-solid btn-custom"
+                            data-bs-toggle="modal">{{ __('change') }}
+                        </button>
+
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
     <!-- modal end -->

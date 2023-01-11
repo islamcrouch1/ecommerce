@@ -43,6 +43,8 @@ class OrdersController extends Controller
     public function store(Request $request)
     {
 
+
+
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
@@ -55,11 +57,28 @@ class OrdersController extends Controller
             'branch_id' => 'nullable|string|max:255',
             'shipping_option' => 'required|string|max:255',
             'payment_method' => 'required|string|max:255',
+            'create_account' => 'nullable|string|max:255',
         ]);
+
+
+        if (isset($request->create_account) && $request->create_account == 'create_account') {
+
+
+
+            $request->merge(['country' => $request->country_id]);
+            $request->merge(['email' => ($request->phone . '@domain.com')]);
+            $request->merge(['check' => 'on']);
+
+            $user_cr = new UserController();
+
+            $user_cr->store($request);
+        }
+
 
         $cart_items = getCartItems();
 
         $count = 0;
+        $count_product = 0;
 
         // check quantity available
         foreach ($cart_items as $item) {
@@ -82,10 +101,19 @@ class OrdersController extends Controller
                     $count = $count + 1;
                 }
             }
+
+            if ($item->product->status != 'active') {
+                $count_product = $count_product + 1;
+            }
         }
 
         if ($count > 0) {
             alertError('Some products do not have enough quantity in stock or the ordered quantity does not match the appropriate order limit', 'بعض المنتجات ليس بها كمية كافية في المخزون او الكمية المطلوبة غير متطابقة مع الحد المناسب للطلب');
+            return redirect()->back();
+        }
+
+        if ($count_product > 0) {
+            alertError('Some products not available please remove it from your cart', 'بعض المنتجات غير متاحة للطلب في الوقت الحالي يرجى حذفها من سلة المشتريات');
             return redirect()->back();
         }
 
@@ -198,8 +226,6 @@ class OrdersController extends Controller
             );
 
             if ($item->product->vendor->hasRole('vendor')) {
-
-
 
                 $vendor_order = $item->product->vendor->vendor_orders()->create([
                     'total_price' => (productPrice($item->product, $item->product_combination_id) * $item->qty),

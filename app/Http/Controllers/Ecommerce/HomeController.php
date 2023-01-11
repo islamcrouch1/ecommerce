@@ -36,17 +36,28 @@ class HomeController extends Controller
         //     ->paginate(20);
 
 
+        $digital_products = Product::Where('product_type', 'digital')
+            ->where('status', "active")
+            ->where('country_id', setting('country_id'));
+
+
+        $service_products = Product::Where('product_type', 'service')
+            ->where('status', "active")
+            ->where('country_id', setting('country_id'));
+
+
         $products = Product::whereHas('stocks', function ($query) {
-            $query->where('warehouse_id', '=', setting('warehouse_id'))
-                ->where('qty', '!=', '0');
+            $query->where('warehouse_id', '=', setting('warehouse_id'));
         })
 
-            ->orWhere('product_type', 'digital')
-            ->orWhere('product_type', 'service')
             ->where('country_id', setting('country_id'))
             ->where('status', "active")
+            ->union($digital_products)
+            ->union($service_products)
             ->latest()
             ->get();
+
+
 
 
         return view('ecommerce.home', compact('categories', 'slides', 'products', 'cart_items'));

@@ -983,6 +983,43 @@ if (!function_exists('changeCompletedWithdrawalBalance')) {
 }
 
 
+if (!function_exists('orderStatus')) {
+    function orderStatus($status)
+    {
+        switch ($status) {
+            case "pending":
+                $status_ar = '<span class="badge rounded-pill bg-danger custom-badge">' . __("Pending") . '</span>';
+                break;
+            case "confirmed":
+                $status_ar = '<span class="badge rounded-pill bg-danger custom-badge">' . __("Confirmed") . '</span>';
+                break;
+            case "on the way":
+                $status_ar = '<span class="badge rounded-pill bg-info custom-badge">' . __("Shipped") . '</span>';
+                break;
+            case "delivered":
+                $status_ar = '<span class="badge rounded-pill bg-info custom-badge">' . __("Delivered") . '</span>';
+                break;
+            case "canceled":
+                $status_ar = '<span class="badge rounded-pill bg-secondary custom-badge">' . __("Canceled") . '</span>';
+                break;
+            case "in the mandatory period":
+                $status_ar = '<span class="badge rounded-pill bg-info custom-badge">' . __("Delivered") . '</span>';
+                break;
+            case "Waiting for the order amount to be released":
+                $status_ar = '<span class="badge rounded-pill bg-info custom-badge">' . __("Delivered") . '</span>';
+                break;
+            case "returned":
+                $status_ar = '<span class="badge rounded-pill bg-secondary custom-badge">' . __("Returned") . '</span>';
+                break;
+            case "RTO":
+                $status_ar = '<span class="badge rounded-pill bg-secondary custom-badge">' . __("RTO") . '</span>';
+                break;
+            default:
+                break;
+        }
+        return $status_ar;
+    }
+}
 
 
 // calculate price with commission
@@ -1117,16 +1154,16 @@ if (!function_exists('getRatingWithStars')) {
         $stars = '';
 
         for ($i = 0; $i < $rating; $i++) {
-            $stars .= '<span class="fa fa-star text-warning fs--1"></span>';
+            $stars .= '<i class="fa fa-star text-warning fs--1"></i>';
         }
 
         if ($check) {
             $rating++;
-            $stars .= '<span class="fa fa-star-half-alt text-warning star-icon fs--1"></span>';
+            $stars .= '<i class="fa fa-star-half-o text-warning star-icon fs--1"></i>';
         }
 
         for ($i = 0; $i < 5 - $rating; $i++) {
-            $stars .= '<span class="fa fa-star text-300 fs--1"></span>';
+            $stars .= '<i class="fa fa-star text-300 fs--1"></i>';
         }
 
         return $stars;
@@ -1142,6 +1179,8 @@ if (!function_exists('getAverageRatingWithStars')) {
         $count = 0;
         $rating = 0;
 
+
+
         foreach ($product->reviews as $review) {
             $count++;
             $rating += $review->rating;
@@ -1156,17 +1195,19 @@ if (!function_exists('getAverageRatingWithStars')) {
         $stars = '';
 
         for ($i = 0; $i < $rating; $i++) {
-            $stars .= '<span class="fa fa-star text-warning"></span>';
+            $stars .= '<i class="fa fa-star text-warning fs--1"></i>';
         }
 
         if ($check) {
             $rating++;
-            $stars .= '<span class="fa fa-star-half-alt text-warning star-icon"></span>';
+            $stars .= '<i class="fa fa-star-half-o text-warning star-icon fs--1"></i>';
         }
 
         for ($i = 0; $i < 5 - $rating; $i++) {
-            $stars .= '<span class="fa fa-star text-300"></span>';
+            $stars .= '<i class="fa fa-star text-300 fs--1"></i>';
         }
+
+
 
         return $stars;
     }
