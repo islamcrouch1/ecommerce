@@ -17,7 +17,7 @@ class UserNotificationsController extends Controller
             ->latest()
             ->paginate(100);
 
-        return view('Dashboard.notifications.index')->with('notifications', $notifications);
+        return view('dashboard.notifications.index')->with('notifications', $notifications);
     }
 
     public function changeStatus(Request $request)

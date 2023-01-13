@@ -29,7 +29,7 @@ class WarehousesController extends Controller
 
 
 
-        return view('Dashboard.warehouses.index')->with('warehouses', $warehouses);
+        return view('dashboard.warehouses.index')->with('warehouses', $warehouses);
     }
 
     /**
@@ -40,7 +40,7 @@ class WarehousesController extends Controller
     public function create()
     {
         $countries = Country::all();
-        return view('Dashboard.warehouses.create')->with('countries', $countries);
+        return view('dashboard.warehouses.create')->with('countries', $countries);
     }
 
     /**
@@ -94,7 +94,7 @@ class WarehousesController extends Controller
     {
         $warehouse = Warehouse::findOrFail($warehouse);
         $countries = Country::all();
-        return view('Dashboard.warehouses.edit ')->with('warehouse', $warehouse)->with('countries', $countries);
+        return view('dashboard.warehouses.edit ')->with('warehouse', $warehouse)->with('countries', $countries);
     }
 
     /**
@@ -155,7 +155,7 @@ class WarehousesController extends Controller
             ->whenSearch(request()->search)
             ->latest()
             ->paginate(100);
-        return view('Dashboard.warehouses.index', ['warehouses' => $warehouses]);
+        return view('dashboard.warehouses.index', ['warehouses' => $warehouses]);
     }
 
     public function restore($warehouse, Request $request)

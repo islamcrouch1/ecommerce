@@ -25,12 +25,12 @@ class BonusController extends Controller
         $bonuses = Bonus::whenSearch(request()->search)
             ->latest()
             ->paginate(100);
-        return view('Dashboard.bonus.index')->with('bonuses', $bonuses);
+        return view('dashboard.bonus.index')->with('bonuses', $bonuses);
     }
 
     public function create()
     {
-        return view('Dashboard.bonus.create');
+        return view('dashboard.bonus.create');
     }
 
 

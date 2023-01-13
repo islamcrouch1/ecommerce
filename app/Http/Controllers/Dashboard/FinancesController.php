@@ -23,6 +23,6 @@ class FinancesController extends Controller
 
     public function index()
     {
-        return view('Dashboard.finances.index');
+        return view('dashboard.finances.index');
     }
 }

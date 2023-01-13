@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     <div class="card mb-3" id="customersTable"
@@ -124,7 +124,7 @@
 
                                         @if ($category->children->count() > 0)
                                             @foreach ($category->children as $subCat)
-                                                @include('Dashboard.categories._category_options', [
+                                                @include('dashboard.categories._category_options', [
                                                     'category' => $subCat,
                                                 ])
                                             @endforeach

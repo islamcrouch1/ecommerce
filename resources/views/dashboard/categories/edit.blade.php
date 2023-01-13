@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     <div class="card mb-3" id="customersTable"
@@ -112,7 +112,7 @@
 
                                         @if ($scategory->children->count() > 0)
                                             @foreach ($scategory->children as $subCat)
-                                                @include('Dashboard.categories._category_options_edit', [
+                                                @include('dashboard.categories._category_options_edit', [
                                                     'scategory' => $subCat,
                                                 ])
                                             @endforeach
@@ -188,7 +188,7 @@
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"
                                     name="submit">{{ __('Edit
-                                                                                                                                                                                                                                                                                                Category') }}</button>
+                                                                                                                                                                                                                                                                                                                                                                                                            Category') }}</button>
                             </div>
                         </form>
 

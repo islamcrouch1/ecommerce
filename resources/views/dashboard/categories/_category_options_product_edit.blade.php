@@ -1,5 +1,5 @@
 @php
-isset($count) ? $count++ : ($count = 1);
+    isset($count) ? $count++ : ($count = 1);
 @endphp
 
 <option value="{{ $scategory->id }}"
@@ -9,7 +9,7 @@ isset($count) ? $count++ : ($count = 1);
 
 @if ($scategory->children->count() > 0)
     @foreach ($scategory->children as $subCat)
-        @include('Dashboard.categories._category_options_edit', [
+        @include('dashboard.categories._category_options_edit', [
             'scategory' => $subCat,
             'count' => $count,
             'product' => $product,

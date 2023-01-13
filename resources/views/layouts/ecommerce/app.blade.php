@@ -48,6 +48,9 @@
     <!-- Theme css -->
     <link rel="stylesheet" type="text/css" href="{{ asset('e-assets/css/style.css') }}">
 
+    <link href='https://fonts.googleapis.com/css?family=Cairo' rel='stylesheet'>
+
+
     @if (app()->getLocale() == 'ar')
         <style>
             p,
@@ -75,6 +78,15 @@
         </style>
     @endif
 
+    <style>
+        .add-btn a {
+            color: var(--theme-color);
+        }
+
+        .text-300 {
+            color: #999999;
+        }
+    </style>
 
 
     @if (websiteSettingData('primary_color') && websiteSettingData('secondary_color'))
@@ -171,10 +183,10 @@
 
 
 
-    {{-- <script src="{{ asset('vendors/anchorjs/anchor.min.js') }}"></script>
+    <script src="{{ asset('vendors/anchorjs/anchor.min.js') }}"></script>
     <script src="{{ asset('vendors/lodash/lodash.min.js') }}"></script>
     <script src="{{ asset('assets/js/theme.js') }}"></script>
-    <script src="{{ asset('vendors/rater-js/index.js') }}"></script> --}}
+    <script src="{{ asset('vendors/rater-js/index.js') }}"></script>
 
 
 

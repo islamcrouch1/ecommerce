@@ -26,7 +26,7 @@ class MessagesController extends Controller
         $messages = Message::whenSearch(request()->search)
             ->latest()
             ->paginate(100);
-        return view('Dashboard.messages.admin')->with('messages', $messages);
+        return view('dashboard.messages.admin')->with('messages', $messages);
     }
 
 

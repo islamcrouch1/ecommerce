@@ -24,7 +24,7 @@ class ShippingRatesController extends Controller
         $shipping_rates = ShippingRate::whenSearch(request()->search)
             ->whenCountry(request()->country_id)
             ->paginate(100);
-        return view('Dashboard.shipping_rates.index')->with('shipping_rates', $shipping_rates);
+        return view('dashboard.shipping_rates.index')->with('shipping_rates', $shipping_rates);
     }
 
 
@@ -33,7 +33,7 @@ class ShippingRatesController extends Controller
         $shipping_rates = ShippingRate::whenSearch(request()->search)
             ->whenCountry(request()->country_id)
             ->paginate(100);
-        return view('Dashboard.shipping_rates.affiliate')->with('shipping_rates', $shipping_rates);
+        return view('dashboard.shipping_rates.affiliate')->with('shipping_rates', $shipping_rates);
     }
 
     /**
@@ -44,7 +44,7 @@ class ShippingRatesController extends Controller
     public function create()
     {
         $countries = Country::all();
-        return view('Dashboard.shipping_rates.create')->with('countries', $countries);
+        return view('dashboard.shipping_rates.create')->with('countries', $countries);
     }
 
     /**
@@ -94,7 +94,7 @@ class ShippingRatesController extends Controller
     {
         $countries = Country::all();
         $shipping_rate = ShippingRate::findORFail($shipping_rate);
-        return view('Dashboard.shipping_rates.edit ')->with('shipping_rate', $shipping_rate)->with('countries', $countries);
+        return view('dashboard.shipping_rates.edit ')->with('shipping_rate', $shipping_rate)->with('countries', $countries);
     }
 
     /**
@@ -151,7 +151,7 @@ class ShippingRatesController extends Controller
     public function trashed()
     {
         $shipping_rates = ShippingRate::onlyTrashed()->paginate(100);
-        return view('Dashboard.shipping_rates.index', ['shipping_rates' => $shipping_rates]);
+        return view('dashboard.shipping_rates.index', ['shipping_rates' => $shipping_rates]);
     }
 
     public function restore($shipping_rate)

@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     <div class="card mb-3" id="customersTable"
@@ -22,8 +22,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="color_ar">{{ __('color name - arabic') }}</label>
                                 <input name="color_ar" class="form-control @error('color_ar') is-invalid @enderror"
-                                    value="{{ $color->color_ar }}" type="text" autocomplete="on" id="color_ar"
-                                    autofocus required />
+                                    value="{{ $color->color_ar }}" type="text" autocomplete="on" id="color_ar" autofocus
+                                    required />
                                 @error('color_ar')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
@@ -57,7 +57,7 @@
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"
                                     name="submit">{{ __('Edit
-                                                                        color') }}</button>
+                                                                                                                                                color') }}</button>
                             </div>
                         </form>
 

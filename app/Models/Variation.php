@@ -19,7 +19,7 @@ class Variation extends Model
 
     public function attribute()
     {
-        return $this->belongsTo(attribute::class);
+        return $this->belongsTo(Attribute::class);
     }
 
     public function combinations()

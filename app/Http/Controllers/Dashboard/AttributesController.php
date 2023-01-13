@@ -27,7 +27,7 @@ class AttributesController extends Controller
             ->paginate(100);
 
 
-        return view('Dashboard.attributes.index')->with('attributes', $attributes);
+        return view('dashboard.attributes.index')->with('attributes', $attributes);
     }
 
     /**
@@ -37,7 +37,7 @@ class AttributesController extends Controller
      */
     public function create()
     {
-        return view('Dashboard.attributes.create');
+        return view('dashboard.attributes.create');
     }
 
     /**
@@ -55,7 +55,7 @@ class AttributesController extends Controller
         ]);
 
 
-        $attribute = attribute::create([
+        $attribute = Attribute::create([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
         ]);
@@ -84,7 +84,7 @@ class AttributesController extends Controller
     public function edit($attribute)
     {
         $attribute = Attribute::findOrFail($attribute);
-        return view('Dashboard.attributes.edit ')->with('attribute', $attribute);
+        return view('dashboard.attributes.edit ')->with('attribute', $attribute);
     }
 
     /**
@@ -139,7 +139,7 @@ class AttributesController extends Controller
             ->whenSearch(request()->search)
             ->latest()
             ->paginate(100);
-        return view('Dashboard.attributes.index', ['attributes' => $attributes]);
+        return view('dashboard.attributes.index', ['attributes' => $attributes]);
     }
 
     public function restore($attribute, Request $request)

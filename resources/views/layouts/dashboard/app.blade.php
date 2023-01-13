@@ -105,21 +105,21 @@
 
 
 
-            @include('layouts.Dashboard._aside')
+            @include('layouts.dashboard._aside')
 
 
 
             <div class="content">
 
-                @include('layouts.Dashboard._header')
+                @include('layouts.dashboard._header')
 
-                @include('layouts.Dashboard._flash')
+                @include('layouts.dashboard._flash')
 
                 @yield('adminContent')
 
 
 
-                @include('layouts.Dashboard._footer')
+                @include('layouts.dashboard._footer')
 
 
             </div>

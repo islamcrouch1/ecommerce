@@ -34,6 +34,6 @@ class LogsController extends Controller
             ->whenLogType(request()->log_type)
             ->latest()
             ->paginate(100);
-        return view('Dashboard.logs.index')->with('logs', $logs);
+        return view('dashboard.logs.index')->with('logs', $logs);
     }
 }

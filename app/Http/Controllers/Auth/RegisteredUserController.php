@@ -25,7 +25,7 @@ class RegisteredUserController extends Controller
      */
     public function create()
     {
-        return view('Dashboard.auth.register');
+        return view('dashboard.auth.register');
     }
 
     /**

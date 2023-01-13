@@ -42,7 +42,7 @@ class WithdrawalsController extends Controller
             ->latest()
             ->paginate(50);
 
-        return view('Dashboard.withdrawals.index', compact('withdrawals', 'countries'));
+        return view('dashboard.withdrawals.index', compact('withdrawals', 'countries'));
     }
 
     public function update(Request $request, Withdrawal $withdrawal)

@@ -170,7 +170,7 @@ class StatesController extends Controller
             ->whenSearch(request()->search)
             ->whenCountry(request()->country_id)
             ->paginate(100);
-        return view('Dashboard.states.index', ['states' => $states]);
+        return view('dashboard.states.index', ['states' => $states]);
     }
 
     public function restore($state)

@@ -22,7 +22,7 @@ class ColorsController extends Controller
     {
         $colors = Color::whenSearch(request()->search)
             ->paginate(100);
-        return view('Dashboard.colors.index')->with('colors', $colors);
+        return view('dashboard.colors.index')->with('colors', $colors);
     }
 
     /**
@@ -32,7 +32,7 @@ class ColorsController extends Controller
      */
     public function create()
     {
-        return view('Dashboard.colors.create');
+        return view('dashboard.colors.create');
     }
 
     /**
@@ -79,7 +79,7 @@ class ColorsController extends Controller
     public function edit($color)
     {
         $color = Color::find($color);
-        return view('Dashboard.colors.edit ')->with('color', $color);
+        return view('dashboard.colors.edit ')->with('color', $color);
     }
 
     /**
@@ -134,7 +134,7 @@ class ColorsController extends Controller
     public function trashed()
     {
         $colors = Color::onlyTrashed()->paginate(100);
-        return view('Dashboard.colors.index', ['colors' => $colors]);
+        return view('dashboard.colors.index', ['colors' => $colors]);
     }
 
     public function restore($color)

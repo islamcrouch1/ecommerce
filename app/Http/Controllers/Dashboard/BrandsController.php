@@ -31,7 +31,7 @@ class BrandsController extends Controller
 
         $countries = Country::all();
 
-        return view('Dashboard.brands.index')->with('brands', $brands)->with('countries', $countries);
+        return view('dashboard.brands.index')->with('brands', $brands)->with('countries', $countries);
     }
 
     /**
@@ -42,7 +42,7 @@ class BrandsController extends Controller
     public function create()
     {
         $countries = Country::all();
-        return view('Dashboard.brands.create')->with('countries', $countries);
+        return view('dashboard.brands.create')->with('countries', $countries);
     }
 
     /**
@@ -102,7 +102,7 @@ class BrandsController extends Controller
     {
         $countries = Country::all();
         $brand = brand::findOrFail($brand);
-        return view('Dashboard.brands.edit ')->with('brand', $brand)->with('countries', $countries);
+        return view('dashboard.brands.edit ')->with('brand', $brand)->with('countries', $countries);
     }
 
     /**
@@ -177,7 +177,7 @@ class BrandsController extends Controller
             ->whenCountry(request()->country_id)
             ->latest()
             ->paginate(100);
-        return view('Dashboard.brands.index', ['brands' => $brands])->with('countries', $countries);
+        return view('dashboard.brands.index', ['brands' => $brands])->with('countries', $countries);
     }
 
     public function restore($brand, Request $request)

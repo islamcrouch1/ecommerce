@@ -17,7 +17,7 @@ class SettingController extends Controller
         $settings = Setting::all();
         $countries = Country::all();
         $shipping_methods = ShippingMethod::all();
-        return view('Dashboard.settings.index', compact('settings', 'warehouses', 'countries', 'shipping_methods'));
+        return view('dashboard.settings.index', compact('settings', 'warehouses', 'countries', 'shipping_methods'));
     }
 
 

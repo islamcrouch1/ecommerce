@@ -27,7 +27,7 @@ class StockController extends Controller
 
         $warehouses = Warehouse::all();
 
-        return view('Dashboard.stocks.index', compact('combinations', 'warehouses'));
+        return view('dashboard.stocks.index', compact('combinations', 'warehouses'));
     }
 
 
@@ -42,13 +42,13 @@ class StockController extends Controller
         $warehouses = Warehouse::all();
 
 
-        return view('Dashboard.stocks.list', compact('stocks', 'warehouses'));
+        return view('dashboard.stocks.list', compact('stocks', 'warehouses'));
     }
 
 
     public function atockAdd()
     {
-        return view('Dashboard.stocks.add');
+        return view('dashboard.stocks.add');
     }
 
     public function search(Request $request)

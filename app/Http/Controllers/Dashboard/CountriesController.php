@@ -34,7 +34,7 @@ class CountriesController extends Controller
         $countries = Country::whenSearch(request()->search)
             ->latest()
             ->paginate(100);
-        return view('Dashboard.countries.index')->with('countries', $countries);
+        return view('dashboard.countries.index')->with('countries', $countries);
     }
 
     /**
@@ -44,7 +44,7 @@ class CountriesController extends Controller
      */
     public function create()
     {
-        return view('Dashboard.countries.create');
+        return view('dashboard.countries.create');
     }
 
     /**
@@ -106,7 +106,7 @@ class CountriesController extends Controller
     public function edit($country)
     {
         $country = Country::findOrFail($country);
-        return view('Dashboard.countries.edit ')->with('country', $country);
+        return view('dashboard.countries.edit ')->with('country', $country);
     }
 
     /**
@@ -208,7 +208,7 @@ class CountriesController extends Controller
     public function trashed()
     {
         $countries = Country::onlyTrashed()->paginate(100);
-        return view('Dashboard.countries.index', ['countries' => $countries]);
+        return view('dashboard.countries.index', ['countries' => $countries]);
     }
 
     public function restore($country)

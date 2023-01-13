@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     <div class="card mb-3" id="customersTable"
@@ -29,8 +29,8 @@
                     <div id="table-customers-replace-element">
 
                         @if (auth()->user()->hasPermission('sizes-create'))
-                            <a href="{{ route('sizes.create') }}" class="btn btn-falcon-default btn-sm"
-                                type="button"><span class="fas fa-plus" data-fa-transform="shrink-3 down-2"></span><span
+                            <a href="{{ route('sizes.create') }}" class="btn btn-falcon-default btn-sm" type="button"><span
+                                    class="fas fa-plus" data-fa-transform="shrink-3 down-2"></span><span
                                     class="d-none d-sm-inline-block ms-1">{{ __('New') }}</span></a>
                         @endif
                         <a href="{{ route('sizes.trashed') }}" class="btn btn-falcon-default btn-sm" type="button"><span

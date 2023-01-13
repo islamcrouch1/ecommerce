@@ -1,5 +1,5 @@
 @php
-isset($count) ? $count++ : ($count = 1);
+    isset($count) ? $count++ : ($count = 1);
 @endphp
 
 <option value="{{ $category->id }}" {{ request()->category_id == $category->id ? 'selected' : '' }}>
@@ -8,7 +8,7 @@ isset($count) ? $count++ : ($count = 1);
 
 @if ($category->children->count() > 0)
     @foreach ($category->children as $subCat)
-        @include('Dashboard.categories._category_options', [
+        @include('dashboard.categories._category_options', [
             'category' => $subCat,
             'count' => $count,
         ])

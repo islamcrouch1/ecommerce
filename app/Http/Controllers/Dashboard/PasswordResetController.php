@@ -14,7 +14,7 @@ class PasswordResetController extends Controller
 {
     public function index()
     {
-        return view('Dashboard.reset_password.password-reset-request');
+        return view('dashboard.reset_password.password-reset-request');
     }
 
     public function verify(Request $request)
@@ -59,7 +59,7 @@ class PasswordResetController extends Controller
     {
 
         $user = User::findOrFail($request->user);
-        return view('Dashboard.reset_password.password-reset-confirm', compact('user'));
+        return view('dashboard.reset_password.password-reset-confirm', compact('user'));
     }
 
     public function resend(Request $request)
@@ -93,7 +93,7 @@ class PasswordResetController extends Controller
             }
         }
 
-        return view('Dashboard.reset_password.password-reset-change', compact('user'));
+        return view('dashboard.reset_password.password-reset-change', compact('user'));
     }
 
 
@@ -105,10 +105,10 @@ class PasswordResetController extends Controller
 
             if (app()->getLocale() == 'ar') {
                 session(['status' => 'الرقم السري الذي ادخلته غير متطابق']);
-                return view('Dashboard.reset_password.password-reset-change', compact('user'));
+                return view('dashboard.reset_password.password-reset-change', compact('user'));
             } else {
                 session(['status' => 'The password you entered does not match']);
-                return view('Dashboard.reset_password.password-reset-change', compact('user'));
+                return view('dashboard.reset_password.password-reset-change', compact('user'));
             }
         }
 

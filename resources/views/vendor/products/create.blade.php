@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     <div class="card mb-3" id="customersTable"
@@ -21,8 +21,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="name_ar">product name - arabic</label>
                                 <input name="name_ar" class="form-control @error('name_ar') is-invalid @enderror"
-                                    value="{{ old('name_ar') }}" type="text" autocomplete="on" id="name_ar"
-                                    required />
+                                    value="{{ old('name_ar') }}" type="text" autocomplete="on" id="name_ar" required />
                                 @error('name_ar')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
@@ -31,8 +30,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="name_en">product name - english</label>
                                 <input name="name_en" class="form-control @error('name_en') is-invalid @enderror"
-                                    value="{{ old('name_en') }}" type="text" autocomplete="on" id="name_en"
-                                    required />
+                                    value="{{ old('name_en') }}" type="text" autocomplete="on" id="name_en" required />
                                 @error('name_en')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
@@ -90,7 +88,7 @@
 
                                         @if ($category->children->count() > 0)
                                             @foreach ($category->children as $subCat)
-                                                @include('Dashboard.categories._category_options', [
+                                                @include('dashboard.categories._category_options', [
                                                     'category' => $subCat,
                                                 ])
                                             @endforeach

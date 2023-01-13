@@ -249,6 +249,10 @@ class OrdersController extends Controller
             }
         }
 
+
+        $stocks_limit_products = [];
+
+
         foreach ($cart_items as $item) {
 
 
@@ -273,6 +277,7 @@ class OrdersController extends Controller
             $item->delete();
 
 
+
             // add noty for stock limit
             if ($item->product->product_type == 'variable') {
                 if (productQuantity($item->product->id, $item->combination->id, setting('warehouse_id')) <= $item->combination->limit) {
@@ -280,7 +285,7 @@ class OrdersController extends Controller
                 }
             } elseif ($item->product->product_type == 'simple') {
                 if (productQuantity($item->product->id, null, setting('warehouse_id')) <= $item->product->limit) {
-                    array_push($stocks_limit, $item->product);
+                    array_push($stocks_limit_products, $item->product);
                 }
             }
         }

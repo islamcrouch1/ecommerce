@@ -62,7 +62,7 @@ class UsersController extends Controller
             ->paginate(100);
 
 
-        return view('Dashboard.users.index', compact('users', 'roles', 'countries'));
+        return view('dashboard.users.index', compact('users', 'roles', 'countries'));
     }
 
 
@@ -77,7 +77,7 @@ class UsersController extends Controller
     {
         $countries = Country::all();
         $roles = Role::WhereRoleNot(['superadministrator', 'administrator'])->get();
-        return view('Dashboard.users.create')->with('roles', $roles)->with('countries', $countries);
+        return view('dashboard.users.create')->with('roles', $roles)->with('countries', $countries);
     }
 
     /**
@@ -173,7 +173,7 @@ class UsersController extends Controller
         $countries = Country::all();
         $roles = Role::WhereRoleNot(['superadministrator', 'administrator', 'user', 'vendor', 'affiliate'])->get();
         $user = User::findOrFail($user);
-        return view('Dashboard.users.edit ', compact('user', 'roles', 'countries'));
+        return view('dashboard.users.edit ', compact('user', 'roles', 'countries'));
     }
 
 
@@ -290,7 +290,7 @@ class UsersController extends Controller
             ->with('roles')
             ->latest()
             ->paginate(100);
-        return view('Dashboard.users.index', compact('users', 'roles', 'countries'));
+        return view('dashboard.users.index', compact('users', 'roles', 'countries'));
     }
 
     public function restore($user)
@@ -415,7 +415,7 @@ class UsersController extends Controller
 
         $categories = Category::all();
 
-        return view('Dashboard.users.show', compact('user', 'withdrawals', 'orders', 'countries', 'vendor_orders', 'requests', 'products', 'categories', 'notes', 'messages'));
+        return view('dashboard.users.show', compact('user', 'withdrawals', 'orders', 'countries', 'vendor_orders', 'requests', 'products', 'categories', 'notes', 'messages'));
     }
 
 

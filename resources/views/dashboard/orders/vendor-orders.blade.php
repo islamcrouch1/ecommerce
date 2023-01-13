@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     <form id="bulk-form" method="POST" action="{{ route('orders.vendor.status.bulk') }}">
@@ -49,8 +49,7 @@
                                         <option value="" selected>{{ __('All Status') }}</option>
                                         <option value="pending" {{ request()->status == 'pending' ? 'selected' : '' }}>
                                             {{ __('pending') }}</option>
-                                        <option value="confirmed"
-                                            {{ request()->status == 'confirmed' ? 'selected' : '' }}>
+                                        <option value="confirmed" {{ request()->status == 'confirmed' ? 'selected' : '' }}>
                                             {{ __('confirmed') }}</option>
                                         <option value="on the way"
                                             {{ request()->status == 'on the way' ? 'selected' : '' }}>
@@ -61,8 +60,7 @@
                                         <option value="Waiting for the order amount to be released"
                                             {{ request()->status == 'Waiting for the order amount to be released' ? 'selected' : '' }}>
                                             {{ __('Waiting for the order amount to be released') }}</option>
-                                        <option value="delivered"
-                                            {{ request()->status == 'delivered' ? 'selected' : '' }}>
+                                        <option value="delivered" {{ request()->status == 'delivered' ? 'selected' : '' }}>
                                             {{ __('delivered') }}</option>
                                         <option value="canceled" {{ request()->status == 'canceled' ? 'selected' : '' }}>
                                             {{ __('canceled') }}</option>
@@ -234,10 +232,10 @@
                                                         @if (auth()->user()->hasPermission('orders-read'))
                                                             <a class="dropdown-item"
                                                                 href="{{ route('users.show', ['user' => $order->user_id]) }}">{{ __('Vendor
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            Info') }}</a>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            Info') }}</a>
                                                             <a class="dropdown-item"
                                                                 href="{{ route('orders.show', ['order' => $order->order_id]) }}">{{ __('Show
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            Affiliate Order') }}</a>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            Affiliate Order') }}</a>
                                                         @endif
 
                                                         @if (auth()->user()->hasPermission('orders-update') && $order->status == 'Waiting for the order amount to be released')

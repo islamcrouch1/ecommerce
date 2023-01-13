@@ -52,7 +52,7 @@ class ProductsController extends Controller
             ->latest()
             ->paginate(100);
 
-        return view('Dashboard.products.index', compact('products', 'categories', 'countries'));
+        return view('dashboard.products.index', compact('products', 'categories', 'countries'));
     }
 
     public function show(Product $product)
@@ -64,7 +64,7 @@ class ProductsController extends Controller
             ->where('parent', $product->categories()->first()->id)
             ->get();
 
-        return view('Dashboard.products.show', compact('categories', 'product'));
+        return view('dashboard.products.show', compact('categories', 'product'));
     }
 
     /**
@@ -79,7 +79,7 @@ class ProductsController extends Controller
         $brands = Brand::where('status', 'active')->get();
         $attributes = Attribute::all();
         $shipping_methods = ShippingMethod::whereIn('id', [1, 2, 3])->get();
-        return view('Dashboard.products.create', compact('attributes', 'categories', 'countries', 'brands', 'shipping_methods'));
+        return view('dashboard.products.create', compact('attributes', 'categories', 'countries', 'brands', 'shipping_methods'));
     }
 
 
@@ -366,7 +366,7 @@ class ProductsController extends Controller
         $countries = Country::all();
         $product = Product::find($product);
         $shipping_methods = ShippingMethod::whereIn('id', [1, 2, 3])->get();
-        return view('Dashboard.products.edit', compact('categories', 'countries', 'product', 'brands', 'shipping_methods'));
+        return view('dashboard.products.edit', compact('categories', 'countries', 'product', 'brands', 'shipping_methods'));
     }
 
     /**
@@ -438,15 +438,16 @@ class ProductsController extends Controller
 
 
         if ($files = $request->file('images')) {
+
             foreach ($product->images as $image) {
-                deleteImage($image->media->media_id);
+                deleteImage($image->media->id);
                 $image->delete();
             }
             foreach ($files as $file) {
                 $media_id = saveMedia('image', $file, 'products');
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'image' => $media_id,
+                    'media_id' => $media_id,
                 ]);
             }
         }
@@ -613,7 +614,7 @@ class ProductsController extends Controller
             ->whenCategory(request()->category_id)
             ->whenCountry(request()->country_id)
             ->paginate(100);
-        return view('Dashboard.products.index')->with('products', $products)->with('categories', $categories)->with('countries', $countries);
+        return view('dashboard.products.index')->with('products', $products)->with('categories', $categories)->with('countries', $countries);
     }
 
     public function restore($product)
@@ -627,14 +628,14 @@ class ProductsController extends Controller
     {
         $warehouses = Warehouse::all();
         $product = Product::findOrFail($product);
-        return view('Dashboard.products.stock ')->with('product', $product)->with('warehouses', $warehouses);
+        return view('dashboard.products.stock ')->with('product', $product)->with('warehouses', $warehouses);
     }
 
     public function stockProductCreate()
     {
         $warehouses = Warehouse::all();
         $product = Product::findOrFail(request()->product);
-        return view('Dashboard.products.stock ')->with('product', $product)->with('warehouses', $warehouses);
+        return view('dashboard.products.stock ')->with('product', $product)->with('warehouses', $warehouses);
     }
 
     public function stockStore(Request $request, Product $product)
@@ -754,7 +755,7 @@ class ProductsController extends Controller
         $colors = Color::all();
         $sizes = Size::all();
         $product = Product::find($product);
-        return view('Dashboard.products.color', compact('colors', 'sizes', 'product'));
+        return view('dashboard.products.color', compact('colors', 'sizes', 'product'));
     }
 
     public function colorStore(Request $request, Product $product)
@@ -806,7 +807,7 @@ class ProductsController extends Controller
             ->get();
 
 
-        return view('Dashboard.aff-prod.mystock_product', compact('categories', 'product'));
+        return view('dashboard.aff-prod.mystock_product', compact('categories', 'product'));
     }
 
     public function myStockOrder($lang, Request $request, Product $product)
@@ -928,8 +929,8 @@ class ProductsController extends Controller
 
         $user = User::find($user);
 
-        return view('Dashboard.orders.mystock_orders')->with('orders', $orders)->with('user', $user);
-        // return view('Dashboard.orders.mystock_orders' , compact($orders , $user));
+        return view('dashboard.orders.mystock_orders')->with('orders', $orders)->with('user', $user);
+        // return view('dashboard.orders.mystock_orders' , compact($orders , $user));
 
 
     }
@@ -954,7 +955,7 @@ class ProductsController extends Controller
             ->paginate(100);
 
 
-        return view('Dashboard.all_orders.stock_orders')->with('orders', $orders);
+        return view('dashboard.all_orders.stock_orders')->with('orders', $orders);
     }
 
     public function myStockCancel($lang, Aorder $order)
@@ -986,7 +987,7 @@ class ProductsController extends Controller
             ->get();
 
 
-        return view('Dashboard.aff-prod.sproduct', compact('categories', 'product', 'order'));
+        return view('dashboard.aff-prod.sproduct', compact('categories', 'product', 'order'));
     }
 
     public function myStockProducts($lang)
@@ -1004,7 +1005,7 @@ class ProductsController extends Controller
 
 
 
-        return view('Dashboard.aff-prod.mystock_products', compact('orders', 'user'));
+        return view('dashboard.aff-prod.mystock_products', compact('orders', 'user'));
     }
 
     public function myStockordersChange($lang, Request $request, Aorder $order)

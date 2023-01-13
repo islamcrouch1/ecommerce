@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     @if ($slides1->count() != 0)
@@ -238,8 +238,8 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLongTitle">{{ setting('affiliate_modal_title') }}</h5>
-                    <button style="{{ app()->getLocale() == 'ar' ? 'margin:0' : '' }}" type="button"
-                        class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button style="{{ app()->getLocale() == 'ar' ? 'margin:0' : '' }}" type="button" class="btn-close"
+                        data-bs-dismiss="modal" aria-label="Close"></button>
 
                 </div>
                 <div class="modal-body">

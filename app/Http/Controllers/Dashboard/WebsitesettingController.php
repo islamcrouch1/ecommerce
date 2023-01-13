@@ -13,7 +13,7 @@ class WebsitesettingController extends Controller
     {
         // $settings = WebsiteSetting::all();
         $categories = Category::all();
-        return view('Dashboard.website_setting.index', compact('categories'));
+        return view('dashboard.website_setting.index', compact('categories'));
     }
 
 

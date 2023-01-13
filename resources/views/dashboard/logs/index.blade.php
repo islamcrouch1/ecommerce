@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     <div class="card mb-3" id="customersTable"
@@ -43,8 +43,7 @@
                                     <option value="" selected>{{ __('All uesr types') }}</option>
                                     <option value="admin" {{ request()->user_type == 'admin' ? 'selected' : '' }}>
                                         {{ __('admin') }}</option>
-                                    <option value="affiliate"
-                                        {{ request()->user_type == 'affiliate' ? 'selected' : '' }}>
+                                    <option value="affiliate" {{ request()->user_type == 'affiliate' ? 'selected' : '' }}>
                                         {{ __('affiliate') }}</option>
                                     <option value="vendor" {{ request()->user_type == 'vendor' ? 'selected' : '' }}>
                                         {{ __('vendor') }}</option>

@@ -18,7 +18,7 @@ class MessagesController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('Dashboard.messages.index', compact('messages'));
+        return view('dashboard.messages.index', compact('messages'));
     }
 
 

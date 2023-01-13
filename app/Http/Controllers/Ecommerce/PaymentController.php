@@ -90,6 +90,7 @@ class PaymentController extends Controller
 
 
 
+
         if (Auth::check() && $order->customer_id != Auth::id()) {
             return redirect()->route('ecommerce.home');
         } elseif (!Auth::check() && $order->session_id != request()->session()->token()) {
@@ -99,6 +100,7 @@ class PaymentController extends Controller
 
 
         $payment = new PayMob();
+
 
 
 
@@ -117,20 +119,27 @@ class PaymentController extends Controller
             $order->id
         );
 
-        $order->update([
-            'orderId' => $paymobOrder->id
-        ]); // save paymob order id for later usage.
+
+
 
         // Duplicate order id
         // PayMob saves your order id as a unique id as well as their id as a primary key, thus your order id must not
         // duplicate in their database.
         if (isset($paymobOrder->message)) {
-            if ($paymobOrder->message == 'duplicate') {
+            if ($paymobOrder->message == 'duplicate' && $order->orderId == null) {
                 # code... your order id is duplicate on PayMob database.
-
+                $this->failed($order);
+                alertError('error in payment processing pleasetry again later', 'حدث خطا اثناء عملية الدفع يرجى المحاولة لاحقا');
+                return redirect()->route('ecommerce.home');
+            } else {
                 $paymobOrder = $payment->getOrder($auth->token, $order->orderId);
             }
+        } else {
+            $order->update([
+                'orderId' => $paymobOrder->id
+            ]); // save paymob order id for later usage.
         }
+
 
 
 
@@ -140,8 +149,8 @@ class PaymentController extends Controller
             $user_name = Auth::user()->name;
             $user_phone = Auth::user()->phone;
         } else {
-            $user_name = null;
-            $user_phone = null;
+            $user_name = 'guast';
+            $user_phone = 'guast';
         }
 
         $payment_key = $payment->getPaymentKeyPaymob( // get payment key

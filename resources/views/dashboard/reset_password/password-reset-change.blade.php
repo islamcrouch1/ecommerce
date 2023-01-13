@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app_login')
+@extends('layouts.dashboard.app_login')
 
 @section('authContent')
     <div class="row min-vh-100 flex-center g-0">
@@ -30,7 +30,8 @@
                                     <a class="text-decoration-underline text-white"
                                         href="#!">{{ __('terms') }}</a>{{ __('and ') }} <a
                                         class="text-decoration-underline text-white" href="#!">{{ __('conditions') }}
-                                    </a></p>
+                                    </a>
+                                </p>
                             </div>
                         </div>
                         <div class="col-md-7 d-flex flex-center">

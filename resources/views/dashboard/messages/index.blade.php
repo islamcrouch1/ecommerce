@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     <div class="card overflow-hidden mb-3">
@@ -17,8 +17,7 @@
                         <div class="notification-avatar">
                             <div class="avatar avatar-xl me-3">
                                 <img class="rounded-circle"
-                                    src="{{ asset('storage/images/users/' . $message->sender->profile) }}"
-                                    alt="" />
+                                    src="{{ asset('storage/images/users/' . $message->sender->profile) }}" alt="" />
 
                             </div>
                         </div>
@@ -56,8 +55,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="message">{{ __('Message') }}</label>
                                 <input name="message" class="form-control @error('message') is-invalid @enderror"
-                                    value="{{ old('message') }}" type="text" autocomplete="on" id="message"
-                                    required />
+                                    value="{{ old('message') }}" type="text" autocomplete="on" id="message" required />
                                 @error('message')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror

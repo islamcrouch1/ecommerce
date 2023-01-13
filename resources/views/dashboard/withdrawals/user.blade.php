@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     <div class="row g-3 mb-3">
@@ -109,8 +109,7 @@
                                                                 <label class="form-label" for="code"><button
                                                                         id="send-conf"
                                                                         class="btn btn-falcon-default btn-sm me-1 mb-1"
-                                                                        type="button"
-                                                                        data-url="{{ route('send.conf') }}">
+                                                                        type="button" data-url="{{ route('send.conf') }}">
                                                                         <div style="display: none"
                                                                             class="spinner-border text-info spinner-border-sm spinner"
                                                                             role="status">

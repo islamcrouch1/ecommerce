@@ -18,7 +18,7 @@ class ProfileController extends Controller
         $countries = Country::all();
         $roles = Role::WhereRoleNot(['superadministrator', 'administrator'])->get();
         $user = Auth::user();
-        return view('Dashboard.users.profile ', compact('user', 'countries', 'roles'));
+        return view('dashboard.users.profile ', compact('user', 'countries', 'roles'));
     }
 
 

@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app_login')
+@extends('layouts.dashboard.app_login')
 
 @section('authContent')
     <div class="row min-vh-100 flex-center g-0">
@@ -33,7 +33,8 @@
                                 <p class="mb-0 mt-4 mt-md-5 fs--1 fw-semi-bold text-white opacity-75">{{ __('Read our') }}
                                     <a class="text-decoration-underline text-white" href="#!">{{ __('terms') }}</a>
                                     {{ __('and') }} <a class="text-decoration-underline text-white"
-                                        href="#!">{{ __('conditions') }} </a></p>
+                                        href="#!">{{ __('conditions') }} </a>
+                                </p>
                             </div>
                         </div>
                         <div class="col-md-7 d-flex flex-center">

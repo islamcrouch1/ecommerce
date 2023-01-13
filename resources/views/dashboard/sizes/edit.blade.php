@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     <div class="card mb-3" id="customersTable"
@@ -32,8 +32,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="size_en">{{ __('size name - english') }}</label>
                                 <input name="size_en" class="form-control @error('size_en') is-invalid @enderror"
-                                    value="{{ $size->size_en }}" type="text" autocomplete="on" id="size_en"
-                                    required />
+                                    value="{{ $size->size_en }}" type="text" autocomplete="on" id="size_en" required />
                                 @error('size_en')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
@@ -42,7 +41,7 @@
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"
                                     name="submit">{{ __('Add New
-                                                                        Size') }}</button>
+                                                                                                                                                Size') }}</button>
                             </div>
                         </form>
 

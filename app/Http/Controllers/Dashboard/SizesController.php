@@ -22,7 +22,7 @@ class SizesController extends Controller
     {
         $sizes = Size::whenSearch(request()->search)
             ->paginate(100);
-        return view('Dashboard.sizes.index')->with('sizes', $sizes);
+        return view('dashboard.sizes.index')->with('sizes', $sizes);
     }
 
     /**
@@ -32,7 +32,7 @@ class SizesController extends Controller
      */
     public function create()
     {
-        return view('Dashboard.sizes.create');
+        return view('dashboard.sizes.create');
     }
 
     /**
@@ -77,7 +77,7 @@ class SizesController extends Controller
     public function edit($size)
     {
         $size = size::find($size);
-        return view('Dashboard.sizes.edit ')->with('size', $size);
+        return view('dashboard.sizes.edit ')->with('size', $size);
     }
 
     /**
@@ -130,7 +130,7 @@ class SizesController extends Controller
     public function trashed()
     {
         $sizes = Size::onlyTrashed()->paginate(100);
-        return view('Dashboard.sizes.index', ['sizes' => $sizes]);
+        return view('dashboard.sizes.index', ['sizes' => $sizes]);
     }
 
     public function restore($size)

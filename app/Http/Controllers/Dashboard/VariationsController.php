@@ -28,7 +28,7 @@ class VariationsController extends Controller
             ->paginate(100);
 
 
-        return view('Dashboard.variations.index')->with('variations', $variations);
+        return view('dashboard.variations.index')->with('variations', $variations);
     }
 
     /**
@@ -39,7 +39,7 @@ class VariationsController extends Controller
     public function create()
     {
         $attributes = Attribute::get();
-        return view('Dashboard.variations.create')->with('attributes', $attributes);
+        return view('dashboard.variations.create')->with('attributes', $attributes);
     }
 
     /**
@@ -92,7 +92,7 @@ class VariationsController extends Controller
     {
         $attributes = Attribute::get();
         $variation = variation::findOrFail($variation);
-        return view('Dashboard.variations.edit ')->with('variation', $variation)->with('attributes', $attributes);
+        return view('dashboard.variations.edit ')->with('variation', $variation)->with('attributes', $attributes);
     }
 
     /**
@@ -155,7 +155,7 @@ class VariationsController extends Controller
             ->whenSearch(request()->search)
             ->latest()
             ->paginate(100);
-        return view('Dashboard.variations.index', ['variations' => $variations]);
+        return view('dashboard.variations.index', ['variations' => $variations]);
     }
 
     public function restore($variation, Request $request)
