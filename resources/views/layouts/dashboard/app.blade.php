@@ -150,15 +150,23 @@
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.5.1/js/bootstrap-colorpicker.min.js">
     </script>
-    <script src="{{ asset('assets/js/custom.js') }}"></script>
     <script src="{{ asset('assets/js/cart.js') }}"></script>
     <script src="{{ asset('assets/js/notification.js') }}"></script>
     <script src="{{ asset('vendors/tinymce/tinymce.min.js') }}"></script>
     <script src="{{ asset('vendors/choices/choices.min.js') }}"></script>
     <script src="{{ asset('vendors/swiper/swiper-bundle.min.js') }}"></script>
     <script src="{{ asset('vendors/rater-js/index.js') }}"></script>
+    <script src="{{ asset('assets/js/custom.js') }}"></script>
 
 
+    @if (Route::is('stock.management.list') || Route::is('stock.management.index'))
+        <script src="{{ asset('assets/js/stock-search.js') }}"></script>
+    @endif
+
+
+    @if (Route::is('stock.management.add') || Route::is('stock_transfers.create'))
+        <script src="{{ asset('assets/js/com-search.js') }}"></script>
+    @endif
 
 
     @if (setting('affiliate_modal') == 'on')

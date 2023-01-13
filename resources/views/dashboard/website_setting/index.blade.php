@@ -35,6 +35,9 @@
                                 <li class="nav-item"><a class="nav-link" id="order-tab" data-bs-toggle="tab"
                                         href="#tab-order" role="tab" aria-controls="tab-order"
                                         aria-selected="false">{{ __('order setting') }}</a></li>
+                                <li class="nav-item"><a class="nav-link" id="about-tab" data-bs-toggle="tab"
+                                        href="#tab-about" role="tab" aria-controls="tab-about"
+                                        aria-selected="false">{{ __('about us') }}</a></li>
                             </ul>
                             <div class="tab-content border-x border-bottom p-3" id="myTabContent">
                                 <div class="tab-pane fade show active" id="tab-home" role="tabpanel"
@@ -940,6 +943,84 @@
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="tab-about" role="tabpanel" aria-labelledby="footer-tab">
+
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="about_banar">{{ __('about banar') . '( 1370 * 385 )' }}</label>
+                                        <input name="about_banar"
+                                            class="img form-control @error('about_banar') is-invalid @enderror"
+                                            type="file" id="about_banar" />
+                                        @error('about_banar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    @if (websiteSettingMedia('about'))
+                                        <div class="mb-3">
+
+                                            <div class="col-md-10">
+                                                <img src="{{ asset(websiteSettingMedia('about')) }}"
+                                                    style="width:100px; border: 1px solid #999"
+                                                    class="img-thumbnail img-prev">
+                                            </div>
+
+                                        </div>
+                                    @endif
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="about_title_ar">{{ __('about title') . ' ' . __('arabic') }}</label>
+                                        <input name="about_title_ar"
+                                            class="form-control @error('about_title_ar') is-invalid @enderror"
+                                            value="{{ websiteSettingAr('about') }}" type="text" autocomplete="on"
+                                            id="about_title_ar" />
+                                        @error('about_title_ar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="about_title_en">{{ __('about title') . ' ' . __('english') }}</label>
+                                        <input name="about_title_en"
+                                            class="form-control @error('about_title_en') is-invalid @enderror"
+                                            value="{{ websiteSettingEn('about') }}" type="text" autocomplete="on"
+                                            id="about_title_en" />
+                                        @error('about_title_en')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="about_description_ar">{{ __('about description') . ' ' . __('arabic') }}</label>
+                                        <textarea name="about_description_ar"
+                                            class="form-control tinymce @error('about_description_ar') is-invalid @enderror" autocomplete="on"
+                                            id="about_description_ar">{!! websiteSettingDAr('about') !!}</textarea>
+                                        @error('about_description_ar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="about_description_en">{{ __('about description') . ' ' . __('english') }}</label>
+                                        <textarea name="about_description_en"
+                                            class="form-control tinymce @error('about_description_en') is-invalid @enderror" autocomplete="on"
+                                            id="about_description_en">{!! websiteSettingDEn('about') !!}</textarea>
+                                        @error('about_description_en')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+
                                 </div>
 
                                 {{-- data here  --}}

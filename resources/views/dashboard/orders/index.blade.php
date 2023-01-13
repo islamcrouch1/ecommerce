@@ -66,8 +66,7 @@
                                         <option value="" selected>{{ __('All Status') }}</option>
                                         <option value="pending" {{ request()->status == 'pending' ? 'selected' : '' }}>
                                             {{ __('pending') }}</option>
-                                        <option value="confirmed"
-                                            {{ request()->status == 'confirmed' ? 'selected' : '' }}>
+                                        <option value="confirmed" {{ request()->status == 'confirmed' ? 'selected' : '' }}>
                                             {{ __('confirmed') }}</option>
                                         <option value="on the way"
                                             {{ request()->status == 'on the way' ? 'selected' : '' }}>
@@ -75,8 +74,7 @@
                                         <option value="in the mandatory period"
                                             {{ request()->status == 'in the mandatory period' ? 'selected' : '' }}>
                                             {{ __('in the mandatory period') }}</option>
-                                        <option value="delivered"
-                                            {{ request()->status == 'delivered' ? 'selected' : '' }}>
+                                        <option value="delivered" {{ request()->status == 'delivered' ? 'selected' : '' }}>
                                             {{ __('delivered') }}</option>
                                         <option value="canceled" {{ request()->status == 'canceled' ? 'selected' : '' }}>
                                             {{ __('canceled') }}</option>
@@ -135,17 +133,23 @@
                                         {{ __('Order ID') }}
                                     </th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
-                                        {{ __('Affiliate Name') }}</th>
+                                        {{ __('Customer Name') }}</th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="status">
                                         {{ __('Status') }}</th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                         {{ __('Total') }}
                                     </th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                        {{ __('Payment Method') }}
+                                    </th>
+                                    <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                        {{ __('Payment Status') }}
+                                    </th>
+                                    {{-- <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                         {{ __('Affiliate Profit') }}
                                     </th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
-                                        {{ __('Sonoo Profit') }}</th>
+                                        {{ __('plateform Profit') }}</th> --}}
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                         {{ __('Shipping') }}</th>
 
@@ -172,8 +176,13 @@
                                             </div>
                                         </td>
                                         <td class="address align-middle white-space-nowrap py-2">
-                                            <a href="{{ route('users.show', ['user' => $order->user_id]) }}">{{ $order->user_name }}
+                                            <a href="{{ route('users.show', ['user' => $order->customer_id]) }}">{{ $order->customer->name }}
                                             </a>
+                                            @if ($order->affiliate_id != null)
+                                                <a href="{{ route('users.show', ['user' => $order->affiliate_id]) }}">{{ $order->affiliate->id }}
+                                                </a>
+                                            @endif
+
                                         </td>
                                         <td class="phone align-middle white-space-nowrap py-2">
                                             {!! getOrderHistory($order->status) !!}
@@ -212,14 +221,26 @@
                                         <td class="address align-middle white-space-nowrap py-2">
                                             {{ $order->total_price . ' ' . $order->country->currency }}
                                         </td>
+
                                         <td class="address align-middle white-space-nowrap py-2">
+                                            {{ $order->payment_method }}
+                                        </td>
+
+                                        <td class="address align-middle white-space-nowrap py-2">
+                                            {{ $order->payment_status }}
+                                        </td>
+                                        {{-- <td class="address align-middle white-space-nowrap py-2">
                                             {{ $order->total_commission . ' ' . $order->country->currency }}
                                         </td>
                                         <td class="address align-middle white-space-nowrap py-2">
                                             {{ $order->total_profit . ' ' . $order->country->currency }}
-                                        </td>
+                                        </td> --}}
                                         <td class="address align-middle white-space-nowrap py-2">
-                                            {{ $order->shipping . ' ' . $order->country->currency }}
+                                            @if ($order->shipping_method_id == '2')
+                                                {{ __('LocalPickup') }}
+                                            @else
+                                                {{ $order->shipping_amount . ' ' . $order->country->currency }}
+                                            @endif
                                         </td>
                                         <td class="joined align-middle py-2">{{ $order->created_at }} <br>
                                             {{ interval($order->created_at) }} </td>
@@ -236,11 +257,13 @@
 
                                                         @if (auth()->user()->hasPermission('orders-update'))
                                                             <a class="dropdown-item"
-                                                                href="{{ route('users.show', ['user' => $order->user_id]) }}">{{ __('Affiliate
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        Info') }}</a>
+                                                                href="{{ route('users.show', ['user' => $order->customer_id]) }}">{{ __('Customer Info') }}</a>
+                                                            @if ($order->affiliate_id != null)
+                                                                <a class="dropdown-item"
+                                                                    href="{{ route('users.show', ['user' => $order->affiliate_id]) }}">{{ __('Affiliate Info') }}</a>
+                                                            @endif
                                                             <a class="dropdown-item"
-                                                                href="{{ route('orders.show', ['order' => $order->id]) }}">{{ __('Display
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        order') }}</a>
+                                                                href="{{ route('orders.show', ['order' => $order->id]) }}">{{ __('Display order') }}</a>
                                                             <a href="" class="dropdown-item"
                                                                 data-bs-toggle="modal"
                                                                 data-bs-target="#status-modal-{{ $order->id }}">{{ __('Change Status') }}</a>
@@ -291,7 +314,7 @@
                                                                 <div class="mb-3">
                                                                     <label class="form-label"
                                                                         for="bonus">{{ __('Change order
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        status') }}</label>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                status') }}</label>
                                                                     <select
                                                                         class="form-control @error('status') is-invalid @enderror"
                                                                         name="status" required>

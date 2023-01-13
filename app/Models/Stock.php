@@ -24,10 +24,25 @@ class Stock extends Model
         return $this->belongsTo(Warehouse::class);
     }
 
+    public function scopeWhenWarehouse($query, $warehouse_id)
+    {
+        return $query->when($warehouse_id, function ($q) use ($warehouse_id) {
+            return $q->where('warehouse_id', 'like', "$warehouse_id");
+        });
+    }
+
+    public function scopeWhenProduct($query, $product)
+    {
+        return $query->when($product, function ($q) use ($product) {
+            return $q->where('product_id', 'like', "$product");
+        });
+    }
+
     public function scopeWhenSearch($query, $search)
     {
         return $query->when($search, function ($q) use ($search) {
-            return $q->orWhere('product_id', 'like', "$search");
+            return $q->orWhere('product_id', 'like', "$search")
+                ->orWhere('stock_status', 'like', "$search");
         });
     }
 }

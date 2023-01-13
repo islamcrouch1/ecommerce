@@ -2,6 +2,7 @@
 
 use App\Events\NewNotification;
 use App\Models\Balance;
+use App\Models\Brand;
 use App\Models\CartItem;
 use App\Models\Category;
 use App\Models\Country;
@@ -163,6 +164,37 @@ if (!function_exists('getFavs')) {
         }
 
         return $favs;
+    }
+}
+
+
+if (!function_exists('getBrands')) {
+    function getBrands()
+    {
+        $brands = Brand::where('country_id', setting('country_id'))->where('status', 'active')->get();
+        return $brands;
+    }
+}
+
+
+if (!function_exists('getCategories')) {
+    function getCategories()
+    {
+        $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
+        return $categories;
+    }
+}
+
+if (!function_exists('getName')) {
+    function getName($item)
+    {
+        if (isset($item) && isset($item->name_ar) && isset($item->name_en)) {
+            if (app()->getLocale() == 'ar') {
+                return $item->name_ar;
+            } else {
+                return $item->name_en;
+            }
+        }
     }
 }
 

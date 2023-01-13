@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Country;
 use App\Models\Order;
+use App\Models\Stock;
 use App\Models\VendorOrder;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -69,69 +70,63 @@ class OrdersController extends Controller
         $body_en  = "Your order status has been changed to " . $order->status;
         $url = route('orders.affiliate.index');
 
-        addNoty($order->user, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
+        addNoty($order->customer, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
 
         if ($status == 'canceled' || $status == 'RTO') {
 
-            foreach ($order->vendor_orders as $vendor_order) {
-                changeOutStandingBalance($vendor_order->user, $vendor_order->total_price, $vendor_order->id, $status, 'sub');
-            }
+            // foreach ($order->vendor_orders as $vendor_order) {
+            //     changeOutStandingBalance($vendor_order->user, $vendor_order->total_price, $vendor_order->id, $status, 'sub');
+            // }
 
             foreach ($order->products as $product) {
-                if ($product->pivot->product_type == '0') {
 
-                    $product->stocks->find($product->pivot->stock_id)->update([
-                        'quantity' => $product->stocks->find($product->pivot->stock_id)->quantity + $product->pivot->quantity
+                if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+
+                    Stock::create([
+                        'product_combination_id' => $product->pivot->product_combination_id,
+                        'product_id' => $product->id,
+                        'warehouse_id' => setting('warehouse_id'),
+                        'qty' => $product->pivot->qty,
+                        'stock_status' => 'IN',
+                        'stock_type' => 'Order',
+                        'reference_id' => $order->id,
+                        'reference_price' => productPrice($product, $product->pivot->product_combination_id),
+                        'created_by' => Auth::check() ? Auth::id() : null,
                     ]);
                 }
-                // else {
-                //     $product->astocks->find($product->pivot->stock_id)->update([
-                //         'stock' => $product->astocks->find($product->pivot->stock_id)->stock + $product->pivot->stock
-                //     ]);
-                // }
             }
 
-            // $mystock_price = 0;
-
-            // foreach ($order->products as $product) {
-            //     if ($product->pivot->product_type != '0') {
-            //         $mystock_price += ($product->min_price * $product->pivot->stock);
-            //     }
-            // }
-            changeOutStandingBalance($order->user, $order->total_commission, $order->id, $order->status, 'sub');
+            // changeOutStandingBalance($order->user, $order->total_commission, $order->id, $order->status, 'sub');
         }
 
         if ($status == 'returned') {
-            foreach ($order->vendor_orders as $vendor_order) {
-                if ($vendor_order->status == 'Waiting for the order amount to be released') {
-                    changeOutStandingBalance($vendor_order->user, $vendor_order->total_price, $vendor_order->id, $status, 'sub');
-                } else {
-                    changeAvailableBalance($vendor_order->user, $vendor_order->total_price, $vendor_order->id, $status, 'sub');
-                }
-            }
-
-            foreach ($order->products as $product) {
-                if ($product->pivot->product_type == '0') {
-                    $product->stocks->find($product->pivot->stock_id)->update([
-                        'quantity' => $product->stocks->find($product->pivot->stock_id)->quantity + $product->pivot->quantity
-                    ]);
-                }
-                // else {
-                //     $product->astocks->find($product->pivot->stock_id)->update([
-                //         'stock' => $product->astocks->find($product->pivot->stock_id)->stock + $product->pivot->stock
-                //     ]);
-                // }
-            }
-
-            // $mystock_price = 0;
-
-            // foreach ($order->products as $product) {
-            //     if ($product->pivot->product_type != '0') {
-            //         $mystock_price += ($product->min_price * $product->pivot->stock);
+            // foreach ($order->vendor_orders as $vendor_order) {
+            //     if ($vendor_order->status == 'Waiting for the order amount to be released') {
+            //         changeOutStandingBalance($vendor_order->user, $vendor_order->total_price, $vendor_order->id, $status, 'sub');
+            //     } else {
+            //         changeAvailableBalance($vendor_order->user, $vendor_order->total_price, $vendor_order->id, $status, 'sub');
             //     }
             // }
 
-            changeAvailableBalance($order->user, $order->total_commission, $order->id, $order->status, 'sub');
+            foreach ($order->products as $product) {
+
+                if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+
+                    Stock::create([
+                        'product_combination_id' => $product->pivot->product_combination_id,
+                        'product_id' => $product->id,
+                        'warehouse_id' => setting('warehouse_id'),
+                        'qty' => $product->pivot->qty,
+                        'stock_status' => 'IN',
+                        'stock_type' => 'Order',
+                        'reference_id' => $order->id,
+                        'reference_price' => productPrice($product, $product->pivot->product_combination_id),
+                        'created_by' => Auth::check() ? Auth::id() : null,
+                    ]);
+                }
+            }
+
+            // changeAvailableBalance($order->user, $order->total_commission, $order->id, $order->status, 'sub');
         }
 
         if ($status == 'delivered') {
@@ -145,23 +140,23 @@ class OrdersController extends Controller
             //     }
             // }
 
-            changeOutStandingBalance($order->user, $order->total_commission, $order->id, $order->status, 'sub');
-            changeAvailableBalance($order->user, $order->total_commission, $order->id, $order->status, 'add');
+            // changeOutStandingBalance($order->user, $order->total_commission, $order->id, $order->status, 'sub');
+            // changeAvailableBalance($order->user, $order->total_commission, $order->id, $order->status, 'add');
         }
 
-        foreach ($order->vendor_orders as $vendor_order) {
+        // foreach ($order->vendor_orders as $vendor_order) {
 
-            $vendor_order->update([
-                'status' => $status == 'delivered' ? 'Waiting for the order amount to be released' : $status,
-            ]);
+        //     $vendor_order->update([
+        //         'status' => $status == 'delivered' ? 'Waiting for the order amount to be released' : $status,
+        //     ]);
 
-            $title_ar = 'اشعار من الإدارة';
-            $body_ar = "تم تغيير حالة الطلب الخاص بك الى " . getArabicStatus($vendor_order->status);
-            $title_en = 'Notification From Admin';
-            $body_en  = "Your order status has been changed to " . $vendor_order->status;
-            $url = route('vendor.orders.index');
-            addNoty($vendor_order->user, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
-        }
+        //     $title_ar = 'اشعار من الإدارة';
+        //     $body_ar = "تم تغيير حالة الطلب الخاص بك الى " . getArabicStatus($vendor_order->status);
+        //     $title_en = 'Notification From Admin';
+        //     $body_en  = "Your order status has been changed to " . $vendor_order->status;
+        //     $url = route('vendor.orders.index');
+        //     addNoty($vendor_order->user, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
+        // }
     }
 
 

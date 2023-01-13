@@ -630,6 +630,12 @@ class ProductsController extends Controller
         return view('Dashboard.products.stock ')->with('product', $product)->with('warehouses', $warehouses);
     }
 
+    public function stockProductCreate()
+    {
+        $warehouses = Warehouse::all();
+        $product = Product::findOrFail(request()->product);
+        return view('Dashboard.products.stock ')->with('product', $product)->with('warehouses', $warehouses);
+    }
 
     public function stockStore(Request $request, Product $product)
     {
@@ -670,20 +676,37 @@ class ProductsController extends Controller
             if ($request->qty[$index] > 0) {
 
 
+
                 if ($request->sale_price[$index] <= $request->discount_price[$index]) {
                     alertError('discount price must be lower than regular price', 'يجب ان يكون سعر الخصم اقل من السعر العادي');
-                    return redirect()->back();
+                    if (url()->previous() == route('products.stock.add')) {
+                        return redirect()->route('products.stock.create', ['product' => $product->id]);
+                    } else {
+                        return redirect()->back();
+                    }
                 }
+
+
 
                 if ($request->warehouse_id[$index] == null) {
                     alertError('Please select the store to add stock quantities', 'يرجى تحديد المخزن لاضافة كميات المخزون');
-                    return redirect()->back();
+                    if (url()->previous() == route('products.stock.add')) {
+                        return redirect()->route('products.stock.create', ['product' => $product->id]);
+                    } else {
+                        return redirect()->back();
+                    }
                 }
+
+
 
                 if ($request->stock_status[$index] == 'OUT') {
                     if ($request->qty[$index] > productQuantity($product->id, $combination->id, $request->warehouse_id[$index])) {
                         alertError('There are not enough quantities in the specified warehouse for stock exchange', 'لا توجد كميات كافية في المخزن المحدد لصرف المخزون');
-                        return redirect()->back();
+                        if (url()->previous() == route('products.stock.add')) {
+                            return redirect()->route('products.stock.create', ['product' => $product->id]);
+                        } else {
+                            return redirect()->back();
+                        }
                     }
                 }
 
@@ -718,7 +741,12 @@ class ProductsController extends Controller
 
 
         alertSuccess('Product stock updated successfully', 'تم تحديث مخزون المنتج بنجاح');
-        return redirect()->route('products.index');
+
+        if (url()->previous() == route('products.stock.add')) {
+            return redirect()->route('stock.management.add');
+        } else {
+            return redirect()->route('products.index');
+        }
     }
 
     public function colorCreate($product)

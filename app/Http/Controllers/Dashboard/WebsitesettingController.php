@@ -78,9 +78,48 @@ class WebsitesettingController extends Controller
             'copyright_text_en' => "nullable|string",
             'order_success_ar' => "nullable|string",
             'order_success_en' => "nullable|string",
+            'about_banar' => "nullable|image",
+            'about_title_ar' => "nullable|string",
+            'about_title_en' => "nullable|string",
+            'about_description_ar' => "nullable|string",
+            'about_description_en' => "nullable|string",
 
         ]);
 
+
+        $setting = WebsiteSetting::where('type', 'about')->first();
+        if ($setting == null) {
+            $setting = WebsiteSetting::create([
+                'type' => 'about',
+                'value_ar' => $request['about_title_ar'],
+                'value_en' => $request['about_title_en'],
+                'description_ar' => $request['about_description_ar'],
+                'description_en' => $request['about_description_en'],
+            ]);
+            if ($request->hasFile('about_banar')) {
+                $media_id = saveMedia('image', $request['about_banar'], 'settings');
+                $setting->update([
+                    'media_id' => $media_id,
+                ]);
+            }
+        } else {
+            $setting->update([
+                'value_ar' => $request['about_title_ar'],
+                'value_en' => $request['about_title_en'],
+                'description_ar' => $request['about_description_ar'],
+                'description_en' => $request['about_description_en'],
+            ]);
+            if ($request->hasFile('about_banar')) {
+
+                if ($setting->media_id != null) {
+                    deleteImage($setting->media_id);
+                }
+                $media_id = saveMedia('image', $request['about_banar'], 'settings');
+                $setting->update([
+                    'media_id' => $media_id,
+                ]);
+            }
+        }
 
 
         $setting = WebsiteSetting::where('type', 'order_success')->first();

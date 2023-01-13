@@ -63,10 +63,10 @@
                                     @foreach ($order->products as $index => $product)
                                         <tr>
                                             <th scope="row">{{ $index }}</th>
-                                            <td>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
-                                                {{ getCProductVariations(getCombination($product->pivot->product_combination_id)) }}
+                                            <td>{{ getProductName($product, getCombination($product->pivot->product_combination_id)) }}
 
-                                                @if ($product->product_type == 'digital')
+
+                                                @if ($product->product_type == 'digital' && $order->payment_status == 'Paid')
                                                     <a href="{{ route('ecommerce.download', ['product_file' => $product->digital_file]) }}"
                                                         class="btn btn-solid btn-sm btn-xs me-3 m-2"
                                                         type="button">{{ __('Download files') }}

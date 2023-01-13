@@ -83,10 +83,9 @@
                                 <div class="col-3 order_detail">
                                     <div>
                                         <h4>{{ __('product name') }}</h4>
-                                        <h5>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
-                                            {{ getCProductVariations(getCombination($product->pivot->product_combination_id)) }}
+                                        <h5>{{ getProductName($product, getCombination($product->pivot->product_combination_id)) }}
                                         </h5>
-                                        @if ($product->product_type == 'digital')
+                                        @if ($product->product_type == 'digital' && $order->payment_status == 'Paid')
                                             <a href="{{ route('ecommerce.download', ['product_file' => $product->digital_file]) }}"
                                                 class="btn btn-solid btn-sm btn-xs me-3 m-2"
                                                 type="button">{{ __('Download files') }}

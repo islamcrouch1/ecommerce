@@ -77,4 +77,8 @@ Route::group(['prefix' => 'ecommerce'], function () {
     Route::post('/change-password', [UserController::class, 'changePassword'])->name('ecommerce.password.change')->middleware('auth');
 
     Route::get('invoice/{order}', [PaymentController::class, 'invoice'])->name('ecommerce.invoice');
+    Route::get('about-us', [HomeController::class, 'about'])->name('ecommerce.about');
+    Route::get('terms', [HomeController::class, 'terms'])->name('ecommerce.terms');
+
+    Route::post('product-search', [ProductController::class, 'search'])->name('ecommerce.product.search');
 });

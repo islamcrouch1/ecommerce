@@ -37,6 +37,7 @@
     <!-- Home slider end -->
 
 
+
     <!-- collection banner -->
     <section class="pt-0 ratio3_2">
         <div class="container-fluid p-0">

@@ -29,15 +29,15 @@
                     <div class="col-lg-2 col-md-6">
                         <div class="sub-title">
                             <div class="footer-title">
-                                <h4>my account</h4>
+                                <h4>{{ __('Categories') }}</h4>
                             </div>
                             <div class="footer-contant">
                                 <ul>
-                                    <li><a href="#">mens</a></li>
-                                    <li><a href="#">womens</a></li>
-                                    <li><a href="#">clothing</a></li>
-                                    <li><a href="#">accessories</a></li>
-                                    <li><a href="#">featured</a></li>
+                                    @foreach (getCategories() as $category)
+                                        <li><a href="{{ route('ecommerce.products', ['category' => $category->id]) }}">
+                                                {{ getName($category) }}
+                                            </a></li>
+                                    @endforeach
                                 </ul>
                             </div>
                         </div>
@@ -45,15 +45,15 @@
                     <div class="col-lg-2 col-md-6">
                         <div class="sub-title">
                             <div class="footer-title">
-                                <h4>information</h4>
+                                <h4>{{ __('Brands') }}</h4>
                             </div>
                             <div class="footer-contant">
                                 <ul>
-                                    <li><a href="#">shipping & return</a></li>
-                                    <li><a href="#">secure shopping</a></li>
-                                    <li><a href="#">gallary</a></li>
-                                    <li><a href="#">affiliates</a></li>
-                                    <li><a href="#">contacts</a></li>
+                                    @foreach (getBrands() as $brand)
+                                        <li><a href="{{ route('ecommerce.products', ['brand[]' => $brand->id]) }}">
+                                                {{ getName($brand) }}
+                                            </a></li>
+                                    @endforeach
                                 </ul>
                             </div>
                         </div>

@@ -10,8 +10,7 @@
                     </div>
                 </div>
                 <div class="col-sm-6">
-                    <nav style="direction: ltr; float:{{ app()->getLocale() == 'ar' ? 'left' : 'right' }}"
-                        aria-label="breadcrumb" class="theme-breadcrumb">
+                    <nav aria-label="breadcrumb" class="theme-breadcrumb">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('ecommerce.home') }}">{{ __('Home') }}</a></li>
                             <li class="breadcrumb-item active" aria-current="page">{{ __('products') }}</li>

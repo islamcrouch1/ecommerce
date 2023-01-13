@@ -17,16 +17,18 @@
     <div class="card mb-3">
         <div class="card-body">
             <div class="row align-items-center text-center mb-3">
-                <div class="col-sm-6 text-sm-start"><img src="{{ asset('assets/img/logo-blue.png') }}" alt="invoice"
-                        width="150" /></div>
+                <div class="col-sm-6 text-sm-start"><img src="{{ asset(websiteSettingMedia('header_logo')) }}"
+                        alt="invoice" width="150" /></div>
                 <div class="col text-sm-end mt-3 mt-sm-0">
                     <h2 class="mb-3">{{ __('Invoice') }}</h2>
-                    <h5>Sonoo.online</h5>
+                    <h5>{{ Request::root() }}</h5>
                     <p class="fs--1 mb-0">
-                        {{ __('3, 26th of July Street, second floor, Flat 25, in front of Al-Hawari, Lebanon Square, above the pharmacy, Dr. Amira, Al-Muhandseen') }}
+                        {{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_address') : websiteSettingEn('footer_address') }}
                     </p>
-                    <p class="fs--1 mb-0">{{ __('Phone:') }}01094666865</p>
-                    <p class="fs--1 mb-0">{{ __('Email:') }} info@coponoo.com</p>
+                    <p class="fs--1 mb-0">
+                        {{ __('Phone:') . ' ' . (websiteSettingAr('header_phone') != null ? websiteSettingAr('header_phone') : websiteSettingAr('footer_phone')) }}
+                    </p>
+                    <p class="fs--1 mb-0">{{ __('Email:') . ' ' . websiteSettingAr('footer_email') }} </p>
                 </div>
                 <div class="col-12">
                     <hr />
@@ -36,7 +38,18 @@
                 <div class="col">
                     <h6 class="text-500">{{ __('Customer Information') }}</h6>
                     <h5>{{ $order->client_name }}</h5>
-                    <p class="fs--1">{{ __('Address:') . $order->address }}<br>
+                    <p class="fs--1">
+                        {{ __('Address:') . $order->address }}<br>
+
+                        @if ($order->country_id)
+                            {{ __('Country:') . ' ' . getName($order->country) }}<br>
+                        @endif
+                        @if ($order->state_id)
+                            {{ __('State:') . ' ' . getName($order->state) }}<br>
+                        @endif
+                        @if ($order->city_id)
+                            {{ __('City:') . ' ' . getName($order->city) }}<br>
+                        @endif
                         @if ($order->house)
                             {{ __('House:') . $order->house }}<br>
                         @endif
@@ -46,7 +59,10 @@
                         @if ($order->phone2)
                             {{ __('Alternate Phone:') . $order->phone2 }}<br>
                         @endif
-                        {{ __('Notes:') . $order->notes }}<br>
+                        @if ($order->notes)
+                            {{ __('Notes:') . $order->notes }}<br>
+                        @endif
+
                     </p>
                     <p class="fs--1"><a href="tel:{{ $order->client_phone }}">{{ $order->client_phone }}</a>
                     </p>
@@ -65,7 +81,7 @@
                                 </tr>
                                 <tr>
                                     <th class="text-sm-end">{{ __('Shipping Cost:') }}</th>
-                                    <td>{{ $order->shipping . ' ' . $order->country->currency }}</td>
+                                    <td>{{ $order->shipping_amount . ' ' . $order->country->currency }}</td>
                                 </tr>
                                 <tr class="alert-success fw-bold">
                                     <th class="text-sm-end">{{ __('Total Price:') }}</th>
@@ -84,8 +100,9 @@
                             <th class="border-0">{{ __('Products') }}</th>
                             <th class="border-0 text-center">{{ __('Quantity') }}</th>
                             <th class="border-0 text-end">{{ __('Item Price') }}</th>
-                            <th class="border-0 text-end">{{ __('Affiliate Profit') }}</th>
-                            <th class="border-0 text-end">{{ __('Sonoo Profit') }}</th>
+                            <th class="border-0 text-end">{{ __('Total Price') }}</th>
+                            {{-- <th class="border-0 text-end">{{ __('Affiliate Profit') }}</th>
+                            <th class="border-0 text-end">{{ __('plateform Profit') }}</th> --}}
                         </tr>
                     </thead>
                     <tbody>
@@ -93,33 +110,27 @@
                             <tr>
                                 <td class="align-middle">
                                     <h6 class="mb-0 text-nowrap">
-                                        {{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</h6>
-                                    <span class="badge badge-soft-info">
-                                        @if ($product->pivot->product_type == '0')
-                                            {{ app()->getLocale() == 'ar' ? $product->stocks->find($product->pivot->stock_id)->color->color_ar : $product->stocks->find($product->pivot->stock_id)->color->color_en }}
-                                        @else
-                                            {{ app()->getLocale() == 'ar' ? $product->astocks->find($product->pivot->stock_id)->color->color_ar : $product->astocks->find($product->pivot->stock_id)->color->color_en }}
-                                        @endif
-                                    </span>
-                                    <span class="badge badge-soft-info">
-                                        @if ($product->pivot->product_type == '0')
-                                            {{ app()->getLocale() == 'ar' ? $product->stocks->find($product->pivot->stock_id)->size->size_ar : $product->stocks->find($product->pivot->stock_id)->size->size_en }}
-                                        @else
-                                            {{ app()->getLocale() == 'ar' ? $product->astocks->find($product->pivot->stock_id)->size->size_ar : $product->astocks->find($product->pivot->stock_id)->size->size_en }}
-                                        @endif
-                                    </span>
+                                        {{ getProductName($product, getCombination($product->pivot->product_combination_id)) }}
+                                    </h6>
+
 
                                     <span class="badge badge-soft-info">
-                                        SKU:{{ $product->sku }}
+                                        @if ($product->product_type == 'digital' || $product->product_type == 'service')
+                                            SKU:{{ $product->sku }}
+                                        @else
+                                            SKU:{{ getCombination($product->pivot->product_combination_id)->sku }}
+                                        @endif
                                     </span>
                                 </td>
-                                <td class="align-middle text-center">{{ $product->pivot->quantity }}</td>
+                                <td class="align-middle text-center">{{ $product->pivot->qty }}</td>
                                 <td class="align-middle text-end">
-                                    {{ $product->pivot->selling_price . ' ' . $product->country->currency }}</td>
+                                    {{ $product->pivot->product_price . ' ' . $product->country->currency }}</td>
                                 <td class="align-middle text-end">
+                                    {{ $product->pivot->total . ' ' . $product->country->currency }}</td>
+                                {{-- <td class="align-middle text-end">
                                     {{ $product->pivot->commission_per_item . ' ' . $product->country->currency }}</td>
                                 <td class="align-middle text-end">
-                                    {{ $product->pivot->profit_per_item . ' ' . $product->country->currency }}</td>
+                                    {{ $product->pivot->profit_per_item . ' ' . $product->country->currency }}</td> --}}
                             </tr>
                         @endforeach
                     </tbody>
@@ -130,16 +141,16 @@
                     <table class="table table-sm table-borderless fs--1 text-end">
                         <tr>
                             <th class="text-900">{{ __('Subtotal:') }}</th>
-                            <td class="fw-semi-bold">{{ $order->total_price . ' ' . $order->country->currency }}</td>
+                            <td class="fw-semi-bold">{{ $order->subtotal_price . ' ' . $order->country->currency }}</td>
                         </tr>
                         <tr>
                             <th class="text-900">{{ __('Shipping Cost:') }}</th>
-                            <td class="fw-semi-bold">{{ $order->shipping . ' ' . $order->country->currency }}</td>
+                            <td class="fw-semi-bold">{{ $order->shipping_amount . ' ' . $order->country->currency }}</td>
                         </tr>
                         <tr class="border-top">
                             <th class="text-900">{{ __('Total:') }}</th>
                             <td class="fw-semi-bold">
-                                {{ $order->shipping + $order->total_price . ' ' . $order->country->currency }}</td>
+                                {{ $order->total_price . ' ' . $order->country->currency }}</td>
                         </tr>
                     </table>
                 </div>

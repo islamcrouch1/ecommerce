@@ -18,6 +18,11 @@ class ProductCombination extends Model
         return $this->hasMany(ProductCombinationDtl::class);
     }
 
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
     public function stocks()
     {
         return $this->hasMany(Stock::class, 'product_combination_id');
@@ -26,5 +31,15 @@ class ProductCombination extends Model
     public function media()
     {
         return $this->belongsTo(Media::class);
+    }
+
+
+
+
+    public function scopeWhenProduct($query, $product)
+    {
+        return $query->when($product, function ($q) use ($product) {
+            return $q->where('product_id', 'like', "$product");
+        });
     }
 }

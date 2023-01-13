@@ -33,13 +33,13 @@
                     <div class="col-sm-12">
                         <div class="main-menu">
                             <div class="menu-left">
-                                <div class="navbar d-block d-xl-none">
+                                {{-- <div class="navbar d-block d-xl-none">
                                     <a href="javascript:void(0)">
                                         <div class="bar-style" id="toggle-sidebar-res"><i class="fa fa-bars sidebar-bar"
                                                 aria-hidden="true"></i>
                                         </div>
                                     </a>
-                                </div>
+                                </div> --}}
                                 <div class="brand-logo">
                                     <a href="{{ route('ecommerce.home') }}"><img style="width:179px"
                                             src="{{ asset(websiteSettingMedia('header_logo')) }}"
@@ -120,15 +120,16 @@
                                     <!-- Sample menu definition -->
                                     <ul class="sm pixelstrap sm-horizontal">
                                         <li>
-                                            <div class="mobile-back text-end">Back<i class="fa fa-angle-right ps-2"
+                                            <div class="mobile-back text-end">{{ __('Back') }}<i
+                                                    class="fa fa-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }} ps-2 p-1"
                                                     aria-hidden="true"></i></div>
                                         </li>
                                         <li><a href="{{ route('ecommerce.home') }}">{{ __('Home') }}</a></li>
                                         <li><a
                                                 href="{{ route('ecommerce.products', ['category' => null]) }}">{{ __('products') }}</a>
                                         </li>
-                                        <li><a href="#">brands</a> </li>
-                                        <li><a href="#">about us</a></li>
+                                        <li><a href="#">{{ __('brands') }}</a> </li>
+                                        <li><a href="#">{{ __('about us') }}</a></li>
                                     </ul>
                                 </nav>
                             </div>
@@ -737,18 +738,29 @@
                                         class="img-fluid blur-up lazyload" alt=""></a>
                             </div>
                         </div>
-                        <div>
-                            <form action={{ route('ecommerce.products') }} class="form_search ajax-search the-basics"
+                        <div class="ajax-search" style="position:relative">
+                            <form action={{ route('ecommerce.products') }} class="form_search the-basics"
                                 role="form">
-                                <input style="{{ app()->getLocale() == 'ar' ? 'direction:rtl;' : '' }}"
-                                    type="search" name="search" value="{{ request()->search }}"
+                                <input data-locale="{{ app()->getLocale() }}"
+                                    data-url="{{ route('ecommerce.product.search') }}"
+                                    style="{{ app()->getLocale() == 'ar' ? 'direction:rtl;' : '' }}" type="text"
+                                    name="search" value="{{ request()->search }}"
                                     placeholder="{{ __('Search any product...') }}"
-                                    class="nav-search nav-search-field typeahead" aria-expanded="true">
+                                    class="nav-search nav-search-field search-input typeahead" aria-expanded="true">
                                 <button type="submit" class="btn-search">
                                     <i class="ti-search"></i>
                                 </button>
                             </form>
+                            <div style="position: absolute;
+                            width:100%;
+                            background-color: #ffffff;
+                            margin-top: 10px;
+                            border-radius: 10px;
+                            padding:15px;
+                            display:none"
+                                class="search-result tt-menu"></div>
                         </div>
+
                         <div class="menu-right pull-right">
                             <nav class="text-start">
                                 <div class="toggle-nav"><i class="fa fa-bars sidebar-bar"></i></div>
@@ -776,30 +788,44 @@
                                                     onclick="openSearch()" class="img-fluid blur-up lazyload"
                                                     alt=""> <i class="ti-search" onclick="openSearch()"></i>
                                             </div>
-                                            {{-- <div id="search-overlay" class="search-overlay">
+                                            <div id="search-overlay" class="search-overlay">
                                                 <div> <span class="closebtn" onclick="closeSearch()"
                                                         title="Close Overlay">×</span>
                                                     <div class="overlay-content">
                                                         <div class="container">
                                                             <div class="row">
-                                                                <div class="col-xl-12">
-                                                                    <form class="ajax-search">
+                                                                <div style="position:relative"
+                                                                    class="ajax-search col-xl-12">
+                                                                    <form action={{ route('ecommerce.products') }}
+                                                                        class="">
                                                                         <div class="form-group the-basics">
-                                                                            <input type="text"
-                                                                                class="form-control typeahead"
-                                                                                id="exampleInputPassword1"
-                                                                                placeholder="Search a Product">
+                                                                            <input
+                                                                                data-locale="{{ app()->getLocale() }}"
+                                                                                data-url="{{ route('ecommerce.product.search') }}"
+                                                                                style="{{ app()->getLocale() == 'ar' ? 'direction:rtl;' : '' }}"
+                                                                                type="text" name="search"
+                                                                                value="{{ request()->search }}"
+                                                                                placeholder="{{ __('Search any product...') }}"
+                                                                                class="form-control search-input typeahead">
                                                                         </div>
                                                                         <button type="submit"
                                                                             class="btn btn-primary"><i
                                                                                 class="fa fa-search"></i></button>
                                                                     </form>
+                                                                    <div style="position: absolute;
+                                                                            width:100%;
+                                                                            margin-top: 10px;
+                                                                            border-radius: 10px;
+                                                                            padding:15px;
+                                                                            display:none"
+                                                                        class="search-result tt-menu">
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div> --}}
+                                            </div>
                                         </li>
                                         <li class="onhover-div mobile-setting">
                                             <div>
@@ -935,7 +961,7 @@
                                 </div>
                                 <ul id="sub-menu" class="sm pixelstrap sm-vertical">
 
-                                    @foreach ($categories as $category)
+                                    @foreach (getCategories() as $category)
                                         <li> <a
                                                 href="{{ route('ecommerce.products', ['category' => $category->id]) }}">{{ app()->getLocale() == 'ar' ? $category->name_ar : $category->name_en }}</a>
                                             @if ($category->children->count() > 0)
@@ -959,7 +985,8 @@
                                 <!-- Sample menu definition -->
                                 <ul id="main-menu" class="sm pixelstrap sm-horizontal">
                                     <li>
-                                        <div class="mobile-back text-end">Back<i class="fa fa-angle-right ps-2"
+                                        <div class="mobile-back text-end">{{ __('Back') }}<i
+                                                class="fa fa-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }} ps-2 p-1"
                                                 aria-hidden="true"></i></div>
                                     </li>
                                     <li><a href="{{ route('ecommerce.home') }}">{{ __('Home') }}</a></li>
@@ -969,10 +996,17 @@
 
                                     </li>
                                     <li>
-                                        <a href="#">brands</a>
-
+                                        <a href="#">{{ __('brands') }}</a>
+                                        <ul>
+                                            @foreach (getBrands() as $brand)
+                                                <li><a
+                                                        href="{{ route('ecommerce.products', ['brand[]' => $brand->id]) }}">{{ getName($brand) }}</a>
+                                                </li>
+                                            @endforeach
+                                        </ul>
                                     </li>
-                                    <li><a href="#">about us</a>
+
+                                    <li><a href="{{ route('ecommerce.about') }}">{{ __('about us') }}</a>
 
                                     </li>
 

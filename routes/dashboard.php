@@ -23,6 +23,7 @@ use App\Http\Controllers\Dashboard\SizesController;
 use App\Http\Controllers\Dashboard\SlidesController;
 use App\Http\Controllers\Dashboard\StatesController;
 use App\Http\Controllers\Dashboard\StockController;
+use App\Http\Controllers\Dashboard\StockTransferController;
 use App\Http\Controllers\Dashboard\UsersController;
 use App\Http\Controllers\Dashboard\VariationsController;
 use App\Http\Controllers\Dashboard\WarehousesController;
@@ -98,6 +99,10 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::get('/trashed-warehouses/{warehouse}', [WarehousesController::class, 'restore'])->name('warehouses.restore')->middleware('auth', 'checkverified', 'checkstatus');
 
 
+    // stock transfer routes
+    Route::resource('stock_transfers', StockTransferController::class)->middleware('auth', 'checkverified', 'checkstatus');
+
+
     // settings route
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('/settings', [SettingController::class, 'store'])->name('settings.store')->middleware('auth', 'checkverified', 'checkstatus');
@@ -114,6 +119,7 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::get('/trashed-products', [ProductsController::class, 'trashed'])->name('products.trashed')->middleware('auth', 'checkverified', 'checkstatus');
     Route::get('/trashed-products/{product}', [ProductsController::class, 'restore'])->name('products.restore')->middleware('auth', 'checkverified', 'checkstatus');
     Route::get('/products/stock/{product}', [ProductsController::class, 'stockCreate'])->name('products.stock.create')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('/products/stock/create', [ProductsController::class, 'stockProductCreate'])->name('products.stock.add')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('/products/stock-store/{product}', [ProductsController::class, 'stockStore'])->name('products.stock.store')->middleware('auth', 'checkverified', 'checkstatus');
     Route::get('/products/color/{product}', [ProductsController::class, 'colorCreate'])->name('products.color.create')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('/products/color-store/{product}', [ProductsController::class, 'colorStore'])->name('products.color.store')->middleware('auth', 'checkverified', 'checkstatus');
@@ -185,7 +191,11 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
 
     // stock management routes
     Route::get('stock/management', [StockController::class, 'index'])->name('stock.management.index')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('stock/add', [StockController::class, 'atockAdd'])->name('stock.management.add')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('stock/list', [StockController::class, 'stockList'])->name('stock.management.list')->middleware('auth', 'checkverified', 'checkstatus');
 
+    Route::post('stock/search', [StockController::class, 'search'])->name('stock.management.search')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('stock/combination', [StockTransferController::class, 'search'])->name('stock.management.com')->middleware('auth', 'checkverified', 'checkstatus');
 
 
 

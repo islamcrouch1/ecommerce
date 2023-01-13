@@ -64,6 +64,18 @@ class HomeController extends Controller
     }
 
 
+
+    public function about(Request $request)
+    {
+        return view('ecommerce.about');
+    }
+
+    public function terms(Request $request)
+    {
+        return view('ecommerce.terms');
+    }
+
+
     public function getProductPrice(Request $request)
     {
 

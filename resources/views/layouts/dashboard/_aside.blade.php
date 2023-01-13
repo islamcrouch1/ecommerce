@@ -20,7 +20,7 @@
     </div>
     <div class="collapse navbar-collapse" id="navbarVerticalCollapse">
         <div class="navbar-vertical-content scrollbar">
-            <ul class="navbar-nav flex-column mb-3" id="navbarVerticalNav">
+            <ul style="padding-bottom: 55px" class="navbar-nav flex-column mb-3" id="navbarVerticalNav">
 
                 @if (Auth::user()->hasRole('administrator|superadministrator'))
                     <li class="nav-item">
@@ -54,6 +54,19 @@
                                 </div>
                             </a>
                         @endif
+
+                    </li>
+
+                    <li class="nav-item">
+                        <!-- label-->
+                        <div class="row navbar-vertical-label-wrapper mt-3 mb-2">
+                            <!-- users - roles - countries - settings -->
+                            <div class="col-auto navbar-vertical-label">{{ __('Countries && Shipping') }}
+                            </div>
+                            <div class="col ps-0">
+                                <hr class="mb-0 navbar-vertical-divider" />
+                            </div>
+                        </div>
 
                         @if (auth()->user()->hasPermission('countries-read'))
                             <!-- parent pages--><a class="nav-link {{ Route::is('countries*') ? 'active' : '' }}"
@@ -145,7 +158,7 @@
                             </a>
                         @endif
 
-                        @if (auth()->user()->hasPermission('bonus-read'))
+                        {{-- @if (auth()->user()->hasPermission('bonus-read'))
                             <!-- parent pages--><a class="nav-link {{ Route::is('bonus*') ? 'active' : '' }}"
                                 href="{{ route('bonus.index') }}" role="button" data-bs-toggle=""
                                 aria-expanded="false">
@@ -154,7 +167,7 @@
                                         class="nav-link-text ps-1">{{ __('Bonus') }}</span>
                                 </div>
                             </a>
-                        @endif
+                        @endif --}}
 
                         @if (auth()->user()->hasPermission('messages-read'))
                             <!-- parent pages--><a class="nav-link {{ Route::is('messages*') ? 'active' : '' }}"
@@ -177,11 +190,13 @@
                         </a>
 
                     </li>
+
+
                     <li class="nav-item">
                         <!-- label-->
                         <div class="row navbar-vertical-label-wrapper mt-3 mb-2">
                             <!-- users - roles - countries - settings -->
-                            <div class="col-auto navbar-vertical-label">{{ __('Products') }}
+                            <div class="col-auto navbar-vertical-label">{{ __('Products && categories') }}
                             </div>
                             <div class="col ps-0">
                                 <hr class="mb-0 navbar-vertical-divider" />
@@ -231,18 +246,6 @@
                             </a>
                         @endif
 
-                        @if (auth()->user()->hasPermission('warehouses-read'))
-                            <!-- parent pages--><a class="nav-link {{ Route::is('warehouses*') ? 'active' : '' }}"
-                                href="{{ route('warehouses.index') }}" role="button" data-bs-toggle=""
-                                aria-expanded="false">
-                                <div class="d-flex align-items-center"><span class="nav-link-icon"><span
-                                            class="fas fa-sitemap"></span></span><span
-                                        class="nav-link-text ps-1">{{ __('warehouses') }}</span>
-                                </div>
-                            </a>
-                        @endif
-
-
 
                         @if (auth()->user()->hasPermission('products-read'))
                             <!-- parent pages--><a class="nav-link {{ Route::is('products*') ? 'active' : '' }}"
@@ -255,35 +258,62 @@
                             </a>
                         @endif
 
-                        @if (auth()->user()->hasPermission('colors-read'))
-                            <!-- parent pages--><a class="nav-link {{ Route::is('colors*') ? 'active' : '' }}"
-                                href="{{ route('colors.index') }}" role="button" data-bs-toggle=""
+                    </li>
+
+                    <li class="nav-item">
+                        <!-- label-->
+                        <div class="row navbar-vertical-label-wrapper mt-3 mb-2">
+                            <!-- users - roles - countries - settings -->
+                            <div class="col-auto navbar-vertical-label">{{ __('Warehouses Management') }}
+                            </div>
+                            <div class="col ps-0">
+                                <hr class="mb-0 navbar-vertical-divider" />
+                            </div>
+                        </div>
+
+                        @if (auth()->user()->hasPermission('warehouses-read'))
+                            <!-- parent pages--><a class="nav-link {{ Route::is('warehouses*') ? 'active' : '' }}"
+                                href="{{ route('warehouses.index') }}" role="button" data-bs-toggle=""
                                 aria-expanded="false">
                                 <div class="d-flex align-items-center"><span class="nav-link-icon"><span
-                                            class="fas fa-paint-brush"></span></span><span
-                                        class="nav-link-text ps-1">{{ __('Colors') }}</span>
+                                            class="fas fa-sitemap"></span></span><span
+                                        class="nav-link-text ps-1">{{ __('warehouses') }}</span>
                                 </div>
                             </a>
                         @endif
 
-                        @if (auth()->user()->hasPermission('sizes-read'))
-                            <!-- parent pages--><a class="nav-link {{ Route::is('sizes*') ? 'active' : '' }}"
-                                href="{{ route('sizes.index') }}" role="button" data-bs-toggle=""
+                        @if (auth()->user()->hasPermission('stock_management-read'))
+                            <!-- parent pages--><a
+                                class="nav-link {{ Route::is('stock.management.add*') ? 'active' : '' }}"
+                                href="{{ route('stock.management.add') }}" role="button" data-bs-toggle=""
                                 aria-expanded="false">
                                 <div class="d-flex align-items-center"><span class="nav-link-icon"><span
-                                            class="fas fa-th"></span></span><span
-                                        class="nav-link-text ps-1">{{ __('Sizes') }}</span>
+                                            class="fas fa-layer-group"></span></span><span
+                                        class="nav-link-text ps-1">{{ __('Add Stock') }}</span>
                                 </div>
                             </a>
                         @endif
 
-                        @if (auth()->user()->hasPermission('shipping_rates-read'))
-                            <!-- parent pages--><a class="nav-link {{ Route::is('shipping_rates*') ? 'active' : '' }}"
-                                href="{{ route('shipping_rates.index') }}" role="button" data-bs-toggle=""
+                        @if (auth()->user()->hasPermission('stock_management-read'))
+                            <!-- parent pages--><a
+                                class="nav-link {{ Route::is('stock.management.list*') ? 'active' : '' }}"
+                                href="{{ route('stock.management.list') }}" role="button" data-bs-toggle=""
                                 aria-expanded="false">
                                 <div class="d-flex align-items-center"><span class="nav-link-icon"><span
-                                            class="fas fa-truck"></span></span><span
-                                        class="nav-link-text ps-1">{{ __('Shipping Rates') }}</span>
+                                            class="fas fa-layer-group"></span></span><span
+                                        class="nav-link-text ps-1">{{ __('Stocks Lists') }}</span>
+                                </div>
+                            </a>
+                        @endif
+
+                        @if (auth()->user()->hasPermission('stock_management-read'))
+                            <!-- parent pages--><a
+                                class="nav-link {{ Route::is('stock_transfers.create*') ? 'active' : '' }}"
+                                href="{{ route('stock_transfers.create') }}" role="button" data-bs-toggle=""
+                                aria-expanded="false">
+                                <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                            class="fas fa-layer-group"></span></span><span
+                                        class="nav-link-text ps-1">{{ __('Stock Transfers') }}</span>
                                 </div>
                             </a>
                         @endif
@@ -295,7 +325,7 @@
                                 aria-expanded="false">
                                 <div class="d-flex align-items-center"><span class="nav-link-icon"><span
                                             class="fas fa-layer-group"></span></span><span
-                                        class="nav-link-text ps-1">{{ __('Stock Management') }}</span>
+                                        class="nav-link-text ps-1">{{ __('Stock Shortages') }}</span>
                                 </div>
                             </a>
                         @endif
@@ -324,7 +354,7 @@
                             </a>
                         @endif
 
-                        @if (auth()->user()->hasPermission('orders-read'))
+                        {{-- @if (auth()->user()->hasPermission('orders-read'))
                             <!-- parent pages--><a class="nav-link {{ Route::is('orders-vendor*') ? 'active' : '' }}"
                                 href="{{ route('orders-vendor') }}" role="button" data-bs-toggle=""
                                 aria-expanded="false">
@@ -333,12 +363,12 @@
                                         class="nav-link-text ps-1">{{ __('Vendors Orders') }}</span>
                                 </div>
                             </a>
-                        @endif
+                        @endif --}}
 
                     </li>
 
 
-                    <li class="nav-item">
+                    {{-- <li class="nav-item">
                         <!-- label-->
                         <div class="row navbar-vertical-label-wrapper mt-3 mb-2">
                             <!-- Orders -  -->
@@ -370,10 +400,10 @@
                             </a>
                         @endif
 
-                    </li>
+                    </li> --}}
                 @endif
 
-                @if (Auth::user()->hasRole('affiliate'))
+                {{-- @if (Auth::user()->hasRole('affiliate'))
                     <li class="nav-item">
                         <!-- label-->
                         <div class="row navbar-vertical-label-wrapper mt-3 mb-2">
@@ -581,7 +611,7 @@
                             </div>
                         </a>
                     </li>
-                @endif
+                @endif --}}
 
             </ul>
 

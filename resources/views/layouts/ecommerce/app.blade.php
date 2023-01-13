@@ -68,6 +68,10 @@
                 font-family: cairo !important;
                 letter-spacing: -0.6px !important;
             }
+
+            .breadcrumb-item+.breadcrumb-item::before {
+                float: right;
+            }
         </style>
     @endif
 
@@ -167,8 +171,6 @@
 
 
 
-
-
     {{-- <script src="{{ asset('vendors/anchorjs/anchor.min.js') }}"></script>
     <script src="{{ asset('vendors/lodash/lodash.min.js') }}"></script>
     <script src="{{ asset('assets/js/theme.js') }}"></script>
@@ -177,21 +179,7 @@
 
 
 
-    <script>
-        /* $(window).on('load', function() {
-                                        setTimeout(function() {
-                                            $('#exampleModal').modal('show');
-                                        }, 2500);
-                                    }); */
 
-        function openSearch() {
-            document.getElementById("search-overlay").style.display = "block";
-        }
-
-        function closeSearch() {
-            document.getElementById("search-overlay").style.display = "none";
-        }
-    </script>
 
 
     <script>

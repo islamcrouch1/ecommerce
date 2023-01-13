@@ -10,8 +10,7 @@
                     </div>
                 </div>
                 <div class="col-sm-6">
-                    <nav style="direction: ltr; float:{{ app()->getLocale() == 'ar' ? 'left' : 'right' }}"
-                        aria-label="breadcrumb" class="theme-breadcrumb">
+                    <nav aria-label="breadcrumb" class="theme-breadcrumb">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('ecommerce.home') }}">{{ __('Home') }}</a></li>
                             <li class="breadcrumb-item active" aria-current="page">{{ __('create account') }}</li>
@@ -113,9 +112,9 @@
                                         class="form-check-input @error('check') is-invalid @enderror" type="checkbox"
                                         id="check" name="check" required />
                                     <span class="p-4" for="check">{{ __('I accept the') }} <a
-                                            href="{{ route('front.terms') }}">{{ __('terms') }}
+                                            href="{{ route('ecommerce.terms') }}">{{ __('terms') }}
                                         </a>{{ __('and') }} <a
-                                            href="{{ route('front.terms') }}">{{ __('privacy policy') }}</a></span>
+                                            href="{{ route('ecommerce.terms') }}">{{ __('privacy policy') }}</a></span>
                                     @error('check')
                                         <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror

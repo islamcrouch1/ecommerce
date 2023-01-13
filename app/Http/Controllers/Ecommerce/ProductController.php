@@ -49,6 +49,30 @@ class ProductController extends Controller
     }
 
 
+    public function search(Request $request)
+    {
+
+        $search = $request->search;
+
+        $products = Product::where('status', "active")
+            ->where('country_id', setting('country_id'))
+            ->whenSearch($search)
+            ->get();
+
+
+        foreach ($products as $product) {
+            $product->url = route('ecommerce.product', ['product' => $product->id]);
+            $product->image = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
+        }
+
+        $data = [];
+        $data['status'] = 1;
+        $data['elements'] = $products;
+
+
+        return $data;
+    }
+
     public function products(Request $request)
     {
 

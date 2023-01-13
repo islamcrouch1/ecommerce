@@ -7,7 +7,7 @@
             <div class="row flex-between-center">
                 <div class="col-2 col-sm-auto d-flex align-items-center pe-0">
                     <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
-                        {{ __('Stock Shortages') }}
+                        {{ __('Stocks Lists') }}
                     </h5>
                 </div>
 
@@ -18,7 +18,7 @@
                         <form id="filter-form" style="display: inline-block" action="">
 
                             <div class="row">
-                                <div class="col-md-5">
+                                <div class="col-md-3">
                                     <div class="">
                                         <select name="warehouse_id" class="form-select form-select-sm sonoo-search"
                                             id="autoSizingSelect">
@@ -35,7 +35,22 @@
 
                                 </div>
 
-                                <div class="col-md-7">
+                                <div class="col-md-3">
+                                    <div class="">
+                                        <select name="search" class="form-select form-select-sm sonoo-search"
+                                            id="autoSizingSelect">
+                                            <option value="">{{ __('All Status') }}</option>
+                                            <option value="IN" {{ request()->search == 'IN' ? 'selected' : '' }}>
+                                                {{ __('IN') }}</option>
+                                            <option value="OUT" {{ request()->search == 'OUT' ? 'selected' : '' }}>
+                                                {{ __('OUT') }}</option>
+
+
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
                                     <div class="">
                                         <select data-url="{{ route('stock.management.search') }}"
                                             data-locale="{{ app()->getLocale() }}"
@@ -49,17 +64,35 @@
                                 </div>
                             </div>
 
+
+
+
+
+
+                            {{-- <div class="d-inline-block">
+                                <select name="country_id" class="form-select form-select-sm sonoo-search"
+                                    id="autoSizingSelect">
+                                    <option value="" selected>{{ __('All Countries') }}</option>
+                                    @foreach ($countries as $country)
+                                        <option value="{{ $country->id }}"
+                                            {{ request()->country_id == $country->id ? 'selected' : '' }}>
+                                            {{ app()->getLocale() == 'ar' ? $country->name_ar : $country->name_en }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div> --}}
+
+
                         </form>
 
 
                     </div>
                 </div>
-
             </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive scrollbar">
-                @if ($combinations->count() > 0)
+                @if ($stocks->count() > 0)
                     <table class="table table-sm table-striped fs--1 mb-0 overflow-hidden">
                         <thead class="bg-200 text-900">
                             <tr>
@@ -67,50 +100,60 @@
                                     {{ __('Product Name') }}</th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
                                     {{ __('SKU - ID') }}</th>
-
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                    {{ __('Warehouse') }}</th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                    {{ __('Status') }}</th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                     {{ __('Quantity') }}</th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
-                                    {{ __('quantity limit') }}</th>
+                                    {{ __('Type') }}</th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
                                     data-sort="joined">{{ __('Created at') }}</th>
 
                             </tr>
                         </thead>
                         <tbody class="list" id="table-customers-body">
-                            @foreach ($combinations as $com)
-                                @if ($com->product != null)
+                            @foreach ($stocks as $stock)
+                                @if ($stock->product != null)
                                     <tr class="btn-reveal-trigger">
 
                                         <td class="name align-middle white-space-nowrap py-2">
                                             <div class="d-flex d-flex align-items-center">
                                                 <div class="avatar avatar-xl me-2">
                                                     <img class="rounded-circle"
-                                                        src="{{ asset($com->product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $com->product->images[0]->media->path) }}"
+                                                        src="{{ asset($stock->product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $stock->product->images[0]->media->path) }}"
                                                         alt="" />
                                                 </div>
                                                 <div class="flex-1">
                                                     <h5 class="mb-0 fs--1">
-                                                        {{ $com->product->images->count() }}
-                                                        {{ getProductName($com->product, $com) }}
+                                                        {{ $stock->product->images->count() }}
+                                                        {{ getProductName($stock->product, getCombination($stock->product_combination_id)) }}
                                                     </h5>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="phone align-middle white-space-nowrap py-2">
-                                            {{ $com->sku . ' - ' . $com->product->id }}
+                                            {{ getCombination($stock->product_combination_id)->sku . ' - ' . $stock->product->id }}
                                         </td>
 
 
                                         <td class="phone align-middle white-space-nowrap py-2">
-                                            {{ productQuantity($com->product_id, $com->id, request()->warehouse_id) }}
+                                            {{ getName($stock->warehouse) }}
                                         </td>
                                         <td class="phone align-middle white-space-nowrap py-2">
-                                            {{ $com->limit }}
+                                            {{ __($stock->stock_status) }}
                                         </td>
 
-                                        <td class="joined align-middle py-2">{{ $com->created_at }} <br>
-                                            {{ interval($com->created_at) }} </td>
+                                        <td class="phone align-middle white-space-nowrap py-2">
+                                            {{ $stock->qty }}
+                                        </td>
+                                        <td class="phone align-middle white-space-nowrap py-2">
+                                            {{ __($stock->stock_type) }}
+                                        </td>
+
+                                        <td class="joined align-middle py-2">{{ $stock->created_at }} <br>
+                                            {{ interval($stock->created_at) }} </td>
 
 
                                     </tr>
@@ -127,7 +170,7 @@
 
 
         <div class="card-footer d-flex align-items-center justify-content-center">
-            {{ $combinations->appends(request()->query())->links() }}
+            {{ $stocks->appends(request()->query())->links() }}
         </div>
 
     </div>

@@ -88,15 +88,23 @@ class PaymentController extends Controller
         $order = Order::findOrFail($orderId);
         # code... get order user.
 
+
+
         if (Auth::check() && $order->customer_id != Auth::id()) {
             return redirect()->route('ecommerce.home');
         } elseif (!Auth::check() && $order->session_id != request()->session()->token()) {
             return redirect()->route('ecommerce.home');
         }
 
+
+
         $payment = new PayMob();
 
+
+
         $auth = $payment->authPaymob(); // login PayMob servers
+
+
 
         if (property_exists($auth, 'detail')) { // login to PayMob attempt failed.
             # code... redirect to previous page with a message.
@@ -108,19 +116,24 @@ class PaymentController extends Controller
             $order->total_price * 100,
             $order->id
         );
+
+        $order->update([
+            'orderId' => $paymobOrder->id
+        ]); // save paymob order id for later usage.
+
         // Duplicate order id
         // PayMob saves your order id as a unique id as well as their id as a primary key, thus your order id must not
         // duplicate in their database.
         if (isset($paymobOrder->message)) {
             if ($paymobOrder->message == 'duplicate') {
                 # code... your order id is duplicate on PayMob database.
+
                 $paymobOrder = $payment->getOrder($auth->token, $order->orderId);
             }
-        } else {
-            $order->update([
-                'orderId' => $paymobOrder->id
-            ]); // save paymob order id for later usage.
         }
+
+
+
 
 
         if (Auth::check()) {
@@ -143,6 +156,8 @@ class PaymentController extends Controller
             // $city->name, // optional
             // $country->name // optional
         );
+
+
 
         $key = $payment_key->token;
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
@@ -196,7 +211,7 @@ class PaymentController extends Controller
     {
 
         $order->update([
-            'payment_status' => 'Paid'
+            'payment_status' => 'Paid',
         ]);
     }
 

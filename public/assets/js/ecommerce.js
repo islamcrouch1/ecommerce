@@ -676,14 +676,116 @@ function getCities(){
 
 
 
-function mouseDown() {
-    $('.price-range').closest('form').submit();
-    console.log(35354454334535);
-}
+// function mouseDown() {
+//     $('.price-range').closest('form').submit();
+//     console.log(35354454334535);
+// }
 
 
 
 $(".price-range").mouseup(function() {
     $('.price-range').closest('form').submit();
-    console.log(35354454334535);
-  });
+});
+
+
+function openSearch() {
+    document.getElementById("search-overlay").style.display = "block";
+}
+
+function closeSearch() {
+    document.getElementById("search-overlay").style.display = "none";
+}
+
+
+
+
+$('.search-input').focusout( function(e){
+    e.preventDefault();
+    if($('.search-result:hover').length != 0){
+        $('.search-result').show()
+
+    }else{
+        $('.search-result').hide()
+
+    }
+});
+
+
+$('.search-input').focus( function(e){
+    e.preventDefault();
+    $('.search-result').show()
+});
+
+
+$('.search-input').on('input' , function(e){
+    e.preventDefault();
+    var search = $(this).val();
+    var url = $(this).data('url');
+    var locale = $(this).data('locale');
+    var result_class = '.search-result';
+
+    console.log(search , url , locale , 500)
+
+    if(search != ''){
+        getSearch(search , locale , url , result_class)
+    }else{
+        $(result_class).children().remove().end()
+    }
+});
+
+
+
+
+function getSearch(search , locale , url , result_class) {
+
+
+    var search = search;
+    var locale = locale;
+    var url = url;
+    var result_class = result_class;
+    var formData = new FormData();
+    formData.append('search' , search);
+    $.ajax({
+        url: url,
+        data: formData,
+        method: 'POST',
+        processData: false,
+        contentType: false,
+        cache: false,
+        success: function(data) {
+            if(data.status == 1){
+
+                $(result_class).children().remove().end()
+                $(result_class).show()
+                var array = data.elements;
+                if(array.length == 0){
+                    $(result_class).append(
+                        '<div class="empty-message">'+(locale == 'ar' ? 'لا توجد نتائج بحث!' : 'No results found!')+'</div>'
+                    )
+                }else{
+                    array.forEach(element => {
+                        $(result_class).append(
+                            `<a style="padding:10px;" href='`+element.url+`' class="man-section">
+                                <div class="image-section">
+                                    <img src="` + element.image + `">
+                                </div>
+
+                                <div class="description-section">
+                                    <h4>`+ (locale == 'ar' ? element.name_ar : element.name_en) +`
+                                    </h4>
+                                </div>
+                            </a>`
+                        )
+                    });
+                }
+
+            }else{
+                $(result_class).children().remove().end()
+
+                $(result_class).append(
+                    '<p>' + (locale == 'ar' ? 'لا توجد نتائج بحث!' : 'No results found!') + '</p>'
+                )
+            }
+        }
+    });
+}

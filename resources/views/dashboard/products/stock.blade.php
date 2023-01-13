@@ -138,9 +138,8 @@
                                                     <td>
                                                         <input name="limit[]"
                                                             class="form-control @error('limit') is-invalid @enderror"
-                                                            min="0"
-                                                            value="{{ $product->product_type == 'simple' ? $product->limit : $combination->limit }}"
-                                                            type="number" autocomplete="on" id="limit" required />
+                                                            min="0" value="{{ $combination->limit }}" type="number"
+                                                            autocomplete="on" id="limit" required />
                                                         @error('limit')
                                                             <div class="alert alert-danger">{{ $message }}</div>
                                                         @enderror
