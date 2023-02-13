@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\Country;
 use App\Models\Setting;
 use App\Models\ShippingMethod;
+use App\Models\Tax;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 
@@ -17,7 +19,12 @@ class SettingController extends Controller
         $settings = Setting::all();
         $countries = Country::all();
         $shipping_methods = ShippingMethod::all();
-        return view('dashboard.settings.index', compact('settings', 'warehouses', 'countries', 'shipping_methods'));
+        $assets_accounts = Account::where('account_type', 'assets')->get();
+        $taxes = Tax::all();
+        $liability_accounts = Account::where('account_type', 'liability')->get();
+        $revenue_accounts = Account::where('account_type', 'revenue')->get();
+        $expenses_accounts = Account::where('account_type', 'expenses')->get();
+        return view('dashboard.settings.index', compact('settings', 'warehouses', 'countries', 'shipping_methods', 'assets_accounts', 'taxes', 'liability_accounts', 'revenue_accounts', 'expenses_accounts'));
     }
 
 
@@ -48,8 +55,220 @@ class SettingController extends Controller
             'country_id' => "nullable|string",
             'shipping_method' => "nullable|string",
             'locale_pickup' => "nullable|string",
+            'assets_account' => "nullable|string",
+            'suppliers_account' => "nullable|string",
+            'wht_products' => "nullable|numeric",
+            'vat' => "nullable|numeric",
+            'wht_invoice_amount' => "nullable|numeric",
+            'vat_purchase_account' => "nullable|numeric",
+            'wct_account' => "nullable|numeric",
+            'revenue_account' => "nullable|numeric",
+            'vat_sales_account' => "nullable|numeric",
+            'account_receivable_account' => "nullable|numeric",
+            'wst_account' => "nullable|numeric",
+            'cash_account' => "nullable|numeric",
+            'card_account' => "nullable|numeric",
+            'income_tax' => "nullable|numeric",
+            'expenses_account' => "nullable|numeric",
+            'wht_services' => "nullable|numeric",
         ]);
 
+
+        $setting = Setting::where('type', 'wht_services')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'wht_services',
+                'value' => $request['wht_services'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['wht_services'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'expenses_account')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'expenses_account',
+                'value' => $request['expenses_account'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['expenses_account'],
+            ]);
+        }
+
+
+        $setting = Setting::where('type', 'income_tax')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'income_tax',
+                'value' => $request['income_tax'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['income_tax'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'cash_account')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'cash_account',
+                'value' => $request['cash_account'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['cash_account'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'card_account')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'card_account',
+                'value' => $request['card_account'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['card_account'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'wst_account')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'wst_account',
+                'value' => $request['wst_account'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['wst_account'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'account_receivable_account')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'account_receivable_account',
+                'value' => $request['account_receivable_account'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['account_receivable_account'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'vat_sales_account')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'vat_sales_account',
+                'value' => $request['vat_sales_account'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['vat_sales_account'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'revenue_account')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'revenue_account',
+                'value' => $request['revenue_account'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['revenue_account'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'wct_account')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'wct_account',
+                'value' => $request['wct_account'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['wct_account'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'vat_purchase_account')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'vat_purchase_account',
+                'value' => $request['vat_purchase_account'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['vat_purchase_account'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'wht_invoice_amount')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'wht_invoice_amount',
+                'value' => $request['wht_invoice_amount'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['wht_invoice_amount'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'vat')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'vat',
+                'value' => $request['vat'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['vat'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'wht_products')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'wht_products',
+                'value' => $request['wht_products'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['wht_products'],
+            ]);
+        }
+
+        $setting = Setting::where('type', 'suppliers_account')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'suppliers_account',
+                'value' => $request['suppliers_account'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['suppliers_account'],
+            ]);
+        }
+
+
+
+
+        $setting = Setting::where('type', 'assets_account')->first();
+        if ($setting == null) {
+            Setting::create([
+                'type' => 'assets_account',
+                'value' => $request['assets_account'],
+            ]);
+        } else {
+            $setting->update([
+                'value' => $request['assets_account'],
+            ]);
+        }
 
         $setting = Setting::where('type', 'locale_pickup')->first();
         if ($setting == null) {

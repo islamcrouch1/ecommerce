@@ -1,11 +1,13 @@
 <?php
 
 use App\Events\NewNotification;
+use App\Models\Account;
 use App\Models\Balance;
 use App\Models\Brand;
 use App\Models\CartItem;
 use App\Models\Category;
 use App\Models\Country;
+use App\Models\Entry;
 use App\Models\FavItem;
 use App\Models\Log;
 use App\Models\Notification;
@@ -26,9 +28,7 @@ use Twilio\Exceptions\TwilioException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Image;
-
-
-
+use PhpParser\Node\Stmt\TryCatch;
 
 if (!function_exists('saveMedia')) {
     function saveMedia($type, $media, $folder)
@@ -65,8 +65,48 @@ if (!function_exists('deleteImage')) {
     function deleteImage($media_id)
     {
         $media = Media::findOrFail($media_id);
-        Storage::disk('public')->delete(substr($media->path, '7'));
-        $media->forceDelete();
+
+        if ($media->productImages->count() == 0 && $media->brands->count() == 0 && $media->categories->count() == 0 && $media->countries->count() == 0 && $media->productCombinations->count() == 0 && $media->slides->count() == 0 && $media->websiteOptions->count() == 0 && $media->websiteSettings->count() == 0) {
+            try {
+                Storage::disk('public')->delete(substr($media->path, '7'));
+                $media->forceDelete();
+                return true;
+            } catch (\Throwable $th) {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+}
+
+if (!function_exists('getImage')) {
+    function getImage($item)
+    {
+        if ($item != null) {
+            if (isset($item->media)) {
+                if ($item->media != null) {
+                    return $item->media->path;
+                }
+            }
+        }
+
+        return null;
+    }
+}
+
+if (!function_exists('getImageAsset')) {
+    function getImageAsset($item)
+    {
+        if ($item != null) {
+            if (isset($item->media)) {
+                if ($item->media != null) {
+                    return asset($item->media->path);
+                }
+            }
+        }
+
+        return null;
     }
 }
 
@@ -199,6 +239,95 @@ if (!function_exists('getName')) {
 }
 
 
+if (!function_exists('getAccount')) {
+    function getAccount($account_id)
+    {
+        $account = Account::findOrFail($account_id);
+        return $account;
+    }
+}
+
+if (!function_exists('getAccountBalance')) {
+    function getAccountBalance($account_id, $type, $from = null, $to = null)
+    {
+        $account = Account::findOrFail($account_id);
+        $cr_amount = 0;
+        $dr_amount = 0;
+
+        $arrays = flatten($account->childrenRecursive()->get()->toArray());
+        $accounts = [];
+        foreach ($arrays as $array) {
+            array_push($accounts, $array['id']);
+        }
+        array_push($accounts, $account_id);
+
+        if (!$from || !$to) {
+            $from = Carbon::now()->subDay(365)->toDateString();
+            $to = Carbon::now()->toDateString();
+        }
+
+
+        foreach (Entry::whereIn('account_id', $accounts)->whereDate('created_at', '>=', $from)
+            ->whereDate('created_at', '<=', $to)->get() as $entry) {
+            $cr_amount += $entry->cr_amount;
+            $dr_amount += $entry->dr_amount;
+        }
+
+        if ($type == 'cr') {
+            return $cr_amount;
+        } elseif ($type == 'dr') {
+            return $dr_amount;
+        }
+    }
+}
+
+
+if (!function_exists('getTrialBalance')) {
+    function getTrialBalance($account_id, $from = null, $to = null)
+    {
+        $account = Account::findOrFail($account_id);
+        $cr_amount = 0;
+        $dr_amount = 0;
+
+        $arrays = flatten($account->childrenRecursive()->get()->toArray());
+        $accounts = [];
+        foreach ($arrays as $array) {
+            array_push($accounts, $array['id']);
+        }
+        array_push($accounts, $account_id);
+
+
+        $balance = [];
+
+        if (!$from || !$to) {
+            $from = Carbon::now()->subDay(365)->toDateString();
+            $to = Carbon::now()->toDateString();
+        }
+
+        foreach (Entry::whereIn('account_id', $accounts)->whereDate('created_at', '>=', $from)
+            ->whereDate('created_at', '<=', $to)->get() as $entry) {
+            $cr_amount += $entry->cr_amount;
+            $dr_amount += $entry->dr_amount;
+        }
+
+        if ($cr_amount > $dr_amount) {
+            $balance['cr'] = $cr_amount - $dr_amount;
+            $balance['dr'] = 0;
+        } elseif ($cr_amount < $dr_amount) {
+            $balance['dr'] = $dr_amount - $cr_amount;
+            $balance['cr'] = 0;
+        } else {
+            $balance['cr'] = 0;
+            $balance['dr'] = 0;
+        }
+
+        return $balance;
+    }
+}
+
+
+
+
 if (!function_exists('getCartItems')) {
     function getCartItems()
     {
@@ -234,12 +363,16 @@ if (!function_exists('shippingWithWeight')) {
 
 
 if (!function_exists('getProductName')) {
-    function getProductName($product, $combination = null)
+    function getProductName($product, $combination = null, $locale = null)
     {
 
         $text = '';
 
-        $text = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
+        if ($locale == null) {
+            $locale = app()->getLocale();
+        }
+
+        $text = $locale == 'ar' ? $product->name_ar : $product->name_en;
 
         if ($combination) {
 
@@ -247,7 +380,7 @@ if (!function_exists('getProductName')) {
                 if ($index == 0) {
                     $text .= ' (';
                 }
-                $text .= app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en;
+                $text .= $locale == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en;
                 if ($index == $combination->variations->count() - 1) {
                     $text .= ') ';
                 } else {
@@ -478,6 +611,54 @@ if (!function_exists('checkUserForTrash')) {
         }
     }
 }
+
+// check user for trash
+if (!function_exists('checkTaxForTrash')) {
+    function checkTaxForTrash($tax)
+    {
+        if (setting('vat') != null && setting('vat') == $tax->id) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+// check account for trash
+if (!function_exists('checkAccountForTrash')) {
+    function checkAccountForTrash($account)
+    {
+        if ($account->accounts->count() > 0  || $account->entries->count() > 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+// flatten array
+if (!function_exists('flatten')) {
+    function flatten($array)
+    {
+        $flatArray = [];
+
+        if (!is_array($array)) {
+            $array = (array)$array;
+        }
+
+        foreach ($array as $key => $value) {
+            if (is_array($value) || is_object($value)) {
+                $flatArray = array_merge($flatArray, flatten($value));
+            } else {
+                $flatArray[0][$key] = $value;
+            }
+        }
+
+        return $flatArray;
+    }
+}
+
+
 
 
 
@@ -841,11 +1022,15 @@ if (!function_exists('websiteSettingMedia')) {
     {
         $setting = WebsiteSetting::where('type', $type)->first();
 
-        if ($setting) {
-            return $setting->media ? $setting->media->path : null;
-        } else {
-            return null;
+        if (isset($setting)) {
+            if (isset($setting->media)) {
+                if ($setting->media != null) {
+                    return $setting->media ? $setting->media->path : null;
+                }
+            }
         }
+
+        return null;
     }
 }
 
@@ -1086,6 +1271,9 @@ if (!function_exists('getArabicStatus')) {
             case "RTO":
                 $status_ar = "فشل في التوصيل";
                 break;
+            case "completed":
+                $status_ar = "مكتمل";
+                break;
             default:
                 break;
         }
@@ -1107,6 +1295,12 @@ if (!function_exists('checkOrderStatus')) {
         // returned
         // RTO
 
+        if ($new_status == 'delivered') {
+            if (setting('vat_sales_account') == null) {
+                return false;
+            }
+        }
+
         if (($new_status == $old_status)) {
             // can not change to same status
             return false;
@@ -1114,6 +1308,28 @@ if (!function_exists('checkOrderStatus')) {
             // can not change status to returned except delivered
             return false;
         } elseif ($old_status == 'returned' || $old_status == 'canceled' || $old_status == 'RTO') {
+            return false;
+        } elseif ($old_status == 'delivered' && $new_status != 'returned') {
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+// check order status for change
+if (!function_exists('checkPurchaseOrderStatus')) {
+    function checkPurchaseOrderStatus($new_status, $old_status)
+    {
+        // completed
+        // returned
+        if (($new_status == $old_status)) {
+            // can not change to same status
+            return false;
+        } elseif ($old_status != 'completed' && $new_status == 'returned') {
+            // can not change status to returned except delivered
+            return false;
+        } elseif ($old_status == 'returned') {
             return false;
         } elseif ($old_status == 'delivered' && $new_status != 'returned') {
             return false;
@@ -1307,6 +1523,9 @@ if (!function_exists('getOrderHistory')) {
                 break;
             case 'RTO':
                 $order_status = '<span class="badge badge-soft-danger ">' . __($status) . '</span>';
+                break;
+            case 'completed':
+                $order_status = '<span class="badge badge-soft-success ">' . __($status) . '</span>';
                 break;
             case 'You canceled the order':
                 $order_status = '<span class="badge badge-soft-danger ">' . __($status) . '</span>';

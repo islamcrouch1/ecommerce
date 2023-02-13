@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Ecommerce;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Classes\PayMob;
+use App\Models\Account;
 use App\Models\Category;
+use App\Models\Entry;
 use App\Models\Order;
 use App\Models\Stock;
+use App\Models\Tax;
 use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
@@ -19,7 +22,6 @@ class PaymentController extends Controller
     public function paymentSuccess(Request $request)
     {
 
-
         if (!isset($request->order) || $request->order == null) {
             return redirect()->route('ecommerce.home');
         }
@@ -27,7 +29,6 @@ class PaymentController extends Controller
         $isSuccess  = $request->success;
         $isVoided  = $request->is_voided;
         $isRefunded  = $request->is_refunded;
-
 
         $amount_cents = $request->amount_cents;
         $created_at = $request->created_at;
@@ -88,25 +89,15 @@ class PaymentController extends Controller
         $order = Order::findOrFail($orderId);
         # code... get order user.
 
-
-
-
         if (Auth::check() && $order->customer_id != Auth::id()) {
             return redirect()->route('ecommerce.home');
         } elseif (!Auth::check() && $order->session_id != request()->session()->token()) {
             return redirect()->route('ecommerce.home');
         }
 
-
-
         $payment = new PayMob();
 
-
-
-
         $auth = $payment->authPaymob(); // login PayMob servers
-
-
 
         if (property_exists($auth, 'detail')) { // login to PayMob attempt failed.
             # code... redirect to previous page with a message.
@@ -118,9 +109,6 @@ class PaymentController extends Controller
             $order->total_price * 100,
             $order->id
         );
-
-
-
 
         // Duplicate order id
         // PayMob saves your order id as a unique id as well as their id as a primary key, thus your order id must not
@@ -139,10 +127,6 @@ class PaymentController extends Controller
                 'orderId' => $paymobOrder->id
             ]); // save paymob order id for later usage.
         }
-
-
-
-
 
 
         if (Auth::check()) {
@@ -165,8 +149,6 @@ class PaymentController extends Controller
             // $city->name, // optional
             // $country->name // optional
         );
-
-
 
         $key = $payment_key->token;
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
@@ -219,6 +201,33 @@ class PaymentController extends Controller
     protected function succeeded($order)
     {
 
+        if (Auth::check()) {
+            $customer_account = Account::where('reference_id', Auth::id())->where('type', 'customer')->first();
+        } else {
+            $customer_account = Account::findOrFail(setting('account_receivable_account'));
+        }
+
+        Entry::create([
+            'account_id' => $customer_account->id,
+            'type' => 'sales',
+            'dr_amount' => 0,
+            'cr_amount' =>  $order->subtotal_price,
+            'description' => 'sales order# ' . $order->id,
+            'reference_id' => $order->id,
+            'created_by' => Auth::id(),
+        ]);
+
+        $card_account = Account::findOrFail(setting('card_account'));
+        Entry::create([
+            'account_id' => $card_account->id,
+            'type' => 'sales',
+            'dr_amount' => $order->subtotal_price,
+            'cr_amount' =>  0,
+            'description' => 'sales order# ' . $order->id,
+            'reference_id' => $order->id,
+            'created_by' => Auth::id(),
+        ]);
+
         $order->update([
             'payment_status' => 'Paid',
         ]);
@@ -262,6 +271,53 @@ class PaymentController extends Controller
                 ]);
             }
         }
+
+        $vat = Tax::findOrFail(setting('vat'));
+        if ($vat != null && $vat->tax_rate != null) {
+            $vat_amount = ($order->subtotal_price * $vat->tax_rate) / 100;
+        } else {
+            $vat_amount = 0;
+        }
+
+        if (Auth::check()) {
+            $customer_account = Account::where('reference_id', Auth::id())->where('type', 'customer')->first();
+        } else {
+            $customer_account = Account::findOrFail(setting('account_receivable_account'));
+        }
+        Entry::create([
+            'account_id' => $customer_account->id,
+            'type' => 'sales',
+            'dr_amount' => 0,
+            'cr_amount' =>  $order->subtotal_price,
+            'description' => 'sales order# ' . $order->id,
+            'reference_id' => $order->id,
+            'created_by' => Auth::id(),
+        ]);
+
+
+        $vat_account = Account::findOrFail(setting('vat_sales_account'));
+
+        Entry::create([
+            'account_id' => $vat_account->id,
+            'type' => 'sales',
+            'dr_amount' => $vat_amount,
+            'cr_amount' =>  0,
+            'description' => 'sales order# ' . $order->id,
+            'reference_id' => $order->id,
+            'created_by' => Auth::id(),
+        ]);
+
+        $revenue_account = Account::findOrFail(setting('revenue_account'));
+
+        Entry::create([
+            'account_id' => $revenue_account->id,
+            'type' => 'sales',
+            'dr_amount' => $order->subtotal_price - $vat_amount,
+            'cr_amount' =>  0,
+            'description' => 'sales order# ' . $order->id,
+            'reference_id' => $order->id,
+            'created_by' => Auth::id(),
+        ]);
     }
 
 

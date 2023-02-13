@@ -120,11 +120,13 @@
 
                                         @if ($category->children->count() > 0)
                                             @foreach ($category->children as $subCat)
-                                                @include('dashboard.categories._category_options_product_edit',
+                                                @include(
+                                                    'dashboard.categories._category_options_product_edit',
                                                     [
                                                         'scategory' => $subCat,
                                                         'product' => $product,
-                                                    ])
+                                                    ]
+                                                )
                                             @endforeach
                                         @endif
                                     @endforeach
@@ -256,6 +258,18 @@
                                 </div>
                             @endif
 
+                            @if ($product->product_type == 'digital' || $product->product_type == 'service')
+                                <div class="mb-3 cost">
+                                    <label class="form-label" for="cost">{{ __('service cost') }}</label>
+                                    <input name="cost" class="form-control @error('cost') is-invalid @enderror"
+                                        value="{{ $product->cost }}" type="number" min="0" autocomplete="on"
+                                        id="cost" />
+                                    @error('cost')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endif
+
                             @if ($product->product_type == 'digital')
                                 <div class="mb-3 digital-file">
                                     <label class="form-label" for="digital_file">{{ __('digital file') }}</label>
@@ -276,6 +290,8 @@
                                     </div>
                                 </div>
                             @endif
+
+
 
 
                             {{-- <div class="mb-3">

@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Ecommerce;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Country;
+use App\Models\Entry;
 use App\Models\Order;
 use App\Models\State;
 use App\Models\Stock;
+use App\Models\Tax;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -72,6 +75,30 @@ class OrdersController extends Controller
             $user_cr = new UserController();
 
             $user_cr->store($request);
+        }
+
+
+        // accounts check
+        if (setting('account_receivable_account') == null) {
+            alertError('An error occurred while processing the request, please try again later', 'حدث خطا اثناء عمل الطلب يرجى المحاولة لاحقا');
+            return redirect()->back();
+        }
+
+        if (setting('vat_sales_account') == null) {
+            alertError('An error occurred while processing the request, please try again later', 'حدث خطا اثناء عمل الطلب يرجى المحاولة لاحقا');
+            return redirect()->back();
+        }
+
+        if (setting('revenue_account') == null) {
+            alertError('An error occurred while processing the request, please try again later', 'حدث خطا اثناء عمل الطلب يرجى المحاولة لاحقا');
+            return redirect()->back();
+        }
+
+
+        // tax check
+        if (setting('vat') == null) {
+            alertError('An error occurred while processing the request, please try again later', 'حدث خطا اثناء عمل الطلب يرجى المحاولة لاحقا');
+            return redirect()->back();
         }
 
 
@@ -153,8 +180,9 @@ class OrdersController extends Controller
         }
 
 
-        $order = Order::create([
 
+
+        $order = Order::create([
             'affiliate_id' => null,
             'customer_id' => Auth::check() ? Auth::id() : null,
             'session_id' => Auth::check() ? null : $request->session()->token(),
@@ -190,13 +218,83 @@ class OrdersController extends Controller
 
             'coupon_code' => null,
             'coupon_amount' => null,
-
         ]);
 
 
 
 
 
+        if (Auth::check()) {
+            if (Account::where('reference_id', Auth::id())->where('type', 'customer')->count() == 0) {
+                $account = Account::findOrFail(setting('account_receivable_account'));
+                $customer_account =  Account::create([
+                    'name_ar' => Auth::user()->name . '(مدينون)',
+                    'name_en' => Auth::user()->name . '(recievable)',
+                    'code' => $account->code .  Auth::id(),
+                    'parent_id' => $account->id,
+                    'account_type' => $account->account_type,
+                    'reference_id' => Auth::id(),
+                    'type' => 'customer',
+                    'created_by' => Auth::id(),
+                ]);
+            } else {
+                $customer_account = Account::where('reference_id', Auth::id())->where('type', 'customer')->first();
+            }
+        } else {
+            $customer_account = Account::findOrFail(setting('account_receivable_account'));
+        }
+
+
+        $vat = Tax::findOrFail(setting('vat'));
+        if ($vat != null && $vat->tax_rate != null) {
+            $subtotal = (100 / ($vat->tax_rate + 100)) * $order->subtotal_price;
+            $vat_amount = $order->subtotal_price - $subtotal;
+        } else {
+            $vat_amount = 0;
+        }
+
+        $order->update([
+            'total_tax' => $vat_amount,
+        ]);
+
+        $vat = Tax::findOrFail(setting('vat'));
+        $order->taxes()->attach([$vat->id, $vat_amount]);
+
+
+        Entry::create([
+            'account_id' => $customer_account->id,
+            'type' => 'sales',
+            'dr_amount' => $order->subtotal_price,
+            'cr_amount' =>  0,
+            'description' => 'sales order# ' . $order->id,
+            'reference_id' => $order->id,
+            'created_by' => Auth::id(),
+        ]);
+
+        $vat_account = Account::findOrFail(setting('vat_sales_account'));
+
+        Entry::create([
+            'account_id' => $vat_account->id,
+            'type' => 'sales',
+            'dr_amount' => 0,
+            'cr_amount' =>  $vat_amount,
+            'description' => 'sales order# ' . $order->id,
+            'reference_id' => $order->id,
+            'created_by' => Auth::id(),
+        ]);
+
+        $revenue_account = Account::findOrFail(setting('revenue_account'));
+
+
+        Entry::create([
+            'account_id' => $revenue_account->id,
+            'type' => 'sales',
+            'dr_amount' => 0,
+            'cr_amount' =>  $order->subtotal_price - $vat_amount,
+            'description' => 'sales order# ' . $order->id,
+            'reference_id' => $order->id,
+            'created_by' => Auth::id(),
+        ]);
 
         foreach ($cart_items as $item) {
 
@@ -249,16 +347,11 @@ class OrdersController extends Controller
             }
         }
 
-
         $stocks_limit_products = [];
-
 
         foreach ($cart_items as $item) {
 
-
-
             // add stock update
-
             if ($item->product->product_type == 'variable' || $item->product->product_type == 'simple') {
 
                 Stock::create([
@@ -276,8 +369,6 @@ class OrdersController extends Controller
 
             $item->delete();
 
-
-
             // add noty for stock limit
             if ($item->product->product_type == 'variable') {
                 if (productQuantity($item->product->id, $item->combination->id, setting('warehouse_id')) <= $item->combination->limit) {
@@ -290,9 +381,11 @@ class OrdersController extends Controller
             }
         }
 
+
+
         $users = User::whereHas('roles', function ($query) {
-            $query->where('name', '==', 'superadministrator')
-                ->where('name', '==', 'administrator');
+            $query->where('name', '=', 'superadministrator')
+                ->where('name', '=', 'administrator');
         })->get();
 
         // send noti to admins about new order and stock limit
@@ -311,7 +404,6 @@ class OrdersController extends Controller
 
             // update user noty for not registered users
             addNoty($admin, $user, $url, $title_en, $title_ar, $body_en, $body_ar);
-
             foreach ($stocks_limit_products as $product) {
                 $title_ar = 'تنبيه بنقص المخزون';
                 $body_ar = 'تجاوز هذا المنتج الحد المسموح في المخزون :#' . $product->name_ar;

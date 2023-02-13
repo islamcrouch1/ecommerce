@@ -42,8 +42,8 @@
                                     <div class="form-group col-md-6 col-sm-6 col-xs-12">
                                         <div class="field-label">{{ __('full name') }}</div>
                                         <input name="name" class="form-control @error('name') is-invalid @enderror"
-                                            value="{{ old('name') }}" type="text" autocomplete="on" id="name"
-                                            autofocus required />
+                                            value="{{ Auth::check() ? Auth::user()->name : '' }}" type="text"
+                                            autocomplete="on" id="name" autofocus required />
                                         @error('name')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
@@ -51,8 +51,8 @@
                                     <div class="form-group col-md-6 col-sm-6 col-xs-12">
                                         <div class="field-label">{{ __('phone') }}</div>
                                         <input name="phone" class="form-control @error('phone') is-invalid @enderror"
-                                            value="{{ old('phone') }}" type="text" autocomplete="on" id="phone"
-                                            autofocus required />
+                                            value="{{ Auth::check() ? Auth::user()->phone : '' }}" type="text"
+                                            autocomplete="on" id="phone" autofocus required />
                                         @error('phone')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
@@ -176,8 +176,8 @@
                                         </div>
                                         <ul class="qty">
                                             @foreach ($cart_items as $item)
-                                                <li>{{ app()->getLocale() == 'ar' ? $item->product->name_ar : $item->product->name_en }}
-                                                    {{ getCProductVariations($item->combination) }} × {{ $item->qty }}
+                                                <li>{{ getProductName($item->product, getCombination($item->product_combination_id)) }}
+                                                    × {{ $item->qty }}
                                                     <span>{{ productPrice($item->product, $item->product_combination_id) * $item->qty . getCurrency() }}</span>
                                                 </li>
                                             @endforeach

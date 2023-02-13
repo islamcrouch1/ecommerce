@@ -63,6 +63,12 @@ $(document).ready(function(){
             $('.digital-file').hide();
         }
 
+        if(type == "digital" || type == "service") {
+            $('.cost').show();
+        }else{
+            $('.cost').hide();
+        }
+
         if(type == "simple" || type == "variable") {
             $('.product-weight').show();
         }else{
@@ -380,3 +386,80 @@ function getStates(){
 
 
 
+$('.from-account').on('change' , '.from-account-select' , function(e){
+    e.preventDefault();
+    var elem = $(this);
+    getAccounts(elem , 'from');
+
+});
+
+$('.to-account').on('change' , '.to-account-select' , function(e){
+    e.preventDefault();
+    var elem = $(this);
+    getAccounts(elem , 'to');
+
+});
+
+
+
+function getAccounts(elem , dir){
+
+
+    var url = elem.data('url');
+    var locale = elem.data('locale');
+    var account_id = elem.find(":selected").val();
+    var account_name = elem.find(":selected").text();
+    var level = elem.data('level');
+
+    var formData = new FormData();
+    formData.append('account_id' , account_id );
+    $.ajax({
+        url: url,
+        data: formData,
+        method: 'POST',
+        processData: false,
+        contentType: false,
+        cache: false,
+        success: function(data) {
+
+            if(data.status == 1){
+                for (var i = 20; i >= level; i--) {
+                    $('.'+dir+'-account'+i).remove();
+                  }
+
+                var array = data.elements;
+                if(array.length == 0){
+                    return;
+                }
+                var options = '';
+
+                array.forEach(element => {
+                    options += `<option value="`+element.id+`">
+                                `+element.name+`
+                                </option>`;
+                });
+
+                $('.'+dir+'-account').append(
+                    `<div class="mb-3 `+(dir+'-account'+level)+`">
+                        <select
+                            class="form-select `+dir+`-account-select"
+                            aria-label="" name="`+dir+`_account" id="`+dir+`_account"
+                            data-url="`+url+`" data-level="`+(level+1)+`" data-locale="`+locale+`"
+                            required>
+                            <option value="">`+(locale == 'ar' ? 'حدد الحساب' : 'select account')+`</option>`
+                            +options+
+                        `</select>
+                    </div>`
+                );
+
+            }
+        }
+    });
+}
+
+
+function printInvoice(){
+
+    $('.no-print').hide();
+    window.print();
+}

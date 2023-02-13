@@ -1,15 +1,15 @@
 @extends('layouts.dashboard.app')
 
 @section('adminContent')
-    <div class="card mb-3">
+    <div class="card mb-3 no-print">
         <div class="card-body">
             <div class="row justify-content-between align-items-center">
                 <div class="col-md">
                     <h5 class="mb-2 mb-md-0">{{ __('Order #') }}{{ $order->id }}</h5>
                 </div>
                 <div class="col-auto">
-                    <button class="btn btn-falcon-default btn-sm me-1 mb-2 mb-sm-0" type="button"><span
-                            class="fas fa-print me-1"> </span>{{ __('Print') }}</button>
+                    <button onclick="printInvoice();" class="btn btn-falcon-default btn-sm me-1 mb-2 mb-sm-0"
+                        type="button"><span class="fas fa-print me-1"> </span>{{ __('Print') }}</button>
                 </div>
             </div>
         </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\Attribute;
 use App\Models\Brand;
 use App\Models\Category;
@@ -121,8 +122,19 @@ class ProductsController extends Controller
             'product_height'  => "nullable|numeric",
             'shipping_amount' => "nullable|numeric",
             'shipping_method' => "nullable|string",
+            'cost' => "nullable|numeric",
+
 
         ]);
+
+
+        if (setting('assets_account') == null) {
+            alertError('please select the default assets account for products in settings page', 'الرجاء تحديد حساب الأصول الافتراضية للمنتجات في صفحة الإعدادات');
+            return redirect()->back();
+        }
+
+        $account = Account::findOrFail(setting('assets_account'));
+
 
         $product_type = $request['product_type'];
 
@@ -184,6 +196,7 @@ class ProductsController extends Controller
             'sale_price' => $request['sale_price'],
             'discount_price' => $request['discount_price'],
             'product_type' => $product_type,
+            'cost' =>  $request['cost'],
 
             'product_weight' =>  $request['product_weight'],
             'product_length' =>  $request['product_length'],
@@ -283,6 +296,7 @@ class ProductsController extends Controller
                     'discount_price' => $product->discount_price,
                     'sale_price' => $product->sale_price,
                 ]);
+
                 foreach ($array as $variation) {
                     ProductCombinationDtl::create([
                         'product_combination_id' => $com->id,
@@ -290,6 +304,18 @@ class ProductsController extends Controller
                         'product_id' => $product->id,
                     ]);
                 }
+
+
+                Account::create([
+                    'name_ar' => getProductName($product, getCombination($com->id), 'ar'),
+                    'name_en' => getProductName($product, getCombination($com->id), 'en'),
+                    'code' => $account->code .  $product->id . $com->id,
+                    'parent_id' => $account->id,
+                    'account_type' => $account->account_type,
+                    'reference_id' => $com->id,
+                    'type' => 'variable_product',
+                    'created_by' => Auth::id(),
+                ]);
             }
         } elseif ($product_type == 'simple') {
             $com = ProductCombination::create([
@@ -297,6 +323,28 @@ class ProductsController extends Controller
                 'sku' => $product->sku,
                 'discount_price' => $product->discount_price,
                 'sale_price' => $product->sale_price,
+            ]);
+
+            Account::create([
+                'name_ar' => getProductName($product, getCombination($com->id), 'ar'),
+                'name_en' => getProductName($product, getCombination($com->id), 'en'),
+                'code' => $account->code .  $product->id . $com->id,
+                'parent_id' => $account->id,
+                'account_type' => $account->account_type,
+                'reference_id' => $com->id,
+                'type' => 'simple_product',
+                'created_by' => Auth::id(),
+            ]);
+        } else {
+            Account::create([
+                'name_ar' => $product->name_ar,
+                'name_en' => $product->name_en,
+                'code' => $account->code . $product->id,
+                'parent_id' => $account->id,
+                'account_type' => $account->account_type,
+                'reference_id' => $product->id,
+                'type' => $product_type == 'digital' ? 'digital_product' : 'service',
+                'created_by' => Auth::id(),
             ]);
         }
 
@@ -402,6 +450,7 @@ class ProductsController extends Controller
             'seo_desc' => "nullable|string",
 
             'product_weight' => "nullable|numeric",
+            'cost' => "nullable|numeric",
             'product_length' => "nullable|numeric",
             'product_width' => "nullable|numeric",
             'product_height'  => "nullable|numeric",
@@ -505,6 +554,7 @@ class ProductsController extends Controller
             'product_height' =>  $request['product_height'],
             'shipping_amount' =>  $request['shipping_amount'],
             'shipping_method_id' =>  $request['shipping_method'],
+            'cost' =>  $request['cost'],
 
             'video_url' => $request['video_url'],
             'product_min_order' => $request['product_min_order'],
@@ -718,6 +768,7 @@ class ProductsController extends Controller
                     'sale_price' => $request->sale_price[$index],
                     'discount_price' => $request->discount_price[$index],
                     'limit' => $request->limit[$index],
+                    'purchase_price' => $request->purchase_price[$index],
                 ]);
 
                 Stock::create([

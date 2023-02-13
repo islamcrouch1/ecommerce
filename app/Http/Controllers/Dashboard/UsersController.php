@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\Balance;
 use App\Models\Cart;
 use App\Models\Category;
@@ -107,6 +108,15 @@ class UsersController extends Controller
         ]);
 
 
+        if ($request['role'] == '3') {
+            if (setting('suppliers_account') == null) {
+                alertError('please select the default liability account for suppliers in settings page', 'الرجاء تحديد حساب الالزامات الافتراضية للموردين في صفحة الإعدادات');
+                return redirect()->back();
+            }
+        }
+
+
+
         $profile = $request->profile;
 
         if (!isset($request->profile)) {
@@ -141,6 +151,23 @@ class UsersController extends Controller
         } else {
             $user->attachRoles(['administrator', $request['role']]);
         }
+
+
+        if ($request['role'] == '3') {
+            $account = Account::findOrFail(setting('suppliers_account'));
+            Account::create([
+                'name_ar' => $user->name,
+                'name_en' => $user->name,
+                'code' => $account->code .  $user->id,
+                'parent_id' => $account->id,
+                'account_type' => $account->account_type,
+                'reference_id' => $user->id,
+                'type' => 'supplier',
+                'created_by' => Auth::id(),
+            ]);
+        }
+
+
 
         Cart::create([
             'user_id' => $user->id,

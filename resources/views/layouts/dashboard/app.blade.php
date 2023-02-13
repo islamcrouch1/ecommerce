@@ -169,6 +169,15 @@
     @endif
 
 
+    @if (Route::is('purchases.create') || Route::is('purchases.create.return'))
+        <script src="{{ asset('assets/js/purchase.js') }}"></script>
+    @endif
+
+
+    @if (Route::is('sales.create') || Route::is('sales.create.return'))
+        <script src="{{ asset('assets/js/sale.js') }}"></script>
+    @endif
+
     @if (setting('affiliate_modal') == 'on')
         <script>
             var myModal = new bootstrap.Modal(document.getElementById('affiliateModal'), {

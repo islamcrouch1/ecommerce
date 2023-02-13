@@ -280,6 +280,15 @@
                             </div>
 
 
+                            <div class="mb-3 cost" style="display:none">
+                                <label class="form-label" for="cost">{{ __('service cost') }}</label>
+                                <input name="cost" class="form-control @error('cost') is-invalid @enderror"
+                                    value="0" type="number" min="0" autocomplete="on" id="cost" />
+                                @error('cost')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <div class="mb-3 digital-file" style="display:none">
                                 <label class="form-label" for="digital_file">{{ __('digital file') }}</label>
                                 <input class="form-control form-control-sm sonoo-search" type="file"

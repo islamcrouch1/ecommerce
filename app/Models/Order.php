@@ -21,6 +21,17 @@ class Order extends Model
         return $this->belongsTo(User::class, 'affiliate_id');
     }
 
+    public function taxes()
+    {
+        return $this->belongsToMany(Tax::class)->withPivot('amount');
+    }
+
+
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
     public function customer()
     {
         return $this->belongsTo(User::class, 'customer_id');

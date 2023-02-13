@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\Country;
+use App\Models\Entry;
 use App\Models\Order;
 use App\Models\Stock;
+use App\Models\Tax;
 use App\Models\VendorOrder;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -33,6 +36,9 @@ class OrdersController extends Controller
 
         $orders = Order::whereDate('created_at', '>=', request()->from)
             ->whereDate('created_at', '<=', request()->to)
+            ->whereNot(function ($query) {
+                $query->where('order_from',  'addpurchase');
+            })
             ->whenSearch(request()->search)
             ->whenCountry(request()->country_id)
             ->whenStatus(request()->status)
@@ -70,7 +76,9 @@ class OrdersController extends Controller
         $body_en  = "Your order status has been changed to " . $order->status;
         $url = route('orders.affiliate.index');
 
-        addNoty($order->customer, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
+        if ($order->customer_id != null) {
+            addNoty($order->customer, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
+        }
 
         if ($status == 'canceled' || $status == 'RTO') {
 
@@ -95,6 +103,57 @@ class OrdersController extends Controller
                     ]);
                 }
             }
+
+            $vat = Tax::findOrFail(setting('vat'));
+            if ($vat != null && $vat->tax_rate != null) {
+                $subtotal = (100 / ($vat->tax_rate + 100)) * $order->subtotal_price;
+                $vat_amount = $order->subtotal_price - $subtotal;
+            } else {
+                $vat_amount = 0;
+            }
+
+            if ($order->customer_id != null) {
+                $customer_account = Account::where('reference_id', $order->customer_id)->where('type', 'customer')->first();
+            } else {
+                $customer_account = Account::findOrFail(setting('account_receivable_account'));
+            }
+            Entry::create([
+                'account_id' => $customer_account->id,
+                'type' => 'sales',
+                'dr_amount' => 0,
+                'cr_amount' =>  $order->subtotal_price,
+                'description' => 'sales order# ' . $order->id,
+                'reference_id' => $order->id,
+                'created_by' => Auth::id(),
+            ]);
+
+            $order->update([
+                'payment_status' => 'Faild',
+            ]);
+
+            $vat_account = Account::findOrFail(setting('vat_sales_account'));
+
+            Entry::create([
+                'account_id' => $vat_account->id,
+                'type' => 'sales',
+                'dr_amount' => $vat_amount,
+                'cr_amount' =>  0,
+                'description' => 'sales order# ' . $order->id,
+                'reference_id' => $order->id,
+                'created_by' => Auth::id(),
+            ]);
+
+            $revenue_account = Account::findOrFail(setting('revenue_account'));
+
+            Entry::create([
+                'account_id' => $revenue_account->id,
+                'type' => 'sales',
+                'dr_amount' => $order->subtotal_price - $vat_amount,
+                'cr_amount' =>  0,
+                'description' => 'sales order# ' . $order->id,
+                'reference_id' => $order->id,
+                'created_by' => Auth::id(),
+            ]);
 
             // changeOutStandingBalance($order->user, $order->total_commission, $order->id, $order->status, 'sub');
         }
@@ -126,11 +185,96 @@ class OrdersController extends Controller
                 }
             }
 
+
+            $vat = Tax::findOrFail(setting('vat'));
+            if ($vat != null && $vat->tax_rate != null) {
+                $subtotal = (100 / ($vat->tax_rate + 100)) * $order->subtotal_price;
+                $vat_amount = $order->subtotal_price - $subtotal;
+            } else {
+                $vat_amount = 0;
+            }
+
+            if ($order->payment_method == 'cash_on_delivery') {
+                $cash_account = Account::findOrFail(setting('cash_account'));
+            } elseif ($order->payment_method == 'card') {
+                $cash_account = Account::findOrFail(setting('card_account'));
+            }
+
+            Entry::create([
+                'account_id' => $cash_account->id,
+                'type' => 'sales',
+                'dr_amount' => 0,
+                'cr_amount' =>  $order->subtotal_price,
+                'description' => 'sales order# ' . $order->id,
+                'reference_id' => $order->id,
+                'created_by' => Auth::id(),
+            ]);
+
+            $vat_account = Account::findOrFail(setting('vat_sales_account'));
+
+            Entry::create([
+                'account_id' => $vat_account->id,
+                'type' => 'sales',
+                'dr_amount' => $vat_amount,
+                'cr_amount' =>  0,
+                'description' => 'sales order# ' . $order->id,
+                'reference_id' => $order->id,
+                'created_by' => Auth::id(),
+            ]);
+
+            $revenue_account = Account::findOrFail(setting('revenue_account'));
+
+            Entry::create([
+                'account_id' => $revenue_account->id,
+                'type' => 'sales',
+                'dr_amount' => $order->subtotal_price - $vat_amount,
+                'cr_amount' =>  0,
+                'description' => 'sales order# ' . $order->id,
+                'reference_id' => $order->id,
+                'created_by' => Auth::id(),
+            ]);
+
+
+
+            $order->update([
+                'payment_status' => 'Faild',
+            ]);
+
             // changeAvailableBalance($order->user, $order->total_commission, $order->id, $order->status, 'sub');
         }
 
         if ($status == 'delivered') {
 
+            if ($order->customer_id != null) {
+                $customer_account = Account::where('reference_id', $order->customer_id)->where('type', 'customer')->first();
+            } else {
+                $customer_account = Account::findOrFail(setting('account_receivable_account'));
+            }
+            Entry::create([
+                'account_id' => $customer_account->id,
+                'type' => 'sales',
+                'dr_amount' => 0,
+                'cr_amount' =>  $order->subtotal_price,
+                'description' => 'sales order# ' . $order->id,
+                'reference_id' => $order->id,
+                'created_by' => Auth::id(),
+            ]);
+
+            $cash_account = Account::findOrFail(setting('cash_account'));
+            Entry::create([
+                'account_id' => $cash_account->id,
+                'type' => 'sales',
+                'dr_amount' => $order->subtotal_price,
+                'cr_amount' =>  0,
+                'description' => 'sales order# ' . $order->id,
+                'reference_id' => $order->id,
+                'created_by' => Auth::id(),
+            ]);
+
+
+            $order->update([
+                'payment_status' => 'Paid',
+            ]);
 
             // $mystock_price = 0;
 

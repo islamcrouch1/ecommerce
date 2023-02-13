@@ -28,7 +28,7 @@ class RoleController extends Controller
 
     public function index()
     {
-        $roles = Role::WhereRoleNot(['superadministrator', 'Administrator', 'user', 'vendor', 'affiliate'])
+        $roles = Role::WhereRoleNot(['Administrator', 'user', 'vendor', 'affiliate'])
             ->whenSearch(request()->search)
             ->with('permissions')
             ->withCount('users')

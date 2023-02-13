@@ -13,7 +13,7 @@ class Product extends Model
     use HasFactory;
     use SoftDeletes;
     protected $fillable = [
-        'seo_meta_tag', 'digital_file', 'product_weight', 'product_type', 'discount_price', 'video_url', 'product_slug', 'product_max_order', 'product_min_order', 'is_featured', 'on_sale', 'brand_id', 'seo_desc', 'name_en', 'name_ar', 'description_ar', 'description_en', 'vendor_price', 'max_price', 'extra_fee', 'sale_price', 'total_profit', 'country_id', 'created_by', 'status', 'updated_by', 'sku', 'unlimited', 'best_selling', 'top_collection', 'product_length', 'product_width', 'product_height', 'shipping_amount', 'shipping_method_id'
+        'seo_meta_tag', 'digital_file', 'product_weight', 'product_type', 'discount_price', 'video_url', 'product_slug', 'product_max_order', 'product_min_order', 'is_featured', 'on_sale', 'brand_id', 'seo_desc', 'name_en', 'name_ar', 'description_ar', 'description_en', 'vendor_price', 'max_price', 'extra_fee', 'sale_price', 'total_profit', 'country_id', 'created_by', 'status', 'updated_by', 'sku', 'unlimited', 'best_selling', 'top_collection', 'product_length', 'product_width', 'product_height', 'shipping_amount', 'shipping_method_id', 'cost'
     ];
 
     // protected $appends = ['profit_percent'];
@@ -25,7 +25,7 @@ class Product extends Model
 
     public function admin()
     {
-        return $this->belongsTo(User::class, 'ubdated_by');
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
 

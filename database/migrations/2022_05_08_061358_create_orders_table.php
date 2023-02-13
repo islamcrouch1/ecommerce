@@ -21,9 +21,9 @@ return new class extends Migration
             $table->integer('customer_id')->nullable();
             $table->integer('branch_id')->nullable();
             $table->integer('warehouse_id')->nullable();
-            $table->enum('order_from', ['androidapp', 'iosapp', 'web', 'pos', 'addsale', 'affiliate'])->default('web');
-            $table->string('full_name');
-            $table->string('address');
+            $table->enum('order_from', ['androidapp', 'iosapp', 'web', 'pos', 'addsale', 'affiliate', 'addpurchase'])->default('web');
+            $table->string('full_name')->nullable();
+            $table->string('address')->nullable();
             $table->integer('country_id')->nullable();
             $table->integer('state_id')->nullable();
             $table->integer('city_id')->nullable();
@@ -46,7 +46,7 @@ return new class extends Migration
 
             $table->string('status')->default('pending');
 
-            $table->string('phone');
+            $table->string('phone')->nullable();
             $table->string('phone2')->nullable();
 
             $table->string('payment_status')->default('Pending');
@@ -56,6 +56,9 @@ return new class extends Migration
             $table->string('transaction_id')->nullable();
 
             $table->double('total_tax', 8, 2)->nullable();
+
+            $table->longText('description')->nullable();
+
 
             $table->boolean('is_seen')->default('0')->comment('1 for seen & 0 for unseen');
             $table->string('coupon_code')->nullable();

@@ -7,7 +7,7 @@
             @foreach ($slides as $slide)
                 <div>
                     <div class="home">
-                        <img src="{{ asset($slide->media->path) }}" alt="" class="bg-img blur-up lazyload">
+                        <img src="{{ getImageAsset($slide) }}" alt="" class="bg-img blur-up lazyload">
                         <div class="container">
                             <div class="row">
                                 <div class="col">
@@ -47,7 +47,7 @@
                         <a href="{{ route('ecommerce.products', ['category' => getCatFromSetting($item)->id]) }}">
                             <div class="collection-banner p-left">
                                 <div class="img-part">
-                                    <img src="{{ asset(getCatFromSetting($item)->media->path) }}"
+                                    <img src="{{ asset(getImage(getCatFromSetting($item))) }}"
                                         class="img-fluid blur-up lazyload bg-img">
                                 </div>
                                 <div class="contain-banner banner-4">
@@ -100,7 +100,7 @@
                             <div class="front">
                                 <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
                                         alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"
-                                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                         class="img-fluid blur-up lazyload bg-img"></a>
                             </div>
                             <div class="cart-detail"><a href="javascript:void(0)" class="add-fav" title="Add to Wishlist"
@@ -129,7 +129,7 @@
                                     <a href="javascript:void(0)" class="add-to-cart"
                                         data-url="{{ route('ecommerce.cart.store') }}"
                                         data-locale="{{ app()->getLocale() }}" data-product_id="{{ $product->id }}"
-                                        data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}">
+                                        data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
                                         <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
                                             class="spinner-border spinner-border-sm spinner spin-{{ $product->id }} "
                                             role="status">
@@ -186,7 +186,7 @@
                                                     <a
                                                         href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
                                                             class="img-fluid blur-up lazyload"
-                                                            src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                                            src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                                             alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                                                     <div class="media-body align-self-center">
                                                         <div class="">{!! getAverageRatingWithStars($product) !!}</div>
@@ -202,7 +202,7 @@
                                                                     data-url="{{ route('ecommerce.cart.store') }}"
                                                                     data-locale="{{ app()->getLocale() }}"
                                                                     data-product_id="{{ $product->id }}"
-                                                                    data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}">
+                                                                    data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
                                                                     <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
                                                                         class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
                                                                         role="status">
@@ -250,7 +250,7 @@
                                     <div class="front">
                                         <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
                                                 alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"
-                                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                                 class="img-fluid blur-up lazyload bg-img"></a>
                                     </div>
                                     <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
@@ -278,7 +278,7 @@
                                                 data-url="{{ route('ecommerce.cart.store') }}"
                                                 data-locale="{{ app()->getLocale() }}"
                                                 data-product_id="{{ $product->id }}"
-                                                data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}">
+                                                data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
                                                 <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
                                                     class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
                                                     role="status">
@@ -311,7 +311,7 @@
                                     <div class="front">
                                         <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
                                                 alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"
-                                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                                 class="img-fluid blur-up lazyload bg-img"></a>
                                     </div>
                                     <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
@@ -339,7 +339,7 @@
                                                 data-url="{{ route('ecommerce.cart.store') }}"
                                                 data-locale="{{ app()->getLocale() }}"
                                                 data-product_id="{{ $product->id }}"
-                                                data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}">
+                                                data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
                                                 <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
                                                     class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
                                                     role="status">
@@ -374,7 +374,7 @@
                         <a href="{{ route('ecommerce.products', ['category' => getCatFromSetting($item)->id]) }}">
                             <div class="collection-banner p-right text-center">
                                 <div class="img-part">
-                                    <img src="{{ asset(getCatFromSetting($item)->media->path) }}"
+                                    <img src="{{ getimageAsset(getCatFromSetting($item)) }}"
                                         class="img-fluid blur-up lazyload bg-img" alt="">
                                 </div>
                                 <div class="contain-banner">
@@ -415,7 +415,7 @@
                                 <div class="media">
                                     <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
                                             class="img-fluid blur-up lazyload"
-                                            src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                            src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                             alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                                     <div class="media-body align-self-center">
                                         <div class="">{!! getAverageRatingWithStars($product) !!}</div>
@@ -430,7 +430,7 @@
                                                     data-url="{{ route('ecommerce.cart.store') }}"
                                                     data-locale="{{ app()->getLocale() }}"
                                                     data-product_id="{{ $product->id }}"
-                                                    data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}">
+                                                    data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
                                                     <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
                                                         class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
                                                         role="status">
@@ -470,7 +470,7 @@
                             <div class="media">
                                 <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
                                         class="img-fluid blur-up lazyload"
-                                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                         alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                                 <div class="media-body align-self-center">
                                     <div class="">{!! getAverageRatingWithStars($product) !!}
@@ -486,7 +486,7 @@
                                                 data-url="{{ route('ecommerce.cart.store') }}"
                                                 data-locale="{{ app()->getLocale() }}"
                                                 data-product_id="{{ $product->id }}"
-                                                data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}">
+                                                data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
                                                 <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
                                                     class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
                                                     role="status">
@@ -526,7 +526,7 @@
                         <div class="media">
                             <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
                                     class="img-fluid blur-up lazyload"
-                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                     alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                             <div class="media-body align-self-center">
                                 <div class="">{!! getAverageRatingWithStars($product) !!}
@@ -542,7 +542,7 @@
                                             data-url="{{ route('ecommerce.cart.store') }}"
                                             data-locale="{{ app()->getLocale() }}"
                                             data-product_id="{{ $product->id }}"
-                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}">
+                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
                                             <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
                                                 class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
                                                 role="status">
@@ -582,7 +582,7 @@
                         <div class="media">
                             <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
                                     class="img-fluid blur-up lazyload"
-                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                     alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                             <div class="media-body align-self-center">
                                 <div class="">{!! getAverageRatingWithStars($product) !!}
@@ -598,7 +598,7 @@
                                             data-url="{{ route('ecommerce.cart.store') }}"
                                             data-locale="{{ app()->getLocale() }}"
                                             data-product_id="{{ $product->id }}"
-                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}">
+                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
                                             <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
                                                 class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
                                                 role="status">
@@ -701,7 +701,7 @@
                         <div class="row">
                             <div class="col-lg-6 col-xs-12">
                                 <div class="quick-view-img"><img
-                                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                         alt="" class="img-fluid blur-up lazyload"></div>
                             </div>
                             <div class="col-lg-6 rtl-text">
@@ -803,7 +803,7 @@
                                             data-url="{{ route('ecommerce.cart.store') }}"
                                             data-locale="{{ app()->getLocale() }}"
                                             data-product_id="{{ $product->id }}"
-                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}">
+                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
 
                                             <div style="display: none; color: #ffffff; margin: 3px; padding: 6px;"
                                                 class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
