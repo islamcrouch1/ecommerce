@@ -32,6 +32,19 @@
                         <form style="display: inline-block" action="">
 
                             <div class="d-inline-block">
+                                <select name="branch_id" class="form-select form-select-sm sonoo-search"
+                                    id="autoSizingSelect">
+                                    <option value="" selected>{{ __('All Branches') }}</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}"
+                                            {{ request()->branch_id == $branch->id ? 'selected' : '' }}>
+                                            {{ getName($branch) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="d-inline-block">
                                 {{-- <label class="form-label" for="from">{{ __('From') }}</label> --}}
                                 <input type="date" id="from" name="from" class="form-control form-select-sm"
                                     value="{{ request()->from }}">
@@ -68,7 +81,7 @@
         </div>
 
         @if (isset(request()->account_id))
-            <div class="card py-3 mb-3">
+            <div class="card mb-3">
                 <div class="card-body py-3">
                     <div class="row g-0">
                         <div class="col-6 col-md-3 border-200 border-md-200 border-bottom border-end pb-4 ps-3">
@@ -83,16 +96,12 @@
                                 {{ getAccountBalance(request()->account_id, 'dr', request()->from, request()->to) }}</p>
                         </div>
                         <div class="col-4 col-md-3 border-200 border-md-200 border-bottom border-end pb-4 ps-3">
-                            <h6 class="pb-1 text-700">{{ __('Trial Balance') . ' : ' . __('cr') }} </h6>
+                            <h6 class="pb-1 text-700">{{ __('Balance') }} </h6>
                             <p class="font-sans-serif lh-1 mb-1 fs-2">
-                                {{ getTrialBalance(request()->account_id, request()->from, request()->to)['cr'] }}
+                                {{ getTrialBalance(request()->account_id, request()->from, request()->to) }}
                             </p>
                         </div>
-                        <div class="col-6 col-md-3 border-200 border-md-200 border-bottom border-md-end pb-4 ps-3">
-                            <h6 class="pb-1 text-700">{{ __('Trial Balance') . ' : ' . __('dr') }}</h6>
-                            <p class="font-sans-serif lh-1 mb-1 fs-2">
-                                {{ getTrialBalance(request()->account_id, request()->from, request()->to)['dr'] }}</p>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -102,14 +111,14 @@
                     <div class="card-header">
                         <div class="row flex-between-center">
                             <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
-                                <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
+                                <h3 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
                                     {{ __('Account statement') . ': ' . getName($account) }}
-                                </h5>
+                                </h3>
                             </div>
 
                         </div>
                     </div>
-                    <div class="card py-3 mb-3">
+                    <div class="card mb-3">
                         <div class="card-body py-3">
                             <div class="row g-0">
                                 <div class="col-6 col-md-3 border-200 border-md-200 border-bottom border-end pb-4 ps-3">
@@ -124,24 +133,18 @@
                                         {{ getAccountBalance($account->id, 'dr', request()->from, request()->to) }}</p>
                                 </div>
                                 <div class="col-4 col-md-3 border-200 border-md-200 border-bottom border-end pb-4 ps-3">
-                                    <h6 class="pb-1 text-700">{{ __('Trial Balance') . ' : ' . __('cr') }} </h6>
+                                    <h6 class="pb-1 text-700">{{ __('Balance') }} </h6>
                                     <p class="font-sans-serif lh-1 mb-1 fs-2">
-                                        {{ getTrialBalance($account->id, request()->from, request()->to)['cr'] }}
+                                        {{ getTrialBalance($account->id, request()->from, request()->to) }}
                                     </p>
                                 </div>
-                                <div class="col-6 col-md-3 border-200 border-md-200 border-bottom border-md-end pb-4 ps-3">
-                                    <h6 class="pb-1 text-700">{{ __('Trial Balance') . ' : ' . __('dr') }}</h6>
-                                    <p class="font-sans-serif lh-1 mb-1 fs-2">
-                                        {{ getTrialBalance($account->id, request()->from, request()->to)['dr'] }}</p>
-                                </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
             @endforeach
         @endif
-
-
 
         <div class="card-body p-0">
             <div class="table-responsive scrollbar">
@@ -157,6 +160,10 @@
                                 </th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
                                     {{ __('ID') }}
+                                </th>
+
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
+                                    {{ __('branch') }}
                                 </th>
 
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
@@ -186,15 +193,21 @@
                                     <td class="phone align-middle white-space-nowrap py-2">{{ $entry->id }}
                                     </td>
 
+                                    <td class="phone align-middle white-space-nowrap py-2">{{ getName($entry->branch) }}
+                                    </td>
+
                                     <td class="phone align-middle white-space-nowrap py-2">{{ $entry->description }}
                                     </td>
                                     <td class="name align-middle white-space-nowrap py-2">
                                         <div class="d-flex d-flex align-items-center">
 
                                             <div class="flex-1">
-                                                <h5 class="mb-0 fs--1">
-                                                    {{ getName(getAccount($entry->account_id)) }}
-                                                </h5>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('entries.index', ['account_id' => $entry->account_id]) }}">
+                                                    <h5 class="mb-0 fs--1">
+                                                        {{ getName(getAccount($entry->account_id)) }}
+                                                    </h5>
+                                                </a>
                                             </div>
                                         </div>
                                     </td>

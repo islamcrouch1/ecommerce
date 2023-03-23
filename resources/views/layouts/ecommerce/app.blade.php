@@ -86,6 +86,19 @@
         .text-300 {
             color: #999999;
         }
+
+        .product-box .cart-detail i,
+        .product-wrap .cart-detail i {
+            color: {{ websiteSettingAr('primary_color') }} !important;
+        }
+
+        .product-box .cart-info.cart-wrap i,
+        .product-box .cart-wrap.cart-wrap i,
+        .product-wrap .cart-info.cart-wrap i,
+        .product-wrap .cart-wrap.cart-wrap i {
+            color: {{ websiteSettingAr('primary_color') }} !important;
+
+        }
     </style>
 
 

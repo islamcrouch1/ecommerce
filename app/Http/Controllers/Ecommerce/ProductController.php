@@ -15,6 +15,7 @@ use App\Models\Review;
 use App\Models\ShippingRate;
 use App\Models\State;
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -26,13 +27,15 @@ class ProductController extends Controller
     public function product(Request $request, Product $product)
     {
 
-        $cat = $product->categories()->inRandomOrder()->limit(1)->first();
-        $cat = $cat->id;
+        $cat = $product->category->id;
 
-        $products = Product::whereHas('stocks', function ($query) {
-            $query->where('warehouse_id', '=', setting('warehouse_id'))
+        $warehouses = getWebsiteWarehouses();
+
+
+        $products = Product::whereHas('stocks', function ($query) use ($warehouses) {
+            $query->whereIn('warehouse_id', $warehouses)
                 ->where('qty', '!=', '0');
-        })
+        })->orWhereNotNull('vendor_id')
 
             ->whereHas('categories', function ($query) use ($cat) {
                 $cat ? $query->where('category_id', 'like', $cat) : $query;
@@ -95,6 +98,7 @@ class ProductController extends Controller
 
         $brand = request()->brand;
 
+        $warehouses = getWebsiteWarehouses();
 
         $digital_products =  !empty($brand) ?
             Product::whereHas('brands', function ($query) use ($brand) {
@@ -137,47 +141,57 @@ class ProductController extends Controller
 
 
 
+        $vendor_products = Product::WhereNotNull('vendor_id')
+            ->where('status', "active")
+            ->where('country_id', setting('country_id'));
+
+
 
         $products = !empty($brand) ?
-            Product::whereHas('stocks', function ($query) {
-                $query->where('warehouse_id', '=', setting('warehouse_id'));
+            Product::whereHas('stocks', function ($query) use ($warehouses) {
+                $query->whereIn('warehouse_id', $warehouses);
             })
 
             ->whereHas('brands', function ($query) use ($brand) {
                 !empty($brand) ? $query->whereIn('brand_id', $brand) : $query;
             })
 
-            ->whereHas('categories', function ($query) use ($cat) {
-                $cat ? $query->where('category_id', 'like', $cat) : $query;
-            })
+            // ->whereHas('categories', function ($query) use ($cat) {
+            //     $cat ? $query->where('category_id', 'like', $cat) : $query;
+            // })
 
+            ->WhenCategory($cat)
             ->where('status', "active")
             ->where('country_id', setting('country_id'))
             ->union($digital_products)
             ->union($service_products)
-
+            ->union($vendor_products)
             ->whenSearch(request()->search)
             ->latest()
             ->paginate(request()->pagination) :
 
-            Product::whereHas('stocks', function ($query) {
-                $query->where('warehouse_id', '=', setting('warehouse_id'));
+
+
+            Product::whereHas('stocks', function ($query) use ($warehouses) {
+                $query->whereIn('warehouse_id', $warehouses);
             })
 
-            ->whereHas('categories', function ($query) use ($cat) {
-                $cat ? $query->where('category_id', 'like', $cat) : $query;
-            })
+            ->WhenCategory($cat)
             ->where('status', "active")
             ->where('country_id', setting('country_id'))
             ->union($digital_products)
             ->union($service_products)
+            ->union($vendor_products)
             ->whenSearch(request()->search)
             ->latest()
             ->paginate(request()->pagination);
 
+
+
+
         $products_all = !empty($brand) ?
-            Product::whereHas('stocks', function ($query) {
-                $query->where('warehouse_id', '=', setting('warehouse_id'));
+            Product::whereHas('stocks', function ($query) use ($warehouses) {
+                $query->whereIn('warehouse_id', $warehouses);
             })
 
             ->whereHas('brands', function ($query) use ($brand) {
@@ -190,14 +204,15 @@ class ProductController extends Controller
 
             ->union($digital_products)
             ->union($service_products)
+            ->union($vendor_products)
             ->where('status', "active")
             ->where('country_id', setting('country_id'))
             ->whenSearch(request()->search)
             ->latest()
             ->paginate(request()->pagination) :
 
-            Product::whereHas('stocks', function ($query) {
-                $query->where('warehouse_id', '=', setting('warehouse_id'));
+            Product::whereHas('stocks', function ($query) use ($warehouses) {
+                $query->whereIn('warehouse_id', $warehouses);
             })
 
             ->whereHas('categories', function ($query) use ($cat) {
@@ -206,6 +221,7 @@ class ProductController extends Controller
 
             ->union($digital_products)
             ->union($service_products)
+            ->union($vendor_products)
             ->where('status', "active")
             ->where('country_id', setting('country_id'))
             ->whenSearch(request()->search)
@@ -213,21 +229,22 @@ class ProductController extends Controller
             ->get();
 
         $top_collection =
-            Product::whereHas('stocks', function ($query) {
-                $query->where('warehouse_id', '=', setting('warehouse_id'));
+            Product::whereHas('stocks', function ($query) use ($warehouses) {
+                $query->whereIn('warehouse_id', $warehouses);
             })
 
             ->where('country_id', setting('country_id'))
             ->where('status', "active")
             ->union($digital_products)
             ->union($service_products)
+            ->union($vendor_products)
             ->where('top_collection', '1')
             ->latest()
             ->get();
 
 
-        $best_selling = Product::whereHas('stocks', function ($query) {
-            $query->where('warehouse_id', '=', setting('warehouse_id'));
+        $best_selling = Product::whereHas('stocks', function ($query) use ($warehouses) {
+            $query->whereIn('warehouse_id', $warehouses);
         })
 
 
@@ -235,6 +252,7 @@ class ProductController extends Controller
             ->where('status', "active")
             ->union($digital_products)
             ->union($service_products)
+            ->union($vendor_products)
             ->where('best_selling', '1')
             ->latest()
             ->get();
@@ -250,24 +268,24 @@ class ProductController extends Controller
 
                 foreach ($product->combinations as $combination) {
                     if (productPrice($product, $combination->id) >  $max_price) {
-                        $max_price = productPrice($product, $combination->id);
+                        $max_price = productPrice($product, $combination->id, 'vat');
                     }
 
                     if ($index == 0) {
-                        $min_price = productPrice($product, $combination->id);
-                    } elseif (productPrice($product, $combination->id) <  $min_price) {
-                        $min_price = productPrice($product, $combination->id);
+                        $min_price = productPrice($product, $combination->id, 'vat');
+                    } elseif (productPrice($product, $combination->id, 'vat') <  $min_price) {
+                        $min_price = productPrice($product, $combination->id, 'vat');
                     }
                 }
             } else {
-                if (productPrice($product) >  $max_price) {
-                    $max_price = productPrice($product);
+                if (productPrice($product, null, 'vat') >  $max_price) {
+                    $max_price = productPrice($product, null, 'vat');
                 }
 
                 if ($index == 0) {
-                    $min_price = productPrice($product);
-                } elseif (productPrice($product) <  $min_price) {
-                    $min_price = productPrice($product);
+                    $min_price = productPrice($product, null, 'vat');
+                } elseif (productPrice($product, null, 'vat') <  $min_price) {
+                    $min_price = productPrice($product, null, 'vat');
                 }
             }
         }
@@ -278,9 +296,6 @@ class ProductController extends Controller
         return view('ecommerce.products', compact('categories', 'products', 'brands', 'best_selling', 'top_collection', 'min_price', 'max_price'));
     }
 
-
-
-
     public function store(Request $request)
     {
 
@@ -290,6 +305,8 @@ class ProductController extends Controller
             'qty' => "required|string",
         ]);
 
+
+        $warehouses = getWebsiteWarehouses();
 
         $data = [];
 
@@ -304,7 +321,6 @@ class ProductController extends Controller
             $user_id = null;
             $session_id = $request->session()->token();
         }
-
 
 
         if ($product->product_type == 'variable') {
@@ -332,7 +348,14 @@ class ProductController extends Controller
             }
 
 
-            $av_qty = productQuantity($product->id, $com->id, setting('warehouse_id'));
+            if ($product->vendor_id == null) {
+                $av_qty = productQuantityWebsite($product->id, $com->id, null, $warehouses);
+            } else {
+
+                $warehouse = Warehouse::where('vendor_id', $product->vendor_id)->first();
+                $av_qty = productQuantity($product->id, $com->id, $warehouse->id);
+            }
+
 
             if ($request->qty > $av_qty || $request->qty <= 0) {
                 $data['status'] = 2;
@@ -356,7 +379,7 @@ class ProductController extends Controller
                 $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
                 $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
                 $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
-                $data['product_price'] = productPrice($product, $com->id);
+                $data['product_price'] = productPrice($product, $com->id, 'vat');
                 $data['qty'] = $request->qty;
                 $data['destroy'] = route('ecommerce.cart.destroy', ['product' => $product->id, 'combination' => $com->id]);
                 return $data;
@@ -366,7 +389,6 @@ class ProductController extends Controller
             CartItem::create([
                 'user_id' => $user_id,
                 'product_id' => $request->product_id,
-                'warehouse_id' => setting('warehouse_id'),
                 'qty' => $request->qty,
                 'product_combination_id' => $com->id,
                 'session_id' => $session_id
@@ -376,15 +398,20 @@ class ProductController extends Controller
             $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
             $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
             $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
-            $data['product_price'] = productPrice($product, $com->id);
+            $data['product_price'] = productPrice($product, $com->id, 'vat');
             $data['qty'] = $request->qty;
             $data['destroy'] = route('ecommerce.cart.destroy', ['product' => $product->id, 'combination' => $com->id]);
             return $data;
         } elseif ($product->product_type == 'simple') {
 
-            $av_qty = productQuantity($product->id, null, setting('warehouse_id'));
 
 
+            if ($product->vendor_id == null) {
+                $av_qty = productQuantityWebsite($product->id, null, null, $warehouses);
+            } else {
+                $warehouse = Warehouse::where('vendor_id', $product->vendor_id)->first();
+                $av_qty = productQuantity($product->id, null, $warehouse->id);
+            }
 
             if ($request->qty > $av_qty || $request->qty <= 0) {
                 $data['status'] = 2;
@@ -409,16 +436,15 @@ class ProductController extends Controller
                 $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
                 $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
                 $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
-                $data['product_price'] = productPrice($product, null);
+                $data['product_price'] = productPrice($product, null, 'vat');
                 $data['qty'] = $request->qty;
-                $data['destroy'] = route('ecommerce.cart.destroy', ['product' => $product->id, 'combination' => null]);
+                $data['destroy'] = route('ecommerce.cart.destroy', ['product' => $product->id, 'combination' => $product->combinations[0]->id]);
                 return $data;
             }
 
             foreach ($product->combinations as $com) {
                 CartItem::create([
                     'product_id' => $request->product_id,
-                    'warehouse_id' => setting('warehouse_id'),
                     'qty' => $request->qty,
                     'user_id' => $user_id,
                     'session_id' => $session_id,
@@ -432,9 +458,9 @@ class ProductController extends Controller
             $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
             $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
             $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
-            $data['product_price'] = productPrice($product, null);
+            $data['product_price'] = productPrice($product, null, 'vat');
             $data['qty'] = $request->qty;
-            $data['destroy'] = route('ecommerce.cart.destroy', ['product' => $product->id, 'combination' => null]);
+            $data['destroy'] = route('ecommerce.cart.destroy', ['product' => $product->id, 'combination' => $com->id]);
             return $data;
         } else {
 
@@ -455,7 +481,7 @@ class ProductController extends Controller
                 $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
                 $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
                 $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
-                $data['product_price'] = productPrice($product, null);
+                $data['product_price'] = productPrice($product, null, 'vat');
                 $data['qty'] = $request->qty;
                 $data['destroy'] = route('ecommerce.cart.destroy', ['product' => $product->id, 'combination' => null]);
                 return $data;
@@ -472,7 +498,7 @@ class ProductController extends Controller
             $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
             $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
             $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
-            $data['product_price'] = productPrice($product, null);
+            $data['product_price'] = productPrice($product, null, 'vat');
             $data['qty'] = $request->qty;
             $data['destroy'] = route('ecommerce.cart.destroy', ['product' => $product->id, 'combination' => null]);
             return $data;
@@ -480,13 +506,13 @@ class ProductController extends Controller
     }
 
 
-
-
     public function destroy($product)
     {
         $product = Product::findOrFail($product);
 
         $session_id = request()->session()->token();
+
+
 
 
         if (Auth::check()) {
@@ -503,10 +529,10 @@ class ProductController extends Controller
                 ->first();
         }
 
+
         $item->delete();
         return redirect()->back();
     }
-
 
 
     public function cart(Request $request)
@@ -528,9 +554,6 @@ class ProductController extends Controller
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         return view('ecommerce.fav', compact('categories'));
     }
-
-
-
 
     public function addFav(Request $request, $product)
     {
@@ -582,8 +605,6 @@ class ProductController extends Controller
         }
     }
 
-
-
     public function changeQuantity(Request $request)
     {
 
@@ -626,11 +647,6 @@ class ProductController extends Controller
     }
 
 
-
-
-
-
-
     public function checkout(Request $request)
     {
 
@@ -645,10 +661,6 @@ class ProductController extends Controller
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         return view('ecommerce.checkout', compact('cart_items', 'categories', 'countries'));
     }
-
-
-
-
 
     public function shipping(Request $request)
     {
@@ -754,8 +766,6 @@ class ProductController extends Controller
     }
 
 
-
-
     public function storeReview(Request $request, $product)
     {
 
@@ -793,7 +803,6 @@ class ProductController extends Controller
 
         return redirect()->route('ecommerce.product', ['product' => $product->id]);
     }
-
 
 
     public function download($order = null)

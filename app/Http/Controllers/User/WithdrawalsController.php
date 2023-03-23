@@ -61,7 +61,7 @@ class WithdrawalsController extends Controller
 
                 $balance = Balance::where('user_id', $user->id)->first();
 
-                if ($request->amount < $balance->available_balance) {
+                if ($request->amount <= $balance->available_balance) {
                     changeAvailableBalance($user, $request->amount,  0, null, 'sub');
                     changePendingWithdrawalBalance($user, $request->amount, 0, null, 'add');
                 } else {
@@ -73,9 +73,11 @@ class WithdrawalsController extends Controller
                     ]);
                 }
 
+
+
                 $users = User::whereHas('roles', function ($query) {
-                    $query->where('name', '!=', 'vendor')
-                        ->where('name', '!=', 'affiliate');
+                    $query->where('name', 'superadministrator')
+                        ->orwhere('name', 'administrator');
                 })->get();
 
                 foreach ($users as $admin) {

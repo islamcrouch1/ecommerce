@@ -6,7 +6,7 @@
         <div class="card-header">
             <div class="row flex-between-center">
                 <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
-                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">{{ __('purchases return') }}</h5>
+                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">{{ __('sales return') }}</h5>
                 </div>
             </div>
         </div>
@@ -15,7 +15,7 @@
             <div class="row g-0 h-100">
                 <div class="col-md-12 d-flex flex-center">
                     <div class="p-4 p-md-5 flex-grow-1">
-                        <form method="POST" action="{{ route('purchases.store.return') }}" enctype="multipart/form-data">
+                        <form method="POST" action="{{ route('sales.store.return') }}" enctype="multipart/form-data">
                             @csrf
 
 
@@ -42,19 +42,19 @@
 
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label" for="supplier_id">{{ __('supplier') }}</label>
+                                        <label class="form-label" for="user_id">{{ __('customer') }}</label>
 
-                                        <select class="form-select @error('supplier_id') is-invalid @enderror"
-                                            aria-label="" name="supplier_id" id="supplier_id" required>
-                                            <option value="">{{ __('select supplier') }}</option>
-                                            @foreach ($suppliers as $supplier)
-                                                <option value="{{ $supplier->id }}"
-                                                    {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>
-                                                    {{ $supplier->name }}
+                                        <select class="form-select @error('user_id') is-invalid @enderror" aria-label=""
+                                            name="user_id" id="user_id" required>
+                                            <option value="">{{ __('select customer') }}</option>
+                                            @foreach ($users as $user)
+                                                <option value="{{ $user->id }}"
+                                                    {{ old('user_id') == $user->id ? 'selected' : '' }}>
+                                                    {{ $user->name }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        @error('supplier_id')
+                                        @error('user_id')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -62,23 +62,40 @@
 
                             </div>
 
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="products">{{ __('Select product') }}</label>
 
-                            <div class="mb-3">
-                                <label class="form-label" for="products">{{ __('Select product') }}</label>
-
-                                <select data-url_com="{{ route('purchases.combinations') }}"
-                                    data-url_cal="{{ route('purchases.combinations.cal') }}"
-                                    data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
-                                    class="form-select product-select @error('products') is-invalid @enderror"
-                                    aria-label="" name="products[]" id="products" required>
+                                        <select data-url_com="{{ route('sales.combinations') }}"
+                                            data-url_cal="{{ route('sales.combinations.cal') }}"
+                                            data-url="{{ route('sales.create.search') }}"
+                                            data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                            class="form-select product-select @error('products') is-invalid @enderror"
+                                            aria-label="" name="products[]" id="products" required>
 
 
 
-                                </select>
-                                @error('products')
-                                    <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
+                                        </select>
+                                        @error('products')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="order_id">{{ __('Reference order number') }}</label>
+                                        <input name="order_id" class="form-control @error('order_id') is-invalid @enderror"
+                                            value="{{ old('order_id') }}" type="number" min="1" autocomplete="on"
+                                            id="order_id" autofocus required />
+                                        @error('order_id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                </div>
                             </div>
 
                             <div style="display: none" class="mb-3 combinations-select">
@@ -113,19 +130,22 @@
                             </div>
 
                             <div class="mb-3">
+
                                 <div class="form-check">
                                     <input name="tax[]"
-                                        class="form-check-input purchase-tax @error('tax') is-invalid @enderror"
+                                        class="form-check-input sale-tax @error('tax') is-invalid @enderror"
                                         id="flexCheckDefault" type="checkbox" value="vat" />
                                     <label class="form-check-label"
                                         for="flexCheckDefault">{{ __('added value tax') }}</label>
                                 </div>
+
+
                                 <div class="form-check">
                                     <input name="tax[]"
-                                        class="form-check-input purchase-tax @error('tax') is-invalid @enderror"
+                                        class="form-check-input sale-tax @error('tax') is-invalid @enderror"
                                         id="flexCheckChecked" type="checkbox" value="wht" />
                                     <label class="form-check-label"
-                                        for="flexCheckChecked">{{ __('withholding and collect tax') }}</label>
+                                        for="flexCheckChecked">{{ __('withholding at source tax') }}</label>
                                 </div>
 
                                 @error('tax')
@@ -146,7 +166,7 @@
                                             <td class="fw-semi-bold vat-amount">0</td>
                                         </tr>
                                         <tr>
-                                            <th class="text-900">{{ __('withholding and collect tax') . ':' }}</th>
+                                            <th class="text-900">{{ __('withholding at source tax') . ':' }}</th>
                                             <td class="fw-semi-bold wht-amount">0</td>
                                         </tr>
                                         <tr class="border-top">
@@ -159,7 +179,7 @@
 
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"
-                                    name="submit">{{ __('add') . ' ' . __('purchases return') }}</button>
+                                    name="submit">{{ __('add') . ' ' . __('sales return') }}</button>
                             </div>
                         </form>
 

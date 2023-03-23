@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Balance;
+use App\Models\Branch;
 use App\Models\Cart;
 use App\Models\Category;
 use App\Models\Country;
@@ -12,6 +13,7 @@ use App\Models\Message;
 use App\Models\Note;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Query;
 use App\Models\Request as ModelsRequest;
 use App\Models\Role;
 use App\Models\User;
@@ -49,6 +51,7 @@ class UsersController extends Controller
 
 
         $countries = Country::all();
+        $branches = Branch::all();
 
         $roles = Role::WhereRoleNot('superadministrator')->get();
         $users = User::whereDate('created_at', '>=', request()->from)
@@ -57,13 +60,14 @@ class UsersController extends Controller
             ->whenSearch(request()->search)
             ->whenRole(request()->role_id)
             ->whenCountry(request()->country_id)
+            ->whenBranch(request()->branch_id)
             ->whenStatus(request()->status)
             ->with('roles')
             ->latest()
             ->paginate(100);
 
 
-        return view('dashboard.users.index', compact('users', 'roles', 'countries'));
+        return view('dashboard.users.index', compact('users', 'roles', 'countries', 'branches'));
     }
 
 
@@ -108,15 +112,6 @@ class UsersController extends Controller
         ]);
 
 
-        if ($request['role'] == '3') {
-            if (setting('suppliers_account') == null) {
-                alertError('please select the default liability account for suppliers in settings page', 'الرجاء تحديد حساب الالزامات الافتراضية للموردين في صفحة الإعدادات');
-                return redirect()->back();
-            }
-        }
-
-
-
         $profile = $request->profile;
 
         if (!isset($request->profile)) {
@@ -151,22 +146,6 @@ class UsersController extends Controller
         } else {
             $user->attachRoles(['administrator', $request['role']]);
         }
-
-
-        if ($request['role'] == '3') {
-            $account = Account::findOrFail(setting('suppliers_account'));
-            Account::create([
-                'name_ar' => $user->name,
-                'name_en' => $user->name,
-                'code' => $account->code .  $user->id,
-                'parent_id' => $account->id,
-                'account_type' => $account->account_type,
-                'reference_id' => $user->id,
-                'type' => 'supplier',
-                'created_by' => Auth::id(),
-            ]);
-        }
-
 
 
         Cart::create([
@@ -307,17 +286,19 @@ class UsersController extends Controller
     public function trashed()
     {
         $countries = Country::all();
+        $branches = Branch::all();
         $roles = Role::WhereRoleNot('superadministrator')->get();
         $users = User::onlyTrashed()
             ->whereRoleNot('superadministrator')
             ->whenSearch(request()->search)
             ->whenRole(request()->role_id)
             ->whenCountry(request()->country_id)
+            ->whenBranch(request()->branch_id)
             ->whenStatus(request()->status)
             ->with('roles')
             ->latest()
             ->paginate(100);
-        return view('dashboard.users.index', compact('users', 'roles', 'countries'));
+        return view('dashboard.users.index', compact('users', 'roles', 'countries', 'branches'));
     }
 
     public function restore($user)
@@ -403,7 +384,7 @@ class UsersController extends Controller
             ->latest()
             ->paginate(50);
 
-        $orders = Order::where('user_id', $user->id)
+        $orders = Order::where('customer_id', $user->id)
             ->whenSearch(request()->search_order)
             ->whenCountry(request()->country_id)
             ->whenStatus(request()->status)
@@ -420,7 +401,7 @@ class UsersController extends Controller
         $requests = ModelsRequest::where('user_id', $user->id)->latest()
             ->paginate(50);
 
-        $products = Product::where('vendor_id', $user->id)
+        $products = Product::where('created_by', $user->id)
             ->whenSearch(request()->search)
             ->whenCategory(request()->category_id)
             ->whenCountry(request()->country_id)
@@ -438,11 +419,18 @@ class UsersController extends Controller
             ->latest()
             ->paginate(20);
 
+        $queries = Query::where('user_id', $user->id)
+            ->latest()
+            ->paginate(20);
+
         $countries = Country::all();
 
         $categories = Category::all();
 
-        return view('dashboard.users.show', compact('user', 'withdrawals', 'orders', 'countries', 'vendor_orders', 'requests', 'products', 'categories', 'notes', 'messages'));
+        $roles = Role::WhereRoleNot('superadministrator')->WhereRoleNot('administrator')->WhereRoleNot('vendor')->WhereRoleNot('affiliate')->get();
+
+
+        return view('dashboard.users.show', compact('roles', 'user', 'withdrawals', 'orders', 'countries', 'vendor_orders', 'requests', 'products', 'categories', 'notes', 'messages', 'queries'));
     }
 
 

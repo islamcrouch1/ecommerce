@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductCombination;
 use App\Models\ProductCombinationDtl;
 use App\Models\Slide;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -45,20 +46,23 @@ class HomeController extends Controller
             ->where('status', "active")
             ->where('country_id', setting('country_id'));
 
+        $vendor_products = Product::WhereNotNull('vendor_id')
+            ->where('status', "active")
+            ->where('country_id', setting('country_id'));
 
-        $products = Product::whereHas('stocks', function ($query) {
-            $query->where('warehouse_id', '=', setting('warehouse_id'));
+
+        $warehouses = getWebsiteWarehouses();
+
+        $products = Product::whereHas('stocks', function ($query) use ($warehouses) {
+            $query->whereIn('warehouse_id', $warehouses);
         })
-
             ->where('country_id', setting('country_id'))
             ->where('status', "active")
             ->union($digital_products)
             ->union($service_products)
+            ->union($vendor_products)
             ->latest()
             ->get();
-
-
-
 
         return view('ecommerce.home', compact('categories', 'slides', 'products', 'cart_items'));
     }
@@ -68,6 +72,11 @@ class HomeController extends Controller
     public function about(Request $request)
     {
         return view('ecommerce.about');
+    }
+
+    public function contact(Request $request)
+    {
+        return view('ecommerce.contact');
     }
 
     public function terms(Request $request)
@@ -100,7 +109,9 @@ class HomeController extends Controller
                 $count = $combination->variations->whereIn('variation_id', $variations);
                 $count =  count($count);
                 if ($count == $selected_attributes_count) {
-                    return $combination;
+
+                    $product = $combination->product;
+                    return getProductPrice($product, $combination);
                 }
             }
         } else {

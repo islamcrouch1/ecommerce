@@ -204,7 +204,7 @@ class PaymentController extends Controller
         if (Auth::check()) {
             $customer_account = Account::where('reference_id', Auth::id())->where('type', 'customer')->first();
         } else {
-            $customer_account = Account::findOrFail(setting('account_receivable_account'));
+            $customer_account = Account::findOrFail(setting('customers_account'));
         }
 
         Entry::create([
@@ -269,6 +269,35 @@ class PaymentController extends Controller
                     'reference_price' => productPrice($product, $product->pivot->product_combination_id),
                     'created_by' => Auth::check() ? Auth::id() : null,
                 ]);
+
+                if ($product->product_type == 'variable') {
+                    $product_account = Account::where('reference_id', $product->pivot->product_combination_id)->where('type', 'variable_product')->first();
+                    $cs_account = Account::where('reference_id', $product->pivot->product_combination_id)->where('type', 'variable_product_cost')->first();
+                } else {
+                    $product_account = Account::where('reference_id', $product->pivot->product_combination_id)->where('type', 'simple_product')->first();
+                    $cs_account = Account::where('reference_id', $product->pivot->product_combination_id)->where('type', 'simple_product_cost')->first();
+                }
+
+                Entry::create([
+                    'account_id' => $product_account->id,
+                    'type' => 'sales',
+                    'dr_amount' => ($product->pivot->cost * $product->pivot->qty),
+                    'cr_amount' => 0,
+                    'description' => 'sales order# ' . $order->id,
+                    'reference_id' => $order->id,
+                    'created_by' => Auth::check() ? Auth::id() : null,
+                ]);
+
+
+                Entry::create([
+                    'account_id' => $cs_account->id,
+                    'type' => 'sales',
+                    'dr_amount' => 0,
+                    'cr_amount' => ($product->pivot->cost * $product->pivot->qty),
+                    'description' => 'sales order# ' . $order->id,
+                    'reference_id' => $order->id,
+                    'created_by' => Auth::check() ? Auth::id() : null,
+                ]);
             }
         }
 
@@ -282,7 +311,7 @@ class PaymentController extends Controller
         if (Auth::check()) {
             $customer_account = Account::where('reference_id', Auth::id())->where('type', 'customer')->first();
         } else {
-            $customer_account = Account::findOrFail(setting('account_receivable_account'));
+            $customer_account = Account::findOrFail(setting('customers_account'));
         }
         Entry::create([
             'account_id' => $customer_account->id,

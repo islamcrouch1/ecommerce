@@ -32,30 +32,35 @@ return new class extends Migration
             $table->string('special_mark')->nullable();
             $table->string('notes')->nullable();
 
-            $table->double('total_price', 8, 2)->nullable();
-            $table->double('subtotal_price', 8, 2)->nullable();
+            $table->double('total_price', 8, 2)->default(0);
+            $table->double('subtotal_price', 8, 2)->default(0);
 
-            $table->double('total_price_affiliate', 8, 2)->nullable();
+            $table->double('total_price_affiliate', 8, 2)->default(0);
 
-            $table->double('total_commission', 8, 2)->nullable();
-            $table->double('total_profit', 8, 2)->nullable();
+            $table->double('total_commission', 8, 2)->default(0);
+            $table->double('total_profit', 8, 2)->default(0);
 
 
-            $table->double('shipping_amount', 8, 2)->nullable();
-            $table->integer('shipping_method_id')->nullable();
+            $table->double('shipping_amount', 8, 2)->default(0);
+            $table->integer('shipping_method_id')->default(0);
 
             $table->string('status')->default('pending');
 
             $table->string('phone')->nullable();
             $table->string('phone2')->nullable();
 
-            $table->string('payment_status')->default('Pending');
+            $table->enum('payment_status', ['pending', 'paid', 'partial', 'faild'])->default('pending');
+
             $table->enum('payment_method', [
                 'cod', 'cash_on_delivery', 'e_wallet', 'paypal', 'authorize_net', 'stripe', 'banktransfer', 'mollie', 'instamojo', 'braintree', 'hyperpay', 'razorpay', 'paytm', 'paystack', 'midtrans', 'wallet', 'fygaro', 'card'
             ])->default('cash_on_delivery');
             $table->string('transaction_id')->nullable();
 
-            $table->double('total_tax', 8, 2)->nullable();
+            $table->double('total_tax', 8, 2)->default(0);
+
+            $table->double('total_wht_products', 8, 2)->default(0);
+            $table->double('total_wht_services', 8, 2)->default(0);
+
 
             $table->longText('description')->nullable();
 
@@ -63,6 +68,10 @@ return new class extends Migration
             $table->boolean('is_seen')->default('0')->comment('1 for seen & 0 for unseen');
             $table->string('coupon_code')->nullable();
             $table->double('coupon_amount', 8, 2)->nullable();
+
+            $table->string('session_id')->nullable();
+            $table->bigInteger('orderId')->nullable();
+
 
             $table->timestamps();
         });

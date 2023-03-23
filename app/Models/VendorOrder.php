@@ -11,7 +11,7 @@ class VendorOrder extends Model
 
 
     protected $fillable = [
-        'status', 'country_id', 'user_name', 'user_id', 'order_id', 'total_price'
+        'status', 'country_id', 'user_name', 'user_id', 'order_id', 'total_price', 'total_commission', 'total_tax'
     ];
 
 
@@ -29,7 +29,7 @@ class VendorOrder extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class)
-            ->withPivot('warehouse_id', 'vendor_price', 'qty', 'total_vendor_price', 'vendor_order_id', 'product_type', 'product_combination_id')
+            ->withPivot('warehouse_id', 'product_price', 'qty', 'commission', 'vendor_order_id', 'product_type', 'product_combination_id')
             ->withTimestamps();
     }
 
@@ -47,8 +47,8 @@ class VendorOrder extends Model
             return $q->where('id', 'like', "%$search%")
                 ->orWhere('total_price', 'like', "%$search%")
                 ->orWhere('user_name', 'like', "%$search%")
-                ->orWhere('client_name', 'like', "%$search%")
-                ->orWhere('client_phone', 'like', "%$search%");
+                ->orWhere('total_commission', 'like', "%$search%")
+                ->orWhere('order_id', 'like', "%$search%");
         });
     }
 

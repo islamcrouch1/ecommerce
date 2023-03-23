@@ -3,7 +3,7 @@
  <!-- ===============================================-->
  <nav class=" navbar navbar-standard navbar-expand-lg fixed-top navbar-dark"
      data-navbar-darken-on-scroll="data-navbar-darken-on-scroll">
-     <div class="container-fluid"> <a class="w-auto mx-auto ms-2 pt-3 " href="{{ route('front.index') }}"><img
+     <div class="container-fluid"> <a class="w-auto mx-auto ms-2 pt-3 " href="{{ route('ecommerce.home') }}"><img
                  src="{{ asset('assets/logos/logo.png') }}" alt="img" height="60"></a>
          <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse"
              data-bs-target="#navbarStandard" aria-controls="navbarStandard" aria-expanded="false"
@@ -11,19 +11,19 @@
          <div class="collapse navbar-collapse scrollbar" id="navbarStandard">
 
              <ul class="navbar-nav" data-top-nav-dropdowns="data-top-nav-dropdowns">
-                 <li class="nav-item "><a class="nav-link" href="{{ route('front.index') }}" role="button"
+                 <li class="nav-item "><a class="nav-link" href="{{ route('ecommerce.home') }}" role="button"
                          id="Dashboards">{{ __('Home') }}</a>
                  </li>
                  <li class="nav-item "><a class="nav-link" href="{{ route('front.about') }}" role="button"
-                    id="Dashboards">{{ __('About Us') }}</a>
-            </li>
+                         id="Dashboards">{{ __('About Us') }}</a>
+                 </li>
                  <li class="nav-item "><a class="nav-link" href="{{ route('front.fqs') }}" role="button"
                          id="Dashboards">{{ __('FAQs') }}</a>
                  </li>
                  <li class="nav-item "><a class="nav-link" href="{{ route('front.terms') }}" role="button"
                          id="Dashboards">{{ __('Terms and conditions') }}</a>
                  </li>
-                
+
                  {{-- <li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button"
                          data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                          id="Dashboards">Dashboard</a>
@@ -532,8 +532,8 @@
                  @else
                      <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
                      </li>
-                     <li class="nav-item"><a class="nav-link"
-                             href="{{ route('register') }}">{{ __('Register') }}</a></li>
+                     <li class="nav-item"><a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                     </li>
                  @endif
 
              </ul>

@@ -82,11 +82,16 @@ $('.attribute-select').on('click' , function(e){
 
                 $(price_tag).html('');
 
-                if(data.discount_price == 0){
-                    var append_data = `<h4>`+ data.sale_price + currency + `</h4>`;
-                }else{
-                    var append_data = `<h4><del>`+ data.sale_price + currency + `</del>` + data.discount_price + ` ` + currency + `</h4>`;
-                }
+                console.log(data)
+
+                var append_data = data;
+
+
+                // if(data.discount_price == 0){
+                //     var append_data = `<h4>`+ data.sale_price + currency + `</h4>`;
+                // }else{
+                //     var append_data = `<h4><del>`+ data.sale_price + currency + `</del>` + data.discount_price + ` ` + currency + `</h4>`;
+                // }
 
                 $(price_tag).append(append_data);
 

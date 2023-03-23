@@ -197,7 +197,13 @@
                                         <td class="phone align-middle white-space-nowrap py-2">
                                             {{ __($product->product_type) }}</td>
                                         <td class="phone align-middle white-space-nowrap py-2">
-                                            {{ productQuantity($product->id) }}
+
+                                            @if ($product->vendor_id == null)
+                                                {{ productQuantity($product->id, null, null, $user->hasPermission('branches-read') ? null : $user->branch->warehouses) }}
+                                            @else
+                                                {{ productQuantity($product->id, null, null, null) }}
+                                            @endif
+
                                         </td>
                                         <td class="phone align-middle white-space-nowrap py-2">
                                             @switch($product->status)
@@ -236,8 +242,9 @@
                                                 <div class="dropdown-menu dropdown-menu-end border py-0"
                                                     aria-labelledby="customer-dropdown-0">
                                                     <div class="bg-white py-2">
-                                                        @if ($product->trashed() &&
-                                                            auth()->user()->hasPermission('products-restore'))
+                                                        @if (
+                                                            $product->trashed() &&
+                                                                auth()->user()->hasPermission('products-restore'))
                                                             <a class="dropdown-item"
                                                                 href="{{ route('products.restore', ['product' => $product->id]) }}">{{ __('Restore') }}</a>
                                                         @elseif(auth()->user()->hasPermission('products-update'))
@@ -248,15 +255,23 @@
                                                                 data-bs-target="#status-modal-{{ $product->id }}">{{ __('Change Status') }}</a>
                                                             <a class="dropdown-item"
                                                                 href="{{ route('products.stock.create', ['product' => $product->id]) }}">{{ __('Edit Stock') }}</a>
-                                                            <a class="dropdown-item"
-                                                                href="{{ route('users.show', ['user' => $product->created_by]) }}">{{ __('Vendor Info') }}</a>
-                                                            @if ($product->created_by != null)
+                                                            @if ($product->vendor_id != null)
                                                                 <a class="dropdown-item"
-                                                                    href="{{ route('users.show', ['user' => $product->created_by]) }}">{{ __('Admin Info') }}</a>
+                                                                    href="{{ route('users.show', ['user' => $product->vendor_id]) }}">{{ __('Vendor Info') }}</a>
+                                                            @endif
+
+                                                            @if ($product->updated_by != null)
+                                                                <a class="dropdown-item"
+                                                                    href="{{ route('users.show', ['user' => $product->updated_by]) }}">{{ __('Admin Info') }}</a>
+                                                            @endif
+
+                                                            @if ($product->created_by != null && $product->vendor_id == null)
+                                                                <a class="dropdown-item"
+                                                                    href="{{ route('users.show', ['user' => $product->created_by]) }}">{{ __('Created By') }}</a>
                                                             @endif
                                                         @endif
                                                         @if (auth()->user()->hasPermission('products-delete') ||
-                                                            auth()->user()->hasPermission('products-trash'))
+                                                                auth()->user()->hasPermission('products-trash'))
                                                             <form method="POST"
                                                                 action="{{ route('products.destroy', ['product' => $product->id]) }}">
                                                                 @csrf

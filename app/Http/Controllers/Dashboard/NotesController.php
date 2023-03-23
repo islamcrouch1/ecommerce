@@ -16,6 +16,7 @@ class NotesController extends Controller
     {
         $request->validate([
             'note' => "required|string",
+            'role' => "required|string",
         ]);
 
         $note = Note::create([
@@ -24,9 +25,83 @@ class NotesController extends Controller
             'admin_id' => Auth::user()->id,
         ]);
 
+
+
+        $description_ar = "تم اضافة ملاحظة لعميل - " . $user->name . ' - ' . $request['note'];
+        $description_en  = "note added for client - " .  $user->name . ' - ' . $request['note'];
+        addLog('admin', 'users', $description_ar, $description_en);
+
+
+        $users = User::whereHas('roles', function ($query) {
+            $query->where('name', '!=', 'user');
+        })->get();
+
+        if ($request['role'] !== '0') {
+
+
+            foreach ($users as $admin) {
+
+                $title_ar = 'تم اضافة ملاحظة لعميل - ' . $user->name;
+                $body_ar = $request['note'];
+                $title_en = 'not has been added to user - ' . $user->name;
+                $body_en  = $request['note'];
+                $url = route('users.show', ['user' => $user->id]);
+
+                if ($admin->id != Auth::user()->id && $admin->hasRole($request['role'])) {
+                    addNoty($admin, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
+                }
+            }
+        }
+
+
         alertSuccess('user note created successfully', 'تم إضافة ملاحظة على المستخدم بنجاح');
         return redirect()->route('users.show', ['user' => $user->id]);
     }
+
+
+    public function edit(Note $note)
+    {
+        return view('Dashboard.users.note ')->with('note', $note);
+    }
+
+    public function update(Request $request, Note $note)
+    {
+
+        $request->validate([
+            'note' => "required|string",
+
+        ]);
+
+        $note->update([
+            'note' => $request['note'],
+        ]);
+
+
+        $description_ar = "تم تعديل ملاحظة لعميل - " . $note->user->name . ' - ' . $request['note'];
+        $description_en  = "note updated for user - " .  $note->user->name . ' - ' . $request['note'];
+        addLog('admin', 'users', $description_ar, $description_en);
+
+
+        alertSuccess('user note updated successfully', 'تم تعديل الملاحظة من العميل بنجاح');
+        return redirect()->route('users.show', ['user' => $note->user->id]);
+    }
+
+
+    public function destroy(Note $note)
+    {
+        $user_id = $note->user_id;
+        $user = User::findOrFail($user_id);
+
+        $description_ar = "تم حذف الملاحظة لعميل - " . $user->name . ' - ' . $note->note;
+        $description_en  = "note added from user - " .  $user->name . ' - ' . $note->note;
+        addLog('admin', 'users', $description_ar, $description_en);
+
+
+        $note->delete();
+        alertSuccess('note deleted successfully', 'تم حذف الملاحظة بنجاح');
+        return redirect()->route('users.show', ['user' => $user_id]);
+    }
+
 
 
     public function addorderNote(Order $order, Request $request)

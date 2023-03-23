@@ -60,46 +60,60 @@
 
                         </form>
 
-                        <form style="display: inline-block" action="{{ route('vendor-products.import') }}" method="POST"
+                        {{-- <form style="display: inline-block" action="{{ route('vendor-products.import') }}" method="POST"
                             enctype="multipart/form-data">
                             @csrf
                             <input class="form-control form-control-sm sonoo-search" type="file" name="file"
                                 accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 data-buttonText="{{ __('Import') }}" required />
 
-                            {{-- <button class="btn btn-falcon-default btn-sm" type="submit"><span
-                                    class="fas fa-external-link-alt" data-fa-transform="shrink-3 down-2"></span><span
-                                    class="d-none d-sm-inline-block ms-1">{{ __('Import') }}</span></button> --}}
-                        </form>
+
+                        </form> --}}
 
                         <a href="{{ route('vendor-products.create') }}" class="btn btn-falcon-default btn-sm"
                             type="button"><span class="fas fa-plus" data-fa-transform="shrink-3 down-2"></span><span
-                                class="d-none d-sm-inline-block ms-1">New</span></a>
+                                class="d-none d-sm-inline-block ms-1">{{ __('New') }}</span></a>
 
-                        <a href="{{ route('vendor-products.export', ['status' => request()->status, 'category_id' => request()->category_id]) }}"
+                        {{-- <a href="{{ route('vendor-products.export', ['status' => request()->status, 'category_id' => request()->category_id]) }}"
                             class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-external-link-alt"
                                 data-fa-transform="shrink-3 down-2"></span><span
-                                class="d-none d-sm-inline-block ms-1">Export</span></a>
+                                class="d-none d-sm-inline-block ms-1">Export</span></a> --}}
                     </div>
                 </div>
             </div>
         </div>
         <div class="card-body p-0">
+
+
             <div class="table-responsive scrollbar">
                 @if ($products->count() > 0)
                     <table class="table table-sm table-striped fs--1 mb-0 overflow-hidden">
                         <thead class="bg-200 text-900">
                             <tr>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">Product Name</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">SKU - ID</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">Vendor Price</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">Quantity</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">Status</th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
+                                    {{ __('Product Name') }}</th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
+                                    {{ __('SKU - ID') }}</th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                    {{ __('sale price') }}</th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                    {{ __('discount price') }}
+                                </th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                    {{ __('platform commission') }}
+                                </th>
+
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                    {{ __('product type') }}</th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                    {{ __('Quantity') }}</th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                    {{ __('Status') }}</th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
-                                    data-sort="joined">Created at</th>
+                                    data-sort="joined">{{ __('Created at') }}</th>
                                 @if ($products->count() > 0 && $products[0]->trashed())
                                     <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
-                                        data-sort="joined">Deleted at</th>
+                                        data-sort="joined">{{ __('Deleted at') }}</th>
                                 @endif
                                 <th class="align-middle no-sort"></th>
                             </tr>
@@ -111,7 +125,7 @@
                                         <div class="d-flex d-flex align-items-center">
                                             <div class="avatar avatar-xl me-2">
                                                 <img class="rounded-circle"
-                                                    src="{{ asset('storage/images/products/' . ($product->images->count() == 0 ? 'place-holder.png' : $product->images[0]->image)) }}"
+                                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
                                                     alt="" />
                                             </div>
                                             <div class="flex-1">
@@ -125,9 +139,15 @@
                                     <td class="phone align-middle white-space-nowrap py-2">
                                         {{ $product->sku . ' - ' . $product->id }}</td>
                                     <td class="phone align-middle white-space-nowrap py-2">
-                                        {{ $product->vendor_price . ' ' . $product->country->currency }}</td>
+                                        {{ $product->sale_price . ' ' . $product->country->currency }}</td>
                                     <td class="phone align-middle white-space-nowrap py-2">
-                                        {{ productQuantity($product) }}
+                                        {{ $product->discount_price . ' ' . $product->country->currency }}</td>
+                                    <td class="phone align-middle white-space-nowrap py-2">
+                                        {{ $product->category->vendor_profit . ' %' }}</td>
+                                    <td class="phone align-middle white-space-nowrap py-2">
+                                        {{ __($product->product_type) }}</td>
+                                    <td class="phone align-middle white-space-nowrap py-2">
+                                        {{ productQuantity($product->id) }}
                                     </td>
                                     <td class="phone align-middle white-space-nowrap py-2">
                                         @switch($product->status)
@@ -167,10 +187,8 @@
                                                 <div class="bg-white py-2">
                                                     @if ($product->status == 'pending' || $product->status == 'pause')
                                                         <a class="dropdown-item"
-                                                            href="{{ route('vendor-products.edit', ['vendor_product' => $product->id]) }}">Edit</a>
-                                                        <a class="dropdown-item"
-                                                            href="{{ route('vendor-products.stock.create', ['product' => $product->id]) }}">Edit
-                                                            Stock</a>
+                                                            href="{{ route('vendor-products.edit', ['vendor_product' => $product->id]) }}">{{ __('Edit') }}</a>
+
 
                                                         <form method="POST"
                                                             action="{{ route('vendor-products.destroy', ['vendor_product' => $product->id]) }}">
@@ -180,6 +198,8 @@
                                                                 type="submit">{{ $product->trashed() ? __('Delete') : __('Trash') }}</button>
                                                         </form>
                                                     @endif
+                                                    <a class="dropdown-item"
+                                                        href="{{ route('vendor-products.stock.create', ['product' => $product->id]) }}">{{ __('Edit Stock') }}</a>
                                                 </div>
                                             </div>
                                         </div>

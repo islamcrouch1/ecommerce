@@ -62,6 +62,10 @@
                                     {{ __('warehouse code') }}
                                 </th>
 
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
+                                    {{ __('city') }}
+                                </th>
+
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">{{ __('Address') }}
                                 </th>
 
@@ -94,6 +98,7 @@
                                     </td>
 
                                     <td class="joined align-middle py-2">{{ $warehouse->code }} </td>
+                                    <td class="joined align-middle py-2">{{ getName($warehouse->city) }} </td>
 
                                     <td class="joined align-middle py-2">{{ $warehouse->address }} </td>
                                     <td class="joined align-middle py-2">{{ $warehouse->created_at }} <br>
@@ -111,8 +116,9 @@
                                             <div class="dropdown-menu dropdown-menu-end border py-0"
                                                 aria-labelledby="customer-dropdown-0">
                                                 <div class="bg-white py-2">
-                                                    @if ($warehouse->trashed() &&
-                                                        auth()->user()->hasPermission('warehouses-restore'))
+                                                    @if (
+                                                        $warehouse->trashed() &&
+                                                            auth()->user()->hasPermission('warehouses-restore'))
                                                         <a class="dropdown-item"
                                                             href="{{ route('warehouses.restore', ['warehouse' => $warehouse->id]) }}">{{ __('Restore') }}</a>
                                                     @elseif(auth()->user()->hasPermission('warehouses-update'))
@@ -120,7 +126,7 @@
                                                             href="{{ route('warehouses.edit', ['warehouse' => $warehouse->id]) }}">{{ __('Edit') }}</a>
                                                     @endif
                                                     @if (auth()->user()->hasPermission('warehouses-delete') ||
-                                                        auth()->user()->hasPermission('warehouses-trash'))
+                                                            auth()->user()->hasPermission('warehouses-trash'))
                                                         <form method="POST"
                                                             action="{{ route('warehouses.destroy', ['warehouse' => $warehouse->id]) }}">
                                                             @csrf

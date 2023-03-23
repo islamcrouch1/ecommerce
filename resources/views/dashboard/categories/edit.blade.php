@@ -147,11 +147,24 @@
 
 
                             <div class="mb-3">
-                                <label class="form-label" for="profit">{{ __('Category Profit %') }}</label>
+                                <label class="form-label"
+                                    for="profit">{{ __('Category Profit for affiliate %') }}</label>
                                 <input name="profit" class="form-control @error('profit') is-invalid @enderror"
                                     value="{{ $category->profit }}" type="number" min="0" autocomplete="on"
                                     id="profit" autofocus required />
                                 @error('profit')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label"
+                                    for="vendor_profit">{{ __('Category Profit for vendors %') }}</label>
+                                <input name="vendor_profit"
+                                    class="form-control @error('vendor_profit') is-invalid @enderror"
+                                    value="{{ $category->vendor_profit }}" type="number" min="0"
+                                    autocomplete="on" id="vendor_profit" autofocus required />
+                                @error('vendor_profit')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -169,7 +182,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="image">{{ __('Category image') }}</label>
                                 <input name="image" class="img form-control @error('image') is-invalid @enderror"
-                                    type="file" id="image" />
+                                    type="file" id="image" accept="image/*" />
                                 @error('image')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
@@ -187,8 +200,7 @@
 
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"
-                                    name="submit">{{ __('Edit
-                                                                                                                                                                                                                                                                                                                                                                                                            Category') }}</button>
+                                    name="submit">{{ __('Edit Category') }}</button>
                             </div>
                         </form>
 

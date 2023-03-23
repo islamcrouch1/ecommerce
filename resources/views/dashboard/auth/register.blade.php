@@ -18,11 +18,12 @@
 
                                 <div class="z-index-1 position-relative"><a
                                         class="link-light mb-4 font-sans-serif fs-4 d-inline-block fw-bolder"
-                                        href="{{ route('front.index') }}">
-                                        <img style="width:150px" src="{{ asset('assets/img/logo.png') }}" alt="">
+                                        href="{{ route('ecommerce.home') }}">
+                                        <img style="width:150px" src="{{ asset(websiteSettingMedia('header_logo')) }}"
+                                            alt="">
                                     </a>
                                     <p class="opacity-75 text-white">
-                                        {{ __('Do not miss the chance.Now you can start your business without needing any capital.') }}
+                                        {{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_about') : websiteSettingEn('footer_about') }}
                                     </p>
 
                                 </div>
@@ -64,9 +65,11 @@
 
                                         <select class="form-select @error('role') is-invalid @enderror" aria-label=""
                                             name="role" id="role" required>
-                                            <option value="4" {{ old('role') == '4' ? 'selected' : '' }}>
+                                            <option value="" {{ old('role') == '3' ? 'selected' : '' }}>
+                                                {{ __('Select account type') }}</option>
+                                            {{-- <option value="4" {{ old('role') == '4' ? 'selected' : '' }}>
                                                 {{ __('Affiliate') }}
-                                            </option>
+                                            </option> --}}
                                             <option value="3" {{ old('role') == '3' ? 'selected' : '' }}>
                                                 {{ __('Vendor') }}</option>
                                         </select>
@@ -174,9 +177,10 @@
                                         <input class="form-check-input @error('check') is-invalid @enderror"
                                             type="checkbox" id="check" name="check" required />
                                         <label class="form-label" for="check">{{ __('I accept the') }} <a
-                                                href="{{ route('front.terms') }}">{{ __('terms') }}
-                                            </a>{{ __('and') }} <a
-                                                href="{{ route('front.terms') }}">{{ __('privacy policy') }}</a></label>
+                                                href="{{ route('ecommerce.terms') }}"
+                                                target="_blank">{{ __('terms') }}
+                                            </a>{{ __('and') }} <a href="{{ route('ecommerce.terms') }}"
+                                                target="_blank">{{ __('privacy policy') }}</a></label>
                                         @error('check')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror

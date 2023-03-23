@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->integer('user_id');
             $table->integer('admin_id');
-            $table->string('note');
+            $table->longText('note')->nullable();
             $table->timestamps();
         });
     }

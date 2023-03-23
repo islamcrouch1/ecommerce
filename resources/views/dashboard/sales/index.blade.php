@@ -39,6 +39,19 @@
                             <form style="display: inline-block" action="">
 
                                 <div class="d-inline-block">
+                                    <select name="branch_id" class="form-select form-select-sm sonoo-search"
+                                        id="autoSizingSelect">
+                                        <option value="" selected>{{ __('All Branches') }}</option>
+                                        @foreach ($branches as $branch)
+                                            <option value="{{ $branch->id }}"
+                                                {{ request()->branch_id == $branch->id ? 'selected' : '' }}>
+                                                {{ getName($branch) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="d-inline-block">
                                     {{-- <label class="form-label" for="from">{{ __('From') }}</label> --}}
                                     <input type="date" id="from" name="from" class="form-control form-select-sm"
                                         value="{{ request()->from }}">
@@ -64,6 +77,24 @@
                                 </div>
 
                                 <div class="d-inline-block">
+                                    <select name="payment_status" class="form-select form-select-sm sonoo-search"
+                                        id="autoSizingSelect">
+                                        <option value="" selected>{{ __('All Payment Status') }}</option>
+                                        <option value="pending"
+                                            {{ request()->payment_status == 'pending' ? 'selected' : '' }}>
+                                            {{ __('pending') }}</option>
+
+                                        <option value="paid" {{ request()->payment_status == 'paid' ? 'selected' : '' }}>
+                                            {{ __('paid') }}</option>
+
+                                        <option value="partial"
+                                            {{ request()->payment_status == 'partial' ? 'selected' : '' }}>
+                                            {{ __('partial') }}</option>
+
+                                    </select>
+                                </div>
+
+                                {{-- <div class="d-inline-block">
                                     <select name="country_id" class="form-select form-select-sm sonoo-search"
                                         id="autoSizingSelect">
                                         <option value="" selected>{{ __('All Countries') }}</option>
@@ -74,7 +105,7 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                </div>
+                                </div> --}}
 
 
                             </form>
@@ -85,10 +116,10 @@
                                     type="button"><span class="fas fa-plus"
                                         data-fa-transform="shrink-3 down-2"></span><span
                                         class="d-none d-sm-inline-block ms-1">{{ __('New') }}</span></a>
-                                {{-- <a href="{{ route('sales.create.return') }}" class="btn btn-falcon-default btn-sm"
+                                <a href="{{ route('sales.create.return') }}" class="btn btn-falcon-default btn-sm"
                                     type="button"><span class="fas fa-plus"
                                         data-fa-transform="shrink-3 down-2"></span><span
-                                        class="d-none d-sm-inline-block ms-1">{{ __('Add return') }}</span></a> --}}
+                                        class="d-none d-sm-inline-block ms-1">{{ __('Add return') }}</span></a>
                             @endif
 
                             {{-- <a href="{{ route('orders.export', ['status' => request()->status, 'from' => request()->from, 'to' => request()->to]) }}"
@@ -119,6 +150,9 @@
                                         {{ __('Supplier Name') }}</th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="status">
                                         {{ __('Status') }}</th>
+                                    <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                        {{ __('Payment Status') }}
+                                    </th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="status">
                                         {{ __('warehouse') }}</th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
@@ -172,6 +206,9 @@
                                             {!! getOrderHistory($order->status) !!}
 
                                         </td>
+                                        <td class="address align-middle white-space-nowrap py-2">
+                                            {!! getPaymentStatus($order->payment_status) !!}
+                                        </td>
                                         <td class="phone align-middle white-space-nowrap py-2">
 
 
@@ -193,13 +230,8 @@
 
                                         <td class="address align-middle white-space-nowrap py-2">
 
+                                            {{ $order->total_wht_products + $order->total_wht_services . ' ' . $order->country->currency }}
 
-
-                                            {{ $order->taxes()->wherein('tax_id', [setting('wht_products'), setting('wht_services')])->first() != null
-                                                ? $order->taxes()->wherein('tax_id', [setting('wht_products'), setting('wht_services')])->first()->pivot->amount .
-                                                    ' ' .
-                                                    $order->country->currency
-                                                : 0 . ' ' . $order->country->currency }}
                                         </td>
 
 
@@ -236,6 +268,12 @@
                                                             <a href="" class="dropdown-item"
                                                                 data-bs-toggle="modal"
                                                                 data-bs-target="#track-modal-{{ $order->id }}">{{ __('Track order') }}</a>
+                                                        @endif
+
+                                                        @if (auth()->user()->hasPermission('payments-create') && $order->status == 'completed')
+                                                            <a class="dropdown-item"
+                                                                href="{{ route('payments.create', ['order' => $order->id]) }}"
+                                                                target="_blank">{{ __('Make payment') }}</a>
                                                         @endif
 
                                                         @if (auth()->user()->hasPermission('orders_notes-read'))

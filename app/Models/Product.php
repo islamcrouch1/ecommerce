@@ -13,14 +13,14 @@ class Product extends Model
     use HasFactory;
     use SoftDeletes;
     protected $fillable = [
-        'seo_meta_tag', 'digital_file', 'product_weight', 'product_type', 'discount_price', 'video_url', 'product_slug', 'product_max_order', 'product_min_order', 'is_featured', 'on_sale', 'brand_id', 'seo_desc', 'name_en', 'name_ar', 'description_ar', 'description_en', 'vendor_price', 'max_price', 'extra_fee', 'sale_price', 'total_profit', 'country_id', 'created_by', 'status', 'updated_by', 'sku', 'unlimited', 'best_selling', 'top_collection', 'product_length', 'product_width', 'product_height', 'shipping_amount', 'shipping_method_id', 'cost'
+        'seo_meta_tag', 'digital_file', 'product_weight', 'product_type', 'discount_price', 'video_url', 'product_slug', 'product_max_order', 'product_min_order', 'is_featured', 'on_sale', 'brand_id', 'seo_desc', 'name_en', 'name_ar', 'description_ar', 'description_en', 'vendor_price', 'max_price', 'extra_fee', 'sale_price', 'total_profit', 'country_id', 'created_by', 'status', 'updated_by', 'sku', 'unlimited', 'best_selling', 'top_collection', 'product_length', 'product_width', 'product_height', 'shipping_amount', 'shipping_method_id', 'cost', 'vendor_id', 'category_id'
     ];
 
     // protected $appends = ['profit_percent'];
 
     public function vendor()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'vendor_id');
     }
 
     public function admin()
@@ -89,6 +89,11 @@ class Product extends Model
     {
         return $this->belongsToMany(Category::class)
             ->withPivot('category_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 
     public function brands()
@@ -232,9 +237,11 @@ class Product extends Model
             return $query;
         } else {
             return $query->when($category_id, function ($q) use ($category_id) {
-                return $q->whereHas('categories', function ($query) {
-                    $query->where('category_id', 'like', request()->category_id);
+                return $q->whereHas('categories', function ($query)  use ($category_id) {
+                    $query->where('category_id', 'like', $category_id);
                 });
+            })->orWhen($category_id, function ($q) use ($category_id) {
+                return $q->where('category_id', $category_id);
             });
         }
     }

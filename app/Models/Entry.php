@@ -10,7 +10,7 @@ class Entry extends Model
     use HasFactory;
 
     protected $fillable = [
-        'account_id', 'reference_id', 'type', 'warehouse_id', 'dr_amount', 'cr_amount', 'description', 'created_by', 'updated_by'
+        'account_id', 'reference_id', 'type', 'warehouse_id', 'dr_amount', 'cr_amount', 'description', 'created_by', 'updated_by', 'created_at', 'branch_id'
     ];
 
     public function user()
@@ -19,6 +19,11 @@ class Entry extends Model
     }
 
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     public function scopeWhenAccount($query, $account_id)
     {
         return $query->when($account_id, function ($q) use ($account_id) {
@@ -26,12 +31,22 @@ class Entry extends Model
         });
     }
 
-
+    public function scopeWhenBranch($query, $branch_id)
+    {
+        return $query->when($branch_id, function ($q) use ($branch_id) {
+            return $q->where('branch_id', 'like', "%$branch_id%");
+        });
+    }
 
     public function scopeWhenSearch($query, $search)
     {
         return $query->when($search, function ($q) use ($search) {
-            return $q->where('description', 'like', "%$search%");
+            return $q->where('description', 'like', "%$search%")
+                ->orWhere('type', 'like', "%$search%")
+                ->orWhere('dr_amount', 'like', "%$search%")
+                ->orWhere('cr_amount', 'like', "%$search%")
+                ->orWhere('account_id', 'like', "$search")
+                ->orWhere('branch_id', 'like', "$search");
         });
     }
 }

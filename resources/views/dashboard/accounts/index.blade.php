@@ -9,8 +9,10 @@
                     <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
                         @if ($accounts->count() > 0 && $accounts[0]->trashed())
                             {{ __('accounts') . ' ' . __('trash') }}
-                        @else
+                        @elseif(request()->parent_id == null)
                             {{ __('accounts') }}
+                        @else
+                            {{ __('subaccounts') . ': ' . getName(getAccount(request()->parent_id)) }}
                         @endif
                     </h5>
                 </div>
@@ -28,14 +30,42 @@
                     </div>
                     <div id="table-customers-replace-element">
 
+                        <form style="display: inline-block" action="">
+
+
+                            <div class="d-inline-block">
+                                <select name="branch_id" class="form-select form-select-sm sonoo-search"
+                                    id="autoSizingSelect">
+                                    <option value="" selected>{{ __('All Branches') }}</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}"
+                                            {{ request()->branch_id == $branch->id ? 'selected' : '' }}>
+                                            {{ getName($branch) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+
+                        </form>
+
+                        @if (request()->parent_id != null)
+                            <a href="{{ route('accounts.index', ['parent_id' => getAccount(request()->parent_id)->parent_id, 'branch_id' => request()->branch_id]) }}"
+                                class="btn btn-falcon-default btn-sm" type="button"><span
+                                    class="fa fa-arrow-{{ app()->getLocale() == 'ar' ? 'right' : 'left' }}"
+                                    data-fa-transform="shrink-3 down-2"></span><span
+                                    class="d-none d-sm-inline-block ms-1">{{ __('Back') }}</span></a>
+                        @endif
+
                         @if (auth()->user()->hasPermission('accounts-create'))
                             <a href="{{ route('accounts.create', ['parent_id' => request()->parent_id]) }}"
                                 class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-plus"
                                     data-fa-transform="shrink-3 down-2"></span><span
                                     class="d-none d-sm-inline-block ms-1">{{ __('New') }}</span></a>
                         @endif
-                        <a href="{{ route('accounts.trashed') }}" class="btn btn-falcon-default btn-sm" type="button"><span
-                                class="fas fa-trash" data-fa-transform="shrink-3 down-2"></span><span
+                        <a href="{{ route('accounts.trashed', ['parent_id' => request()->parent_id]) }}"
+                            class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-trash"
+                                data-fa-transform="shrink-3 down-2"></span><span
                                 class="d-none d-sm-inline-block ms-1">{{ __('Trash') }}</span></a>
                         <button class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-external-link-alt"
                                 data-fa-transform="shrink-3 down-2"></span><span
@@ -62,7 +92,10 @@
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
                                     {{ __('name') }}</th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                    {{ __('branch') }}</th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                     {{ __('code') }}</th>
+
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                     {{ __('account type') }}</th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
@@ -92,18 +125,23 @@
                                         <div class="d-flex d-flex align-items-center">
 
                                             <div class="flex-1">
-                                                <h5 class="mb-0 fs--1">
-                                                    {{ getName($account) }}
-                                                </h5>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('entries.index', ['account_id' => $account->id]) }}">
+                                                    <h5 class="mb-0 fs--1">
+                                                        {{ getName($account) }}
+                                                    </h5>
+                                                </a>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td class="phone align-middle white-space-nowrap py-2">{{ getName($account->branch) }}
                                     </td>
                                     <td class="phone align-middle white-space-nowrap py-2">{{ $account->code }}
                                     </td>
                                     <td class="phone align-middle white-space-nowrap py-2">
                                         {{ __($account->account_type) }} </td>
                                     <td class="phone align-middle white-space-nowrap py-2"><a
-                                            href="{{ route('accounts.index', ['parent_id' => $account->id]) }}"
+                                            href="{{ route('accounts.index', ['parent_id' => $account->id, 'branch_id' => request()->branch_id]) }}"
                                             class="btn btn-falcon-primary btn-sm me-1 mb-1">{{ __('sub accounts') }}
                                         </a></td>
                                     <td class="joined align-middle py-2">{{ $account->created_at }} <br>

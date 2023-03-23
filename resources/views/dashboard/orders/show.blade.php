@@ -41,6 +41,9 @@
                     <p class="fs--1">
                         {{ __('Address:') . $order->address }}<br>
 
+                        @if ($order->phone)
+                            {{ __('Phone:') . ' ' . $order->phone }}<br>
+                        @endif
                         @if ($order->country_id)
                             {{ __('Country:') . ' ' . getName($order->country) }}<br>
                         @endif
@@ -121,6 +124,13 @@
                                             SKU:{{ getCombination($product->pivot->product_combination_id)->sku }}
                                         @endif
                                     </span>
+
+                                    @if ($product->vendor_id != null)
+                                        <span class="badge badge-soft-info">
+                                            {{ __('vendor product') }}
+                                        </span>
+                                    @endif
+
                                 </td>
                                 <td class="align-middle text-center">{{ $product->pivot->qty }}</td>
                                 <td class="align-middle text-end">
@@ -143,6 +153,11 @@
                             <th class="text-900">{{ __('Subtotal:') }}</th>
                             <td class="fw-semi-bold">{{ $order->subtotal_price . ' ' . $order->country->currency }}</td>
                         </tr>
+                        <tr>
+                            <th class="text-900">{{ __('Tax Value:') }}</th>
+                            <td class="fw-semi-bold">{{ $order->total_tax . ' ' . $order->country->currency }}</td>
+                        </tr>
+
                         <tr>
                             <th class="text-900">{{ __('Shipping Cost:') }}</th>
                             <td class="fw-semi-bold">{{ $order->shipping_amount . ' ' . $order->country->currency }}</td>

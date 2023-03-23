@@ -26,6 +26,22 @@
 
                     <div id="table-customers-replace-element">
                         <form style="display: inline-block" action="">
+
+
+                            <div class="d-inline-block">
+                                <select name="branch_id" class="form-select form-select-sm sonoo-search"
+                                    id="autoSizingSelect">
+                                    <option value="" selected>{{ __('All Branches') }}</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}"
+                                            {{ request()->branch_id == $branch->id ? 'selected' : '' }}>
+                                            {{ getName($branch) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+
                             <div class="d-inline-block">
                                 {{-- <label class="form-label" for="from">{{ __('From') }}</label> --}}
                                 <input type="date" id="from" name="from" class="form-control form-select-sm"
@@ -48,7 +64,120 @@
 
             <div class="card-body">
                 <div class="row g-0">
-                    <div class="col-6 col-md-3 border-200 border-md-200 border-bottom border-end pb-4 ps-3">
+
+
+
+                    <div class="table-responsive scrollbar">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">{{ __('Account Name') }}</th>
+                                    <th style scope="col"></th>
+                                    <th class="text-end" scope="col">{{ __('Balance') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ __('Sales Revenue') }}</td>
+                                    <td>(+)</td>
+                                    <td class="text-end">{{ $revenue . ' ' . getCurrency() }}</td>
+                                </tr>
+
+                                <tr>
+                                    <td>{{ __('Sales Cost') }}</td>
+                                    <td>(-)</td>
+                                    <td class="text-end">{{ abs($cs) . ' ' . getCurrency() }}</td>
+                                </tr>
+
+                                <tr>
+                                    <td>{{ __('Services & Digital Cost') }}</td>
+                                    <td>(-)</td>
+                                    <td class="text-end">{{ $services_cost . ' ' . getCurrency() }}</td>
+                                </tr>
+
+
+                                <tr class="table-primary">
+                                    <td>{{ __('Gross Profit') }}</td>
+                                    <td></td>
+                                    <td class="text-end">{{ $revenue - abs($cs) - $services_cost . ' ' . getCurrency() }}
+                                    </td>
+                                </tr>
+
+                                @foreach ($expenses_accounts as $account)
+                                    @php
+                                        $expenses = getTrialBalance($account->id, request()->from, request()->to);
+                                    @endphp
+
+                                    <tr>
+                                        <td>{{ getName($account) }}</td>
+                                        <td>(-)</td>
+                                        <td class="text-end">{{ $expenses . ' ' . getCurrency() }}</td>
+                                    </tr>
+                                @endforeach
+
+
+                                <tr class="table-secondary">
+                                    <td>{{ __('Gross Margian') }}</td>
+                                    <td></td>
+                                    <td class="text-end">
+                                        {{ $revenue - abs($cs) - $services_cost - $expenses_all . ' ' . getCurrency() }}
+                                    </td>
+                                </tr>
+
+
+                                <tr>
+                                    <td>{{ __('Other Revenues') }}</td>
+                                    <td>(+)</td>
+                                    <td class="text-end">
+                                        {{ $other_revenue . ' ' . getCurrency() }}</td>
+                                </tr>
+
+
+                                <tr class="table-success">
+                                    <td>{{ __('Net Profit Before Tax') }}</td>
+                                    <td></td>
+                                    <td class="text-end">
+                                        {{ $revenue - abs($cs) - $services_cost - $expenses_all + $other_revenue . ' ' . getCurrency() }}
+                                    </td>
+                                </tr>
+
+
+                                @php
+                                    $gross_profit = $revenue - abs($cs) - $services_cost - $expenses_all + $other_revenue;
+                                    if ($gross_profit <= 0) {
+                                        $tax = 0;
+                                    } else {
+                                        $tax = calcTax($gross_profit, 'income_tax');
+                                    }
+                                    
+                                @endphp
+
+                                <tr>
+                                    <td>{{ __('Income & Deferred Tax') }}</td>
+                                    <td>(-)</td>
+                                    <td class="text-end">
+                                        {{ $tax . ' ' . getCurrency() }}</td>
+                                </tr>
+
+
+                                <tr class="table-danger">
+                                    <td>{{ __('Net Profit After Tax') }}</td>
+                                    <td></td>
+                                    <td class="text-end">
+                                        {{ $revenue - abs($cs) - $services_cost - $expenses_all + $other_revenue - $tax . ' ' . getCurrency() }}
+                                    </td>
+                                </tr>
+
+
+
+                            </tbody>
+                        </table>
+                    </div>
+
+
+
+
+                    {{-- <div class="col-6 col-md-3 border-200 border-md-200 border-bottom border-end pb-4 ps-3">
                         <h6 class="pb-1 pt-2 text-700">{{ __('Sales') }} </h6>
                         <p class="font-sans-serif lh-1 mb-1 fs-2">
                             {{ $revenue . ' ' . getCurrency() }}
@@ -98,7 +227,10 @@
                             {{ __('Incom Tax') . '(' . $income_tax . ')' }} {{ ' = ' }}
                             {{ $net_profit }} {{ ' ' . getCurrency() }}
                         </h3>
-                    </div>
+
+                    </div> --}}
+
+
 
                 </div>
             </div>

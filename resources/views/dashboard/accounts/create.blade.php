@@ -49,6 +49,26 @@
 
 
                             <div class="mb-3">
+                                <label class="form-label" for="branches">{{ __('branches') }}</label>
+
+                                <select class="form-select js-choice @error('branches') is-invalid @enderror" aria-label=""
+                                    multiple="multiple" name="branches[]" id="branches"
+                                    data-options='{"removeItemButton":true,"placeholder":true}' required>
+
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}">
+                                            {{ getName($branch) }}
+                                        </option>
+                                    @endforeach
+
+                                </select>
+                                @error('branches')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
                                 <label class="form-label" for="account_type">{{ __('account type') }}</label>
 
                                 <select class="form-select @error('account_type') is-invalid @enderror" aria-label=""

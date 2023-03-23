@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Country;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Image;
@@ -67,7 +68,6 @@ class CountriesController extends Controller
         ]);
 
         $media_id = saveMedia('image', $request['media'], 'countries');
-        $this->checkDefault($request['is_default']);
 
 
         $country = Country::create([
@@ -81,6 +81,10 @@ class CountriesController extends Controller
             'is_default' => $request['is_default'] == 'on' ? '1' : '0',
 
         ]);
+
+
+        $this->checkDefault($request['is_default'], $country->id);
+
 
         alertSuccess('Country created successfully', 'تم اضافة الدولة بنجاح');
         return redirect()->route('countries.index');
@@ -138,12 +142,6 @@ class CountriesController extends Controller
         }
 
 
-
-        $this->checkDefault($request['is_default']);
-
-
-
-
         $country->update([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
@@ -155,6 +153,7 @@ class CountriesController extends Controller
         ]);
 
 
+        $this->checkDefault($request['is_default'], $country->id);
 
 
         alertSuccess('Country updated successfully', 'تم تعديل الدولة بنجاح');
@@ -162,7 +161,7 @@ class CountriesController extends Controller
     }
 
 
-    private function checkDefault($is_default)
+    private function checkDefault($is_default, $country_id)
     {
 
         $countries = Country::all();
@@ -172,9 +171,24 @@ class CountriesController extends Controller
             foreach ($countries as $scountry) {
 
                 $scountry->update([
-                    'is_default' => '0'
+                    'is_default' => $scountry->id == $country_id ? '1' : '0'
                 ]);
             }
+        }
+
+        $setting = Setting::where('type', 'country_id')->first();
+
+        if ($setting == null) {
+
+            Setting::create([
+                'type' => 'country_id',
+                'value' => $country_id,
+            ]);
+        } elseif ($setting->value != $country_id) {
+
+            $setting->update([
+                'value' => $country_id,
+            ]);
         }
     }
 

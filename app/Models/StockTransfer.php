@@ -13,6 +13,16 @@ class StockTransfer extends Model
         'reference_no', 'notes', 'warehouse_from', 'warehouse_to', 'created_by', 'updated_by',
     ];
 
+    public function fw()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_from');
+    }
+
+    public function tw()
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_to');
+    }
+
     public function scopeWhenSearch($query, $search)
     {
         return $query->when($search, function ($q) use ($search) {

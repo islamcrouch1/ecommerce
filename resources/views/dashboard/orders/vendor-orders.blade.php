@@ -114,11 +114,15 @@
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="status">
                                         {{ __('Status') }}</th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
-                                        {{ __('Quantity') }}</th>
-                                    <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
                                         {{ __('Item Price') }}</th>
+                                    <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
+                                        {{ __('Quantity') }}</th>
+
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                         {{ __('Total') }}</th>
+                                    <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                        {{ __('Platform Commission') }}
+                                    </th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
                                         data-sort="joined">{{ __('Created At') }}</th>
                                     <th class="align-middle no-sort"></th>
@@ -147,17 +151,10 @@
                                         </td>
                                         <td class="align-middle">
                                             <h6 class="mb-0 text-nowrap">
-                                                {{ app()->getLocale() == 'ar' ? $order->products()->first()->name_ar : $order->products()->first()->name_en }}
+                                                {{ getProductName($order->products()->first(), getCombination($order->products()->first()->pivot->product_combination_id)) }}
                                             </h6>
                                             <span class="badge badge-soft-info">
-                                                {{ app()->getLocale() == 'ar' ? $order->products()->first()->pivot->color_ar : $order->products()->first()->pivot->color_en }}
-                                            </span>
-                                            <span class="badge badge-soft-info">
-                                                {{ app()->getLocale() == 'ar' ? $order->products()->first()->pivot->size_ar : $order->products()->first()->pivot->size_en }}
-                                            </span>
-
-                                            <span class="badge badge-soft-info">
-                                                SKU:{{ $order->products()->first()->sku }}
+                                                SKU:{{ getCombination($order->products()->first()->pivot->product_combination_id)->sku }}
                                             </span>
                                         </td>
                                         <td class="phone align-middle white-space-nowrap py-2">
@@ -206,15 +203,18 @@
 
 
                                         </td>
+                                        <td class="address align-middle white-space-nowrap py-2">
+                                            {{ $order->products()->first()->pivot->product_price . ' ' . $order->country->currency }}
+                                        </td>
+                                        <td class="address align-middle white-space-nowrap py-2">
+                                            {{ $order->products()->first()->pivot->qty }}
+                                        </td>
 
                                         <td class="address align-middle white-space-nowrap py-2">
-                                            {{ $order->products()->first()->pivot->quantity }}
-                                        </td>
-                                        <td class="address align-middle white-space-nowrap py-2">
-                                            {{ $order->products()->first()->pivot->vendor_price . ' ' . $order->country->currency }}
-                                        </td>
-                                        <td class="address align-middle white-space-nowrap py-2">
                                             {{ $order->total_price . ' ' . $order->country->currency }}
+                                        </td>
+                                        <td class="address align-middle white-space-nowrap py-2">
+                                            {{ $order->total_commission . ' ' . $order->country->currency }}
                                         </td>
                                         <td class="joined align-middle py-2">{{ $order->created_at }} <br>
                                             {{ interval($order->created_at) }} </td>
@@ -231,11 +231,9 @@
 
                                                         @if (auth()->user()->hasPermission('orders-read'))
                                                             <a class="dropdown-item"
-                                                                href="{{ route('users.show', ['user' => $order->user_id]) }}">{{ __('Vendor
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            Info') }}</a>
+                                                                href="{{ route('users.show', ['user' => $order->user_id]) }}">{{ __('Vendor Info') }}</a>
                                                             <a class="dropdown-item"
-                                                                href="{{ route('orders.show', ['order' => $order->order_id]) }}">{{ __('Show
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            Affiliate Order') }}</a>
+                                                                href="{{ route('orders.show', ['order' => $order->order_id]) }}">{{ __('Show Main Order') }}</a>
                                                         @endif
 
                                                         @if (auth()->user()->hasPermission('orders-update') && $order->status == 'Waiting for the order amount to be released')
@@ -273,8 +271,8 @@
                                                             </div>
                                                             <div class="p-4 pb-0">
                                                                 <div class="mb-3">
-                                                                    <label class="form-label" for="bonus">Change order
-                                                                        status</label>
+                                                                    <label class="form-label"
+                                                                        for="bonus">{{ __('Change order status') }}</label>
                                                                     <select
                                                                         class="form-control @error('status') is-invalid @enderror"
                                                                         name="status" required>

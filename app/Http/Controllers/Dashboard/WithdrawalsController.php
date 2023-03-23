@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\Balance;
 use App\Models\Country;
+use App\Models\Entry;
 use App\Models\User;
 use App\Models\Withdrawal;
 use Carbon\Carbon;
@@ -42,14 +44,24 @@ class WithdrawalsController extends Controller
             ->latest()
             ->paginate(50);
 
-        return view('dashboard.withdrawals.index', compact('withdrawals', 'countries'));
+        $branch_id = getUserBranchId(Auth::user());
+        $cash_accounts = Account::findOrFail(settingAccount('cash_accounts', $branch_id));
+
+
+        return view('dashboard.withdrawals.index', compact('withdrawals', 'countries', 'cash_accounts'));
     }
 
     public function update(Request $request, Withdrawal $withdrawal)
     {
         $request->validate([
             'status' => "required|string",
+            'account_id' => "nullable|numeric",
         ]);
+
+        if ($request->status == 'confirmed' && !isset($request->account_id)) {
+            alertError('please select cash account to complete the request', 'يرجى تحديد الحساب النقدي لاستكمال العملية');
+            return redirect()->back();
+        }
 
         $withdrawal->update([
             'status' => $request->status,
@@ -61,6 +73,37 @@ class WithdrawalsController extends Controller
             changeAvailableBalance($user, $withdrawal->amount,  0, null, 'add');
             changePendingWithdrawalBalance($user, $withdrawal->amount, 0, null, 'sub');
         } elseif ($request->status == 'confirmed') {
+
+            if ($user->hasRole('vendor')) {
+
+
+                $cash_account = Account::findOrFail($request->account_id);
+                $branch_id = setting('website_branch');
+                $supplier_account = getItemAccount($user->id, null, 'suppliers_account', $branch_id);
+
+                Entry::create([
+                    'account_id' => $supplier_account->id,
+                    'type' => 'withdrawal',
+                    'dr_amount' => $withdrawal->amount,
+                    'cr_amount' => 0,
+                    'description' => 'withdrawal request# ' . $withdrawal->id,
+                    'branch_id' => $branch_id,
+                    'reference_id' => $withdrawal->id,
+                    'created_by' => Auth::check() ? Auth::id() : null,
+                ]);
+
+                Entry::create([
+                    'account_id' => $cash_account->id,
+                    'type' => 'withdrawal',
+                    'dr_amount' => 0,
+                    'cr_amount' => $withdrawal->amount,
+                    'description' => 'withdrawal request# ' . $withdrawal->id,
+                    'branch_id' => $branch_id,
+                    'reference_id' => $withdrawal->id,
+                    'created_by' => Auth::check() ? Auth::id() : null,
+                ]);
+            }
+
             changePendingWithdrawalBalance($user, $withdrawal->amount, 0, null, 'sub');
             changeCompletedWithdrawalBalance($user, $withdrawal->amount, 0, null, 'add');
         }

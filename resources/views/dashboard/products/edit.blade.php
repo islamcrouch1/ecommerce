@@ -21,7 +21,8 @@
                             @method('PUT')
 
                             <div class="mb-3">
-                                <label class="form-label" for="name_ar">{{ __('product name - arabic') }}</label>
+                                <label class="form-label"
+                                    for="name_ar">{{ __('product name') . ' ' . __('arabic') }}</label>
                                 <input name="name_ar" class="form-control @error('name_ar') is-invalid @enderror"
                                     value="{{ $product->name_ar }}" type="text" autocomplete="on" id="name_ar"
                                     required />
@@ -31,7 +32,8 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="name_en">{{ __('product name - english') }}</label>
+                                <label class="form-label"
+                                    for="name_en">{{ __('product name') . ' ' . __('english') }}</label>
                                 <input name="name_en" class="form-control @error('name_en') is-invalid @enderror"
                                     value="{{ $product->name_en }}" type="text" autocomplete="on" id="name_en"
                                     required />
@@ -61,7 +63,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label"
-                                    for="description_ar">{{ __('product description - arabic') }}</label>
+                                    for="description_ar">{{ __('product description') . ' ' . __('arabic') }}</label>
                                 <textarea id="description_ar" class="form-control tinymce d-none @error('description_ar') is-invalid @enderror"
                                     name="description_ar">{!! $product->description_ar !!}</textarea>
                                 @error('description_ar')
@@ -71,7 +73,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label"
-                                    for="description_en">{{ __('product description - english') }}</label>
+                                    for="description_en">{{ __('product description') . ' ' . __('english') }}</label>
                                 <textarea id="description_en" class="form-control tinymce d-none @error('description_en') is-invalid @enderror"
                                     name="description_en">{!! $product->description_en !!}</textarea>
                                 @error('description_en')
@@ -102,14 +104,44 @@
                             </div>
 
 
+                            <div class="mb-3">
+                                <label class="form-label" for="category">{{ __('Select main category') }}</label>
+
+                                <select class="form-select @error('category') is-invalid @enderror" name="category"
+                                    id="category" required>
+                                    <option value="">
+                                        {{ __('Select main category') }}</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}"
+                                            {{ $product->category->id == $category->id ? 'selected' : '' }}>
+                                            {{ getName($category) }}
+                                        </option>
+
+                                        @if ($category->children->count() > 0)
+                                            @foreach ($category->children as $subCat)
+                                                @include(
+                                                    'dashboard.categories._category_options_product_edit',
+                                                    [
+                                                        'category' => $subCat,
+                                                    ]
+                                                )
+                                            @endforeach
+                                        @endif
+                                    @endforeach
+                                </select>
+                                @error('category')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
 
 
                             <div class="mb-3">
-                                <label class="form-label" for="categories">{{ __('Select Categories') }}</label>
+                                <label class="form-label" for="categories">{{ __('Select more categories') }}</label>
 
                                 <select class="form-select js-choice @error('categories') is-invalid @enderror"
-                                    multiple="multiple" name="categories[]" id="categories"
-                                    data-options='{"removeItemButton":true,"placeholder":true}' required>
+                                    {{ $product->vendor_id == null ? 'multiple="multiple"' : '' }} name="categories[]"
+                                    id="categories" data-options='{"removeItemButton":true,"placeholder":true}'>
                                     <option value="">
                                         {{ __('Select Categories') }}</option>
                                     @foreach ($categories as $category)
@@ -140,8 +172,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="brands">{{ __('brands') }}</label>
 
-                                <select class="form-select js-choice @error('brands') is-invalid @enderror" aria-label=""
-                                    multiple="multiple" name="brands[]" id="brands"
+                                <select class="form-select js-choice @error('brands') is-invalid @enderror"
+                                    aria-label="" multiple="multiple" name="brands[]" id="brands"
                                     data-options='{"removeItemButton":true,"placeholder":true}'>
                                     @foreach ($brands as $brand)
                                         <option value="{{ $brand->id }}"

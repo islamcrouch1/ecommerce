@@ -37,12 +37,12 @@
 
                                 <div class="col-md-3">
                                     <div class="">
-                                        <select name="search" class="form-select form-select-sm sonoo-search"
+                                        <select name="status" class="form-select form-select-sm sonoo-search"
                                             id="autoSizingSelect">
                                             <option value="">{{ __('All Status') }}</option>
-                                            <option value="IN" {{ request()->search == 'IN' ? 'selected' : '' }}>
+                                            <option value="IN" {{ request()->status == 'IN' ? 'selected' : '' }}>
                                                 {{ __('IN') }}</option>
-                                            <option value="OUT" {{ request()->search == 'OUT' ? 'selected' : '' }}>
+                                            <option value="OUT" {{ request()->status == 'OUT' ? 'selected' : '' }}>
                                                 {{ __('OUT') }}</option>
 
 

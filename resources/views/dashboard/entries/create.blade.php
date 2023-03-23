@@ -13,65 +13,47 @@
         <div class="card-body p-0">
 
             <div class="row g-0 h-100">
+
+                {{-- @if ($check == true)
+                    <div class="row m-2">
+                        <div class="alert alert-danger border-2 d-flex align-items-center" role="alert">
+                            <div class="bg-danger me-3 icon-item"><span class="fas fa-times-circle text-white fs-3"></span>
+                            </div>
+                            <p class="mb-0 flex-1">
+                                {{ __('Please note that there are unequal entries, please settle them to adjust the accounting process') }}
+                            </p>
+                            <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        <a href="{{ route('entries.settle.create') }}" class="btn btn-falcon-danger me-1 mb-1"
+                            type="button">{{ __('settle entry') }}
+                        </a>
+                    </div>
+                @endif --}}
                 <div class="col-md-12 d-flex flex-center">
+
                     <div class="p-4 p-md-5 flex-grow-1">
                         <form method="POST" action="{{ route('entries.store') }}" enctype="multipart/form-data">
                             @csrf
 
 
-                            <div class="from-account">
-                                <div class="mb-3">
-                                    <label class="form-label" for="from_account">{{ __('From Account') }}</label>
+                            <div style="display:none" class="div-data" data-accounts="{{ $accounts }}"
+                                data-url="{{ route('entries.accounts') }}" data-locale="{{ app()->getLocale() }}"></div>
 
-                                    <select
-                                        class="form-select from-account-select @error('from_account') is-invalid @enderror"
-                                        aria-label="" name="from_account" id="from_account"
-                                        data-url="{{ route('entries.accounts') }}" data-level="1"
-                                        data-locale="{{ app()->getLocale() }}" required>
-                                        <option value="">{{ __('select account') }}</option>
-                                        @foreach ($accounts as $account)
-                                            <option value="{{ $account->id }}">
-                                                {{ getName($account) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('from_account')
-                                        <div class="alert alert-danger">{{ $message }}</div>
-                                    @enderror
+
+
+                            <div class="mb-3 mt-5">
+                                <label class="form-label"
+                                    for="flash_news_ar">{{ __('please add entry accounts') }}</label><br>
+                                <button href="javascript:void(0);"
+                                    class="btn btn-outline-primary btn-sm add_account me-1 mb-1 mt-1"
+                                    type="button">{{ __('add account') }}
+                                </button>
+                                <div class="field_wrapper">
+
                                 </div>
+
                             </div>
 
-
-
-                            <div class="to-account">
-                                <div class="mb-3">
-                                    <label class="form-label" for="to_account">{{ __('To Account') }}</label>
-
-                                    <select class="form-select to-account-select @error('to_account') is-invalid @enderror"
-                                        aria-label="" name="to_account" id="to_account"
-                                        data-url="{{ route('entries.accounts') }}" data-level="1"
-                                        data-locale="{{ app()->getLocale() }}" required>
-                                        <option value="">{{ __('select account') }}</option>
-                                        @foreach ($accounts as $account)
-                                            <option value="{{ $account->id }}">
-                                                {{ getName($account) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('to_account')
-                                        <div class="alert alert-danger">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label" for="amount">{{ __('entry amount') }}</label>
-                                <input name="amount" class="form-control @error('amount') is-invalid @enderror"
-                                    value="{{ old('amount') }}" type="number" autocomplete="on" id="amount" required />
-                                @error('amount')
-                                    <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
 
                             <div class="mb-3">
                                 <label class="form-label" for="description">{{ __('entry description') }}</label>
@@ -82,13 +64,6 @@
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>
-
-
-
-
-
-
-
 
 
                             <div class="mb-3">

@@ -105,8 +105,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="notes">{{ __('notes') }}</label>
                                 <textarea name="notes" rows="5" class="form-control @error('notes') is-invalid @enderror" type="text"
-                                    autocomplete="on" id="notes">{{ old('notes') }}
-                                    </textarea>
+                                    autocomplete="on" id="notes">{{ old('notes') }}</textarea>
                                 @error('notes')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror

@@ -48,6 +48,20 @@
                         <div id="table-customers-replace-element">
                             <form style="display: inline-block" action="">
 
+
+                                <div class="d-inline-block">
+                                    <select name="branch_id" class="form-select form-select-sm sonoo-search"
+                                        id="autoSizingSelect">
+                                        <option value="" selected>{{ __('All Branches') }}</option>
+                                        @foreach ($branches as $branch)
+                                            <option value="{{ $branch->id }}"
+                                                {{ request()->branch_id == $branch->id ? 'selected' : '' }}>
+                                                {{ getName($branch) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 <div class="d-inline-block">
                                     {{-- <label class="form-label" for="from">{{ __('From') }}</label> --}}
                                     <input type="date" id="from" name="from" class="form-control form-select-sm"
@@ -101,13 +115,13 @@
 
                             </form>
 
-                            <a href="{{ route('orders.mandatory') }}" class="btn btn-falcon-default btn-sm"
+                            {{-- <a href="{{ route('orders.mandatory') }}" class="btn btn-falcon-default btn-sm"
                                 type="button"><span class="fas fa-receipt" data-fa-transform="shrink-3 down-2"></span><span
                                     class="d-none d-sm-inline-block ms-1">{{ __('Mandatory') }}</span></a>
                             <a href="{{ route('orders.refunds') }}" class="btn btn-falcon-default btn-sm"
                                 type="button"><span class="fas fa-backward"
                                     data-fa-transform="shrink-3 down-2"></span><span
-                                    class="d-none d-sm-inline-block ms-1">{{ __('Refunds Requsets') }}</span></a>
+                                    class="d-none d-sm-inline-block ms-1">{{ __('Refunds Requsets') }}</span></a> --}}
                             <a href="{{ route('orders.export', ['status' => request()->status, 'from' => request()->from, 'to' => request()->to]) }}"
                                 class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-external-link-alt"
                                     data-fa-transform="shrink-3 down-2"></span><span
@@ -232,7 +246,7 @@
                                         </td>
 
                                         <td class="address align-middle white-space-nowrap py-2">
-                                            {{ $order->payment_status }}
+                                            {!! getPaymentStatus($order->payment_status) !!}
                                         </td>
                                         {{-- <td class="address align-middle white-space-nowrap py-2">
                                             {{ $order->total_commission . ' ' . $order->country->currency }}
@@ -322,7 +336,7 @@
                                                                 <div class="mb-3">
                                                                     <label class="form-label"
                                                                         for="bonus">{{ __('Change order
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                status') }}</label>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                status') }}</label>
                                                                     <select
                                                                         class="form-control @error('status') is-invalid @enderror"
                                                                         name="status" required>

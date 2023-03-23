@@ -18,7 +18,7 @@ Route::redirect('/', '/ecommerce');
 //front route
 
 
-// Route::get('/', [FrontController::class, 'index'])->name('front.index');
+Route::get('/front', [FrontController::class, 'index'])->name('front.index');
 Route::get('/fqs', [FrontController::class, 'fqs'])->name('front.fqs');
 Route::get('/about-us', [FrontController::class, 'about'])->name('front.about');
 Route::get('/terms-conditions', [FrontController::class, 'terms'])->name('front.terms');

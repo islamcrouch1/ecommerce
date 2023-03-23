@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Controllers\Dashboard\AccountsController;
+use App\Http\Controllers\Dashboard\AssetsController;
 use App\Http\Controllers\Dashboard\AttributesController;
 use App\Http\Controllers\Dashboard\BonusController;
+use App\Http\Controllers\Dashboard\BranchesController;
 use App\Http\Controllers\Dashboard\BrandsController;
 use App\Http\Controllers\Dashboard\ProductsController;
 use App\Http\Controllers\Dashboard\CategoriesController;
 use App\Http\Controllers\Dashboard\CitiesController;
+use App\Http\Controllers\Dashboard\ClientsController;
 use App\Http\Controllers\Dashboard\ColorsController;
 use App\Http\Controllers\Dashboard\CountriesController;
 use App\Http\Controllers\Dashboard\EntriesController;
@@ -19,13 +22,18 @@ use App\Http\Controllers\Dashboard\MessagesController;
 use App\Http\Controllers\Dashboard\NotesController;
 use App\Http\Controllers\Dashboard\OrdersController;
 use App\Http\Controllers\Dashboard\PasswordResetController;
+use App\Http\Controllers\Dashboard\PaymentsController;
+use App\Http\Controllers\Dashboard\PreviewsClientsController;
+use App\Http\Controllers\Dashboard\PreviewsController;
 use App\Http\Controllers\Dashboard\PurchasesController;
+use App\Http\Controllers\Dashboard\QueriesController;
 use App\Http\Controllers\Dashboard\RoleController;
 use App\Http\Controllers\Dashboard\SalesController;
 use App\Http\Controllers\Dashboard\SettingController;
 use App\Http\Controllers\Dashboard\ShippingRatesController;
 use App\Http\Controllers\Dashboard\SizesController;
 use App\Http\Controllers\Dashboard\SlidesController;
+use App\Http\Controllers\Dashboard\StagesController;
 use App\Http\Controllers\Dashboard\StatesController;
 use App\Http\Controllers\Dashboard\StockController;
 use App\Http\Controllers\Dashboard\StockTransferController;
@@ -111,7 +119,7 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
 
     // settings route
     Route::get('/settings', [SettingController::class, 'index'])->name('settings.index')->middleware('auth', 'checkverified', 'checkstatus');
-    Route::post('/settings', [SettingController::class, 'store'])->name('settings.store')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('/settings-store', [SettingController::class, 'store'])->name('settings.store')->middleware('auth', 'checkverified', 'checkstatus');
 
 
     // website settings route
@@ -132,6 +140,7 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::get('/stock/color-remove/{stock}', [ProductsController::class, 'colorDestroy'])->name('products.color.destroy')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('products/status/{product}', [ProductsController::class, 'updateStatus'])->name('products.status')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('products-bulk/status', [ProductsController::class, 'updateStatusBulk'])->name('products.status.bulk')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/vendors-products', [ProductsController::class, 'vendorsIndex'])->name('products.vendors')->middleware('auth', 'checkverified', 'checkstatus');
 
     // product color routes
     Route::resource('colors', ColorsController::class)->middleware('auth', 'checkverified', 'checkstatus');
@@ -171,6 +180,15 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     // users and orders notes routes
     Route::post('user/note/{user}', [NotesController::class, 'addUserNote'])->name('users.note')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('order/note/{order}', [NotesController::class, 'addorderNote'])->name('orders.note')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('notes/edit/{note}', [NotesController::class, 'edit'])->name('notes.admin.edit')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('notes/update/{note}', [NotesController::class, 'update'])->name('notes.admin.update')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('notes/delete/{note}', [NotesController::class, 'destroy'])->name('notes.admin.destroy')->middleware('auth', 'checkverified', 'checkstatus');
+
+    // users queries routes
+    Route::post('user/query/{user}', [QueriesController::class, 'addUserQuery'])->name('users.query')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('queries/edit/{query}', [QueriesController::class, 'edit'])->name('queries.admin.edit')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('queries/update/{query}', [QueriesController::class, 'update'])->name('queries.admin.update')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('queries/delete/{query}', [QueriesController::class, 'destroy'])->name('queries.admin.destroy')->middleware('auth', 'checkverified', 'checkstatus');
 
     // bonus routes
     Route::resource('bonus', BonusController::class)->middleware('auth', 'checkverified', 'checkstatus');
@@ -203,6 +221,8 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::post('stock/search', [StockController::class, 'search'])->name('stock.management.search')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('stock/combination', [StockTransferController::class, 'search'])->name('stock.management.com')->middleware('auth', 'checkverified', 'checkstatus');
 
+    Route::get('stock/inventory', [StockController::class, 'inventory'])->name('stock.management.inventory')->middleware('auth', 'checkverified', 'checkstatus');
+
     // media routes
     Route::resource('medias', MediasController::class)->middleware('auth', 'checkverified', 'checkstatus');
 
@@ -211,6 +231,17 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::resource('accounts', AccountsController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
     Route::get('/trashed-accounts', [AccountsController::class, 'trashed'])->name('accounts.trashed')->middleware('auth', 'checkverified', 'checkstatus');
     Route::get('/trashed-accounts/{account}', [AccountsController::class, 'restore'])->name('accounts.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+    // accounts routes
+    Route::resource('assets', AssetsController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
+    Route::get('/trashed-assets', [AssetsController::class, 'trashed'])->name('assets.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-assets/{asset}', [AssetsController::class, 'restore'])->name('assets.restore')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('/sell-assets-post/{account}', [AssetsController::class, 'sell'])->name('assets.sell')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/sell-assets/{account}', [AssetsController::class, 'sellCreate'])->name('assets.sell.create')->middleware('auth', 'checkverified', 'checkstatus');
+
+    Route::post('/purchase-assets-post/{account}', [AssetsController::class, 'purchase'])->name('assets.purchase')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/purchase-assets/{account}', [AssetsController::class, 'purchaseCreate'])->name('assets.purchase.create')->middleware('auth', 'checkverified', 'checkstatus');
+
 
 
     // taxes routes
@@ -225,6 +256,10 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::post('/getsubaccounts', [EntriesController::class, 'getSubAccounts'])->name('entries.accounts')->middleware('auth', 'checkverified', 'checkstatus');
 
     Route::get('/income', [EntriesController::class, 'income'])->name('entries.income')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/balance', [EntriesController::class, 'balance'])->name('entries.balance')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trial-balance', [EntriesController::class, 'trial'])->name('entries.trial')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/settle', [EntriesController::class, 'settleCreate'])->name('entries.settle.create')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('/settle-store', [EntriesController::class, 'settleStore'])->name('entries.settle.store')->middleware('auth', 'checkverified', 'checkstatus');
 
 
     // purchases routes
@@ -248,11 +283,49 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::get('/return-sales', [SalesController::class, 'craeteReturn'])->name('sales.create.return')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('/return-sales-post', [SalesController::class, 'storeReturn'])->name('sales.store.return')->middleware('auth', 'checkverified', 'checkstatus');
 
+
+    Route::post('/return-sales-search', [StockController::class, 'searchReturn'])->name('sales.create.search')->middleware('auth', 'checkverified', 'checkstatus');
+
+
     Route::post('sales/status/{order}', [SalesController::class, 'updateStatus'])->name('sales.status')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('sales-bulk/status', [SalesController::class, 'updateStatusBulk'])->name('sales.status.bulk')->middleware('auth', 'checkverified', 'checkstatus');
 
 
-    Route::get('/test-sale', [SalesController::class, 'test'])->name('sales.test')->middleware('auth', 'checkverified', 'checkstatus');
+    // branches routes
+    Route::resource('branches', BranchesController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
+    Route::get('/trashed-branches', [BranchesController::class, 'trashed'])->name('branches.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-branches/{branche}', [BranchesController::class, 'restore'])->name('branches.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    // stages routes
+    Route::resource('stages', StagesController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
+    Route::get('/trashed-stages', [StagesController::class, 'trashed'])->name('stages.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-stages/{stage}', [StagesController::class, 'restore'])->name('stages.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+    // previews routes
+    Route::resource('previews', PreviewsController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
+    Route::get('/trashed-previews', [PreviewsController::class, 'trashed'])->name('previews.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-previews/{preview}', [PreviewsController::class, 'restore'])->name('previews.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    // previews clients routes
+    Route::resource('previews_clients', PreviewsClientsController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
+    Route::get('/trashed-previews_clients', [PreviewsClientsController::class, 'trashed'])->name('previews_clients.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-previews/{previews_client}', [PreviewsClientsController::class, 'restore'])->name('previews_clients.restore')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/previews/create/{user}', [PreviewsClientsController::class, 'createPreview'])->name('previews.create')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('/previews/store/{user}', [PreviewsClientsController::class, 'StorePreview'])->name('previews.store')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    // clients routes
+    Route::resource('clients', ClientsController::class)->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-clients', [ClientsController::class, 'trashed'])->name('clients.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-clients/{country}', [ClientsController::class, 'restore'])->name('clients.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    // payments routes
+    Route::get('/payments/{order}', [PaymentsController::class, 'create'])->name('payments.create')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('/payments-store/{order}', [PaymentsController::class, 'store'])->name('payments.store')->middleware('auth', 'checkverified', 'checkstatus');
+
 
 
     // --------------------------------------------- Vendors Routes ---------------------------------------------

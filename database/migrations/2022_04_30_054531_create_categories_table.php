@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('name_ar');
             $table->longText('description_en');
             $table->longText('description_ar');
-            $table->double('profit', 8, 2)->nullable();
+            $table->double('profit', 8, 2)->default(0);
             $table->integer('media_id')->nullable();
             // $table->string('image');
             $table->string('category_slug')->nullable();

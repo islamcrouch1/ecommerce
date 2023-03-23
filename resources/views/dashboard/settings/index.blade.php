@@ -13,8 +13,20 @@
         <div class="card-body p-0">
 
             <div class="row g-0 h-100">
+
                 <div class="col-md-12 d-flex flex-center">
                     <div class="p-4 p-md-5 flex-grow-1">
+
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul>
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <form method="POST" action="{{ route('settings.store') }}" enctype="multipart/form-data">
                             @csrf
 
@@ -23,9 +35,17 @@
                                 <li class="nav-item"><a class="nav-link active" id="taxes-tab" data-bs-toggle="tab"
                                         href="#tab-taxes" role="tab" aria-controls="tab-taxes"
                                         aria-selected="true">{{ __('taxes') }}</a></li>
-                                <li class="nav-item"><a class="nav-link " id="accounts-tab" data-bs-toggle="tab"
-                                        href="#tab-accounts" role="tab" aria-controls="tab-accounts"
-                                        aria-selected="true">{{ __('accounts') }}</a></li>
+
+                                @foreach ($branches as $branch)
+                                    <li class="nav-item"><a class="nav-link " id="accounts-tab-{{ $branch->id }}"
+                                            data-bs-toggle="tab" href="#tab-accounts-{{ $branch->id }}" role="tab"
+                                            aria-controls="tab-accounts"
+                                            aria-selected="true">{{ __('accounts') . ' - ' . getName($branch) }}</a></li>
+                                @endforeach
+
+
+
+
                                 <li class="nav-item"><a class="nav-link " id="shipping-tab" data-bs-toggle="tab"
                                         href="#tab-shipping" role="tab" aria-controls="tab-shipping"
                                         aria-selected="true">{{ __('shipping') }}</a></li>
@@ -51,7 +71,7 @@
                                         <label class="form-label" for="vat">{{ __('default added tax') }}</label>
 
                                         <select class="form-select @error('vat') is-invalid @enderror" aria-label=""
-                                            name="vat" id="vat" required>
+                                            name="vat" id="vat">
                                             <option value="">{{ __('select tax') }}</option>
 
                                             @foreach ($taxes as $tax)
@@ -73,7 +93,7 @@
                                             for="wht_products">{{ __('default withholding tax for products') }}</label>
 
                                         <select class="form-select @error('wht_products') is-invalid @enderror"
-                                            aria-label="" name="wht_products" id="wht_products" required>
+                                            aria-label="" name="wht_products" id="wht_products">
                                             <option value="">{{ __('select tax') }}</option>
 
                                             @foreach ($taxes as $tax)
@@ -93,7 +113,7 @@
                                             for="wht_services">{{ __('default withholding tax for services') }}</label>
 
                                         <select class="form-select @error('wht_services') is-invalid @enderror"
-                                            aria-label="" name="wht_services" id="wht_services" required>
+                                            aria-label="" name="wht_services" id="wht_services">
                                             <option value="">{{ __('select tax') }}</option>
 
                                             @foreach ($taxes as $tax)
@@ -113,7 +133,7 @@
                                         <label class="form-label" for="income_tax">{{ __('default income tax') }}</label>
 
                                         <select class="form-select @error('income_tax') is-invalid @enderror"
-                                            aria-label="" name="income_tax" id="income_tax" required>
+                                            aria-label="" name="income_tax" id="income_tax">
                                             <option value="">{{ __('select tax') }}</option>
 
                                             @foreach ($taxes as $tax)
@@ -128,247 +148,208 @@
                                         @enderror
                                     </div>
 
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="vendors_tax">{{ __('default tax for vendors products commissions') }}</label>
+
+                                        <select class="form-select @error('vendors_tax') is-invalid @enderror"
+                                            aria-label="" name="vendors_tax" id="income_tax">
+                                            <option value="">{{ __('select tax') }}</option>
+
+                                            @foreach ($taxes as $tax)
+                                                <option value="{{ $tax->id }}"
+                                                    {{ setting('vendors_tax') == $tax->id ? 'selected' : '' }}>
+                                                    {{ $tax->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('vendors_tax')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
                                     <div class="mb-3">
                                         <label class="form-label"
                                             for="wht_invoice_amount">{{ __('total invoice amount to apply withholding tax') }}</label>
                                         <input name="wht_invoice_amount"
                                             class="form-control @error('wht_invoice_amount') is-invalid @enderror"
                                             value="{{ setting('wht_invoice_amount') }}" type="number" autocomplete="on"
-                                            id="wht_invoice_amount" autofocus required />
+                                            id="wht_invoice_amount" autofocus />
                                         @error('wht_invoice_amount')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
 
-                                </div>
-
-                                <div class="tab-pane fade show " id="tab-accounts" role="tabpanel"
-                                    aria-labelledby="accounts-tab">
 
                                     <div class="mb-3">
                                         <label class="form-label"
-                                            for="assets_account">{{ __('default assets account for products') }}</label>
-
-                                        <select class="form-select @error('assets_account') is-invalid @enderror"
-                                            aria-label="" name="assets_account" id="assets_account" required>
-                                            <option value="">{{ __('select account') }}</option>
-
-                                            @foreach ($assets_accounts as $account)
-                                                <option value="{{ $account->id }}"
-                                                    {{ setting('assets_account') == $account->id ? 'selected' : '' }}>
-                                                    {{ getName($account) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('assets_account')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="cash_account">{{ __('default assets account for cash on delivery payment method') }}</label>
-
-                                        <select class="form-select @error('cash_account') is-invalid @enderror"
-                                            aria-label="" name="cash_account" id="cash_account" required>
-                                            <option value="">{{ __('select account') }}</option>
-
-                                            @foreach ($assets_accounts as $account)
-                                                <option value="{{ $account->id }}"
-                                                    {{ setting('cash_account') == $account->id ? 'selected' : '' }}>
-                                                    {{ getName($account) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('cash_account')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="card_account">{{ __('default assets account for card payment method') }}</label>
-
-                                        <select class="form-select @error('card_account') is-invalid @enderror"
-                                            aria-label="" name="card_account" id="card_account" required>
-                                            <option value="">{{ __('select account') }}</option>
-
-                                            @foreach ($assets_accounts as $account)
-                                                <option value="{{ $account->id }}"
-                                                    {{ setting('card_account') == $account->id ? 'selected' : '' }}>
-                                                    {{ getName($account) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('card_account')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="revenue_account">{{ __('default revenue account for sales') }}</label>
-
-                                        <select class="form-select @error('revenue_account') is-invalid @enderror"
-                                            aria-label="" name="revenue_account" id="revenue_account" required>
-                                            <option value="">{{ __('select account') }}</option>
-
-                                            @foreach ($revenue_accounts as $account)
-                                                <option value="{{ $account->id }}"
-                                                    {{ setting('revenue_account') == $account->id ? 'selected' : '' }}>
-                                                    {{ getName($account) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('revenue_account')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="account_receivable_account">{{ __('default assets account for customers') }}</label>
-
-                                        <select
-                                            class="form-select @error('account_receivable_account') is-invalid @enderror"
-                                            aria-label="" name="account_receivable_account" id="revenue_account"
-                                            required>
-                                            <option value="">{{ __('select account') }}</option>
-
-                                            @foreach ($assets_accounts as $account)
-                                                <option value="{{ $account->id }}"
-                                                    {{ setting('account_receivable_account') == $account->id ? 'selected' : '' }}>
-                                                    {{ getName($account) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('account_receivable_account')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="suppliers_account">{{ __('default liability account for suppliers') }}</label>
-
-                                        <select class="form-select @error('suppliers_account') is-invalid @enderror"
-                                            aria-label="" name="suppliers_account" id="suppliers_account" required>
-                                            <option value="">{{ __('select account') }}</option>
-
-                                            @foreach ($liability_accounts as $account)
-                                                <option value="{{ $account->id }}"
-                                                    {{ setting('suppliers_account') == $account->id ? 'selected' : '' }}>
-                                                    {{ getName($account) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('suppliers_account')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="suppliers_account">{{ __('default added value tax account for purchases') }}</label>
-
-                                        <select class="form-select @error('vat_purchase_account') is-invalid @enderror"
-                                            aria-label="" name="vat_purchase_account" id="vat_purchase_account"
-                                            required>
-                                            <option value="">{{ __('select account') }}</option>
-
-                                            @foreach ($assets_accounts as $account)
-                                                <option value="{{ $account->id }}"
-                                                    {{ setting('vat_purchase_account') == $account->id ? 'selected' : '' }}>
-                                                    {{ getName($account) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('vat_purchase_account')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="vat_sales_account">{{ __('default added value tax account for sales') }}</label>
-
-                                        <select class="form-select @error('vat_sales_account') is-invalid @enderror"
-                                            aria-label="" name="vat_sales_account" id="vat_sales_account" required>
-                                            <option value="">{{ __('select account') }}</option>
-
-                                            @foreach ($liability_accounts as $account)
-                                                <option value="{{ $account->id }}"
-                                                    {{ setting('vat_sales_account') == $account->id ? 'selected' : '' }}>
-                                                    {{ getName($account) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('vat_sales_account')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="wct_account">{{ __('default withholding and collection tax account for purchases') }}</label>
-
-                                        <select class="form-select @error('wct_account') is-invalid @enderror"
-                                            aria-label="" name="wct_account" id="wct_account" required>
-                                            <option value="">{{ __('select account') }}</option>
-                                            @foreach ($liability_accounts as $account)
-                                                <option value="{{ $account->id }}"
-                                                    {{ setting('wct_account') == $account->id ? 'selected' : '' }}>
-                                                    {{ getName($account) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('wct_account')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="wst_account">{{ __('default withholding at source tax account for sales') }}</label>
-
-                                        <select class="form-select @error('wst_account') is-invalid @enderror"
-                                            aria-label="" name="wst_account" id="wst_account" required>
-                                            <option value="">{{ __('select account') }}</option>
-                                            @foreach ($assets_accounts as $account)
-                                                <option value="{{ $account->id }}"
-                                                    {{ setting('wst_account') == $account->id ? 'selected' : '' }}>
-                                                    {{ getName($account) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('wst_account')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="expenses_account">{{ __('default expenses account') }}</label>
-
-                                        <select class="form-select @error('expenses_account') is-invalid @enderror"
-                                            aria-label="" name="expenses_account" id="expenses_account" required>
-                                            <option value="">{{ __('select account') }}</option>
-                                            @foreach ($expenses_accounts as $account)
-                                                <option value="{{ $account->id }}"
-                                                    {{ setting('expenses_account') == $account->id ? 'selected' : '' }}>
-                                                    {{ getName($account) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('expenses_account')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
+                                            for="website_vat">{{ __('Applying value added tax to website sales') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="website_vat"
+                                                    class="form-control @error('website_vat') is-invalid @enderror"
+                                                    name="website_vat" type="checkbox"
+                                                    {{ setting('website_vat') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('website_vat')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
                                     </div>
 
                                 </div>
+
+                                @foreach ($branches as $branch)
+                                    <div class="tab-pane fade show " id="tab-accounts-{{ $branch->id }}"
+                                        role="tabpanel" aria-labelledby="accounts-tab-{{ $branch->id }}">
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'assets_account',
+                                            'default current assets account for inventory',
+                                            $assets_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'cs_account',
+                                            'default liability account for cost of goods sold',
+                                            $liability_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'funding_assets_account',
+                                            'default funding assets account',
+                                            $assets_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'fixed_assets_account',
+                                            'default non current assets account',
+                                            $assets_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'dep_expenses_account',
+                                            'default depreciation expenses account',
+                                            $expenses_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'cash_account',
+                                            'default assets account for cash on delivery payment method',
+                                            $assets_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'card_account',
+                                            'default assets account for card payment method',
+                                            $assets_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'revenue_account',
+                                            'default revenue account for sales',
+                                            $revenue_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'customers_account',
+                                            'default assets account for customers',
+                                            $assets_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+
+
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'suppliers_account',
+                                            'default liability account for suppliers',
+                                            $liability_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'vat_purchase_account',
+                                            'default added value tax account for purchases',
+                                            $assets_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'vat_sales_account',
+                                            'default added value tax account for sales',
+                                            $liability_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'vendors_tax_account',
+                                            'default commission tax account for vendors products',
+                                            $liability_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'wct_account',
+                                            'default withholding and collection tax account for purchases',
+                                            $liability_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'wst_account',
+                                            'default withholding at source tax account for sales',
+                                            $assets_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting('cash_accounts', 'default cash treasury account', $assets_accounts, $branch->id) !!}
+
+
+                                        {!! getDivForAccountsSetting('expenses_account', 'default expenses account', $expenses_accounts, $branch->id) !!}
+
+
+                                    </div>
+                                @endforeach
+
+
                                 <div class="tab-pane fade show " id="tab-shipping" role="tabpanel"
                                     aria-labelledby="shipping-tab">
 
@@ -377,7 +358,10 @@
                                             for="shipping_method">{{ __('default shipping method') }}</label>
 
                                         <select class="form-select @error('shipping_method') is-invalid @enderror"
-                                            aria-label="" name="shipping_method" id="shipping_method" required>
+                                            aria-label="" name="shipping_method" id="shipping_method">
+                                            <option value="">
+                                                {{ __('select shipping method') }}
+                                            </option>
                                             @foreach ($shipping_methods as $method)
                                                 <option value="{{ $method->id }}"
                                                     {{ setting('shipping_method') == $method->id ? 'selected' : '' }}>
@@ -446,7 +430,10 @@
                                         <label class="form-label" for="country_id">{{ __('default country') }}</label>
 
                                         <select class="form-select @error('country_id') is-invalid @enderror"
-                                            aria-label="" name="country_id" id="country_id" required>
+                                            aria-label="" name="country_id" id="country_id">
+                                            <option value="">
+                                                {{ __('select country') }}
+                                            </option>
                                             @foreach ($countries as $country)
                                                 <option value="{{ $country->id }}"
                                                     {{ setting('country_id') == $country->id ? 'selected' : '' }}>
@@ -459,27 +446,6 @@
                                         @enderror
                                     </div>
 
-                                    <div class="mb-3">
-
-                                        <label class="form-label" for="commission">{{ __('Website warehouse') }}</label>
-                                        <select class="form-select @error('warehouse_id') is-invalid @enderror"
-                                            aria-label="" name="warehouse_id" id="warehouse_id">
-                                            <option value="">
-                                                {{ __('select warehouse') }}
-                                            </option>
-                                            @foreach ($warehouses as $warehouse)
-                                                <option value="{{ $warehouse->id }}"
-                                                    {{ setting('warehouse_id') == $warehouse->id ? 'selected' : '' }}>
-                                                    {{ app()->getLocale() == 'ar' ? $warehouse->name_ar : $warehouse->name_en }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('warehouse_id')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-
 
                                     <div class="mb-3">
                                         <label class="form-label"
@@ -487,12 +453,33 @@
                                         <input name="compression_ratio"
                                             class="form-control @error('compression_ratio') is-invalid @enderror"
                                             value="{{ setting('compression_ratio') }}" type="number" autocomplete="on"
-                                            id="compression_ratio" required />
+                                            id="compression_ratio" />
                                         @error('compression_ratio')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
 
+
+                                    <div class="mb-3">
+
+                                        <label class="form-label"
+                                            for="website_branch">{{ __('Website default branch') }}</label>
+                                        <select class="form-select @error('website_branch') is-invalid @enderror"
+                                            aria-label="" name="website_branch" id="website_branch">
+                                            <option value="">
+                                                {{ __('select branch') }}
+                                            </option>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}"
+                                                    {{ setting('website_branch') == $branch->id ? 'selected' : '' }}>
+                                                    {{ getName($branch) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('website_branch')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
 
 
 
@@ -507,7 +494,7 @@
                                         <label class="form-label" for="tax">{{ __('Tax %') }}</label>
                                         <input name="tax" class="form-control @error('tax') is-invalid @enderror"
                                             value="{{ setting('tax') }}" type="number" autocomplete="on"
-                                            id="tax" autofocus required />
+                                            id="tax" autofocus />
                                         @error('tax')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
@@ -518,7 +505,7 @@
                                         <input name="max_price"
                                             class="form-control @error('max_price') is-invalid @enderror"
                                             value="{{ setting('max_price') }}" type="number" autocomplete="on"
-                                            id="max_price" required />
+                                            id="max_price" />
                                         @error('max_price')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
@@ -530,7 +517,7 @@
                                         <input name="commission"
                                             class="form-control @error('commission') is-invalid @enderror"
                                             value="{{ setting('commission') }}" type="number" autocomplete="on"
-                                            id="commission" required />
+                                            id="commission" />
                                         @error('commission')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
@@ -542,7 +529,7 @@
                                         <input name="affiliate_limit"
                                             class="form-control @error('affiliate_limit') is-invalid @enderror"
                                             value="{{ setting('affiliate_limit') }}" type="number" autocomplete="on"
-                                            id="affiliate_limit" required />
+                                            id="affiliate_limit" />
                                         @error('affiliate_limit')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
@@ -555,7 +542,7 @@
                                         <input name="vendor_limit"
                                             class="form-control @error('vendor_limit') is-invalid @enderror"
                                             value="{{ setting('vendor_limit') }}" type="number" autocomplete="on"
-                                            id="vendor_limit" required />
+                                            id="vendor_limit" />
                                         @error('vendor_limit')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
@@ -568,7 +555,7 @@
                                         <input name="mandatory_affiliate"
                                             class="form-control @error('mandatory_affiliate') is-invalid @enderror"
                                             value="{{ setting('mandatory_affiliate') }}" type="number"
-                                            autocomplete="on" id="mandatory_affiliate" required />
+                                            autocomplete="on" id="mandatory_affiliate" />
                                         @error('mandatory_affiliate')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
@@ -580,7 +567,7 @@
                                         <input name="mandatory_vendor"
                                             class="form-control @error('mandatory_vendor') is-invalid @enderror"
                                             value="{{ setting('mandatory_vendor') }}" type="number" autocomplete="on"
-                                            id="mandatory_vendor" required />
+                                            id="mandatory_vendor" />
                                         @error('mandatory_vendor')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror

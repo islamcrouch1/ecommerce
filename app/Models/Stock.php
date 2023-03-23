@@ -31,6 +31,13 @@ class Stock extends Model
         });
     }
 
+    public function scopeWhenStatus($query, $status)
+    {
+        return $query->when($status, function ($q) use ($status) {
+            return $q->where('stock_status', 'like', "$status");
+        });
+    }
+
     public function scopeWhenProduct($query, $product)
     {
         return $query->when($product, function ($q) use ($product) {

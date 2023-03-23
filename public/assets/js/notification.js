@@ -25,7 +25,7 @@ $(document).ready(function(){
                             <div class="notification-avatar">
                                 <div class="avatar avatar-2xl me-3">
                                     <img class="rounded-circle"
-                                        src="http://localhost:8000/assets/img/fevicon.png" alt="" />
+                                        src="`+data.sender_image+`" alt="" />
 
                                 </div>
                             </div>

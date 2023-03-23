@@ -10,13 +10,19 @@ class ProductCombination extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id', 'sku', 'sale_price', 'discount_price', 'media_id', 'limit',
+        'product_id', 'sku', 'sale_price', 'discount_price', 'media_id', 'limit', 'purchase_price',
     ];
 
     public function variations()
     {
         return $this->hasMany(ProductCombinationDtl::class);
     }
+
+    public function costs()
+    {
+        return $this->hasMany(Cost::class);
+    }
+
 
     public function product()
     {

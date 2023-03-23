@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Attribute;
+use App\Models\Branch;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Color;
 use App\Models\Country;
+use App\Models\Entry;
 use App\Models\Product;
 use App\Models\ProductCombination;
 use App\Models\ProductCombinationDtl;
@@ -45,8 +47,28 @@ class ProductsController extends Controller
         $countries = Country::all();
 
 
+        $user = Auth::user();
 
-        $products = Product::whenSearch(request()->search)
+        $products = Product::where('vendor_id', null)
+            ->whenSearch(request()->search)
+            ->whenCategory(request()->category_id)
+            ->whenCountry(request()->country_id)
+            ->whenStatus(request()->status)
+            ->latest()
+            ->paginate(100);
+
+        return view('dashboard.products.index', compact('products', 'categories', 'countries', 'user'));
+    }
+
+
+    public function vendorsIndex()
+    {
+        $categories = Category::whereNull('parent_id')->get();
+        $countries = Country::all();
+
+
+        $products = Product::whereNotNull('vendor_id')
+            ->whenSearch(request()->search)
             ->whenCategory(request()->category_id)
             ->whenCountry(request()->country_id)
             ->whenStatus(request()->status)
@@ -99,11 +121,12 @@ class ProductsController extends Controller
             'sku' => "required|string|unique:products",
             'product_slug' => "required|string|unique:products",
             'images' => "required|array",
+            'category' => "required|string",
             'description_ar' => "required|string",
             'description_en' => "required|string",
             'sale_price' => "required|numeric",
             'discount_price' => "required|numeric",
-            'categories' => "required|array",
+            'categories' => "nullable|array",
             'brands' => "nullable|array",
             'product_type' => "required|string",
             'digital_file' => "nullable|file",
@@ -124,16 +147,8 @@ class ProductsController extends Controller
             'shipping_method' => "nullable|string",
             'cost' => "nullable|numeric",
 
-
         ]);
 
-
-        if (setting('assets_account') == null) {
-            alertError('please select the default assets account for products in settings page', 'الرجاء تحديد حساب الأصول الافتراضية للمنتجات في صفحة الإعدادات');
-            return redirect()->back();
-        }
-
-        $account = Account::findOrFail(setting('assets_account'));
 
 
         $product_type = $request['product_type'];
@@ -167,6 +182,10 @@ class ProductsController extends Controller
         //     return redirect()->route('products.index');
         // }
 
+
+
+
+
         if ($product_type == 'variable') {
             if (empty($request['attributes'])) {
                 alertError('please select product attribute', 'يرجى تحديد سمات المنتج');
@@ -189,6 +208,7 @@ class ProductsController extends Controller
             'created_by' => Auth::id(),
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
+            'category_id' => $request['category'],
             'product_slug' => createSlug($request['product_slug']),
             'sku' => $request['sku'],
             'description_ar' => $request['description_ar'],
@@ -306,16 +326,28 @@ class ProductsController extends Controller
                 }
 
 
-                Account::create([
-                    'name_ar' => getProductName($product, getCombination($com->id), 'ar'),
-                    'name_en' => getProductName($product, getCombination($com->id), 'en'),
-                    'code' => $account->code .  $product->id . $com->id,
-                    'parent_id' => $account->id,
-                    'account_type' => $account->account_type,
-                    'reference_id' => $com->id,
-                    'type' => 'variable_product',
-                    'created_by' => Auth::id(),
-                ]);
+                // Account::create([
+                //     'name_ar' => getProductName($product, getCombination($com->id), 'ar'),
+                //     'name_en' => getProductName($product, getCombination($com->id), 'en'),
+                //     'code' => $account->code .  $product->id . $com->id,
+                //     'parent_id' => $account->id,
+                //     'account_type' => $account->account_type,
+                //     'reference_id' => $com->id,
+                //     'type' => 'variable_product',
+                //     'created_by' => Auth::id(),
+                // ]);
+
+
+                // Account::create([
+                //     'name_ar' => 'حساب تكلفة مبيعات - ' . getProductName($product, getCombination($com->id), 'ar'),
+                //     'name_en' => 'cost of sales account - ' . getProductName($product, getCombination($com->id), 'en'),
+                //     'code' => $cs_account->code .  $product->id . $com->id,
+                //     'parent_id' => $cs_account->id,
+                //     'account_type' => $cs_account->account_type,
+                //     'reference_id' => $com->id,
+                //     'type' => 'variable_product_cost',
+                //     'created_by' => Auth::id(),
+                // ]);
             }
         } elseif ($product_type == 'simple') {
             $com = ProductCombination::create([
@@ -325,27 +357,49 @@ class ProductsController extends Controller
                 'sale_price' => $product->sale_price,
             ]);
 
-            Account::create([
-                'name_ar' => getProductName($product, getCombination($com->id), 'ar'),
-                'name_en' => getProductName($product, getCombination($com->id), 'en'),
-                'code' => $account->code .  $product->id . $com->id,
-                'parent_id' => $account->id,
-                'account_type' => $account->account_type,
-                'reference_id' => $com->id,
-                'type' => 'simple_product',
-                'created_by' => Auth::id(),
-            ]);
+            // Account::create([
+            //     'name_ar' => getProductName($product, getCombination($com->id), 'ar'),
+            //     'name_en' => getProductName($product, getCombination($com->id), 'en'),
+            //     'code' => $account->code .  $product->id . $com->id,
+            //     'parent_id' => $account->id,
+            //     'account_type' => $account->account_type,
+            //     'reference_id' => $com->id,
+            //     'type' => 'simple_product',
+            //     'created_by' => Auth::id(),
+            // ]);
+
+            // Account::create([
+            //     'name_ar' => 'حساب تكلفة مبيعات - ' . getProductName($product, getCombination($com->id), 'ar'),
+            //     'name_en' => 'cost of sales account - ' . getProductName($product, getCombination($com->id), 'en'),
+            //     'code' => $cs_account->code .  $product->id . $com->id,
+            //     'parent_id' => $cs_account->id,
+            //     'account_type' => $cs_account->account_type,
+            //     'reference_id' => $com->id,
+            //     'type' => 'simple_product_cost',
+            //     'created_by' => Auth::id(),
+            // ]);
         } else {
-            Account::create([
-                'name_ar' => $product->name_ar,
-                'name_en' => $product->name_en,
-                'code' => $account->code . $product->id,
-                'parent_id' => $account->id,
-                'account_type' => $account->account_type,
-                'reference_id' => $product->id,
-                'type' => $product_type == 'digital' ? 'digital_product' : 'service',
-                'created_by' => Auth::id(),
-            ]);
+            // Account::create([
+            //     'name_ar' => $product->name_ar,
+            //     'name_en' => $product->name_en,
+            //     'code' => $account->code . $product->id,
+            //     'parent_id' => $account->id,
+            //     'account_type' => $account->account_type,
+            //     'reference_id' => $product->id,
+            //     'type' => $product_type == 'digital' ? 'digital_product' : 'service',
+            //     'created_by' => Auth::id(),
+            // ]);
+
+            // Account::create([
+            //     'name_ar' => 'حساب تكلفة مبيعات - ' . $product->name_ar,
+            //     'name_en' => 'cost of sales account - ' . $product->name_en,
+            //     'code' => $cs_account->code .  $product->id,
+            //     'parent_id' => $cs_account->id,
+            //     'account_type' => $cs_account->account_type,
+            //     'reference_id' => $product->id,
+            //     'type' => $product_type == 'digital' ? 'digital_product_cost' : 'service_cost',
+            //     'created_by' => Auth::id(),
+            // ]);
         }
 
 
@@ -433,11 +487,12 @@ class ProductsController extends Controller
             'sku' => "required|string|unique:products,sku," . $product->id,
             'product_slug' => "required|string|unique:products,product_slug," . $product->id,
             'images' => "nullable|array",
+            'category' => "required|string",
             'description_ar' => "required|string",
             'description_en' => "required|string",
             'sale_price' => "required|numeric",
             'discount_price' => "required|numeric",
-            'categories' => "required|array",
+            'categories' => "nullable|array",
             'brands' => "nullable|array",
             'digital_file' => "nullable|file",
             'status' => "required|string",
@@ -541,6 +596,7 @@ class ProductsController extends Controller
         $product->update([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
+            'category_id' => $request['category'],
             'sku' => $request['sku'],
             'product_slug' => createSlug($request['product_slug']),
             'description_ar' => $request['description_ar'],
@@ -554,7 +610,6 @@ class ProductsController extends Controller
             'product_height' =>  $request['product_height'],
             'shipping_amount' =>  $request['shipping_amount'],
             'shipping_method_id' =>  $request['shipping_method'],
-            'cost' =>  $request['cost'],
 
             'video_url' => $request['video_url'],
             'product_min_order' => $request['product_min_order'],
@@ -564,9 +619,20 @@ class ProductsController extends Controller
             'extra_fee' => $request['extra_fee'],
             'status' => $request['status'],
             'extra_fee' => $request['extra_fee'],
-            'updated' => Auth::id(),
+            'updated_by' => Auth::id(),
             'digital_file' => $product_type == 'digital' ? $path : null,
         ]);
+
+
+        if ($product_type == 'digital' || $product_type == 'service') {
+
+            $product->update([
+                'cost' =>  $request['cost'],
+            ]);
+        }
+
+
+
 
         if ($product->product_type == 'simple') {
             foreach ($product->combinations as $combination) {
@@ -613,7 +679,12 @@ class ProductsController extends Controller
         addLog('admin', 'products', $description_ar, $description_en);
 
         alertSuccess('Product updated successfully', 'تم تحديث المنتج بنجاح');
-        return redirect()->route('products.index');
+
+        if ($product->vendor_id == null) {
+            return redirect()->route('products.index');
+        } else {
+            return redirect()->route('products.vendors');
+        }
     }
 
     /**
@@ -676,24 +747,32 @@ class ProductsController extends Controller
 
     public function stockCreate($product)
     {
-        $warehouses = Warehouse::all();
+
+        $user = Auth::user();
+
+        $warehouses = Warehouse::where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
+            ->where('vendor_id', null)
+            ->get();
         $product = Product::findOrFail($product);
-        return view('dashboard.products.stock ')->with('product', $product)->with('warehouses', $warehouses);
+        return view('dashboard.products.stock', compact('product', 'warehouses'));
     }
 
     public function stockProductCreate()
     {
-        $warehouses = Warehouse::all();
+        $user = Auth::user();
+
+        $warehouses = Warehouse::where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
+            ->where('vendor_id', null)
+            ->get();
         $product = Product::findOrFail(request()->product);
-        return view('dashboard.products.stock ')->with('product', $product)->with('warehouses', $warehouses);
+        return view('dashboard.products.stock', compact('product', 'warehouses'));
     }
 
     public function stockStore(Request $request, Product $product)
     {
 
-
         $request->validate([
-            'warehouse_id' => "nullable|array",
+            'warehouse_id' => "required|string",
             'sku' => "required|array",
             'qty' => "required|array",
             'purchase_price' => "required|array",
@@ -705,28 +784,33 @@ class ProductsController extends Controller
         ]);
 
 
-        foreach ($product->combinations as $index => $combination) {
 
+        $warehouse = Warehouse::findOrFail($request->warehouse_id);
+        $branch_id = $warehouse->branch->id;
 
-            if ($request->has('images')) {
-                if (array_key_exists($combination->id, $request->images)) {
-                    $media_id = saveMedia('image', $request->images[$combination->id][0], 'combinations');
-                    if ($combination->media_id != null) {
-                        deleteImage($combination->media_id);
-                    }
-                    $combination->update([
-                        'media_id' => $media_id,
-                    ]);
-                }
-            }
+        if (settingAccount('funding_assets_account', $branch_id) == null) {
+            alertError('please select the default funding assets account in settings page', 'الرجاء تحديد حساب تمويل الأصول المتداولة الافتراضية في صفحة الإعدادات');
+            return redirect()->back();
         }
+
+        if (settingAccount('assets_account', $branch_id) == null) {
+            alertError('please select the default assets account for products in settings page', 'الرجاء تحديد حساب الأصول الافتراضية للمنتجات في صفحة الإعدادات');
+            return redirect()->back();
+        }
+
+        if (settingAccount('cs_account', $branch_id) == null) {
+            alertError('please select the default liability account for cost of goods sold in settings page', 'الرجاء تحديد حساب حقوق الملكية الافتراضية لتكلفة البضاعة المباعة في صفحة الإعدادات');
+            return redirect()->back();
+        }
+
+
+        $funding_assets_account = Account::findOrFail(settingAccount('funding_assets_account', $branch_id));
+
 
 
         foreach ($product->combinations as $index => $combination) {
 
             if ($request->qty[$index] > 0) {
-
-
 
                 if ($request->sale_price[$index] <= $request->discount_price[$index]) {
                     alertError('discount price must be lower than regular price', 'يجب ان يكون سعر الخصم اقل من السعر العادي');
@@ -737,21 +821,8 @@ class ProductsController extends Controller
                     }
                 }
 
-
-
-                if ($request->warehouse_id[$index] == null) {
-                    alertError('Please select the store to add stock quantities', 'يرجى تحديد المخزن لاضافة كميات المخزون');
-                    if (url()->previous() == route('products.stock.add')) {
-                        return redirect()->route('products.stock.create', ['product' => $product->id]);
-                    } else {
-                        return redirect()->back();
-                    }
-                }
-
-
-
                 if ($request->stock_status[$index] == 'OUT') {
-                    if ($request->qty[$index] > productQuantity($product->id, $combination->id, $request->warehouse_id[$index])) {
+                    if ($request->qty[$index] > productQuantity($product->id, $combination->id, $warehouse->id)) {
                         alertError('There are not enough quantities in the specified warehouse for stock exchange', 'لا توجد كميات كافية في المخزن المحدد لصرف المخزون');
                         if (url()->previous() == route('products.stock.add')) {
                             return redirect()->route('products.stock.create', ['product' => $product->id]);
@@ -761,20 +832,36 @@ class ProductsController extends Controller
                     }
                 }
 
-                $combination->update([
-                    'warehouse_id' => $request->warehouse_id[$index],
-                    'sku' => $request->sku[$index],
-                    'qty' => $request->qty[$index],
-                    'sale_price' => $request->sale_price[$index],
-                    'discount_price' => $request->discount_price[$index],
-                    'limit' => $request->limit[$index],
-                    'purchase_price' => $request->purchase_price[$index],
-                ]);
+                if ($request->has('images')) {
+                    if (array_key_exists($combination->id, $request->images)) {
+                        $media_id = saveMedia('image', $request->images[$combination->id][0], 'combinations');
+                        if ($combination->media_id != null) {
+                            deleteImage($combination->media_id);
+                        }
+                        $combination->update([
+                            'media_id' => $media_id,
+                        ]);
+                    }
+                }
+
+                if ($request->stock_status[$index] == 'IN') {
+
+                    // calculate product cost in add stock
+                    updateCost($combination, $request->purchase_price[$index], $request->qty[$index], 'add', $branch_id);
+
+                    $combination->update([
+                        'warehouse_id' => $warehouse->id,
+                        'sku' => $request->sku[$index],
+                        'sale_price' => $request->sale_price[$index],
+                        'discount_price' => $request->discount_price[$index],
+                        'limit' => $request->limit[$index],
+                    ]);
+                }
 
                 Stock::create([
                     'product_combination_id' => $combination->id,
                     'product_id' => $product->id,
-                    'warehouse_id' => $request->warehouse_id[$index],
+                    'warehouse_id' => $warehouse->id,
                     'qty' => $request->qty[$index],
                     'stock_status' => $request->stock_status[$index],
                     'stock_type' => 'StockAdjustment',
@@ -782,7 +869,52 @@ class ProductsController extends Controller
                     'created_by' => Auth::id()
                 ]);
 
-                if ($product->product_type == 'simple') {
+
+                $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
+                $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
+
+                Entry::create([
+                    'account_id' => $product_account->id,
+                    'type' => $request->stock_status[$index] == 'IN' ? 'stockIN' : 'stockOut',
+                    'dr_amount' => $request->stock_status[$index] == 'IN' ? ($request->purchase_price[$index] * $request->qty[$index]) : 0,
+                    'cr_amount' => $request->stock_status[$index] == 'OUT' ? ($combination->costs->where('branch_id', $branch_id)->first()->cost * $request->qty[$index]) : 0,
+                    'description' => 'stock adjustment# ' . $combination->id,
+                    'reference_id' => $combination->id,
+                    'branch_id' => $branch_id,
+                    'created_by' => Auth::id(),
+                ]);
+
+
+                if ($request->stock_status[$index] == 'IN') {
+
+                    entry::create([
+                        'account_id' => $funding_assets_account->id,
+                        'type' => 'stockIN',
+                        'dr_amount' => 0,
+                        'cr_amount' => ($request->purchase_price[$index] * $request->qty[$index]),
+                        'description' => 'stock adjustment# ' . $combination->id,
+                        'branch_id' => $branch_id,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+
+                if ($request->stock_status[$index] == 'OUT') {
+
+                    Entry::create([
+                        'account_id' => $cs_product_account->id,
+                        'type' => 'stockOut',
+                        'dr_amount' => ($combination->costs->where('branch_id', $branch_id)->first()->cost * $request->qty[$index]),
+                        'cr_amount' => 0,
+                        'description' => 'stock adjustment# ' . $combination->id,
+                        'reference_id' => $combination->id,
+                        'branch_id' => $branch_id,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+
+
+
+                if ($product->product_type == 'simple' && $request->stock_status[$index] == 'IN') {
                     $product->update([
                         'sale_price' => $request->sale_price[$index],
                         'discount_price' => $request->discount_price[$index],
@@ -1220,33 +1352,37 @@ class ProductsController extends Controller
 
     private function changeStatus($product, $status)
     {
-        $title_ar = 'اشعار من الإدارة';
-        $title_en = 'Notification From Admin';
 
-        switch ($status) {
-            case 'active':
-                $body_ar = "تم تغيير حالة المنتج الخاص بك الى نشط";
-                $body_en  = "Your product status has been changed to Active";
-                break;
-            case 'rejected':
-                $body_ar = "تم تغيير حالة المنتج الخاص بك الى مرفوض";
-                $body_en  = "Your product status has been changed to Rejected";
-                break;
-            case 'pause':
-                $body_ar = "تم تغيير حالة المنتج الخاص بك الى معطل مؤقتا";
-                $body_en  = "Your product status has been changed to pause";
-                break;
-            case 'pending':
-                $body_ar = "تم تغيير حالة المنتج الخاص بك الى معلق";
-                $body_en  = "Your product status has been changed to pending";
-                break;
-            default:
-                # code...
-                break;
+        if ($product->vendor_id != null) {
+            $title_ar = 'اشعار من الإدارة';
+            $title_en = 'Notification From Admin';
+
+            switch ($status) {
+                case 'active':
+                    $body_ar = "تم تغيير حالة المنتج الخاص بك الى نشط";
+                    $body_en  = "Your product status has been changed to Active";
+                    break;
+                case 'rejected':
+                    $body_ar = "تم تغيير حالة المنتج الخاص بك الى مرفوض";
+                    $body_en  = "Your product status has been changed to Rejected";
+                    break;
+                case 'pause':
+                    $body_ar = "تم تغيير حالة المنتج الخاص بك الى معطل مؤقتا";
+                    $body_en  = "Your product status has been changed to pause";
+                    break;
+                case 'pending':
+                    $body_ar = "تم تغيير حالة المنتج الخاص بك الى معلق";
+                    $body_en  = "Your product status has been changed to pending";
+                    break;
+                default:
+                    # code...
+                    break;
+            }
+
+            $url = route('vendor-products.index');
+            addNoty($product->vendor, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
         }
 
-        $url = route('vendor-products.index');
-        addNoty($product->vendor, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
 
         $product->update([
             'status' => $status,

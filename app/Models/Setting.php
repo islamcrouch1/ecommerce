@@ -10,6 +10,6 @@ class Setting extends Model
     use HasFactory;
 
     protected $fillable = [
-        'type', 'value'
+        'type', 'value', 'reference_type', 'reference_id'
     ];
 }

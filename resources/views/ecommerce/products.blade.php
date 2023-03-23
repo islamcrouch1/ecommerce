@@ -327,7 +327,7 @@
                                                         </div>
                                                         <div class="cart-info cart-wrap">
                                                             <a href="javascript:void(0)" class="add-fav"
-                                                                title="Add to Wishlist"
+                                                                title="{{ __('Add to Wishlist') }}"
                                                                 data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
                                                                 data-product_id="{{ $product->id }}"><i
                                                                     style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
@@ -336,10 +336,11 @@
 
                                                             <a href="#" data-bs-toggle="modal"
                                                                 data-bs-target="#quick-view-{{ $product->id }}"
-                                                                title="Quick View"><i class="ti-search"
-                                                                    aria-hidden="true"></i></a> <a href="compare.html"
-                                                                title="Compare"><i class="ti-reload"
+                                                                title="{{ __('Quick View') }}"><i class="ti-search"
                                                                     aria-hidden="true"></i></a>
+                                                            {{-- <a href="compare.html"
+                                                                title="Compare"><i class="ti-reload"
+                                                                    aria-hidden="true"></i></a> --}}
 
                                                         </div>
                                                     </div>
@@ -478,10 +479,11 @@
                                         class="product-description border-product product-attributes-{{ $product->id }}">
                                         @if ($product->product_type == 'variable')
                                             @foreach ($product->attributes as $attribute)
-                                                @if ($attribute->name_en == 'color' ||
-                                                    $attribute->name_en == 'colors' ||
-                                                    $attribute->name_en == 'Color' ||
-                                                    $attribute->name_en == 'Colors')
+                                                @if (
+                                                    $attribute->name_en == 'color' ||
+                                                        $attribute->name_en == 'colors' ||
+                                                        $attribute->name_en == 'Color' ||
+                                                        $attribute->name_en == 'Colors')
                                                     <div class="row">
                                                         <div
                                                             class="col-md-3 d-flex justify-content-center align-items-center">
@@ -616,6 +618,15 @@
     @endforeach
 
     <!-- Quick-view modal popup end-->
+
+
+
+    <!-- added to cart notification -->
+    <div class="added-notification cart-noty">
+        <h3>{{ __('added to cart') }}</h3>
+    </div>
+    <!-- added to cart notification -->
+
 
 
 

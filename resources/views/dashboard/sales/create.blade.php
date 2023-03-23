@@ -112,25 +112,15 @@
 
                             <div class="mb-3">
 
-
-
-
-
                                 <div class="form-check">
                                     <input name="tax[]"
                                         class="form-check-input sale-tax @error('tax') is-invalid @enderror"
-                                        id="flexCheckDefault" type="checkbox" value="vat-from" />
+                                        id="flexCheckDefault" type="checkbox" value="vat" />
                                     <label class="form-check-label"
-                                        for="flexCheckDefault">{{ __('added value tax') . ' ' . __('(from sale price)') }}</label>
+                                        for="flexCheckDefault">{{ __('added value tax') }}</label>
                                 </div>
 
-                                <div class="form-check">
-                                    <input name="tax[]"
-                                        class="form-check-input sale-tax @error('tax') is-invalid @enderror"
-                                        id="flexCheckDefault" type="checkbox" value="vat-on" />
-                                    <label class="form-check-label"
-                                        for="flexCheckDefault">{{ __('added value tax') . ' ' . __('(on sale price)') }}</label>
-                                </div>
+
                                 <div class="form-check">
                                     <input name="tax[]"
                                         class="form-check-input sale-tax @error('tax') is-invalid @enderror"

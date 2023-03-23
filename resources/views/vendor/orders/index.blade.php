@@ -62,15 +62,24 @@
                     <table class="table table-sm table-striped fs--1 mb-0 overflow-hidden">
                         <thead class="bg-200 text-900">
                             <tr>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="id">Order ID</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">Vendor Name</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">Product</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="status">Status</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">Quantity</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">Item Price</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">Total</th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="id">{{ __('Order ID') }}
+                                </th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">{{ __('Product') }}
+                                </th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="status">
+                                    {{ __('Status') }}</th>
+
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
+                                    {{ __('Item Price') }}</th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">{{ __('Quantity') }}
+                                </th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">{{ __('Total') }}
+                                </th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                    {{ __('Platform Commission') }}
+                                </th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
-                                    data-sort="joined">Created At</th>
+                                    data-sort="joined">{{ __('Created At') }}</th>
                             </tr>
                         </thead>
                         <tbody class="list" id="table-customers-body">
@@ -83,22 +92,15 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="address align-middle white-space-nowrap py-2">
-                                        {{ $order->user_name }}
-                                    </td>
+
                                     <td class="align-middle">
                                         <h6 class="mb-0 text-nowrap">
-                                            {{ app()->getLocale() == 'ar' ? $order->products()->first()->name_ar : $order->products()->first()->name_en }}
+                                            {{ getProductName($order->products()->first(), getCombination($order->products()->first()->pivot->product_combination_id)) }}
                                         </h6>
-                                        <span class="badge badge-soft-info">
-                                            {{ app()->getLocale() == 'ar' ? $order->products()->first()->pivot->color_ar : $order->products()->first()->pivot->color_en }}
-                                        </span>
-                                        <span class="badge badge-soft-info">
-                                            {{ app()->getLocale() == 'ar' ? $order->products()->first()->pivot->size_ar : $order->products()->first()->pivot->size_en }}
-                                        </span>
+
 
                                         <span class="badge badge-soft-info">
-                                            SKU:{{ $order->products()->first()->sku }}
+                                            SKU:{{ getCombination($order->products()->first()->pivot->product_combination_id)->sku }}
                                         </span>
                                     </td>
                                     <td class="phone align-middle white-space-nowrap py-2">
@@ -148,13 +150,19 @@
                                     </td>
 
                                     <td class="address align-middle white-space-nowrap py-2">
-                                        {{ $order->products()->first()->pivot->quantity }}
+                                        {{ $order->products()->first()->pivot->product_price . ' ' . $order->country->currency }}
                                     </td>
+
                                     <td class="address align-middle white-space-nowrap py-2">
-                                        {{ $order->products()->first()->pivot->vendor_price . ' ' . $order->country->currency }}
+                                        {{ $order->products()->first()->pivot->qty }}
                                     </td>
+
                                     <td class="address align-middle white-space-nowrap py-2">
                                         {{ $order->total_price . ' ' . $order->country->currency }}
+                                    </td>
+
+                                    <td class="address align-middle white-space-nowrap py-2">
+                                        {{ $order->total_commission . ' ' . $order->country->currency }}
                                     </td>
                                     <td class="joined align-middle py-2">{{ $order->created_at }} <br>
                                         {{ interval($order->created_at) }} </td>

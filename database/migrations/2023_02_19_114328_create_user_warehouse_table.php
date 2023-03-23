@@ -13,8 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->bigInteger('orderId')->nullable();
+        Schema::create('user_warehouse', function (Blueprint $table) {
+            $table->id();
+            $table->integer('user_id');
+            $table->integer('warehouse_id');
+            $table->timestamps();
         });
     }
 
@@ -25,8 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn('orderId');
-        });
+        Schema::dropIfExists('user_warehouse');
     }
 };

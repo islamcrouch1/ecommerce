@@ -24,6 +24,7 @@ class WarehousesController extends Controller
 
 
         $warehouses = Warehouse::whenSearch(request()->search)
+            ->where('vendor_id', null)
             ->latest()
             ->paginate(100);
 
@@ -57,7 +58,10 @@ class WarehousesController extends Controller
             'name_en' => "required|string|max:255|unique:warehouses",
             'code' => "required|string|max:255|unique:warehouses",
             'address' => "required|string",
+            'phone' => "nullable|string",
+            'email' => "nullable|string",
             'country_id' => "required|string",
+            'city_id' => "required|string",
         ]);
 
 
@@ -66,7 +70,10 @@ class WarehousesController extends Controller
             'name_en' => $request['name_en'],
             'code' => $request['code'],
             'address' => $request['address'],
+            'phone' => $request['phone'],
+            'email' => $request['email'],
             'country_id' => $request['country_id'],
+            'city_id' => $request['city_id'],
         ]);
 
         alertSuccess('warehouse created successfully', 'تم إضافة المخزن بنجاح');
@@ -111,7 +118,10 @@ class WarehousesController extends Controller
             'name_en' => "required|string|max:255|unique:warehouses,name_en," . $warehouse->id,
             'code' => "required|string|max:255|unique:warehouses,code," . $warehouse->id,
             'address' => "required|string",
+            'phone' => "nullable|string",
+            'email' => "nullable|string",
             'country_id' => "required|string",
+            'city_id' => "required|string",
         ]);
 
         $warehouse->update([
@@ -119,7 +129,10 @@ class WarehousesController extends Controller
             'name_en' => $request['name_en'],
             'code' => $request['code'],
             'address' => $request['address'],
+            'phone' => $request['phone'],
+            'email' => $request['email'],
             'country_id' => $request['country_id'],
+            'city_id' => $request['city_id'],
         ]);
 
         alertSuccess('warehouse updated successfully', 'تم تعديل المخزن بنجاح');

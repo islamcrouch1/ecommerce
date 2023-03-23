@@ -13,11 +13,11 @@ class FinancesController extends Controller
     public function __construct()
     {
         $this->middleware('role:superadministrator|administrator');
-        $this->middleware('permission:finances-read')->only('index', 'show');
-        $this->middleware('permission:finances-create')->only('create', 'store');
-        $this->middleware('permission:finances-update')->only('edit', 'update');
-        $this->middleware('permission:finances-delete|finances-trash')->only('destroy', 'trashed');
-        $this->middleware('permission:finances-restore')->only('restore');
+        $this->middleware('permission:orders_report-read')->only('index', 'show');
+        $this->middleware('permission:orders_report-create')->only('create', 'store');
+        $this->middleware('permission:orders_report-update')->only('edit', 'update');
+        $this->middleware('permission:orders_report-delete|orders_report-trash')->only('destroy', 'trashed');
+        $this->middleware('permission:orders_report-restore')->only('restore');
     }
 
 

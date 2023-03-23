@@ -15,14 +15,14 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id');
-            $table->integer('sender_id');
+            $table->integer('user_id')->nullable();
+            $table->integer('sender_id')->nullable();
             $table->string('sender_name')->nullable();
             $table->string('sender_image')->nullable();
             $table->string('title_ar')->nullable();
-            $table->string('body_ar')->nullable();
+            $table->longText('body_ar')->nullable();
             $table->string('title_en')->nullable();
-            $table->string('body_en')->nullable();
+            $table->longText('body_en')->nullable();
             $table->string('date')->nullable();
             $table->string('url')->nullable();
             $table->integer('status')->default(0);

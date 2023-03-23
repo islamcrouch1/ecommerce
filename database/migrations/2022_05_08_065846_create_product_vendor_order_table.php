@@ -20,9 +20,9 @@ return new class extends Migration
             $table->enum('product_type', ['simple', 'variable', 'digital', 'service']);
             $table->integer('vendor_order_id');
             $table->integer('warehouse_id');
-            $table->double('vendor_price', 8, 2)->nullable();
-            $table->double('total_vendor_price', 8, 2)->nullable();
-            $table->integer('qty');
+            $table->double('product_price', 8, 2)->default(0);
+            $table->double('commission', 8, 2)->default(0);
+            $table->integer('qty')->default(0);
             $table->timestamps();
         });
     }

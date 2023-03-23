@@ -107,14 +107,39 @@
                                 @enderror
                             </div>
 
+                            <div class="mb-3">
+                                <label class="form-label" for="category">{{ __('Select main category') }}</label>
+
+                                <select class="form-select @error('category') is-invalid @enderror" name="category"
+                                    id="category" required>
+                                    <option value="">
+                                        {{ __('Select main category') }}</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}">
+                                            {{ app()->getLocale() == 'ar' ? $category->name_ar : $category->name_en }}
+                                        </option>
+
+                                        @if ($category->children->count() > 0)
+                                            @foreach ($category->children as $subCat)
+                                                @include('dashboard.categories._category_options', [
+                                                    'category' => $subCat,
+                                                ])
+                                            @endforeach
+                                        @endif
+                                    @endforeach
+                                </select>
+                                @error('category')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
 
 
                             <div class="mb-3">
-                                <label class="form-label" for="categories">{{ __('Select Categories') }}</label>
+                                <label class="form-label" for="categories">{{ __('Select more categories') }}</label>
 
                                 <select class="form-select js-choice @error('categories') is-invalid @enderror"
                                     multiple="multiple" name="categories[]" id="categories"
-                                    data-options='{"removeItemButton":true,"placeholder":true}' required>
+                                    data-options='{"removeItemButton":true,"placeholder":true}'>
                                     <option value="">
                                         {{ __('Select Categories') }}</option>
                                     @foreach ($categories as $category)
@@ -141,8 +166,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="brands">{{ __('brands') }}</label>
 
-                                <select class="form-select js-choice @error('brands') is-invalid @enderror" aria-label=""
-                                    multiple="multiple" name="brands[]" id="brands"
+                                <select class="form-select js-choice @error('brands') is-invalid @enderror"
+                                    aria-label="" multiple="multiple" name="brands[]" id="brands"
                                     data-options='{"removeItemButton":true,"placeholder":true}'>
                                     @foreach ($brands as $brand)
                                         <option value="{{ $brand->id }}"

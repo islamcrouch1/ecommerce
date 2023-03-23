@@ -21,6 +21,7 @@ return new class extends Migration
             $table->enum('account_type', ['assets', 'revenue', 'liability', 'expenses'])->default('assets');
             $table->tinyInteger('status')->default('1')->comment('1 for active & 0 for inactive');
             $table->integer('parent_id')->nullable();
+            $table->integer('branch_id')->nullable();
             $table->integer('reference_id')->nullable();
             $table->string('type')->nullable();
             $table->integer('created_by')->nullable();

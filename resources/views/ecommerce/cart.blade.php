@@ -62,8 +62,11 @@
                                                 src="{{ asset($item->product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $item->product->images[0]->media->path) }}"
                                                 alt=""></a>
                                     </td>
-                                    <td><a href="{{ route('ecommerce.product', ['product' => $item->product->id]) }}">{{ app()->getLocale() == 'ar' ? $item->product->name_ar : $item->product->name_en }}
-                                            {{ getCProductVariations($item->combination) }}
+                                    <td><a href="{{ route('ecommerce.product', ['product' => $item->product->id]) }}">
+
+                                            {{ getProductName($item->product, $item->combination) }}
+
+
                                         </a>
                                         <div class="mobile-cart-content row">
                                             <div class="col">
@@ -76,7 +79,7 @@
                                             </div>
                                             <div class="col">
                                                 <h2 class="td-color">
-                                                    {{ productPrice($item->product, $item->product_combination_id) . getCurrency() }}
+                                                    {{ productPrice($item->product, $item->product_combination_id, 'vat') . getCurrency() }}
                                                 </h2>
 
                                             </div>
@@ -89,7 +92,7 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <h2>{{ productPrice($item->product, $item->product_combination_id) . getCurrency() }}
+                                        <h2>{{ productPrice($item->product, $item->product_combination_id, 'vat') . getCurrency() }}
                                         </h2>
                                     </td>
                                     <td>
@@ -106,7 +109,7 @@
                                             class="icon"><i class="ti-close"></i></a></td>
                                     <td>
                                         <h2 class="td-color">
-                                            {{ productPrice($item->product, $item->product_combination_id) * $item->qty . getCurrency() }}
+                                            {{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . getCurrency() }}
                                         </h2>
                                     </td>
                                 </tr>

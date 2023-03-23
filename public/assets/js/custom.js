@@ -25,9 +25,107 @@ $(document).ready(function(){
     });
 
 
-    $('.sonoo-search').change(function(){
-        $(this).closest('form').submit();
+    $('.country-select').on('change' , function(e){
+        e.preventDefault();
+        getStates();
     });
+
+    $('.state-select').on('change' , function(e){
+        e.preventDefault();
+        getCities();
+    });
+
+    $(document).ready(function(){
+        getStates()
+    });
+
+
+
+    function getStates(){
+
+        var country_id = $('.country-select').find(":selected").data('country_id');
+        var url = $('.country-select').data('url');
+
+        var formData = new FormData();
+
+        formData.append('country_id' , country_id );
+
+        $.ajax({
+            url: url,
+            data: formData,
+            method: 'POST',
+            processData: false,
+            contentType: false,
+            cache: false,
+            success: function(data) {
+
+                if(data.status == 1){
+
+                    $('.state-select').children().remove().end()
+
+                    var array = data.states;
+                    array.forEach(element => {
+                        $('.state-select').append(
+                            `<option data-state_id="`+ element.id +`" value="`+ element.id +`">`+ (data.locale == 'ar' ? element.name_ar : element.name_en) +`</option>`
+                        )
+                    });
+
+                    getCities()
+
+                }else{
+                    $('.state-select').children().remove().end()
+                }
+
+            }
+        });
+
+
+    }
+
+
+    function getCities(){
+
+        var state_id = $('.state-select').find(":selected").data('state_id');
+        var url = $('.state-select').data('url');
+
+        var formData = new FormData();
+
+        formData.append('state_id' , state_id );
+
+        $.ajax({
+            url: url,
+            data: formData,
+            method: 'POST',
+            processData: false,
+            contentType: false,
+            cache: false,
+            success: function(data) {
+
+                if(data.status == 1){
+
+                    $('.city-select').children().remove().end()
+
+                    var array = data.cities;
+                    array.forEach(element => {
+                        $('.city-select').append(
+                            `<option data-city_id="`+ element.id +`" value="`+ element.id +`">`+ (data.locale == 'ar' ? element.name_ar : element.name_en) +`</option>`
+                        )
+                    });
+
+                    calculateShipping()
+
+                }else{
+                    $('.city-select').children().remove().end()
+                }
+
+            }
+        });
+    }
+
+
+
+
+
 
     $('.sonoo-form').change(function(){
         $(this).closest('form').submit();
@@ -49,6 +147,25 @@ $(document).ready(function(){
         }
     });
 
+
+        // display digital file input when select cproduct type digital
+        $('.stock-status').on('change', function() {
+
+            var type = $(this).find(":selected").val();
+            var id =  $(this).data("id");
+
+            if(type == "IN") {
+                $('.discount_price-'+id).show();
+                $('.purchase_price-'+id).show();
+                $('.sale_price-'+id).show();
+            }else{
+                $('.discount_price-'+id).hide();
+                $('.purchase_price-'+id).hide();
+                $('.sale_price-'+id).hide();
+            }
+
+
+        });
 
     // display digital file input when select cproduct type digital
     $('.product-type').on('change', function() {
@@ -144,6 +261,358 @@ $(document).ready(function(){
         $(this).parent('div').remove(); //Remove field html
         x--; //Decrement field counter
     });
+
+
+
+
+    // add accounts
+    var maxField = 50; //Input fields increment limitation
+    var addButton = $('.add_account'); //Add button selector
+    var wrapper = $('.field_wrapper'); //Input field wrapper
+
+    var x = 1; //Initial field counter is 1
+
+    //Once add button is clicked
+    $(addButton).click(function(){
+        //Check maximum number of input fields
+        if(x < maxField){
+            x++; //Increment field counter
+
+            const  accounts = $('.div-data').data('accounts');
+            var locale = $('.div-data').data('locale');
+            var text1 = locale == 'ar' ? 'حدد الحساب' : 'select account';
+            var text2 = '';
+
+
+             accounts.forEach(function(element) {
+                text2 += '<option value="'+ element.id +'">'+ (locale == 'ar' ? element.name_ar : element.name_en) +'</option>';
+            });
+
+            console.log(text2);
+
+
+
+
+            var fieldHTML = `
+            <div class="input-group mt-3">
+                <select
+                    class="form-select from-account-select"
+                    aria-label="" name="accounts[]"  data-level="1"
+                    required>
+                    <option value="">`+ text1  +`</option>`+ text2 +`
+                </select>
+                <input name="dr_amount[]" class="form-control"  type="number"
+                placeholder="`+ (locale == 'ar' ? 'مدين' : 'debit') +`" min="0" required />
+                <input name="cr_amount[]" class="form-control"  type="number"
+                placeholder="`+ (locale == 'ar' ? 'دائن' : 'credit') +`" min="0" required />
+                <a href="javascript:void(0);" class="remove_button">
+                    <span class="input-group-text" id="basic-addon1">
+                        <span class="far fa-trash-alt text-danger fs-2"></span>
+                    </span>
+                </a>
+            </div>`; //New input field html
+
+            $(wrapper).append(fieldHTML); //Add field html
+        }
+    });
+
+    //Once remove button is clicked
+    $(wrapper).on('click', '.remove_button', function(e){
+        e.preventDefault();
+        $(this).parent('div').remove(); //Remove field html
+        x--; //Decrement field counter
+    });
+
+
+    $('.field_wrapper').on('change' , '.from-account-select' , function(e){
+        e.preventDefault();
+        var elem = $(this);
+        getAccounts(elem , 'from');
+
+    });
+
+
+    function getAccounts(elem , dir){
+
+
+        var url = $('.div-data').data('url');
+        var locale = $('.div-data').data('locale');
+        var account_id = elem.find(":selected").val();
+        var account_name = elem.find(":selected").text();
+        var level = elem.data('level');
+
+        var formData = new FormData();
+        formData.append('account_id' , account_id );
+        $.ajax({
+            url: url,
+            data: formData,
+            method: 'POST',
+            processData: false,
+            contentType: false,
+            cache: false,
+            success: function(data) {
+
+                if(data.status == 1){
+                    for (var i = 20; i >= level; i--) {
+                        $('.'+dir+'-account'+i).remove();
+                      }
+
+                    var array = data.elements;
+                    if(array.length == 0){
+                        return;
+                    }
+                    var options = '';
+
+                    array.forEach(element => {
+                        options += `<option value="`+element.id+`">
+                                    `+element.name+`
+                                    </option>`;
+                    });
+
+                    elem.parent().prepend(
+                        `<select
+                            class="form-select `+dir+`-account-select"
+                            aria-label="" name="accounts[]" required>
+                                <option value="">`+(locale == 'ar' ? 'حدد الحساب' : 'select account')+`</option>`
+                            +options+
+                        `</select>
+                        `
+                    );
+
+                    elem.closest('.form-select').remove();
+
+
+
+                }
+            }
+        });
+    }
+
+
+
+    // add fields
+    var maxField = 1000; //Input fields increment limitation
+    var addButton = $('.add_field'); //Add button selector
+    var wrapper = $('.field_wrapper'); //Input field wrapper
+
+    var x = 0; //Initial field counter is 1
+
+    var level = $('.data-x').data('x');
+
+    if(level){
+        x = level;
+    }
+
+    //Once add button is clicked
+    $(addButton).click(function(){
+        //Check maximum number of input fields
+
+        if(x < maxField){
+            x++; //Increment field counter
+
+            console.log(x);
+
+            var locale = $(this).data('locale');
+
+            var type = $('.select_type').find(":selected").val();
+
+
+            switch(type) {
+                case 'name':
+                  typeTextAr = 'اسم' ;
+                  typeTextEn = type ;
+                  break;
+                case 'text':
+                    typeTextAr = 'نص' ;
+                    typeTextEn = type ;
+                case 'photo':
+                    typeTextAr = 'صورة' ;
+                    typeTextEn = type ;
+                case 'number':
+                    typeTextAr = 'رقم' ;
+                    typeTextEn = type ;
+                case 'checkbox':
+                    typeTextAr = 'اختيار من متعدد' ;
+                    typeTextEn = type ;
+                case 'radio':
+                    typeTextAr = 'اختيار واحد' ;
+                    typeTextEn = type ;
+                break;
+                default:
+                  // code block
+              }
+
+              var fieldHTMLOption = `<div style="display:none" class="col-md-2 mt-2">
+                                        <input name="options[`+x+`][]" class="form-control" value="0" type="text"
+                                             required />
+                                    </div>`;
+              var text8 = locale == 'ar' ? 'اضافة خيارات' : 'add options';
+
+
+              if(type == 'checkbox' || type == 'radio'){
+                fieldHTMLOption = `<div class="col-md-2 mt-2">
+                                        <button href="javascript:void(0);" data-x="`+x+`" data-type="`+type+`" data-locale="`+locale+`"
+                                            class="btn btn-outline-primary btn-sm add_option me-1 mb-1 mt-1"
+                                            type="button">`+text8+`
+                                        </button>
+                                    </div>`;
+              }
+
+            var text1 = locale == 'ar' ? 'نوع الحقل' : 'field type';
+            var text2 = locale == 'ar' ? 'الاسم عربي' : 'field name arabic';
+            var text3 = locale == 'ar' ? 'الاسم انجليزي' : 'field name english';
+            var text4 = locale == 'ar' ? 'نقاط الحقل' : 'field score';
+            var text5 = locale == 'ar' ? 'حقل اجباري' : 'field required';
+            var text6 = locale == 'ar' ? 'حذف' : 'delete';
+
+            var text7 = locale == 'ar' ? typeTextAr : typeTextEn;
+
+
+
+            var fieldHTML = `<div class="row div-`+x+`">
+
+                                <div class="col-md-2 mt-2">
+                                    <label class="form-label" for="field_name_en">`+text1+`</label>
+                                    <input name="type[]" class="form-control stage-field" value="`+type+`" type="text"
+                                         required disabled />
+                                </div>
+
+                                <div style="display:none" class="col-md-2 mt-2">
+                                    <input name="level[]" class="form-control stage-field" value="`+x+`" type="text"
+                                         required disabled />
+                                </div>
+
+                                <div class="col-md-3 mt-2">
+                                    <label class="form-label" for="field_name_ar">`+text2+`</label>
+                                    <input name="field_name_ar[]" class="form-control"
+                                        value="" type="text" autocomplete="on"
+                                        id="field_name_ar" autofocus required />
+                                </div>
+
+                                <div class="col-md-3 mt-2">
+                                    <label class="form-label" for="field_name_en">`+text3+`</label>
+                                    <input name="field_name_en[]" class="form-control "
+                                        value="" type="text" autocomplete="on"
+                                        id="field_name_en" autofocus required />
+                                </div>
+
+                                <div class="col-md-1 mt-2">
+                                    <label class="form-label" for="field_score">`+text4+`</label>
+                                    <input name="field_score[]" class="form-control" value="0" min="0"
+                                        type="number" autocomplete="on" id="field_score" autofocus required />
+                                </div>
+
+                                <div class="col-md-1 mt-2">
+                                    <label class="form-label" for="is_required">`+text5+`</label>
+                                    <div>
+                                        <label class="switch">
+                                            <input id="is_required" class="form-control " name="is_required[`+x+`][]"
+                                                type="checkbox">
+                                            <span class="slider round"></span>
+                                        </label>
+
+                                    </div>
+                                </div>
+
+                                <div class="col-md-1 mt-2">
+                                    <label class="form-label" for="is_required">`+text6+`</label>
+                                    <div>
+                                        <a href="javascript:void(0);" data-x="`+x+`" class="remove_button m-2">
+                                            <span id="basic-addon1">
+                                                <span class="far fa-trash-alt text-danger fs-2"></span>
+                                            </span>
+                                        </a>
+                                    </div>
+
+                                </div>`+fieldHTMLOption+`
+
+                            </div>`; //New input field html
+
+            $(wrapper).append(fieldHTML); //Add field html
+        }
+    });
+
+    //Once remove button is clicked
+    $(wrapper).on('click', '.remove_button', function(e){
+        e.preventDefault();
+        var x = $(this).data('x');
+        $('.div-'+x).remove(); //Remove field html
+        x--; //Decrement field counter
+    });
+
+
+    $('.field_wrapper').on('change' , '.from-account-select' , function(e){
+        e.preventDefault();
+        var elem = $(this);
+        getAccounts(elem , 'from');
+
+    });
+
+
+
+    //Once add button is clicked
+    $(wrapper).on('click', '.add_option', function(e){
+
+        var locale = $(this).data('locale');
+        var type = $(this).data('type');
+        var x = $(this).data('x');
+        var div = '.div-' + x;
+
+        var text = locale == 'ar' ? 'اسم الخيار' : 'option name';
+
+        var fieldHTML = `<div class="col-md-2 mt-2">
+                            <label class="form-label" for="options">`+text+`</label>
+                            <div class="input-group">
+                                <input name="options[`+x+`][]" class="form-control"
+                                        value="" type="text" autocomplete="on"
+                                        id="options" autofocus required />
+                                <a href="javascript:void(0);" class="remove_button_option">
+                                    <span class="input-group-text" id="basic-addon1">
+                                        <span class="far fa-trash-alt text-danger fs-2"></span>
+                                    </span>
+                                </a>
+                            </div>
+                        </div>`; //New input field html
+
+        $(div).append(fieldHTML); //Add field html
+
+    });
+
+    //Once remove button is clicked
+    $(wrapper).on('click', '.remove_button_option', function(e){
+        e.preventDefault();
+        $(this).parent('div').parent('div').remove(); //Remove field html
+        x--; //Decrement field counter
+    });
+
+
+
+    $('.submit-form').on('click' , function(e){
+
+        e.preventDefault
+
+        var check = 0;
+
+        $(this).closest('form').find('input').each(function() {
+            if ($(this).prop('required') && $(this).val() == '' ) {
+                check++;
+            }
+        });
+
+          if(check == 0){
+
+            $('.stage-field').attr("disabled", false);
+
+            $(this).closest('form').submit(function () {
+                $('.btn').attr("disabled", true);
+            });
+        }
+
+
+    });
+
+
+
 
 
     function copyLink() {
@@ -297,6 +766,9 @@ $(document).ready(function(){
 });
 
 
+$('.sonoo-search').change(function(){
+    $(this).closest('form').submit();
+});
 
 function downloadAll() {
     var div = document.getElementById("allImages");

@@ -81,4 +81,6 @@ Route::group(['prefix' => 'ecommerce'], function () {
     Route::get('terms', [HomeController::class, 'terms'])->name('ecommerce.terms');
 
     Route::post('product-search', [ProductController::class, 'search'])->name('ecommerce.product.search');
+
+    Route::get('contact', [HomeController::class, 'contact'])->name('ecommerce.contact');
 });

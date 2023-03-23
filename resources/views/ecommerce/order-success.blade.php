@@ -114,6 +114,9 @@
                                 <li>{{ __('subtotal') }}
                                     <span>{{ $order->subtotal_price . $order->country->currency }}</span>
                                 </li>
+                                <li>{{ __('tax value') }}
+                                    <span>{{ $order->total_tax . $order->country->currency }}</span>
+                                </li>
                                 <li>{{ __('shipping') }}
                                     <span>{{ $order->shipping_amount . $order->country->currency }}</span>
                                 </li>

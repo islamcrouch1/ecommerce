@@ -23,11 +23,11 @@ class StockTransferController extends Controller
     public function __construct()
     {
         $this->middleware('role:superadministrator|administrator');
-        $this->middleware('permission:stock_management-read')->only('index', 'show');
-        $this->middleware('permission:stock_management-create')->only('create', 'store');
-        $this->middleware('permission:stock_management-update')->only('edit', 'update');
-        $this->middleware('permission:stock_management-delete|stock_management-trash')->only('destroy', 'trashed');
-        $this->middleware('permission:stock_management-restore')->only('restore');
+        $this->middleware('permission:stock_transfers-read')->only('index', 'show');
+        $this->middleware('permission:stock_transfers-create')->only('create', 'store');
+        $this->middleware('permission:stock_transfers-update')->only('edit', 'update');
+        $this->middleware('permission:stock_transfers-delete|stock_transfers-trash')->only('destroy', 'trashed');
+        $this->middleware('permission:stock_transfers-restore')->only('restore');
     }
 
 
@@ -46,7 +46,10 @@ class StockTransferController extends Controller
      */
     public function create()
     {
-        $warehouses = Warehouse::all();
+        $user = Auth::user();
+        $warehouses = Warehouse::where('branch_id', $user->branch_id)
+            ->where('vendor_id', null)
+            ->get();
         return view('dashboard.stock_transfers.create', compact('warehouses'));
     }
 

@@ -102,7 +102,7 @@
 
                                 {{ app()->getLocale() == 'ar' ? websiteSettingAr('copyright_text') : websiteSettingEn('copyright_text') }}
                                 <span> {{ ' - ' . __('Developed By') . ' ' }} <a style="color:#dd2027 !important;"
-                                        href="https://red-gulf.com/">RED</a></span>
+                                        href="https://red-gulf.com/" target="_blank">RED</a></span>
                             </p>
                         </div>
                     </div>

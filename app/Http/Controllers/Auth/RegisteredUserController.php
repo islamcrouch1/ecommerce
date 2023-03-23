@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\Balance;
 use App\Models\Cart;
 use App\Models\Country;
@@ -64,6 +65,15 @@ class RegisteredUserController extends Controller
             return redirect()->back();
         }
 
+
+
+        if ($request['role'] == '3') {
+            if (setting('suppliers_account') == null) {
+                alertError('Error happen on this request please try again later', 'حدث خطاء اثناء تنفيذ الطلب يرجى المحاولة لاحقا');
+            }
+        }
+
+
         $profile = $request->profile;
 
         if (!isset($request->profile)) {
@@ -98,6 +108,7 @@ class RegisteredUserController extends Controller
 
 
         $user->attachRole($request->role);
+
 
         Cart::create([
             'user_id' => $user->id,

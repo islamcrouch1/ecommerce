@@ -6,7 +6,7 @@
         <div class="card-header">
             <div class="row flex-between-center">
                 <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
-                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">Edit Product</h5>
+                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">{{ __('Edit Product') }}</h5>
                 </div>
             </div>
         </div>
@@ -22,7 +22,8 @@
                             @method('PUT')
 
                             <div class="mb-3">
-                                <label class="form-label" for="name_ar">product name - arabic</label>
+                                <label class="form-label"
+                                    for="name_ar">{{ __('product name') . ' ' . __('arabic') }}</label>
                                 <input name="name_ar" class="form-control @error('name_ar') is-invalid @enderror"
                                     value="{{ $product->name_ar }}" type="text" autocomplete="on" id="name_ar"
                                     required />
@@ -32,7 +33,8 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="name_en">product name - english</label>
+                                <label class="form-label"
+                                    for="name_en">{{ __('product name') . ' ' . __('english') }}</label>
                                 <input name="name_en" class="form-control @error('name_en') is-invalid @enderror"
                                     value="{{ $product->name_en }}" type="text" autocomplete="on" id="name_en"
                                     required />
@@ -41,17 +43,28 @@
                                 @enderror
                             </div>
 
+                            {{-- <div class="mb-3">
+                                <label class="form-label" for="product_slug">{{ __('slug') }}</label>
+                                <input name="product_slug" class="form-control @error('product_slug') is-invalid @enderror"
+                                    value="{{ $product->product_slug }}" type="text" autocomplete="on"
+                                    id="product_slug" />
+                                @error('product_slug')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div> --}}
+
                             <div class="mb-3">
-                                <label class="form-label" for="sku">SKU</label>
+                                <label class="form-label" for="sku">{{ __('SKU') }}</label>
                                 <input name="sku" class="form-control @error('sku') is-invalid @enderror"
-                                    value="{{ $product->sku }}" type="text" autocomplete="on" id="sku" />
+                                    value="{{ $product->sku }}" type="text" autocomplete="on" id="sku" required />
                                 @error('sku')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="description_ar">product description - arabic</label>
+                                <label class="form-label"
+                                    for="description_ar">{{ __('product description') . ' ' . __('arabic') }}</label>
                                 <textarea id="description_ar" class="form-control tinymce d-none @error('description_ar') is-invalid @enderror"
                                     name="description_ar">{!! $product->description_ar !!}</textarea>
                                 @error('description_ar')
@@ -60,7 +73,8 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="description_en">product description - english</label>
+                                <label class="form-label"
+                                    for="description_en">{{ __('product description') . ' ' . __('english') }}</label>
                                 <textarea id="description_en" class="form-control tinymce d-none @error('description_en') is-invalid @enderror"
                                     name="description_en">{!! $product->description_en !!}</textarea>
                                 @error('description_en')
@@ -69,36 +83,52 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="vendor_price">Vendor price</label>
-                                <input name="vendor_price" class="form-control @error('vendor_price') is-invalid @enderror"
-                                    value="{{ $product->vendor_price }}" type="number" min="0" autocomplete="on"
-                                    id="vendor_price" required />
-                                @error('vendor_price')
+                                <label class="form-label" for="sale_price">{{ __('product price') }}</label>
+                                <input name="sale_price" class="form-control @error('sale_price') is-invalid @enderror"
+                                    value="{{ $product->sale_price }}" type="number" min="0" autocomplete="on"
+                                    id="sale_price" required />
+                                @error('sale_price')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label" for="categories">Select Categories</label>
 
-                                <select class="form-select js-choice @error('categories') is-invalid @enderror"
-                                    multiple="multiple" name="categories[]" id="categories"
-                                    data-options='{"removeItemButton":true,"placeholder":true}' required>
+                            <div class="mb-3">
+                                <label class="form-label" for="discount_price">{{ __('discount price') }}</label>
+                                <input name="discount_price"
+                                    class="form-control @error('discount_price') is-invalid @enderror"
+                                    value="{{ $product->discount_price }}" type="number" min="0" autocomplete="on"
+                                    id="discount_price" required />
+                                @error('discount_price')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="category">{{ __('Select Category') }}</label>
+
+                                <select class="form-select @error('category') is-invalid @enderror" name="category"
+                                    id="category" data-options='{"removeItemButton":true,"placeholder":true}' required>
                                     <option value="">
-                                        {{ __('Select Categories') }}</option>
+                                        {{ __('Select Category') }}</option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}"
-                                            {{ $product->categories()->where('category_id', $category->id)->first()? 'selected': '' }}>
+                                            {{ $product->category_id == $category->id ? 'selected' : '' }}>
                                             {{ app()->getLocale() == 'ar' ? $category->name_ar : $category->name_en }}
                                         </option>
 
                                         @if ($category->children->count() > 0)
                                             @foreach ($category->children as $subCat)
-                                                @include('dashboard.categories._category_options_product_edit',
+                                                @include(
+                                                    'dashboard.categories._category_options_product_edit',
                                                     [
                                                         'scategory' => $subCat,
                                                         'product' => $product,
-                                                    ])
+                                                    ]
+                                                )
                                             @endforeach
                                         @endif
                                     @endforeach
@@ -108,8 +138,104 @@
                                 @enderror
                             </div>
 
+
+
+
+
+
+                            @if ($product->product_type == 'simple' || $product->product_type == 'variable')
+                                <div class="row product-weight">
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label class="form-label"
+                                                for="product_weight">{{ __('product weight') }}</label>
+                                            <input name="product_weight"
+                                                class="form-control @error('product_weight') is-invalid @enderror"
+                                                value="{{ $product->product_weight }}" type="number" min="0"
+                                                autocomplete="on" id="product_weight" />
+                                            @error('product_weight')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label class="form-label"
+                                                for="product_length">{{ __('product length') }}</label>
+                                            <input name="product_length"
+                                                class="form-control @error('product_length') is-invalid @enderror"
+                                                value="{{ $product->product_length }}" type="number" min="0"
+                                                autocomplete="on" id="product_length" />
+                                            @error('product_length')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label class="form-label"
+                                                for="product_width">{{ __('product width') }}</label>
+                                            <input name="product_width"
+                                                class="form-control @error('product_width') is-invalid @enderror"
+                                                value="{{ $product->product_width }}" type="number" min="0"
+                                                autocomplete="on" id="product_width" />
+                                            @error('product_width')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label class="form-label"
+                                                for="product_height">{{ __('product height') }}</label>
+                                            <input name="product_height"
+                                                class="form-control @error('product_height') is-invalid @enderror"
+                                                value="{{ $product->product_height }}" type="number" min="0"
+                                                autocomplete="on" id="product_height" />
+                                            @error('product_height')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+
+
+
+                                </div>
+                            @endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                             <div class="mb-3">
-                                <label class="form-label" for="image">Product images</label>
+                                <label class="form-label" for="video_url">{{ __('video url') }}</label>
+                                <input name="video_url" class="form-control @error('video_url') is-invalid @enderror"
+                                    value="{{ $product->video_url }}" type="text" autocomplete="on"
+                                    id="name_en" />
+                                @error('video_url')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="image">{{ __('Product images') }}</label>
                                 <input name="images[]" class="imgs form-control @error('image') is-invalid @enderror"
                                     type="file" accept="image/*" id="image" multiple />
                                 @error('image')
@@ -120,7 +246,7 @@
                             <div class="mb-3">
                                 <div class="col-md-12" id="gallery">
                                     @foreach ($product->images as $image)
-                                        <img src="{{ asset('storage/images/products/' . $image->image) }}"
+                                        <img src="{{ asset($image->media->path) }}"
                                             style="width:100px; border: 1px solid #999" class="img-thumbnail img-prev">
                                     @endforeach
 
@@ -128,8 +254,8 @@
                             </div>
 
                             <div class="mb-3">
-                                <button class="btn btn-primary d-block w-100 mt-3" type="submit" name="submit">Edit
-                                    Product</button>
+                                <button class="btn btn-primary d-block w-100 mt-3" type="submit"
+                                    name="submit">{{ __('Edit Product') }}</button>
                             </div>
                         </form>
 

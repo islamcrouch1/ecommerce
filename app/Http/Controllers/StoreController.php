@@ -283,8 +283,8 @@ class StoreController extends Controller
         // }
 
         $users = User::whereHas('roles', function ($query) {
-            $query->where('name', '!=', 'vendor')
-                ->where('name', '!=', 'affiliate');
+            $query->where('name', 'superadministrator')
+                ->orwhere('name', 'administrator');
         })->get();
 
         foreach ($users as $admin) {

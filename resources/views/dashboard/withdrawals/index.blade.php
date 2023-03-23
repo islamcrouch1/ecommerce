@@ -221,6 +221,28 @@
                                                                     <div class="alert alert-danger">{{ $message }}</div>
                                                                 @enderror
                                                             </div>
+
+                                                            <div class="mb-3">
+                                                                <label class="form-label"
+                                                                    for="account_id">{{ __('select cash account') }}</label>
+
+                                                                <select
+                                                                    class="form-select @error('account_id') is-invalid @enderror"
+                                                                    aria-label="" name="account_id" id="account_id">
+
+                                                                    <option value="">{{ __('select cash account') }}
+                                                                    </option>
+
+                                                                    @foreach ($cash_accounts->accounts as $account)
+                                                                        <option value="{{ $account->id }}">
+                                                                            {{ getName($account) }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                                @error('account_id')
+                                                                    <div class="alert alert-danger">{{ $message }}</div>
+                                                                @enderror
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">

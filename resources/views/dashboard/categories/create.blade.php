@@ -144,11 +144,24 @@
 
 
                             <div class="mb-3">
-                                <label class="form-label" for="profit">{{ __('Category Profit %') }}</label>
+                                <label class="form-label"
+                                    for="profit">{{ __('Category Profit for affiliate %') }}</label>
                                 <input name="profit" class="form-control @error('profit') is-invalid @enderror"
                                     value="{{ old('profit') }}" type="number" min="0" autocomplete="on"
                                     id="profit" autofocus required />
                                 @error('profit')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label"
+                                    for="vendor_profit">{{ __('Category Profit for vendors %') }}</label>
+                                <input name="vendor_profit"
+                                    class="form-control @error('vendor_profit') is-invalid @enderror"
+                                    value="{{ old('vendor_profit') }}" type="number" min="0" autocomplete="on"
+                                    id="vendor_profit" autofocus required />
+                                @error('vendor_profit')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -167,7 +180,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="image">{{ __('Category image') }}</label>
                                 <input name="image" class="img form-control @error('image') is-invalid @enderror"
-                                    type="file" id="image" required />
+                                    type="file" id="image" accept="image/*" required />
                                 @error('image')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror

@@ -12,13 +12,19 @@ class Category extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'name_en', 'name_ar', 'media_id', 'description_ar', 'description_en', 'country_id', 'parent_id', 'profit', 'created_by', 'updated_by', 'category_slug', 'sort_order', 'subtitle_en', 'subtitle_ar'
+        'name_en', 'name_ar', 'media_id', 'description_ar', 'description_en', 'country_id', 'parent_id', 'profit', 'created_by', 'updated_by', 'category_slug', 'sort_order', 'subtitle_en', 'subtitle_ar', 'vendor_profit', 'category_id'
     ];
 
     public function products()
     {
         return $this->belongsToMany(Product::class);
     }
+
+    public function main_products()
+    {
+        return $this->hasMany(Product::class);
+    }
+
 
     // public function categories()
     // {

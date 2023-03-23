@@ -71,6 +71,7 @@ class CategoriesController extends Controller
             'sort_order' => "nullable|numeric",
             'subtitle_en' => "nullable|string",
             'subtitle_ar' => "nullable|string",
+            'vendor_profit' => "required|numeric",
         ]);
 
         $media_id = saveMedia('image', $request['image'], 'categories');
@@ -86,6 +87,7 @@ class CategoriesController extends Controller
             'country_id' => $request['country'],
             'parent_id' => isset($request['parent_id']) ? $request['parent_id'] : null,
             'profit' => $request['profit'],
+            'vendor_profit' => $request['vendor_profit'],
             'category_slug' => createSlug($request['category_slug']),
             'sort_order' => $request['sort_order'],
             'created_by' => Auth::id(),
@@ -141,6 +143,7 @@ class CategoriesController extends Controller
             'country' => "required",
             'parent_id' => "nullable|string",
             'profit' => "required|numeric",
+            'vendor_profit' => "required|numeric",
             'category_slug' => "nullable|string|max:255",
             'sort_order' => "nullable|numeric",
             'subtitle_en' => "nullable|string",
@@ -163,6 +166,7 @@ class CategoriesController extends Controller
             'country_id' => $request['country'],
             'parent_id' => isset($request['parent_id']) ? $request['parent_id'] : null,
             'profit' => $request['profit'],
+            'vendor_profit' => $request['vendor_profit'],
             'category_slug' => createSlug($request['category_slug']),
             'sort_order' => $request['sort_order'],
             'updated_by' => Auth::id(),

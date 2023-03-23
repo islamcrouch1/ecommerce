@@ -6,7 +6,7 @@
         <div class="card-header">
             <div class="row flex-between-center">
                 <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
-                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">Add Product Stock</h5>
+                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">{{ __('Add Product Stock') }}</h5>
                 </div>
             </div>
         </div>
@@ -21,91 +21,137 @@
                             @csrf
 
                             <div class="mb-3">
-                                <label class="form-label" for="vendor_id">Add Product Stock</label>
-
                                 <div class="table-responsive scrollbar">
                                     <table class="table">
                                         <thead>
                                             <tr>
-                                                <th scope="col">Color</th>
-                                                <th scope="col">Size</th>
-                                                <th scope="col">Quantity</th>
-                                                <th class="text-end" scope="col">Actions</th>
+                                                <th scope="col">{{ __('product') }}</th>
+                                                {{-- <th scope="col">{{ __('warehouse') }}</th> --}}
+                                                <th scope="col">{{ __('SKU') }}</th>
+                                                <th scope="col">{{ __('stock status') }}</th>
+                                                <th scope="col">{{ __('Quantity') }}</th>
+                                                {{-- <th scope="col">{{ __('Purchase price') }}</th> --}}
+                                                <th scope="col">{{ __('sale price') }}</th>
+                                                <th scope="col">{{ __('discount price') }}</th>
+                                                {{-- <th scope="col">{{ __('stock limit') }}</th> --}}
+                                                <th scope="col">{{ __('variation image') }}</th>
+                                                {{-- <th class="text-end" scope="col">{{ __('Actions') }}</th> --}}
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach ($product->stocks as $stock)
+                                            @foreach ($product->combinations as $combination)
                                                 <tr>
-                                                    <td>{{ app()->getLocale() == 'ar' ? $stock->color->color_ar : $stock->color->color_en }}
-                                                    </td>
-                                                    <td>{{ app()->getLocale() == 'ar' ? $stock->size->size_ar : $stock->size->size_en }}
-                                                    </td>
                                                     <td>
-                                                        <input name="stock[]"
-                                                            class="form-control @error('stock') is-invalid @enderror"
-                                                            min="0" value="{{ $stock->quantity }}" type="number"
-                                                            autocomplete="on" id="stock" required />
-                                                        @error('stock')
+                                                        @if ($combination->media != null)
+                                                            <div class="avatar avatar-xl me-2">
+                                                                <img class="rounded-circle"
+                                                                    src="{{ asset($combination->media->path) }}"
+                                                                    alt="" />
+                                                            </div>
+                                                        @endif
+                                                        {{ getProductName($product, $combination) }}
+                                                    </td>
+
+
+                                                    <td>
+                                                        <input name="sku[]"
+                                                            class="form-control @error('sku') is-invalid @enderror"
+                                                            value="{{ $combination->sku }}" type="text"
+                                                            autocomplete="on" id="sku" required />
+                                                        @error('sku')
                                                             <div class="alert alert-danger">{{ $message }}</div>
                                                         @enderror
                                                     </td>
-                                                    <td class="text-end">
+
+
+                                                    <td>
+                                                        <select
+                                                            class="form-select stock-status @error('stock_status') is-invalid @enderror"
+                                                            aria-label="" data-id="{{ $combination->id }}"
+                                                            name="stock_status[]" id="stock_status" required>
+                                                            <option value="IN">
+                                                                {{ __('IN') }}
+                                                            </option>
+                                                            <option value="OUT">
+                                                                {{ __('OUT') }}
+                                                            </option>
+                                                        </select>
+                                                        @error('stock_status')
+                                                            <div class="alert alert-danger">{{ $message }}</div>
+                                                        @enderror
+                                                    </td>
+
+
+                                                    <td>
+                                                        <input name="qty[]"
+                                                            class="form-control  @error('qty') is-invalid @enderror"
+                                                            min="0" value="0" type="number" autocomplete="on"
+                                                            id="qty" required />
+                                                        @error('qty')
+                                                            <div class="alert alert-danger">{{ $message }}</div>
+                                                        @enderror
+                                                    </td>
+
+
+
+                                                    <td>
+                                                        <input name="sale_price[]"
+                                                            class="form-control sale_price-{{ $combination->id }} @error('sale_price') is-invalid @enderror"
+                                                            min="0" value="{{ $combination->sale_price }}"
+                                                            type="number" autocomplete="on" id="sale_price" required />
+                                                        @error('sale_price')
+                                                            <div class="alert alert-danger">{{ $message }}</div>
+                                                        @enderror
+                                                    </td>
+
+                                                    <td>
+                                                        <input name="discount_price[]"
+                                                            class="form-control discount_price-{{ $combination->id }} @error('discount_price') is-invalid @enderror"
+                                                            min="0" value="{{ $combination->discount_price }}"
+                                                            type="number" autocomplete="on" id="discount_price" required />
+                                                        @error('discount_price')
+                                                            <div class="alert alert-danger">{{ $message }}</div>
+                                                        @enderror
+                                                    </td>
+
+
+                                                    <td>
+                                                        <input name="images[{{ $combination->id }}][]"
+                                                            class="img form-control @error('image') is-invalid @enderror"
+                                                            type="file" id="image" />
+                                                        @error('image')
+                                                            <div class="alert alert-danger">{{ $message }}</div>
+                                                        @enderror
+
+                                                    </td>
+                                                    {{-- <td class="text-end">
                                                         <div>
-                                                            <a href="{{ route('vendor-products.color.destroy', ['stock' => $stock->id]) }}"
-                                                                class="btn p-0 ms-2" type="button" data-bs-toggle="tooltip"
-                                                                data-bs-placement="top" title="Delete"><span
+                                                            <a href="#" class="btn p-0 ms-2" type="button"
+                                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                title="Delete"><span
                                                                     class="text-500 fas fa-trash-alt"></span></a>
                                                         </div>
-                                                    </td>
+                                                    </td> --}}
                                                 </tr>
                                             @endforeach
-                                            <tr>
+                                            {{-- <tr>
                                                 <td>
-                                                    <a href="{{ route('vendor-products.color.create', ['product' => $product->id]) }}"
-                                                        class="btn btn-falcon-primary me-1 mb-1">Add new color & size
+                                                    <a href="{{ route('products.color.create', ['product' => $product->id]) }}"
+                                                        class="btn btn-falcon-primary me-1 mb-1">{{ __('Add new color & size') }}
                                                     </a>
                                                 </td>
-                                            </tr>
+                                            </tr> --}}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
 
 
-                            <div class="mb-3">
-                                <label class="form-label" for="name_ar">Colors Images</label>
-                            </div>
 
-                            @foreach ($product->stocks as $stock)
-                                @php
-                                    $stocks = $product->stocks->unique('color_id');
-                                @endphp
-                            @endforeach
 
-                            @foreach ($stocks as $stock)
-                                <div class="mb-3">
-                                    <label class="form-label"
-                                        for="image">{{ app()->getLocale() == 'ar' ? $stock->color->color_ar : $stock->color->color_en }}
-                                        {{ 'Image' }}</label>
-                                    <input name="image[{{ $stock->id }}][]"
-                                        class="img form-control @error('image') is-invalid @enderror" type="file"
-                                        id="image" />
-                                    @error('image')
-                                        <div class="alert alert-danger">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                @if ($stock->image != null)
-                                    <div class="mb-3">
-                                        <div class="col-md-10">
-                                            <img src="{{ asset('storage/images/products/' . $stock->image) }}"
-                                                style="width:100px; border: 1px solid #999" class="img-thumbnail img-prev">
-                                        </div>
-                                    </div>
-                                @endif
-                            @endforeach
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"
-                                    name="submit">Save</button>
+                                    name="submit">{{ __('Save') }}</button>
                             </div>
                         </form>
 

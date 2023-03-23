@@ -13,8 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->string('session_id')->nullable();
+        Schema::create('queries', function (Blueprint $table) {
+            $table->id();
+            $table->integer('user_id')->nullable();
+            $table->integer('admin_id')->nullable();
+            $table->string('query_type')->nullable();
+            $table->longText('query')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -25,8 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn('session_id');
-        });
+        Schema::dropIfExists('queries');
     }
 };

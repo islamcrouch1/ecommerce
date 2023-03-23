@@ -82,7 +82,7 @@
                             <div class="label-section">
                                 <span class="badge badge-grey-color">#1 Best seller</span>
                                 <span
-                                    class="label-text">{{ app()->getLocale() == 'ar' ? $product->categories()->first()->name_ar : $product->categories()->first()->name_en }}</span>
+                                    class="label-text">{{ app()->getLocale() == 'ar' ? $product->category->name_ar : $product->category->name_en }}</span>
                             </div>
                             <div style="font-size: 15px;" class="ecommerce-product-price-{{ $product->id }} pb-2">
                                 {!! getProductPrice($product) !!}
@@ -115,10 +115,11 @@
                                 <div class="product-description product-attributes-{{ $product->id }}">
                                     @if ($product->product_type == 'variable')
                                         @foreach ($product->attributes as $attribute)
-                                            @if ($attribute->name_en == 'color' ||
-                                                $attribute->name_en == 'colors' ||
-                                                $attribute->name_en == 'Color' ||
-                                                $attribute->name_en == 'Colors')
+                                            @if (
+                                                $attribute->name_en == 'color' ||
+                                                    $attribute->name_en == 'colors' ||
+                                                    $attribute->name_en == 'Color' ||
+                                                    $attribute->name_en == 'Colors')
                                                 <div class="row">
                                                     <div class="col-md-2 d-flex justify-content-center align-items-center">
                                                         <h4>{{ app()->getLocale() == 'ar' ? $attribute->name_ar : $attribute->name_en }}
@@ -478,16 +479,17 @@
                                             alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                                 </div>
                                 <div class="cart-info cart-wrap">
-                                    <a href="javascript:void(0)" class="add-fav" title="Add to Wishlist"
+                                    <a href="javascript:void(0)" class="add-fav" title="{{ __('Add to Wishlist') }}"
                                         data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
                                         data-product_id="{{ $product->id }}"><i
                                             style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
                                             class="fa fa-heart fav-{{ $product->id }} " aria-hidden="true"></i></a>
 
                                     <a href="#" data-bs-toggle="modal"
-                                        data-bs-target="#quick-view-{{ $product->id }}" title="Quick View"><i
-                                            class="ti-search" aria-hidden="true"></i></a> <a href="compare.html"
-                                        title="Compare"><i class="ti-reload" aria-hidden="true"></i></a>
+                                        data-bs-target="#quick-view-{{ $product->id }}"
+                                        title="{{ __('Quick View') }}"><i class="ti-search" aria-hidden="true"></i></a>
+                                    {{-- <a href="compare.html"
+                                        title="Compare"><i class="ti-reload" aria-hidden="true"></i></a> --}}
 
                                 </div>
                             </div>
@@ -589,10 +591,11 @@
                                         class="product-description border-product product-attributes-{{ $product->id }}">
                                         @if ($product->product_type == 'variable')
                                             @foreach ($product->attributes as $attribute)
-                                                @if ($attribute->name_en == 'color' ||
-                                                    $attribute->name_en == 'colors' ||
-                                                    $attribute->name_en == 'Color' ||
-                                                    $attribute->name_en == 'Colors')
+                                                @if (
+                                                    $attribute->name_en == 'color' ||
+                                                        $attribute->name_en == 'colors' ||
+                                                        $attribute->name_en == 'Color' ||
+                                                        $attribute->name_en == 'Colors')
                                                     <div class="row">
                                                         <div
                                                             class="col-md-3 d-flex justify-content-center align-items-center">

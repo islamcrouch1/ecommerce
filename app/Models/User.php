@@ -25,7 +25,7 @@ class User extends Authenticatable
      */
 
     protected $fillable = [
-        'name', 'email', 'password', 'country_id', 'phone', 'gender', 'profile', 'role', 'status', 'lang', 'store_name', 'store_description', 'store_profile', 'store_cover', 'store_status'
+        'name', 'email', 'password', 'country_id', 'phone', 'gender', 'profile', 'role', 'status', 'lang', 'store_name', 'store_description', 'store_profile', 'store_cover', 'store_status', 'created_by', 'updated_by', 'branch_id'
     ];
 
     /**
@@ -59,10 +59,29 @@ class User extends Authenticatable
         return $this->hasMany(Product::class, 'vendor_id');
     }
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+
+    public function warehouses()
+    {
+        return $this->hasMany(Warehouse::class, 'vendor_id');
+    }
+
     public function cart_items()
     {
         return $this->hasMany(CartItem::class);
     }
+
+
+    public function previews()
+    {
+        return $this->hasMany(Preview::class);
+    }
+
+
 
 
     public function balance()
@@ -100,6 +119,11 @@ class User extends Authenticatable
         return $this->belongsTo(Country::class);
     }
 
+    public function branches()
+    {
+        return $this->belongsToMany(Branch::class);
+    }
+
 
     public function notifications()
     {
@@ -114,7 +138,7 @@ class User extends Authenticatable
 
     public function vendor_orders()
     {
-        return $this->hasMany(VendorOrder::class, 'created_by');
+        return $this->hasMany(VendorOrder::class, 'user_id');
     }
 
     public function orders()
@@ -148,6 +172,14 @@ class User extends Authenticatable
     {
         return $query->when($country_id, function ($q) use ($country_id) {
             return $q->where('country_id', 'like', "%$country_id%");
+        });
+    }
+
+
+    public function scopeWhenBranch($query, $branch_id)
+    {
+        return $query->when($branch_id, function ($q) use ($branch_id) {
+            return $q->where('branch_id', 'like', "%$branch_id%");
         });
     }
 

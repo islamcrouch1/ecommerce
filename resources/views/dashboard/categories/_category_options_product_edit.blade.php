@@ -3,7 +3,7 @@
 @endphp
 
 <option value="{{ $scategory->id }}"
-    {{ $product->categories()->where('category_id', $scategory->id)->first()? 'selected': '' }}>
+    {{ $product->categories()->where('category_id', $scategory->id)->first() || $product->category->id == $category->id? 'selected': '' }}>
     {{ str_repeat(' - ', $count) }} {{ app()->getLocale() == 'ar' ? $scategory->name_ar : $scategory->name_en }}
 </option>
 

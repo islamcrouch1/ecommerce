@@ -79,6 +79,19 @@
                                 </select>
                             </div>
 
+                            <div class="d-inline-block">
+                                <select name="branch_id" class="form-select form-select-sm sonoo-search"
+                                    id="autoSizingSelect">
+                                    <option value="" selected>{{ __('All Branches') }}</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}"
+                                            {{ request()->branch_id == $branch->id ? 'selected' : '' }}>
+                                            {{ getName($branch) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
 
                         </form>
                         @if (auth()->user()->hasPermission('users-create'))
@@ -144,7 +157,14 @@
                                                         alt="" />
                                                 </div>
                                                 <div class="flex-1">
-                                                    <h5 class="mb-0 fs--1">{{ $user->name }}</h5>
+                                                    <h5 class="mb-0 fs--1">{{ $user->name }} <br>
+                                                        @if ($user->hasRole('administrator|superadministrator') && $user->branch_id != null)
+                                                            <span
+                                                                class="badge badge-soft-primary">{{ __('branch') . ': ' . getName($user->branch) }}
+                                                            </span>
+                                                        @endif
+                                                    </h5>
+
                                                 </div>
                                             </div>
                                         </a></td>
@@ -184,8 +204,9 @@
                                             <div class="dropdown-menu dropdown-menu-end border py-0"
                                                 aria-labelledby="customer-dropdown-0">
                                                 <div class="bg-white py-2">
-                                                    @if ($user->trashed() &&
-                                                        auth()->user()->hasPermission('users-restore'))
+                                                    @if (
+                                                        $user->trashed() &&
+                                                            auth()->user()->hasPermission('users-restore'))
                                                         <a class="dropdown-item"
                                                             href="{{ route('users.restore', ['user' => $user->id]) }}">{{ __('Restore') }}</a>
                                                     @elseif(auth()->user()->hasPermission('users-update'))
@@ -199,7 +220,7 @@
                                                             data-bs-target="#bonus-modal-{{ $user->id }}">{{ __('Add bonus') }}</a>
                                                     @endif
                                                     @if (auth()->user()->hasPermission('users-delete') ||
-                                                        auth()->user()->hasPermission('users-trash'))
+                                                            auth()->user()->hasPermission('users-trash'))
                                                         <form method="POST"
                                                             action="{{ route('users.destroy', ['user' => $user->id]) }}">
                                                             @csrf

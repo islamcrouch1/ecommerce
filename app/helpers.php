@@ -3,9 +3,11 @@
 use App\Events\NewNotification;
 use App\Models\Account;
 use App\Models\Balance;
+use App\Models\Branch;
 use App\Models\Brand;
 use App\Models\CartItem;
 use App\Models\Category;
+use App\Models\Cost;
 use App\Models\Country;
 use App\Models\Entry;
 use App\Models\FavItem;
@@ -20,6 +22,7 @@ use Carbon\Carbon;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductCombination;
+use App\Models\Tax;
 use App\Models\Warehouse;
 use App\Models\WebsiteSetting;
 use Illuminate\Support\Facades\Auth;
@@ -113,31 +116,110 @@ if (!function_exists('getImageAsset')) {
 if (!function_exists('getProductPrice')) {
     function getProductPrice($product, $combination = null)
     {
-        if ($product->product_type == 'variable') {
-            return '<h4>' . __("Variable product") . '</h4>';
-        } else {
-            if ($product->discount_price == 0) {
-                return    '<h4>' . $product->sale_price . $product->country->currency . '</h4>';
+
+
+        if ($product->vendor_id == null) {
+            if ($product->product_type == 'variable' && $combination == null) {
+                return '<h4>' . __("Variable product") . '</h4>';
+            } elseif ($product->product_type == 'variable' && $combination != null) {
+                if ($combination->discount_price == 0) {
+                    return    '<h4>' . calcWebsiteTax($combination->sale_price)  . $product->country->currency . '</h4>';
+                } else {
+                    return '<h4>' . calcWebsiteTax($combination->discount_price)  . $product->country->currency . ' ' . '<del>' . calcWebsiteTax($product->sale_price)  . $product->country->currency . '</del>
+                    </h4>';
+                }
             } else {
-                return '<h4>' . $product->discount_price . $product->country->currency . '<del>' . $product->sale_price . $product->country->currency . '</del>
-                </h4>';
+                if ($product->discount_price == 0) {
+                    return    '<h4>' . calcWebsiteTax($product->sale_price)  . $product->country->currency . '</h4>';
+                } else {
+                    return '<h4>' . calcWebsiteTax($product->discount_price)  . $product->country->currency . ' ' . '<del>' . calcWebsiteTax($product->sale_price)  . $product->country->currency . '</del>
+                    </h4>';
+                }
+            }
+        } else {
+            if ($product->product_type == 'variable' && $combination == null) {
+                return '<h4>' . __("Variable product") . '</h4>';
+            } elseif ($product->product_type == 'variable' && $combination != null) {
+                if ($combination->discount_price == 0) {
+                    return    '<h4>' . ($combination->sale_price)  . $product->country->currency . '</h4>';
+                } else {
+                    return '<h4>' . ($combination->discount_price)  . $product->country->currency . ' ' . '<del>' . ($product->sale_price)  . $product->country->currency . '</del>
+                    </h4>';
+                }
+            } else {
+                if ($product->discount_price == 0) {
+                    return    '<h4>' . ($product->sale_price)  . $product->country->currency . '</h4>';
+                } else {
+                    return '<h4>' . ($product->discount_price)  . $product->country->currency . ' ' . '<del>' . ($product->sale_price)  . $product->country->currency . '</del>
+                    </h4>';
+                }
+            }
+        }
+    }
+}
+
+if (!function_exists('calcWebsiteTax')) {
+    function calcWebsiteTax($price)
+    {
+        if (setting('website_vat')) {
+
+            $price = $price + calcTax($price, 'vat');
+        }
+
+        return $price;
+    }
+}
+
+
+if (!function_exists('productPrice')) {
+    function productPrice($product, $combination = null, $vat = null)
+    {
+        if ($vat && $product->vendor_id == null) {
+            if ($product->product_type == 'variable') {
+                $com = ProductCombination::findOrFail($combination);
+                return  $com->discount_price == 0 ? calcWebsiteTax($com->sale_price)  : calcWebsiteTax($com->discount_price);
+            } else {
+                return $product->discount_price == 0 ? calcWebsiteTax($product->sale_price)  : calcWebsiteTax($product->discount_price);
+            }
+        } else {
+            if ($product->product_type == 'variable') {
+                $com = ProductCombination::findOrFail($combination);
+                return $com->discount_price == 0 ? $com->sale_price : $com->discount_price;
+            } else {
+                return $product->discount_price == 0 ? $product->sale_price : $product->discount_price;
             }
         }
     }
 }
 
 
-if (!function_exists('productPrice')) {
-    function productPrice($product, $combination = null)
+if (!function_exists('getProductAccount')) {
+    function getProductAccount($product, $combination_id = null)
     {
         if ($product->product_type == 'variable') {
-            $com = ProductCombination::findOrFail($combination);
-            return $com->discount_price == 0 ? $com->sale_price : $com->discount_price;
+            $account = Account::where('reference_id', $combination_id)->where('type', 'variable_product')->first();
         } else {
-            return $product->discount_price == 0 ? $product->sale_price : $product->discount_price;
+            $account = Account::where('reference_id', $combination_id)->where('type', 'simple_product')->first();
         }
+        return $account;
     }
 }
+
+
+if (!function_exists('getProductCostAccount')) {
+    function getProductCostAccount($product, $combination_id = null)
+    {
+        if ($product->product_type == 'variable') {
+            $account = Account::where('reference_id', $combination_id)->where('type', 'variable_product_cost')->first();
+        } else {
+            $account = Account::where('reference_id', $combination_id)->where('type', 'simple_product_cost')->first();
+        }
+        return $account;
+    }
+}
+
+
+
 
 
 if (!function_exists('getCartSubtotal')) {
@@ -145,7 +227,7 @@ if (!function_exists('getCartSubtotal')) {
     {
         $subtotal = 0;
         foreach ($cart_items as $item) {
-            $subtotal +=  $item->qty *  productPrice($item->product, $item->product_combination_id);
+            $subtotal +=  $item->qty *  productPrice($item->product, $item->product_combination_id, 'vat');
         }
 
         return $subtotal;
@@ -184,7 +266,7 @@ if (!function_exists('getCurrency')) {
 if (!function_exists('getDefaultCountry')) {
     function getDefaultCountry()
     {
-        $country = Country::where('is_default', '1')->first();
+        $country = Country::find(setting('country_id'));
         if ($country == null) {
             $country = Country::first();
         }
@@ -239,6 +321,33 @@ if (!function_exists('getName')) {
 }
 
 
+if (!function_exists('getAccu')) {
+    function getAccu($account)
+    {
+        $account = Account::where('reference_id', $account->parent_id)->where('type', 'accumulated_depreciation')->first();
+        return $account;
+    }
+}
+
+
+if (!function_exists('getDep')) {
+    function getDep($account)
+    {
+        $account = Account::where('reference_id', $account->parent_id)->where('type', 'depreciation_expenses')->first();
+        return $account;
+    }
+}
+
+
+if (!function_exists('getSubAccounts')) {
+    function getSubAccounts($account_id)
+    {
+        $accounts = Account::where('parent_id', $account_id);
+        return $accounts;
+    }
+}
+
+
 if (!function_exists('getAccount')) {
     function getAccount($account_id)
     {
@@ -274,9 +383,9 @@ if (!function_exists('getAccountBalance')) {
         }
 
         if ($type == 'cr') {
-            return $cr_amount;
+            return round($cr_amount, 2);
         } elseif ($type == 'dr') {
-            return $dr_amount;
+            return round($dr_amount, 2);
         }
     }
 }
@@ -297,7 +406,7 @@ if (!function_exists('getTrialBalance')) {
         array_push($accounts, $account_id);
 
 
-        $balance = [];
+        $balance = 0;
 
         if (!$from || !$to) {
             $from = Carbon::now()->subDay(365)->toDateString();
@@ -310,18 +419,119 @@ if (!function_exists('getTrialBalance')) {
             $dr_amount += $entry->dr_amount;
         }
 
-        if ($cr_amount > $dr_amount) {
-            $balance['cr'] = $cr_amount - $dr_amount;
-            $balance['dr'] = 0;
-        } elseif ($cr_amount < $dr_amount) {
-            $balance['dr'] = $dr_amount - $cr_amount;
-            $balance['cr'] = 0;
+
+        $type = getAccountType($account);
+
+        if ($type == 'debit') {
+            $balance = round($dr_amount - $cr_amount, 2);
         } else {
-            $balance['cr'] = 0;
-            $balance['dr'] = 0;
+            $balance = round($cr_amount - $dr_amount, 2);
         }
 
         return $balance;
+    }
+}
+
+
+if (!function_exists('getAccountType')) {
+    function getAccountType($account)
+    {
+        $type = '';
+        if ($account->account_type == 'assets' || $account->account_type == 'expenses') {
+            $type = 'debit';
+        } else {
+            $type = 'credit';
+        }
+        return $type;
+    }
+}
+
+if (!function_exists('getSettleAmount')) {
+    function getSettleAmount()
+    {
+
+        $assets_account = Account::findOrFail(setting('assets_account'));
+
+        $assets = 0;
+        $assets_cr = getTrialBalance($assets_account->id, null, null)['cr'];
+        $assets_dr = getTrialBalance($assets_account->id, null, null)['dr'];
+
+        if ($assets_cr > $assets_dr) {
+            $assets = $assets_cr;
+        } else {
+            $assets = $assets_dr;
+        }
+
+        $vat_account = Account::findOrFail(setting('vat_purchase_account'));
+
+        $vat = 0;
+        $vat_cr = getTrialBalance($vat_account->id, null, null)['cr'];
+        $vat_dr = getTrialBalance($vat_account->id, null, null)['dr'];
+
+        if ($vat_cr > $vat_dr) {
+            $vat = $vat_cr;
+        } else {
+            $vat = $vat_dr;
+        }
+
+
+        $suppliers_account = Account::findOrFail(setting('suppliers_account'));
+
+        $suppliers = 0;
+        $suppliers_cr = getTrialBalance($suppliers_account->id, null, null)['cr'];
+        $suppliers_dr = getTrialBalance($suppliers_account->id, null, null)['dr'];
+
+        if ($suppliers_cr > $suppliers_dr) {
+            $suppliers = $suppliers_cr;
+        } else {
+            $suppliers = $suppliers_dr;
+        }
+
+
+        $wct_account = Account::findOrFail(setting('wct_account'));
+
+        $wct = 0;
+        $wct_cr = getTrialBalance($wct_account->id, null, null)['cr'];
+        $wct_dr = getTrialBalance($wct_account->id, null, null)['dr'];
+
+        if ($wct_cr > $wct_dr) {
+            $wct = $wct_cr;
+        } else {
+            $wct = $wct_dr;
+        }
+
+        $cs_account = Account::findOrFail(setting('cs_account'));
+        $cs = 0;
+        $cs_cr = getTrialBalance($cs_account->id, null, null)['cr'];
+        $cs_dr = getTrialBalance($cs_account->id, null, null)['dr'];
+
+        if ($cs_cr > $cs_dr) {
+            $cs = $cs_cr;
+        } else {
+            $cs = $cs_dr;
+        }
+
+
+        $sttle = 0;
+        $sttle_cr = 0;
+        $sttle_dr = 0;
+
+        foreach (Entry::where('type', 'stockSettle')->get() as $entry) {
+            $sttle_cr += $entry->cr_amount;
+            $sttle_dr += $entry->dr_amount;
+        }
+
+        if ($sttle_cr > $sttle_dr) {
+            $sttle = $sttle_cr;
+        } else {
+            $sttle = $wct_dr;
+        }
+
+        // dd($assets, $vat, $cs, $suppliers, $wct, $sttle);
+
+        $amount = ($assets + $vat + $cs) - ($suppliers + $wct + $sttle);
+
+        return $amount;
     }
 }
 
@@ -335,7 +545,12 @@ if (!function_exists('getCartItems')) {
         if (Auth::check()) {
             $cart_items = CartItem::where('user_id', Auth::id())->get();
         } else {
-            $cart_items = CartItem::where('session_id', request()->session()->token())->get();
+            // temporary solution for session problem on 404 page
+            try {
+                $cart_items = CartItem::where('session_id', request()->session()->token())->get();
+            } catch (Exception $ex) {
+                $cart_items = CartItem::where(null);
+            }
         }
 
         return $cart_items;
@@ -612,6 +827,33 @@ if (!function_exists('checkUserForTrash')) {
     }
 }
 
+// check client for trash
+if (!function_exists('checkClientForTrash')) {
+    function checkClientForTrash($client)
+    {
+        if ($client->user->count() > 0 || $client->user->notes->count() > 0 || $client->user->messages->count() > 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+// check user for trash
+if (!function_exists('checkBranchForTrash')) {
+    function checkBranchForTrash($branch)
+    {
+        if ($branch->users->count() > 0 || $branch->warehouses->count() > 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+
+
+
 // check user for trash
 if (!function_exists('checkTaxForTrash')) {
     function checkTaxForTrash($tax)
@@ -850,8 +1092,10 @@ if (!function_exists('checkSizeForTrash')) {
 }
 
 
+
+// get product quantity for simple , variable and vendor product
 if (!function_exists('productQuantity')) {
-    function productQuantity($product_id, $combination_id = null, $warehouse_id = null)
+    function productQuantity($product_id, $combination_id = null, $warehouse_id = null, $warehouses = null)
     {
 
         $quantity_in = 0;
@@ -860,19 +1104,61 @@ if (!function_exists('productQuantity')) {
 
         $product = Product::findOrFail($product_id);
 
-        foreach ($product->stocks->where('product_combination_id', $combination_id ? '==' : '!=', $combination_id)->where('stock_status', 'IN')->where('warehouse_id', $warehouse_id ? '==' : '!=', $warehouse_id) as $stock) {
-            $quantity_in += $stock->qty;
+        // if product belong to vendor then get vendor warehouse and calculate quantity
+        if ($product->vendor_id != null) {
+            $warehouse = Warehouse::where('vendor_id', $product->vendor_id)->first();
+            $warehouse_id = $warehouse->id;
         }
-        foreach ($product->stocks->where('product_combination_id', $combination_id ? '==' : '!=', $combination_id)->where('stock_status', 'OUT')->where('warehouse_id', $warehouse_id ? '==' : '!=', $warehouse_id) as $stock) {
-            $quantity_out += $stock->qty;
+
+        if ($warehouses) {
+            $warehouses = $warehouses->pluck('id')->toArray();
+        } else {
+            $warehouses = Warehouse::all()->pluck('id')->toArray();
+        }
+
+        foreach ($product->stocks->where('product_combination_id', $combination_id ? '==' : '!=', $combination_id)->where('warehouse_id', $warehouse_id ? '==' : '!=', $warehouse_id)->whereIn('warehouse_id', $warehouses) as $stock) {
+            if ($stock->stock_status == 'IN') {
+                $quantity_in += $stock->qty;
+            } else {
+                $quantity_out += $stock->qty;
+            }
         }
 
         $quantity = $quantity_in - $quantity_out;
-
         return $quantity;
     }
 }
 
+
+// get product quantity for simple , variable and vendor product for website
+if (!function_exists('productQuantityWebsite')) {
+    function productQuantityWebsite($product_id, $combination_id = null, $warehouse_id = null, $warehouses = [])
+    {
+
+        $quantity_in = 0;
+        $quantity_out = 0;
+        $quantity = 0;
+
+        $product = Product::findOrFail($product_id);
+
+        // if product belong to vendor then get vendor warehouse and calculate quantity
+        if ($product->vendor_id != null) {
+            $warehouse = Warehouse::where('vendor_id', $product->vendor_id)->first();
+            $warehouse_id = $warehouse->id;
+        }
+
+        foreach ($product->stocks->where('product_combination_id', $combination_id ? '==' : '!=', $combination_id)->where('warehouse_id', $warehouse_id ? '==' : '!=', $warehouse_id)->whereIn('warehouse_id', $warehouses) as $stock) {
+            if ($stock->stock_status == 'IN') {
+                $quantity_in += $stock->qty;
+            } else {
+                $quantity_out += $stock->qty;
+            }
+        }
+
+        $quantity = $quantity_in - $quantity_out;
+        return $quantity;
+    }
+}
 
 
 
@@ -1068,24 +1354,199 @@ if (!function_exists('CalculateProductPrice')) {
             'price' => ceil($producPrice),
         ]);
     }
+}
 
 
+if (!function_exists('checkVendor')) {
+    function checkVendor($vendor_id)
+    {
+        $vendor = User::find($vendor_id);
+        if ($vendor == null) {
+            return false;
+        } elseif (!$vendor->hasRole('vendor')) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
 
-    if (!function_exists('checkVendor')) {
-        function checkVendor($vendor_id)
-        {
-            $vendor = User::find($vendor_id);
-            if ($vendor == null) {
-                return false;
-            } elseif (!$vendor->hasRole('vendor')) {
-                return false;
+
+if (!function_exists('settingAccount')) {
+    function settingAccount($type, $branch_id)
+    {
+        $setting = Setting::where('type', $type)->where('reference_type', 'accounts')->where('reference_id', $branch_id)->first();
+        return $setting ? $setting->value : null;
+    }
+}
+
+
+if (!function_exists('settingAccounts')) {
+    function settingAccounts($type)
+    {
+        $setting = Setting::where('type', $type)->get();
+        return $setting;
+    }
+}
+
+if (!function_exists('getBranchName')) {
+    function getBranchName($branch_id)
+    {
+        $item = Branch::findOrFail($branch_id);
+
+        if (isset($item) && isset($item->name_ar) && isset($item->name_en)) {
+            if (app()->getLocale() == 'ar') {
+                return $item->name_ar;
             } else {
-                return true;
+                return $item->name_en;
             }
         }
     }
 }
 
+
+if (!function_exists('getUserBranchId')) {
+    function getUserBranchId($user)
+    {
+
+        if ($user->branch_id != null) {
+            $branch_id = $user->branch->id;
+        } else {
+            $branch_id = null;
+        }
+
+        return $branch_id;
+    }
+}
+
+
+if (!function_exists('getDivForAccountsSetting')) {
+    function getDivForAccountsSetting($type, $label, $accounts, $branch_id)
+    {
+
+        $output = '';
+        $name = [];
+
+        $output .= '<div class="mb-3">
+                        <label class="form-label" for="' . $type . '">';
+        $output .= __($label) . '</label><select class="form-select" ';
+
+        $output .= 'aria-label="" name="' . $type . '[' . $branch_id . ']'   . '" id="' . $type . '"><option value="">';
+
+        $output .= __('select account') . '</option>';
+
+
+        foreach ($accounts->where('branch_id', $branch_id) as $account) {
+            $output .= '<option value="' .  $account->id . '"';
+            $output .= settingAccount($type, $branch_id) == $account->id ? 'selected' : '';
+            $output .= '>';
+            $output .= getName($account) . ' - ' . getBranchName($branch_id) . '</option>';
+        }
+
+        $output .= '</select>';
+
+        $output .= '</div> ';
+
+
+
+        return $output;
+    }
+}
+
+
+
+// update accounts setting
+if (!function_exists('updateAccountSetting')) {
+    function updateAccountSetting($type, $request)
+    {
+
+
+        if ($request[$type] != null && is_array($request[$type])) {
+
+            foreach ($request[$type] as $index => $value) {
+
+                $setting = Setting::where('type', $type)->where('reference_type', 'accounts')->where('reference_id', $index)->first();
+
+                if ($value != null && $setting == null) {
+                    $branch = Branch::findOrFail($index);
+                    $account = Account::findOrFail($value);
+
+                    Setting::create([
+                        'type' => $type,
+                        'value' => $account->id,
+                        'reference_type' => 'accounts',
+                        'reference_id' => $branch->id
+                    ]);
+                } elseif ($value != null && $setting != null && $setting->value != $value) {
+
+                    $account = Account::findOrFail($setting->value);
+                    $new_account = Account::findOrFail($value);
+
+                    $childrens = $account->accounts;
+                    $entries = $account->entries;
+
+                    $last_account = $new_account->accounts->last();
+
+                    if ($last_account == null) {
+                        $last_code = $new_account->code . '00';
+                    } else {
+                        $last_code = $last_account->code;
+                    }
+
+                    foreach ($childrens as $children) {
+                        $last_code += 1;
+                        $children->update([
+                            'parent_id' => $new_account->id,
+                            'code' => $last_code,
+                        ]);
+                    }
+
+                    foreach ($entries as $entry) {
+                        $entry->update([
+                            'account_id' => $new_account->id
+                        ]);
+                    }
+
+                    $setting->update([
+                        'value' => $new_account->id,
+                    ]);
+                }
+            }
+        }
+    }
+}
+
+
+// update setting values
+if (!function_exists('updateSetting')) {
+    function updateSetting($type, $request)
+    {
+
+        $setting = Setting::where('type', $type)->first();
+        if ($setting == null) {
+
+            Setting::create([
+                'type' => $type,
+                'value' => $request[$type],
+            ]);
+        } elseif ($setting->value != $request[$type]) {
+
+            $setting->update([
+                'value' => $request[$type],
+            ]);
+
+            if ($type == 'country_id') {
+
+                $countries = Country::all();
+                foreach ($countries as $country) {
+                    $country->update([
+                        'is_default' => $country->id == $request[$type] ? '1' : '0'
+                    ]);
+                }
+            }
+        }
+    }
+}
 
 
 // calculate price with commission
@@ -1131,6 +1592,10 @@ if (!function_exists('calculateCartTotal')) {
 }
 
 
+
+
+
+
 // change outstanding balance
 if (!function_exists('changeOutStandingBalance')) {
     function changeOutStandingBalance($user, $amount, $order_id = 0, $status = null, $type)
@@ -1172,7 +1637,7 @@ if (!function_exists('changeAvailableBalance')) {
 
 // change pending withdrawal requests balance
 if (!function_exists('changePendingWithdrawalBalance')) {
-    function changePendingWithdrawalBalance($user, $amount, $order_id = 0, $status = '', $type)
+    function changePendingWithdrawalBalance($user, $amount, $order_id = 0, $status = null, $type)
     {
         $balance = Balance::where('user_id', $user->id)->first();
         $balance->update([
@@ -1331,7 +1796,7 @@ if (!function_exists('checkPurchaseOrderStatus')) {
             return false;
         } elseif ($old_status == 'returned') {
             return false;
-        } elseif ($old_status == 'delivered' && $new_status != 'returned') {
+        } elseif ($old_status == 'completed' && $new_status != 'returned') {
             return false;
         } else {
             return true;
@@ -1536,5 +2001,781 @@ if (!function_exists('getOrderHistory')) {
         }
 
         return $order_status;
+    }
+}
+
+
+// get order history
+if (!function_exists('getPaymentStatus')) {
+    function getPaymentStatus($status)
+    {
+
+        $order_status = '';
+
+        switch ($status) {
+            case 'pending':
+                $order_status = '<span class="badge badge-soft-warning ">' . __($status) . '</span>';
+                break;
+            case 'paid':
+                $order_status = '<span class="badge badge-soft-success ">' . __($status) . '</span>';
+                break;
+            case 'partial':
+                $order_status = '<span class="badge badge-soft-info ">' . __($status) . '</span>';
+                break;
+            case 'faild':
+                $order_status = '<span class="badge badge-soft-danger ">' . __($status) . '</span>';
+                break;
+
+            default:
+                $order_status = '';
+                break;
+        }
+
+        return $order_status;
+    }
+}
+
+// get stage fields
+if (!function_exists('getStageField')) {
+    function getStageField($field, $preview = null)
+    {
+
+        $data = '';
+        $required = $field->is_required == '1' ? 'required' : '';
+        $field_name = app()->getLocale() == "ar" ? $field->name_ar : $field->name_en;
+
+        $first_name = app()->getLocale() == "en" ? 'first name' : 'الاسم الاول';
+        $second_name = app()->getLocale() == "en" ? 'second name' : 'الاسم الثاني';
+        $third_name = app()->getLocale() == "en" ? 'third name' : 'الاسم الثالث';
+        $forth_name = app()->getLocale() == "en" ? 'forth name' : 'الاسم الرابع';
+
+        if (isset($preview->fields)) {
+            $preview_field = $preview->fields->where('id', $field->id)->first();
+
+
+            // if field not required and the user did not submit it
+            if (isset($preview_field)) {
+                $field_data = $preview_field->pivot->data;
+                $media_id = $preview_field->pivot->media_id;
+            } else {
+                $field_data = '';
+                $media_id = null;
+            }
+        } else {
+            $field_data = '';
+            $media_id = null;
+        }
+
+
+
+
+        if ($field->type == 'name') {
+
+            $field_data = explode(',', $field_data);
+
+
+            $data = '
+
+                    <div class="col-md-12 mt-3">
+                        <label class="form-label">' .  $field_name . '</label>
+
+                    </div>
+                    <div class="col-md-3">
+                        <input name="data[' . $field->id . '][]" class="form-control"
+                            value="' . (isset($field_data[0]) ? $field_data[0] : '') . '" type="text" ' .  $required . ' placeholder="' .  $first_name . '" />
+                    </div>
+                    <div class="col-md-3">
+                        <input name="data[' . $field->id . '][]" class="form-control"
+                            value="' . (isset($field_data[1]) ? $field_data[1] : '') . '" type="text" ' .  $required . ' placeholder="' .  $second_name . '" />
+                    </div>
+                    <div class="col-md-3">
+                        <input name="data[' . $field->id . '][]" class="form-control"
+                            value="' . (isset($field_data[2]) ? $field_data[2] : '') . '" type="text" ' .  $required . ' placeholder="' .  $third_name . '" />
+                    </div>
+                    <div class="col-md-3">
+                        <input name="data[' . $field->id . '][]" class="form-control"
+                            value="' . (isset($field_data[3]) ? $field_data[3] : '') . '" type="text" ' .  $required . ' placeholder="' .  $forth_name . '" />
+                    </div>';
+        }
+
+
+        if ($field->type == 'photo') {
+
+            if ($media_id != null) {
+                $media = Media::findOrFail($media_id);
+                $path = asset($media->path);
+                $required = '';
+            } else {
+                $path = '';
+            }
+
+            $data = '<div class="col-md-12 mt-3">
+                        <label class="form-label">' .  $field_name . '</label>
+
+                    </div>
+                    <div class="mb-3">
+                        <input name="data[' . $field->id . '][]" class="img form-control"
+                            type="file" id="image" ' .  $required . ' />
+
+                    </div>
+                    <div class="mb-3">
+                        <div class="col-md-10">
+                            <img src="' . $path . '" style="width:100px; border: 1px solid #999"
+                                class="img-thumbnail img-prev">
+                        </div>
+                    </div>';
+        }
+
+        if ($field->type == 'number') {
+
+            $data = '<div class="col-md-12 mt-3">
+                        <label class="form-label">' .  $field_name . '</label>
+
+                    </div>
+                    <div class="mb-3">
+                        <input name="data[' . $field->id . '][]" class="form-control"
+                        value="' . $field_data . '" type="number" ' .  $required . '  />
+                    </div>
+                    ';
+        }
+
+        if ($field->type == 'text') {
+
+            $data = '<div class="col-md-12 mt-3">
+                        <label class="form-label">' .  $field_name . '</label>
+
+                    </div>
+                    <div class="mb-3">
+                        <input name="data[' . $field->id . '][]" class="form-control"
+                        value="' . $field_data . '" type="text" ' .  $required . '  />
+                    </div>
+                    ';
+        }
+
+
+        if ($field->type == 'radio') {
+
+
+            $options = explode(',', $field->data);
+            $field_options = '';
+            $field_data = explode(',', $field_data);
+
+
+            foreach ($options as $option) {
+
+                $field_options .= '<div class="form-check form-check-inline">
+                                    <input
+                                        class="form-check-input" id="gender1"
+                                        type="radio" name="data[' . $field->id . '][]" value="' . $option . '" ' .  $required . ' ' . (in_array($option, $field_data) ? 'checked' : '') . ' />
+                                    <label class="form-check-label" for="">' . $option . '</label>
+                                </div>';
+            }
+
+            $data = '<div class="col-md-12 mt-3">
+                        <label class="form-label">' .  $field_name . '</label>
+                    </div>
+
+                    <div class="mb-3">' . $field_options . '</div>';
+        }
+
+
+        if ($field->type == 'checkbox') {
+
+
+            $options = explode(',', $field->data);
+            $field_options = '';
+            $field_data = explode(',', $field_data);
+
+
+            foreach ($options as $option) {
+
+                $field_options .= '<div class="form-check form-check-inline">
+                                    <input
+                                        class="form-check-input" id="gender1"
+                                        type="checkbox" name="data[' . $field->id . '][]" value="' . $option . '" ' .  $required . ' ' . (in_array($option, $field_data) ? 'checked' : '') . ' />
+                                    <label class="form-check-label" for="">' . $option . '</label>
+                                </div>';
+            }
+
+            $data = '<div class="col-md-12 mt-3">
+                        <label class="form-label">' .  $field_name . '</label>
+                    </div>
+
+                    <div class="mb-3">' . $field_options . '</div>';
+        }
+
+
+        return $data;
+    }
+}
+
+
+
+// create order history
+if (!function_exists('getAccountCode')) {
+    function getAccountCode($account)
+    {
+        $last_account = $account->accounts->last();
+        if ($last_account == null) {
+            $code = $account->code . '01';
+        } else {
+            $code = $last_account->code + 1;
+        }
+        return $code;
+    }
+}
+
+
+// create order history
+if (!function_exists('getAccountName')) {
+    function getAccountName($type, $item = null)
+    {
+
+        $name = [];
+
+        switch ($type) {
+            case 'assets_account':
+                $name['ar'] = 'مخزون' . ' - ' . $item->name_ar;
+                $name['en'] = $item->name_ar . ' - ' . 'inventory';
+                break;
+
+            case 'assets_account_sub':
+                $name['ar'] = 'مخزون' . ' - ' . getProductName($item->product, $item, 'ar');
+                $name['en'] = getProductName($item->product, $item, 'ar') . ' - ' . 'inventory';
+                break;
+
+            case 'cs_account':
+                $name['ar'] = 'تكلفة البضاعة المباعة' . ' - ' . $item->name_ar;
+                $name['en'] = $item->name_ar . ' - ' . 'cost of inventory';
+                break;
+
+
+            case 'cs_account_sub':
+                $name['ar'] = 'تكلفة البضاعة المباعة' . ' - ' . getProductName($item->product, $item, 'ar');
+                $name['en'] = getProductName($item->product, $item, 'ar') . ' - ' . 'cost of inventory';
+                break;
+
+            case 'suppliers_account':
+                $name['ar'] = 'حساب مورد' . ' - ' . $item->name;
+                $name['en'] = $item->name . ' - ' . 'supplier account';
+                break;
+
+            case 'customers_account':
+                if ($item) {
+                    $name['ar'] = 'حساب عميل' . ' - ' . $item->name;
+                    $name['en'] = $item->name . ' - ' . 'customer account';
+                } else {
+                    $name['ar'] = 'حساب عملاء غير مسجلين';
+                    $name['en'] = 'not registered users account';
+                }
+
+                break;
+
+            case 'revenue_account_services':
+                $name['ar'] = 'ايراد' . ' - ' . $item->name_ar;
+                $name['en'] = $item->name_ar . ' - ' . 'revenue';
+                break;
+
+            case 'revenue_account_services_sub':
+                $name['ar'] = 'ايراد' . ' - ' . getProductName($item, null, 'ar');
+                $name['en'] = getProductName($item, null, 'ar') . ' - ' . 'revenue';
+                break;
+
+
+            case 'revenue_account_products':
+                $name['ar'] = 'ايراد' . ' - ' . $item->name_ar;
+                $name['en'] = $item->name_ar . ' - ' . 'revenue';
+                break;
+
+            case 'revenue_account_products_sub':
+                $name['ar'] = 'ايراد' . ' - ' . getProductName($item->product, $item, 'ar');
+                $name['en'] = getProductName($item->product, $item, 'ar') . ' - ' . 'revenue';
+                break;
+
+            case 'revenue_account_shipping':
+                $name['ar'] = 'ايراد من شحن المنتجات';
+                $name['en'] = 'revenue from products shipping';
+                break;
+
+            default:
+                # code...
+                break;
+        }
+
+        return $name;
+    }
+}
+
+
+// get item acount
+if (!function_exists('getItemAccount')) {
+    function getItemAccount($item, $parent, $type, $branch_id)
+    {
+
+
+        if ($type == 'revenue_account_services' || $type == 'revenue_account_products' || $type == 'revenue_account_shipping') {
+            $main_account = Account::findOrFail(settingAccount('revenue_account', $branch_id));
+        } else {
+            $main_account = Account::findOrFail(settingAccount($type, $branch_id));
+        }
+
+        if ($type == 'suppliers_account' || $type ==  'customers_account') {
+
+            if ($item != null) {
+                $user = User::findOrFail($item);
+                $account = Account::where('reference_id', $user->id)->where('type', $type)->where('branch_id', $branch_id)->first();
+
+                if ($account == null) {
+
+                    $code = getAccountCode($main_account);
+                    $account_name = getAccountName($type, $user);
+
+                    $account = Account::create([
+                        'name_ar' => $account_name['ar'],
+                        'name_en' => $account_name['en'],
+                        'code' => $code,
+                        'parent_id' => $main_account->id,
+                        'account_type' => $main_account->account_type,
+                        'reference_id' =>  $user->id,
+                        'type' => $type,
+                        'branch_id' => $branch_id,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+            } else {
+
+                // create customer account == null when make fast order
+                $account = Account::where('reference_id', null)->where('type', $type)->where('branch_id', $branch_id)->first();
+
+                if ($account == null) {
+
+                    $code = getAccountCode($main_account);
+                    $account_name = getAccountName($type, null);
+
+                    $account = Account::create([
+                        'name_ar' => $account_name['ar'],
+                        'name_en' => $account_name['en'],
+                        'code' => $code,
+                        'parent_id' => $main_account->id,
+                        'account_type' => $main_account->account_type,
+                        'reference_id' =>  null,
+                        'type' => $type,
+                        'branch_id' => $branch_id,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+            }
+        } elseif ($type == 'revenue_account_shipping') {
+
+            $account = Account::where('reference_id', null)->where('type', $type)->where('branch_id', $branch_id)->first();
+
+            if ($account == null) {
+
+                $code = getAccountCode($main_account);
+                $account_name = getAccountName($type, null);
+
+                $account = Account::create([
+                    'name_ar' => $account_name['ar'],
+                    'name_en' => $account_name['en'],
+                    'code' => $code,
+                    'parent_id' => $main_account->id,
+                    'account_type' => $main_account->account_type,
+                    'reference_id' =>  null,
+                    'type' => $type,
+                    'branch_id' => $branch_id,
+                    'created_by' => Auth::id(),
+                ]);
+            }
+        } else {
+
+            $parent_account = Account::where('reference_id', $parent->id)->where('type', $type)->where('branch_id', $branch_id)->first();
+
+            if ($parent_account == null) {
+
+                $code = getAccountCode($main_account);
+                $account_name = getAccountName($type, $parent);
+
+                $parent_account = Account::create([
+                    'name_ar' => $account_name['ar'],
+                    'name_en' => $account_name['en'],
+                    'code' => $code,
+                    'parent_id' => $main_account->id,
+                    'account_type' => $main_account->account_type,
+                    'reference_id' =>  $parent->id,
+                    'type' => $type,
+                    'branch_id' => $branch_id,
+                    'created_by' => Auth::id(),
+                ]);
+            }
+
+            $new_type = $type . '_sub';
+
+            $account = Account::where('reference_id', $item->id)->where('type', $new_type)->where('parent_id', $parent_account->id)->first();
+
+            if ($account == null) {
+
+
+                $code = getAccountCode($parent_account);
+                $account_name = getAccountName($new_type, $item);
+
+
+                $account = Account::create([
+                    'name_ar' => $account_name['ar'],
+                    'name_en' => $account_name['en'],
+                    'code' => $code,
+                    'parent_id' => $parent_account->id,
+                    'account_type' => $parent_account->account_type,
+                    'reference_id' =>  $item->id,
+                    'type' => $new_type,
+                    'branch_id' => $branch_id,
+                    'created_by' => Auth::id(),
+                ]);
+            }
+        }
+
+
+
+
+        return $account;
+    }
+}
+
+
+if (!function_exists('checkPer')) {
+    function checkPer($pers)
+    {
+        $check = false;
+
+        foreach ($pers as $per) {
+            if (Auth::user()->hasPermission($per . '-read')) {
+                $check = true;
+            }
+        }
+
+        return $check;
+    }
+}
+
+
+if (!function_exists('calcTax')) {
+    function calcTax($price, $type)
+    {
+        $tax_amount = 0;
+        $rate = 0;
+        if (setting($type)) {
+            $tax = Tax::findOrFail(setting($type));
+            $rate = $tax->tax_rate;
+        }
+
+        if ($type == 'vat-from') {
+            $total = $price;
+            $price = (100 / ($rate + 100)) * $total;
+            $tax_amount = $total - $price;
+        } else {
+            $tax_amount = ($price * $rate) / 100;
+        }
+
+        return $tax_amount;
+    }
+}
+
+
+if (!function_exists('updateCost')) {
+    function updateCost($combination, $new_cost, $qty, $type, $branch_id)
+    {
+
+        $cost = $combination->costs->where('branch_id', $branch_id)->first();
+        $branch = Branch::findOrFail($branch_id);
+        $warehouses = $branch->warehouses;
+
+        if ($cost == null) {
+            $cost = Cost::create([
+                'product_id' => $combination->product_id,
+                'product_combination_id' => $combination->id,
+                'branch_id' => $branch_id,
+            ]);
+        }
+
+        $old_qty = productQuantity($combination->product_id, $combination->id, null, $warehouses);
+
+        if ($type == 'add') {
+            $all_qty = $old_qty + $qty;
+            $old_cost = $cost->cost * $old_qty;
+            $all_cost = $old_cost + ($new_cost * $qty);
+        } else {
+
+            $all_qty = $old_qty - $qty;
+            $old_cost = $cost->cost * $old_qty;
+            $all_cost = $old_cost - ($new_cost * $qty);
+        }
+
+        if ($all_qty == 0) {
+            $new_cost = 0;
+        } else {
+            $new_cost = $all_cost / $all_qty;
+        }
+
+        $cost->update([
+            'cost' => $new_cost,
+        ]);
+
+        return $cost->cost;
+    }
+}
+
+
+if (!function_exists('getOrderDue')) {
+    function getOrderDue($order)
+    {
+
+        $branch_id = $order->branch_id;
+        $amount = 0;
+
+
+        if ($order->order_from == 'addpurchase') {
+
+            $account = getItemAccount($order->customer_id, null, 'suppliers_account', $branch_id);
+            $entries = Entry::where('reference_id', $order->id)->where('type', 'purchase')->where('account_id', $account->id)->get();
+
+            foreach ($entries as $entry) {
+                $amount -= $entry->dr_amount;
+                $amount += $entry->cr_amount;
+            }
+        }
+
+        if ($order->order_from == 'addsale') {
+
+            $account = getItemAccount($order->customer_id, null, 'customers_account', $branch_id);
+            $entries = Entry::where('reference_id', $order->id)->where('type', 'sales')->where('account_id', $account->id)->get();
+
+            foreach ($entries as $entry) {
+                $amount += $entry->dr_amount;
+                $amount -= $entry->cr_amount;
+            }
+        }
+
+        return $amount;
+    }
+}
+
+
+if (!function_exists('getTotalPayments')) {
+    function getTotalPayments($order)
+    {
+
+        $branch_id = $order->branch_id;
+        $amount = 0;
+
+        if ($order->order_from == 'addpurchase') {
+
+            $account = getItemAccount($order->customer_id, null, 'suppliers_account', $branch_id);
+
+            $entries = Entry::where('reference_id', $order->id)->where('type', 'pay_purchase')->where('account_id', $account->id)->get();
+
+            foreach ($entries as $entry) {
+                $amount += $entry->dr_amount;
+                $amount -= $entry->cr_amount;
+            }
+        }
+
+
+        if ($order->order_from == 'addsale') {
+
+            $account = getItemAccount($order->customer_id, null, 'customers_account', $branch_id);
+
+            $entries = Entry::where('reference_id', $order->id)->where('type', 'pay_sales')->where('account_id', $account->id)->get();
+
+            foreach ($entries as $entry) {
+                $amount -= $entry->dr_amount;
+                $amount += $entry->cr_amount;
+            }
+        }
+
+        return $amount;
+    }
+}
+
+
+if (!function_exists('createEntry')) {
+    function createEntry($account, $type, $dr_amount, $cr_amount, $branch_id, $reference)
+    {
+        Entry::create([
+            'account_id' => $account->id,
+            'type' => $type,
+            'dr_amount' => $dr_amount,
+            'cr_amount' => $cr_amount,
+            'description' => getEntryDes($type, $reference),
+            'branch_id' => $branch_id,
+            'reference_id' => $reference->id,
+            'created_by' => Auth::id(),
+        ]);
+    }
+}
+
+
+// create order history
+if (!function_exists('getEntryDes')) {
+    function getEntryDes($type, $reference = null)
+    {
+
+        $des = '';
+
+        switch ($type) {
+            case 'pay_purchase':
+                $des = 'pay for purchase invoice' . ' - ' . 'دفع لفاتورة مشتريات' . ' - #'  . $reference->id;
+                break;
+            case 'pay_sales':
+                $des = 'pay for sales invoice' . ' - ' . 'دفع لفاتورة مبيعات' . ' - #'  . $reference->id;
+                break;
+
+            case 'sales':
+                $des = 'sales order' . ' - ' . 'طلب مبيعات' . ' - #'  . $reference->id;
+                break;
+
+            default:
+                # code...
+                break;
+        }
+
+        return $des;
+    }
+}
+
+
+
+// get website warehouses
+if (!function_exists('getWebsiteWarehouses')) {
+    function getWebsiteWarehouses()
+    {
+
+        $branch = setting('website_branch');
+        $branch = Branch::find($branch);
+
+        if ($branch) {
+
+            $warehouses = Warehouse::where('branch_id', $branch->id)
+                ->where('vendor_id', null)
+                ->get()->pluck('id')->toArray();
+        } else {
+            $warehouses = [];
+        }
+
+
+        return $warehouses;
+    }
+}
+
+
+// get website warehouse for order
+if (!function_exists('getWarehousForOrder')) {
+    function getWarehousForOrder($branch_id, $city_id, $combination, $qty)
+    {
+
+
+        $branch = Branch::find($branch_id);
+        $warehouses = $branch->warehouses->where('city_id', $city_id);
+
+
+
+        foreach ($warehouses as $warehouse) {
+            $av_qty = productQuantityWebsite($combination->product->id, $combination->id, $warehouse->id, null);
+            if ($av_qty >= $qty) {
+                return $warehouse;
+            }
+        }
+
+        $warehouses = $branch->warehouses;
+
+
+
+        foreach ($warehouses as $index => $warehouse) {
+            $av_qty = productQuantity($combination->product->id, $combination->id, $warehouse->id, null);
+            if ($av_qty >= $qty) {
+                return $warehouse;
+            }
+        }
+    }
+}
+
+
+
+
+// check accounts
+if (!function_exists('checkAccounts')) {
+    function checkAccounts($branch_id, $types)
+    {
+
+        $check = true;
+        foreach ($types as $type) {
+            if (!settingAccount($type, $branch_id)) {
+                $check = false;
+            }
+        }
+        return $check;
+    }
+}
+
+
+// check quantities and status
+if (!function_exists('checkProductsForOrder')) {
+    function checkProductsForOrder($products, $combinations, $qty, $warehouse_id)
+    {
+
+        $check = true;
+        $count = 0;
+
+        foreach ($products as $index => $product_id) {
+
+            $product = Product::findOrFail($product_id);
+
+            if ($product->product_type == 'simple' || $product->product_type == 'variable') {
+
+                $av_qty = productQuantity($product_id, $combinations[$index], $warehouse_id);
+
+                if ($qty[$index] > $av_qty || $qty[$index] <= 0) {
+                    $count += 1;
+                }
+            }
+
+            if ($product->status != 'active') {
+                $count += 1;
+            }
+        }
+
+        if ($count > 0) {
+            $check = false;
+        }
+
+        return $check;
+    }
+}
+
+
+
+// check accounts
+if (!function_exists('getProductCost')) {
+    function getProductCost($product, $combination, $branch_id, $ref_order, $qty, $returned)
+    {
+
+        $cost = 0;
+
+        if ($returned == false) {
+            if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+                $cost = $combination->costs->where('branch_id', $branch_id)->first()->cost;
+            } else {
+                $cost = $product->cost;
+            }
+        } else {
+            if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+                $ref_product =  $ref_order->products()->wherePivot('product_id', $product->id)->wherePivot('product_combination_id', $combination->id)->first();
+                $cost = $ref_product->pivot->cost;
+                updateCost($combination, $cost, $qty, 'add', $branch_id);
+            } else {
+                $ref_product =  $ref_order->products()->wherePivot('product_id', $product->id)->first();
+                $cost = $ref_product->pivot->cost;
+            }
+        }
+
+        return $cost;
     }
 }

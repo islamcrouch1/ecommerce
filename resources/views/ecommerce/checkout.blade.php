@@ -178,7 +178,7 @@
                                             @foreach ($cart_items as $item)
                                                 <li>{{ getProductName($item->product, getCombination($item->product_combination_id)) }}
                                                     × {{ $item->qty }}
-                                                    <span>{{ productPrice($item->product, $item->product_combination_id) * $item->qty . getCurrency() }}</span>
+                                                    <span>{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . getCurrency() }}</span>
                                                 </li>
                                             @endforeach
                                         </ul>

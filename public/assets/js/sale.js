@@ -225,6 +225,8 @@ function getTotal(){
         tax.push($(this).val());
     });
 
+    console.log(tax);
+
     var formData = new FormData();
 
     formData.append('qty' , qty);

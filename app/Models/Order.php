@@ -12,7 +12,7 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'affiliate_id', 'address', 'status', 'country_id', 'customer_id', 'warehouse_id', 'order_from', 'total_commission', 'total_profit', 'notes', 'full_name', 'total_price', 'special_mark', 'house', 'phone2', 'shipping_amount', 'city_id', 'state_id', 'subtotal_price', 'total_price_affiliate', 'phone', 'shipping_method_id', 'payment_status', 'payment_method', 'transaction_id', 'total_tax', 'is_seen', 'coupon_code', 'coupon_amount', 'branch_id', 'session_id', 'orderId'
+        'affiliate_id', 'address', 'status', 'country_id', 'customer_id', 'warehouse_id', 'order_from', 'total_commission', 'total_profit', 'notes', 'full_name', 'total_price', 'special_mark', 'house', 'phone2', 'shipping_amount', 'city_id', 'state_id', 'subtotal_price', 'total_price_affiliate', 'phone', 'shipping_method_id', 'payment_status', 'payment_method', 'transaction_id', 'total_tax', 'is_seen', 'coupon_code', 'coupon_amount', 'branch_id', 'session_id', 'orderId', 'total_wht_products', 'total_wht_services'
     ];
 
 
@@ -23,8 +23,15 @@ class Order extends Model
 
     public function taxes()
     {
-        return $this->belongsToMany(Tax::class)->withPivot('amount');
+        return $this->belongsToMany(Tax::class)->withPivot('tax_id', 'amount');
     }
+
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
 
 
     public function warehouse()
@@ -68,7 +75,7 @@ class Order extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class)
-            ->withPivot('order_id', 'product_id', 'warehouse_id', 'product_combination_id', 'product_price', 'product_tax', 'product_discount', 'total', 'qty', 'affiliate_price', 'total_affiliate_price', 'commission_per_item', 'profit_per_item', 'total_commission', 'total_profit', 'extra_shipping_amount', 'shipping_method_id', 'product_type')
+            ->withPivot('order_id', 'product_id', 'warehouse_id', 'product_combination_id', 'product_price', 'product_tax', 'product_discount', 'total', 'qty', 'affiliate_price', 'total_affiliate_price', 'commission_per_item', 'profit_per_item', 'total_commission', 'total_profit', 'extra_shipping_amount', 'shipping_method_id', 'product_type', 'cost', 'product_wht')
             ->withTimestamps();
     }
 
@@ -102,6 +109,11 @@ class Order extends Model
     public function vendor_orders()
     {
         return $this->hasMany(VendorOrder::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public static function getOrders($status = null, $from = null, $to = null)
@@ -158,6 +170,13 @@ class Order extends Model
     }
 
 
+    public function scopeWhenBranch($query, $branch_id)
+    {
+        return $query->when($branch_id, function ($q) use ($branch_id) {
+            return $q->where('branch_id', 'like', "%$branch_id%");
+        });
+    }
+
     public function scopeWhenSearch($query, $search)
     {
         return $query->when($search, function ($q) use ($search) {
@@ -183,6 +202,8 @@ class Order extends Model
             return $q->where('Status', 'like', "%$status%");
         });
     }
+
+
     public function scopeWhenPaymentStatus($query, $payment_status)
     {
         return $query->when($payment_status, function ($q) use ($payment_status) {

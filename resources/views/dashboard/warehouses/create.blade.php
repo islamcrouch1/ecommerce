@@ -44,6 +44,23 @@
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="phone">{{ __('phone') }}</label>
+                                <input name="phone" class="form-control @error('phone') is-invalid @enderror"
+                                    value="{{ old('phone') }}" type="text" autocomplete="on" id="phone" />
+                                @error('phone')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="email">{{ __('email') }}</label>
+                                <input name="email" class="form-control @error('email') is-invalid @enderror"
+                                    value="{{ old('email') }}" type="email" autocomplete="on" id="email" />
+                                @error('email')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
 
                             <div class="mb-3">
                                 <label class="form-label" for="address">{{ __('address') }}</label>
@@ -59,10 +76,11 @@
                             <div class="mb-3">
                                 <label class="form-label" for="country_id">{{ __('Country') }}</label>
 
-                                <select class="form-select @error('country_id') is-invalid @enderror" aria-label=""
-                                    name="country_id" id="country" required>
+                                <select class="form-select country-select @error('country_id') is-invalid @enderror"
+                                    aria-label="" name="country_id" id="country_id"
+                                    data-url="{{ route('country.states') }}" required>
                                     @foreach ($countries as $country)
-                                        <option value="{{ $country->id }}"
+                                        <option value="{{ $country->id }}" data-country_id="{{ $country->id }}"
                                             {{ old('country_id') == $country->id ? 'selected' : '' }}>
                                             {{ app()->getLocale() == 'ar' ? $country->name_ar : $country->name_en }}
                                         </option>
@@ -73,6 +91,29 @@
                                 @enderror
                             </div>
 
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="state_id">{{ __('state') }}</label>
+                                <select class="form-control state-select @error('state_id') is-invalid @enderror"
+                                    id="state_id" name="state_id" data-url="{{ route('state.cities') }}" required>
+
+                                </select>
+                                @error('state_id')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="city_id">{{ __('city') }}</label>
+                                <select class="form-control city-select @error('city_id') is-invalid @enderror"
+                                    id="city_id" name="city_id" required>
+
+                                </select>
+                                @error('city_id')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"
                                     name="submit">{{ __('Add New') . ' ' . __('warehouse') }}</button>

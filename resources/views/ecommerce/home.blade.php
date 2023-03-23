@@ -103,7 +103,8 @@
                                         src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                         class="img-fluid blur-up lazyload bg-img"></a>
                             </div>
-                            <div class="cart-detail"><a href="javascript:void(0)" class="add-fav" title="Add to Wishlist"
+                            <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
+                                    title="{{ __('Add to Wishlist') }}"
                                     data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
                                     data-product_id="{{ $product->id }}"><i
                                         style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
@@ -112,8 +113,9 @@
 
 
                                 <a href="#" data-bs-toggle="modal" data-bs-target="#quick-view-{{ $product->id }}"
-                                    title="Quick View"><i class="ti-search" aria-hidden="true"></i></a> <a
-                                    href="compare.html" title="Compare"><i class="ti-reload" aria-hidden="true"></i></a>
+                                    title="{{ __('Quick View') }}"><i class="ti-search" aria-hidden="true"></i></a>
+                                {{-- <a
+                                    href="compare.html" title="Compare"><i class="ti-reload" aria-hidden="true"></i></a> --}}
                             </div>
                         </div>
                         <div class="product-info">
@@ -254,15 +256,17 @@
                                                 class="img-fluid blur-up lazyload bg-img"></a>
                                     </div>
                                     <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
-                                            title="Add to Wishlist"
+                                            title="{{ __('Add to Wishlist') }}"
                                             data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
                                             data-product_id="{{ $product->id }}"><i
                                                 style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
                                                 class="fa fa-heart fav-{{ $product->id }} " aria-hidden="true"></i></a>
                                         <a href="#" data-bs-toggle="modal"
-                                            data-bs-target="#quick-view-{{ $product->id }}" title="Quick View"><i
-                                                class="ti-search" aria-hidden="true"></i></a> <a href="compare.html"
-                                            title="Compare"><i class="ti-reload" aria-hidden="true"></i></a>
+                                            data-bs-target="#quick-view-{{ $product->id }}"
+                                            title="{{ __('Quick View') }}"><i class="ti-search"
+                                                aria-hidden="true"></i></a>
+                                        {{-- <a href="compare.html" title="Compare"><i class="ti-reload"
+                                                aria-hidden="true"></i></a> --}}
                                     </div>
                                 </div>
                                 <div class="product-info">
@@ -321,9 +325,11 @@
                                                 style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
                                                 class="fa fa-heart fav-{{ $product->id }} " aria-hidden="true"></i></a>
                                         <a href="#" data-bs-toggle="modal"
-                                            data-bs-target="#quick-view-{{ $product->id }}" title="Quick View"><i
-                                                class="ti-search" aria-hidden="true"></i></a> <a href="compare.html"
-                                            title="Compare"><i class="ti-reload" aria-hidden="true"></i></a>
+                                            data-bs-target="#quick-view-{{ $product->id }}"
+                                            title="{{ __('Quick View') }}"><i class="ti-search"
+                                                aria-hidden="true"></i></a>
+                                        {{-- <a href="compare.html"
+                                            title="Compare"><i class="ti-reload" aria-hidden="true"></i></a> --}}
                                     </div>
                                 </div>
                                 <div class="product-info">
@@ -718,10 +724,11 @@
                                         class="product-description border-product product-attributes-{{ $product->id }}">
                                         @if ($product->product_type == 'variable')
                                             @foreach ($product->attributes as $attribute)
-                                                @if ($attribute->name_en == 'color' ||
-                                                    $attribute->name_en == 'colors' ||
-                                                    $attribute->name_en == 'Color' ||
-                                                    $attribute->name_en == 'Colors')
+                                                @if (
+                                                    $attribute->name_en == 'color' ||
+                                                        $attribute->name_en == 'colors' ||
+                                                        $attribute->name_en == 'Color' ||
+                                                        $attribute->name_en == 'Colors')
                                                     <div class="row">
                                                         <div
                                                             class="col-md-3 d-flex justify-content-center align-items-center">

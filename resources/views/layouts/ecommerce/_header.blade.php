@@ -893,10 +893,10 @@
                                                                         </h4>
                                                                     </a>
                                                                     @if ($item->product->product_type == 'variable')
-                                                                        <h4><span>{{ __('price') . ': ' . productPrice($item->product, $item->product_combination_id) }}</span>
+                                                                        <h4><span>{{ __('price') . ': ' . productPrice($item->product, $item->product_combination_id, 'vat') }}</span>
                                                                         </h4>
                                                                     @else
-                                                                        <h4><span>{{ __('price') . ': ' . productPrice($item->product) }}</span>
+                                                                        <h4><span>{{ __('price') . ': ' . productPrice($item->product, null, 'vat') }}</span>
                                                                         </h4>
                                                                     @endif
 

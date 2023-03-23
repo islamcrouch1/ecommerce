@@ -21,22 +21,28 @@ return new class extends Migration
             $table->integer('warehouse_id')->nullable();
             $table->integer('product_combination_id')->nullable();
 
-            $table->float('product_price')->nullable();
-            $table->float('product_tax')->nullable();
-            $table->float('product_discount')->nullable();
-            $table->float('total')->nullable();
-            $table->integer('qty')->nullable();
+
+            $table->double('product_price', 8, 2)->default(0);
+            $table->double('product_tax', 8, 2)->default(0);
+            $table->double('product_wht', 8, 2)->default(0);
+            $table->double('product_discount', 8, 2)->default(0);
+            $table->double('total', 8, 2)->default(0);
+
+            $table->double('cost', 8, 2)->default(0);
+
+
+            $table->integer('qty')->default(0);
             $table->enum('product_type', ['simple', 'variable', 'digital', 'service']);
 
-            $table->double('affiliate_price', 8, 2)->nullable();
-            $table->double('total_affiliate_price', 8, 2)->nullable();
+            $table->double('affiliate_price', 8, 2)->default(0);
+            $table->double('total_affiliate_price', 8, 2)->default(0);
 
-            $table->double('commission_per_item', 8, 2)->nullable();
-            $table->double('profit_per_item', 8, 2)->nullable();
-            $table->double('total_commission', 8, 2)->nullable();
-            $table->double('total_profit', 8, 2)->nullable();
+            $table->double('commission_per_item', 8, 2)->default(0);
+            $table->double('profit_per_item', 8, 2)->default(0);
+            $table->double('total_commission', 8, 2)->default(0);
+            $table->double('total_profit', 8, 2)->default(0);
 
-            $table->double('extra_shipping_amount', 8, 2)->nullable();
+            $table->double('extra_shipping_amount', 8, 2)->default(0);
             $table->integer('shipping_method_id')->nullable();
 
             $table->timestamps();

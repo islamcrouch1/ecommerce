@@ -31,7 +31,7 @@
 
                         </form> --}}
 
-                        @if (auth()->user()->hasPermission('stock_management-create'))
+                        @if (auth()->user()->hasPermission('stock_transfers-create'))
                             <a href="{{ route('stock_transfers.create') }}" class="btn btn-falcon-default btn-sm"
                                 type="button"><span class="fas fa-plus" data-fa-transform="shrink-3 down-2"></span><span
                                     class="d-none d-sm-inline-block ms-1">{{ __('New') }}</span></a>
@@ -53,26 +53,24 @@
                                             data-bulk-select='{"body":"table-customers-body","actions":"table-customers-actions","replacedElement":"table-customers-replace-element"}' />
                                     </div>
                                 </th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">{{ __('Name') }}
-                                </th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">{{ __('country') }}
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
+                                    {{ __('Refrence No') }}
                                 </th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
-                                    {{ __('shipping amount') }}
+                                    {{ __('From Warehouse') }}
                                 </th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">{{ __('Status') }}
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
+                                    {{ __('To Warehouse') }}
+                                </th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">{{ __('Notes') }}
                                 </th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
                                     data-sort="joined">{{ __('Created at') }}</th>
-                                @if ($transfers->count() > 0 && $transfers[0]->trashed())
-                                    <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
-                                        data-sort="joined">{{ __('Deleted at') }}</th>
-                                @endif
-                                <th class="align-middle no-sort"></th>
+
                             </tr>
                         </thead>
                         <tbody class="list" id="table-customers-body">
-                            @foreach ($transfers as $state)
+                            @foreach ($transfers as $transfer)
                                 <tr class="btn-reveal-trigger">
                                     <td class="align-middle py-2" style="width: 28px;">
                                         <div class="form-check fs-0 mb-0 d-flex align-items-center">
@@ -85,67 +83,26 @@
 
                                             <div class="flex-1">
                                                 <h5 class="mb-0 fs--1">
-                                                    {{ app()->getLocale() == 'ar' ? $state->name_ar : $state->name_en }}
-
-
-
+                                                    {{ $transfer->reference_no }}
                                                 </h5>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="phone align-middle white-space-nowrap py-2">
-                                        {{ app()->getLocale() == 'ar' ? $state->country->name_ar : $state->country->name_en }}
+                                        {{ getName($transfer->fw) }}
                                     </td>
 
                                     <td class="phone align-middle white-space-nowrap py-2">
-                                        {{ $state->shipping_amount }}
+                                        {{ getName($transfer->tw) }}
                                     </td>
                                     <td class="phone align-middle white-space-nowrap py-2">
-                                        @if ($state->status == 'active')
-                                            <span class='badge badge-soft-success'>{{ __('Active') }}</span>
-                                        @elseif ($state->status == 'inactive')
-                                            <span class='badge badge-soft-danger'>{{ __('Inactive') }}</span>
-                                        @endif
+                                        {{ $transfer->notes }}
                                     </td>
 
+                                    <td class="joined align-middle py-2">{{ $transfer->created_at }} <br>
+                                        {{ interval($transfer->created_at) }} </td>
 
-                                    <td class="joined align-middle py-2">{{ $state->created_at }} <br>
-                                        {{ interval($state->created_at) }} </td>
-                                    @if ($state->trashed())
-                                        <td class="joined align-middle py-2">{{ $state->deleted_at }} <br>
-                                            {{ interval($state->deleted_at) }} </td>
-                                    @endif
-                                    <td class="align-middle white-space-nowrap py-2 text-end">
-                                        <div class="dropdown font-sans-serif position-static">
-                                            <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal"
-                                                type="button" id="customer-dropdown-0" data-bs-toggle="dropdown"
-                                                data-boundary="window" aria-haspopup="true" aria-expanded="false"><span
-                                                    class="fas fa-ellipsis-h fs--1"></span></button>
-                                            <div class="dropdown-menu dropdown-menu-end border py-0"
-                                                aria-labelledby="customer-dropdown-0">
-                                                <div class="bg-white py-2">
-                                                    @if ($state->trashed() &&
-                                                        auth()->user()->hasPermission('transfers-restore'))
-                                                        <a class="dropdown-item"
-                                                            href="{{ route('transfers.restore', ['state' => $state->id]) }}">{{ __('Restore') }}</a>
-                                                    @elseif(auth()->user()->hasPermission('transfers-update'))
-                                                        <a class="dropdown-item"
-                                                            href="{{ route('transfers.edit', ['state' => $state->id]) }}">{{ __('Edit') }}</a>
-                                                    @endif
-                                                    @if (auth()->user()->hasPermission('transfers-delete') ||
-                                                        auth()->user()->hasPermission('transfers-trash'))
-                                                        <form method="POST"
-                                                            action="{{ route('transfers.destroy', ['state' => $state->id]) }}">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button class="dropdown-item text-danger"
-                                                                type="submit">{{ $state->trashed() ? __('Delete') : __('Trash') }}</button>
-                                                        </form>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
+
                                 </tr>
                             @endforeach
                         </tbody>

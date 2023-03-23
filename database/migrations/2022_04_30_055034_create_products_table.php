@@ -18,11 +18,12 @@ return new class extends Migration
             $table->id();
             $table->enum('status', ['active', 'pending', 'rejected', 'pause'])->default('pending');
             $table->integer('country_id');
+            $table->integer('category_id')->nullable();
             $table->string('name_en');
             $table->string('name_ar');
             $table->string('sku')->nullable();
-            $table->text('description_en');
-            $table->text('description_ar');
+            $table->longText('description_en');
+            $table->longText('description_ar');
             $table->double('sale_price', 8, 2)->default(0);
             $table->double('max_price', 8, 2)->default(0);
             $table->double('extra_fee', 8, 2)->default(0);
@@ -30,11 +31,9 @@ return new class extends Migration
             $table->double('total_profit', 8, 2)->default(0);
             $table->integer('unlimited')->default(0);
             $table->enum('product_type', ['simple', 'variable', 'digital', 'service']);
-            $table->string('product_slug')->unique();
+            $table->string('product_slug')->nullable()->unique();
             $table->Text('video_url')->nullable();
             $table->double('discount_price', 8, 2)->default(0);
-
-
 
             $table->double('product_weight', 8, 2)->nullable();
             $table->double('product_height', 8, 2)->nullable();
@@ -42,8 +41,6 @@ return new class extends Migration
             $table->double('product_length', 8, 2)->nullable();
             $table->double('shipping_amount', 8, 2)->nullable()->default(0);
             $table->integer('shipping_method_id')->nullable();
-
-
 
             $table->string('digital_file')->nullable();
             $table->integer('brand_id')->nullable();

@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Models\Branch;
 use App\Models\Country;
 use App\Models\Entry;
 use App\Models\Order;
+use App\Models\ProductCombination;
 use App\Models\Stock;
 use App\Models\Tax;
 use App\Models\VendorOrder;
+use App\Models\Warehouse;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,19 +37,29 @@ class OrdersController extends Controller
             $request->merge(['to' => Carbon::now()->toDateString()]);
         }
 
+
+        $user = Auth::user();
+
+        if ($user->hasPermission('branches-read')) {
+            $branches = Branch::all();
+        } else {
+            $branches = Branch::where('id', $user->branch_id)->get();
+        }
+
+
         $orders = Order::whereDate('created_at', '>=', request()->from)
             ->whereDate('created_at', '<=', request()->to)
-            ->whereNot(function ($query) {
-                $query->where('order_from',  'addpurchase');
-            })
+            ->where('order_from', 'web')
+            ->where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
             ->whenSearch(request()->search)
             ->whenCountry(request()->country_id)
+            ->whenBranch(request()->branch_id)
             ->whenStatus(request()->status)
             ->whenPaymentStatus(request()->payment_status)
             ->latest()
             ->paginate(100);
 
-        return view('dashboard.orders.index')->with('orders', $orders)->with('countries', $countries);
+        return view('dashboard.orders.index', compact('orders', 'countries', 'branches'));
     }
 
 
@@ -70,111 +83,334 @@ class OrdersController extends Controller
 
         addLog('admin', 'orders', $description_ar, $description_en);
 
-        $title_ar = 'اشعار من الإدارة';
-        $body_ar = "تم تغيير حالة الطلب الخاص بك الى " . getArabicStatus($order->status);
-        $title_en = 'Notification From Admin';
-        $body_en  = "Your order status has been changed to " . $order->status;
-        $url = route('orders.affiliate.index');
-
-        if ($order->customer_id != null) {
-            addNoty($order->customer, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
+        if ($order->affiliate_id != null) {
+            $title_ar = 'اشعار من الإدارة';
+            $body_ar = "تم تغيير حالة الطلب الخاص بك الى " . getArabicStatus($order->status);
+            $title_en = 'Notification From Admin';
+            $body_en  = "Your order status has been changed to " . $order->status;
+            $url = route('orders.affiliate.index');
+            addNoty($order->affiliate, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
         }
 
         if ($status == 'canceled' || $status == 'RTO') {
 
-            // foreach ($order->vendor_orders as $vendor_order) {
-            //     changeOutStandingBalance($vendor_order->user, $vendor_order->total_price, $vendor_order->id, $status, 'sub');
-            // }
+            foreach ($order->vendor_orders as $vendor_order) {
+                changeOutStandingBalance($vendor_order->user, ($vendor_order->total_price - $vendor_order->total_commission), $vendor_order->id, $status, 'sub');
+            }
+
+            $branch_id = $order->branch_id;
+
+            $vendors_tax_account = Account::findOrFail(settingAccount('vendors_tax_account', $branch_id));
+            $total_vendors_tax_ammount = 0;
+            $total_order_vendors_products = 0;
+
+
 
             foreach ($order->products as $product) {
 
                 if ($product->product_type == 'variable' || $product->product_type == 'simple') {
 
+
+                    $combination = ProductCombination::findOrFail($product->pivot->product_combination_id);
+
+
+                    if ($product->vendor_id == null) {
+
+                        $warehouse_id = $product->pivot->warehouse_id;
+
+                        $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
+                        $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
+
+                        updateCost($combination, $product->pivot->cost, $product->pivot->qty, 'add', $order->branch_id);
+
+
+                        Entry::create([
+                            'account_id' => $product_account->id,
+                            'type' => 'sales',
+                            'dr_amount' => ($product->pivot->cost * $product->pivot->qty),
+                            'cr_amount' => 0,
+                            'description' => 'return sales order# ' . $order->id,
+                            'branch_id' => $branch_id,
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::check() ? Auth::id() : null,
+                        ]);
+
+
+                        Entry::create([
+                            'account_id' => $cs_product_account->id,
+                            'type' => 'sales',
+                            'dr_amount' => 0,
+                            'cr_amount' => ($product->pivot->cost * $product->pivot->qty),
+                            'description' => 'return sales order# ' . $order->id,
+                            'branch_id' => $branch_id,
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::check() ? Auth::id() : null,
+                        ]);
+                    }
+
+                    if ($product->vendor_id != null) {
+
+                        $warehouse = Warehouse::where('vendor_id', $product->vendor_id)->first();
+                        $warehouse_id = $warehouse->id;
+                        $total_vendors_tax_ammount += $vendor_order->total_tax;
+                        $total_order_vendors_products += $vendor_order->total_price;
+
+                        // add return entry for commission tax account
+
+                        $supplier_account = getItemAccount($product->vendor_id, null, 'suppliers_account', $branch_id);
+
+
+                        Entry::create([
+                            'account_id' => $supplier_account->id,
+                            'type' => 'purchase',
+                            'dr_amount' => $vendor_order->total_price - $vendor_order->total_commission,
+                            'cr_amount' => 0,
+                            'description' => 'return sales order# ' . $order->id,
+                            'branch_id' => $branch_id,
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::check() ? Auth::id() : null,
+                        ]);
+
+                        if ($vendor_order->total_commission > 0) {
+
+                            $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
+
+
+                            Entry::create([
+                                'account_id' => $revenue_account->id,
+                                'type' => 'sales',
+                                'dr_amount' => $vendor_order->total_commission - $vendor_order->total_tax,
+                                'cr_amount' =>  0,
+                                'description' => 'return sales order# ' . $order->id,
+                                'branch_id' => $branch_id,
+                                'reference_id' => $order->id,
+                                'created_by' => Auth::check() ? Auth::id() : null,
+                            ]);
+
+
+                            Entry::create([
+                                'account_id' => $vendors_tax_account->id,
+                                'type' => 'sales',
+                                'dr_amount' => $vendor_order->total_tax,
+                                'cr_amount' =>  0,
+                                'description' => 'return sales order# ' . $order->id,
+                                'branch_id' => $branch_id,
+                                'reference_id' => $order->id,
+                                'created_by' => Auth::check() ? Auth::id() : null,
+                            ]);
+                        }
+                    }
+
                     Stock::create([
                         'product_combination_id' => $product->pivot->product_combination_id,
                         'product_id' => $product->id,
-                        'warehouse_id' => setting('warehouse_id'),
+                        'warehouse_id' => $warehouse_id,
                         'qty' => $product->pivot->qty,
                         'stock_status' => 'IN',
                         'stock_type' => 'Order',
                         'reference_id' => $order->id,
-                        'reference_price' => productPrice($product, $product->pivot->product_combination_id),
+                        'reference_price' => productPrice($product, $product->pivot->product_combination_id, 'vat'),
                         'created_by' => Auth::check() ? Auth::id() : null,
+                    ]);
+                }
+
+
+                if ($product->vendor_id == null) {
+                    if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+                        $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
+                    } else {
+                        $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
+                    }
+
+                    Entry::create([
+                        'account_id' => $revenue_account->id,
+                        'type' => 'sales',
+                        'dr_amount' =>   $product->pivot->product_price - $product->pivot->product_tax,
+                        'cr_amount' => 0,
+                        'description' => 'return sales order# ' . $order->id,
+                        'branch_id' => $branch_id,
+                        'reference_id' => $order->id,
+                        'created_by' => Auth::id(),
                     ]);
                 }
             }
 
-            $vat = Tax::findOrFail(setting('vat'));
-            if ($vat != null && $vat->tax_rate != null) {
-                $subtotal = (100 / ($vat->tax_rate + 100)) * $order->subtotal_price;
-                $vat_amount = $order->subtotal_price - $subtotal;
-            } else {
-                $vat_amount = 0;
-            }
 
             if ($order->customer_id != null) {
-                $customer_account = Account::where('reference_id', $order->customer_id)->where('type', 'customer')->first();
+                $customer_account = getItemAccount($order->customer_id, null, 'customers_account', $branch_id);
             } else {
-                $customer_account = Account::findOrFail(setting('account_receivable_account'));
+                $customer_account = getItemAccount(null, null, 'customers_account', $branch_id);
             }
+
+
             Entry::create([
                 'account_id' => $customer_account->id,
                 'type' => 'sales',
                 'dr_amount' => 0,
-                'cr_amount' =>  $order->subtotal_price,
-                'description' => 'sales order# ' . $order->id,
+                'cr_amount' =>  $order->total_price,
+                'description' => 'return sales order# ' . $order->id,
+                'branch_id' => $branch_id,
                 'reference_id' => $order->id,
                 'created_by' => Auth::id(),
             ]);
 
             $order->update([
-                'payment_status' => 'Faild',
+                'payment_status' => 'faild',
             ]);
 
-            $vat_account = Account::findOrFail(setting('vat_sales_account'));
 
-            Entry::create([
-                'account_id' => $vat_account->id,
-                'type' => 'sales',
-                'dr_amount' => $vat_amount,
-                'cr_amount' =>  0,
-                'description' => 'sales order# ' . $order->id,
-                'reference_id' => $order->id,
-                'created_by' => Auth::id(),
-            ]);
+            if ($order->total_tax > 0) {
+                $vat_account = Account::findOrFail(settingAccount('vat_sales_account', $branch_id));
+                Entry::create([
+                    'account_id' => $vat_account->id,
+                    'type' => 'sales',
+                    'dr_amount' => $order->total_tax,
+                    'cr_amount' =>  0,
+                    'description' => 'return sales order# ' . $order->id,
+                    'branch_id' => $branch_id,
+                    'reference_id' => $order->id,
+                    'created_by' => Auth::id(),
+                ]);
+            }
 
-            $revenue_account = Account::findOrFail(setting('revenue_account'));
 
-            Entry::create([
-                'account_id' => $revenue_account->id,
-                'type' => 'sales',
-                'dr_amount' => $order->subtotal_price - $vat_amount,
-                'cr_amount' =>  0,
-                'description' => 'sales order# ' . $order->id,
-                'reference_id' => $order->id,
-                'created_by' => Auth::id(),
-            ]);
+            if ($order->shipping_amount > 0) {
 
-            // changeOutStandingBalance($order->user, $order->total_commission, $order->id, $order->status, 'sub');
+                $revenue_account_shipping = getItemAccount(null, null, 'revenue_account_shipping', $branch_id);
+                Entry::create([
+                    'account_id' => $revenue_account_shipping->id,
+                    'type' => 'sales',
+                    'dr_amount' =>   $order->shipping_amount,
+                    'cr_amount' => 0,
+                    'description' => 'return sales order# ' . $order->id,
+                    'branch_id' => $branch_id,
+                    'reference_id' => $order->id,
+                    'created_by' => Auth::id(),
+                ]);
+            }
+
+            if ($order->affiliate_id != null) {
+                changeOutStandingBalance($order->affiliate, $order->total_commission, $order->id, $order->status, 'sub');
+            }
         }
 
         if ($status == 'returned') {
-            // foreach ($order->vendor_orders as $vendor_order) {
-            //     if ($vendor_order->status == 'Waiting for the order amount to be released') {
-            //         changeOutStandingBalance($vendor_order->user, $vendor_order->total_price, $vendor_order->id, $status, 'sub');
-            //     } else {
-            //         changeAvailableBalance($vendor_order->user, $vendor_order->total_price, $vendor_order->id, $status, 'sub');
-            //     }
-            // }
+
+
+            $branch_id = $order->branch_id;
+            $vendors_tax_account = Account::findOrFail(settingAccount('vendors_tax_account', $branch_id));
+            $total_vendors_tax_ammount = 0;
+            $total_order_vendors_products = 0;
+
+
+            foreach ($order->vendor_orders as $vendor_order) {
+
+                if ($vendor_order->status == 'Waiting for the order amount to be released') {
+                    changeOutStandingBalance($vendor_order->user, ($vendor_order->total_price - $vendor_order->total_commission), $vendor_order->id, $status, 'sub');
+                } else {
+                    changeAvailableBalance($vendor_order->user, ($vendor_order->total_price - $vendor_order->total_commission), $vendor_order->id, $status, 'sub');
+                }
+            }
 
             foreach ($order->products as $product) {
 
+                $combination = ProductCombination::findOrFail($product->pivot->product_combination_id);
+
                 if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+
+
+                    if ($product->vendor_id == null) {
+
+                        $warehouse_id = $product->pivot->warehouse_id;
+
+                        $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
+                        $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
+
+                        updateCost($combination, $product->pivot->cost, $product->pivot->qty, 'add', $order->branch_id);
+
+
+                        Entry::create([
+                            'account_id' => $product_account->id,
+                            'type' => 'sales',
+                            'dr_amount' => ($product->pivot->cost * $product->pivot->qty),
+                            'cr_amount' => 0,
+                            'description' => 'return sales order# ' . $order->id,
+                            'branch_id' => $branch_id,
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::check() ? Auth::id() : null,
+                        ]);
+
+
+                        Entry::create([
+                            'account_id' => $cs_product_account->id,
+                            'type' => 'sales',
+                            'dr_amount' => 0,
+                            'cr_amount' => ($product->pivot->cost * $product->pivot->qty),
+                            'description' => 'return sales order# ' . $order->id,
+                            'branch_id' => $branch_id,
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::check() ? Auth::id() : null,
+                        ]);
+                    }
+
+                    if ($product->vendor_id != null) {
+
+                        $warehouse = Warehouse::where('vendor_id', $product->vendor_id)->first();
+                        $warehouse_id = $warehouse->id;
+                        $total_vendors_tax_ammount += $vendor_order->total_tax;
+                        $total_order_vendors_products += $vendor_order->total_price;
+
+                        // add return entry for commission tax account
+
+
+                        $supplier_account = getItemAccount($product->vendor_id, null, 'suppliers_account', $branch_id);
+
+                        Entry::create([
+                            'account_id' => $supplier_account->id,
+                            'type' => 'purchase',
+                            'dr_amount' => $vendor_order->total_price - $vendor_order->total_commission,
+                            'cr_amount' => 0,
+                            'description' => 'return sales order# ' . $order->id,
+                            'branch_id' => $branch_id,
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::check() ? Auth::id() : null,
+                        ]);
+
+                        if ($vendor_order->total_commission > 0) {
+
+                            $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
+
+
+                            Entry::create([
+                                'account_id' => $revenue_account->id,
+                                'type' => 'sales',
+                                'dr_amount' => $vendor_order->total_commission - $vendor_order->total_tax,
+                                'cr_amount' =>  0,
+                                'description' => 'return sales order# ' . $order->id,
+                                'branch_id' => $branch_id,
+                                'reference_id' => $order->id,
+                                'created_by' => Auth::check() ? Auth::id() : null,
+                            ]);
+
+
+                            Entry::create([
+                                'account_id' => $vendors_tax_account->id,
+                                'type' => 'sales',
+                                'dr_amount' => $vendor_order->total_tax,
+                                'cr_amount' =>  0,
+                                'description' => 'return sales order# ' . $order->id,
+                                'branch_id' => $branch_id,
+                                'reference_id' => $order->id,
+                                'created_by' => Auth::check() ? Auth::id() : null,
+                            ]);
+                        }
+                    }
+
 
                     Stock::create([
                         'product_combination_id' => $product->pivot->product_combination_id,
                         'product_id' => $product->id,
-                        'warehouse_id' => setting('warehouse_id'),
+                        'warehouse_id' => $warehouse_id,
                         'qty' => $product->pivot->qty,
                         'stock_status' => 'IN',
                         'stock_type' => 'Order',
@@ -183,61 +419,82 @@ class OrdersController extends Controller
                         'created_by' => Auth::check() ? Auth::id() : null,
                     ]);
                 }
-            }
 
 
-            $vat = Tax::findOrFail(setting('vat'));
-            if ($vat != null && $vat->tax_rate != null) {
-                $subtotal = (100 / ($vat->tax_rate + 100)) * $order->subtotal_price;
-                $vat_amount = $order->subtotal_price - $subtotal;
-            } else {
-                $vat_amount = 0;
+
+                if ($product->vendor_id == null) {
+                    if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+                        $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
+                    } else {
+                        $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
+                    }
+
+                    Entry::create([
+                        'account_id' => $revenue_account->id,
+                        'type' => 'sales',
+                        'dr_amount' =>   $product->pivot->product_price - $product->pivot->product_tax,
+                        'cr_amount' => 0,
+                        'description' => 'return sales order# ' . $order->id,
+                        'branch_id' => $branch_id,
+                        'reference_id' => $order->id,
+                        'created_by' => Auth::id(),
+                    ]);
+                }
             }
+
 
             if ($order->payment_method == 'cash_on_delivery') {
-                $cash_account = Account::findOrFail(setting('cash_account'));
+                $cash_account = Account::findOrFail(settingAccount('cash_account', $branch_id));
             } elseif ($order->payment_method == 'card') {
-                $cash_account = Account::findOrFail(setting('card_account'));
+                $cash_account = Account::findOrFail(settingAccount('card_account', $branch_id));
             }
 
             Entry::create([
                 'account_id' => $cash_account->id,
                 'type' => 'sales',
                 'dr_amount' => 0,
-                'cr_amount' =>  $order->subtotal_price,
-                'description' => 'sales order# ' . $order->id,
+                'cr_amount' =>  $order->total_price,
+                'description' => 'return sales order# ' . $order->id,
+                'branch_id' => $branch_id,
                 'reference_id' => $order->id,
                 'created_by' => Auth::id(),
             ]);
 
-            $vat_account = Account::findOrFail(setting('vat_sales_account'));
 
-            Entry::create([
-                'account_id' => $vat_account->id,
-                'type' => 'sales',
-                'dr_amount' => $vat_amount,
-                'cr_amount' =>  0,
-                'description' => 'sales order# ' . $order->id,
-                'reference_id' => $order->id,
-                'created_by' => Auth::id(),
-            ]);
+            if ($order->total_tax > 0) {
+                $vat_account = Account::findOrFail(settingAccount('vat_sales_account', $branch_id));
+                Entry::create([
+                    'account_id' => $vat_account->id,
+                    'type' => 'sales',
+                    'dr_amount' => $order->total_tax,
+                    'cr_amount' =>  0,
+                    'description' => 'return sales order# ' . $order->id,
+                    'branch_id' => $branch_id,
+                    'reference_id' => $order->id,
+                    'created_by' => Auth::id(),
+                ]);
+            }
 
-            $revenue_account = Account::findOrFail(setting('revenue_account'));
 
-            Entry::create([
-                'account_id' => $revenue_account->id,
-                'type' => 'sales',
-                'dr_amount' => $order->subtotal_price - $vat_amount,
-                'cr_amount' =>  0,
-                'description' => 'sales order# ' . $order->id,
-                'reference_id' => $order->id,
-                'created_by' => Auth::id(),
-            ]);
+            if ($order->shipping_amount > 0) {
+
+                $revenue_account_shipping = getItemAccount(null, null, 'revenue_account_shipping', $branch_id);
+                Entry::create([
+                    'account_id' => $revenue_account_shipping->id,
+                    'type' => 'sales',
+                    'dr_amount' =>   $order->shipping_amount,
+                    'cr_amount' => 0,
+                    'description' => 'return sales order# ' . $order->id,
+                    'branch_id' => $branch_id,
+                    'reference_id' => $order->id,
+                    'created_by' => Auth::id(),
+                ]);
+            }
 
 
 
             $order->update([
-                'payment_status' => 'Faild',
+                'payment_status' => 'faild',
             ]);
 
             // changeAvailableBalance($order->user, $order->total_commission, $order->id, $order->status, 'sub');
@@ -245,35 +502,49 @@ class OrdersController extends Controller
 
         if ($status == 'delivered') {
 
+
+            $branch_id = $order->branch_id;
+
+
             if ($order->customer_id != null) {
-                $customer_account = Account::where('reference_id', $order->customer_id)->where('type', 'customer')->first();
+                $customer_account = getItemAccount($order->customer_id, null, 'customers_account', $branch_id);
             } else {
-                $customer_account = Account::findOrFail(setting('account_receivable_account'));
+                $customer_account = getItemAccount(null, null, 'customers_account', $branch_id);
             }
+
             Entry::create([
                 'account_id' => $customer_account->id,
                 'type' => 'sales',
                 'dr_amount' => 0,
-                'cr_amount' =>  $order->subtotal_price,
-                'description' => 'sales order# ' . $order->id,
+                'cr_amount' =>  $order->total_price,
+                'description' => 'return sales order# ' . $order->id,
+                'branch_id' => $branch_id,
                 'reference_id' => $order->id,
                 'created_by' => Auth::id(),
             ]);
 
-            $cash_account = Account::findOrFail(setting('cash_account'));
+
+            if ($order->payment_method == 'cash_on_delivery') {
+                $cash_account = Account::findOrFail(settingAccount('cash_account', $branch_id));
+            } elseif ($order->payment_method == 'card') {
+                $cash_account = Account::findOrFail(settingAccount('card_account', $branch_id));
+            }
+
+
             Entry::create([
                 'account_id' => $cash_account->id,
                 'type' => 'sales',
-                'dr_amount' => $order->subtotal_price,
+                'dr_amount' => $order->total_price,
                 'cr_amount' =>  0,
-                'description' => 'sales order# ' . $order->id,
+                'description' => 'return sales order# ' . $order->id,
                 'reference_id' => $order->id,
+                'branch_id' => $branch_id,
                 'created_by' => Auth::id(),
             ]);
 
 
             $order->update([
-                'payment_status' => 'Paid',
+                'payment_status' => 'paid',
             ]);
 
             // $mystock_price = 0;
@@ -288,19 +559,19 @@ class OrdersController extends Controller
             // changeAvailableBalance($order->user, $order->total_commission, $order->id, $order->status, 'add');
         }
 
-        // foreach ($order->vendor_orders as $vendor_order) {
+        foreach ($order->vendor_orders as $vendor_order) {
 
-        //     $vendor_order->update([
-        //         'status' => $status == 'delivered' ? 'Waiting for the order amount to be released' : $status,
-        //     ]);
+            $vendor_order->update([
+                'status' => $status == 'delivered' ? 'Waiting for the order amount to be released' : $status,
+            ]);
 
-        //     $title_ar = 'اشعار من الإدارة';
-        //     $body_ar = "تم تغيير حالة الطلب الخاص بك الى " . getArabicStatus($vendor_order->status);
-        //     $title_en = 'Notification From Admin';
-        //     $body_en  = "Your order status has been changed to " . $vendor_order->status;
-        //     $url = route('vendor.orders.index');
-        //     addNoty($vendor_order->user, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
-        // }
+            $title_ar = 'اشعار من الإدارة';
+            $body_ar = "تم تغيير حالة الطلب الخاص بك الى " . getArabicStatus($vendor_order->status);
+            $title_en = 'Notification From Admin';
+            $body_en  = "Your order status has been changed to " . $vendor_order->status;
+            $url = route('vendor.orders.index');
+            addNoty($vendor_order->user, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
+        }
     }
 
 
@@ -407,8 +678,6 @@ class OrdersController extends Controller
     }
 
 
-
-
     public function indexVendors(Request $request)
     {
         $countries = Country::all();
@@ -447,6 +716,8 @@ class OrdersController extends Controller
             ->paginate(100);
         return view('dashboard.orders.vendor-orders')->with('orders', $orders)->with('countries', $countries);
     }
+
+
 
     public function updateStatusVendor(Request $request, VendorOrder $vendor_order)
     {
@@ -497,7 +768,7 @@ class OrdersController extends Controller
 
         addNoty($vendor_order->user, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
 
-        changeOutStandingBalance($vendor_order->user, $vendor_order->total_price, $vendor_order->id, $vendor_order->status, 'sub');
-        changeAvailableBalance($vendor_order->user, $vendor_order->total_price, $vendor_order->id, $vendor_order->status, 'add');
+        changeOutStandingBalance($vendor_order->user, ($vendor_order->total_price - $vendor_order->total_commission), $vendor_order->id, $vendor_order->status, 'sub');
+        changeAvailableBalance($vendor_order->user, ($vendor_order->total_price - $vendor_order->total_commission), $vendor_order->id, $vendor_order->status, 'add');
     }
 }

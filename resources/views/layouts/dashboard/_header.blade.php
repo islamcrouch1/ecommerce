@@ -16,7 +16,7 @@
                 <div class="search-box" data-list='{"valueNames":["title"]}'>
                     <form class="position-relative" data-bs-toggle="search" data-bs-display="static">
                         <input class="form-control search-input fuzzy-search" type="search"
-                            value="{{ request()->search }}" name="search" autofocus placeholder="Search..."
+                            value="{{ request()->search }}" name="search" autofocus placeholder="{{ __('Search...') }}"
                             aria-label="Search" />
                         <span class="fas fa-search search-box-icon"></span>
 
@@ -30,7 +30,7 @@
                     <a style="text-decoration: none" href="{{ route('setlocale') }}">
                         <div
                             style="background-color:#d8e2ef; align-items: center; display: flex; justify-content: center; padding:5px ; border-radius:50% ; width:30px; height:30px">
-                            <span data-bs-toggle="tooltip" data-bs-placement="left" title="Switch language"
+                            <span data-bs-toggle="tooltip" data-bs-placement="left" title="{{ __('Switch language') }}"
                                 style="color:#2c7be5 !important"
                                 class="material-icons text-secondary fs-2">language</span>
                         </div>
@@ -43,10 +43,10 @@
                     <input class="form-check-input ms-0 theme-control-toggle-input" id="themeControlToggle"
                         type="checkbox" data-theme-control="theme" value="dark" />
                     <label class="mb-0 theme-control-toggle-label theme-control-toggle-light" for="themeControlToggle"
-                        data-bs-toggle="tooltip" data-bs-placement="left" title="Switch to light theme"><span
-                            class="fas fa-sun fs-0"></span></label>
+                        data-bs-toggle="tooltip" data-bs-placement="left"
+                        title="{{ __('Switch to light theme') }}"><span class="fas fa-sun fs-0"></span></label>
                     <label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggle"
-                        data-bs-toggle="tooltip" data-bs-placement="left" title="Switch to dark theme"><span
+                        data-bs-toggle="tooltip" data-bs-placement="left" title="{{ __('Switch to dark theme') }}"><span
                             class="fas fa-moon fs-0"></span></label>
                 </div>
             </li>
@@ -80,16 +80,16 @@
                         <div class="card-header">
                             <div class="row justify-content-between align-items-center">
                                 <div class="col-auto">
-                                    <h6 class="card-header-title mb-0">Notifications</h6>
+                                    <h6 class="card-header-title mb-0">{{ __('Notifications') }}</h6>
                                 </div>
                                 <div class="col-auto ps-0 ps-sm-3"><a class="card-link fw-normal"
-                                        href="{{ route('notifications.change.all') }}">Mark all as
-                                        read</a></div>
+                                        href="{{ route('notifications.change.all') }}">{{ __('Mark all as read') }}</a>
+                                </div>
                             </div>
                         </div>
                         <div class="scrollbar-overlay" style="max-height:19rem">
                             <div class="list-group list-group-flush fw-normal fs--1">
-                                <div class="list-group-title border-bottom">NEW</div>
+                                <div class="list-group-title border-bottom">{{ __('NEW') }}</div>
                                 <div class="noty-list">
                                     @foreach (Auth::user()->notifications()->where('status', 0)->orderBy('id', 'desc')->limit(50)->get() as $notification)
                                         <div class="list-group-item">
@@ -99,7 +99,7 @@
                                                 <div class="notification-avatar">
                                                     <div class="avatar avatar-2xl me-3">
                                                         <img class="rounded-circle"
-                                                            src="{{ Auth::user()->hasRole('administrator|superadministrator') ? $notification->sender_image : asset('assets/img/fevicon.png') }}"
+                                                            src="{{ Auth::user()->hasRole('administrator|superadministrator') ? $notification->sender_image : asset(websiteSettingMedia('header_icon')) }}"
                                                             alt="" />
 
                                                     </div>
@@ -124,7 +124,7 @@
                                     @endforeach
                                 </div>
 
-                                <div class="list-group-title border-bottom">EARLIER</div>
+                                <div class="list-group-title border-bottom">{{ __('EARLIER') }}</div>
                                 @foreach (Auth::user()->notifications()->where('status', 1)->orderBy('id', 'desc')->limit(50)->get() as $notification)
                                     <div class="list-group-item">
                                         <a class="notification notification-flush noty"
@@ -133,7 +133,8 @@
                                             <div class="notification-avatar">
                                                 <div class="avatar avatar-2xl me-3">
                                                     <img class="rounded-circle"
-                                                        src="{{ asset('assets/img/fevicon.png') }}" alt="" />
+                                                        src="{{ Auth::user()->hasRole('administrator|superadministrator') ? $notification->sender_image : asset(websiteSettingMedia('header_icon')) }}"
+                                                        alt="" />
 
                                                 </div>
                                             </div>
@@ -158,7 +159,7 @@
                             </div>
                         </div>
                         <div class="card-footer text-center border-top"><a class="card-link d-block"
-                                href="{{ route('notifications.index') }}">View all</a></div>
+                                href="{{ route('notifications.index') }}">{{ __('View all') }}</a></div>
                     </div>
                 </div>
 
@@ -177,7 +178,7 @@
                     <div class="bg-white dark__bg-1000 rounded-2 py-2">
 
                         {{-- <div class="dropdown-divider"></div> --}}
-                        <a class="dropdown-item" href="{{ route('user.edit') }}">Profile &amp; account</a>
+                        <a class="dropdown-item" href="{{ route('user.edit') }}">{{ __('Profile & account') }}</a>
                         <a class="dropdown-item"
                             href="{{ route('notifications.index') }}">{{ __('Notifications') }}</a>
                         <a class="dropdown-item" href="{{ route('messages.index') }}">{{ __('Messages') }}</a>
