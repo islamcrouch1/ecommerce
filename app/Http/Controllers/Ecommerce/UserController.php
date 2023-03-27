@@ -33,7 +33,7 @@ class UserController extends Controller
     public function account()
     {
         $user = Auth::user();
-        $orders = Order::where('customer_id', $user->id)->get();
+        $orders = Order::where('customer_id', $user->id)->latest()->get();
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         return view('ecommerce.account', compact('categories', 'orders', 'user'));
     }
@@ -89,7 +89,11 @@ class UserController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(RouteServiceProvider::ECOMMERCE);
+        if ($user->hasRole('administrator|superadministrator')) {
+            return redirect()->intended(RouteServiceProvider::HOME);
+        } else {
+            return redirect()->intended(RouteServiceProvider::ECOMMERCE);
+        }
     }
 
 

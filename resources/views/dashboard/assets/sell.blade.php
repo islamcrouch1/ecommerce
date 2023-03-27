@@ -27,8 +27,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="price">{{ __('Enter sell price') }}</label>
                                 <input name="price" class="form-control @error('price') is-invalid @enderror"
-                                    value="{{ old('price') }}" type="number" autocomplete="on" id="price" autofocus
-                                    required />
+                                    value="{{ old('price') }}" type="number" step="0.01" autocomplete="on"
+                                    id="price" autofocus required />
                                 @error('price')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror

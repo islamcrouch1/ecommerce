@@ -8,7 +8,9 @@ use App\Models\CartItem;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Country;
+use App\Models\Coupon;
 use App\Models\FavItem;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductCombination;
 use App\Models\Review;
@@ -21,6 +23,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use SebastianBergmann\Environment\Console;
+use Carbon\Carbon;
+
 
 class ProductController extends Controller
 {
@@ -326,7 +330,11 @@ class ProductController extends Controller
         if ($product->product_type == 'variable') {
 
             $attributes_count = $product->attributes->count();
-            $variations = explode(",", $request->variations);
+            if ($request->variations == null) {
+                $variations = [];
+            } else {
+                $variations = explode(",", $request->variations);
+            }
             $selected_attributes_count = count($variations);
 
             if ($selected_attributes_count < $attributes_count) {
@@ -620,6 +628,7 @@ class ProductController extends Controller
             $session_id = $request->session()->token();
         }
 
+        $data = [];
 
         $cart_item = CartItem::where('user_id', $user_id)
             ->where('session_id', $session_id)
@@ -639,11 +648,16 @@ class ProductController extends Controller
             $qty = $max;
         }
 
+
+        $data['product_price'] = productPrice($product, $request->combination, 'vat');
+        $data['qty'] = $qty;
+
+
         $cart_item->update([
             'qty' => $qty
         ]);
 
-        return $qty;
+        return $data;
     }
 
 
@@ -669,6 +683,7 @@ class ProductController extends Controller
             'country_id' => "required|string",
             'state_id' => "required|string",
             'city_id' => "required|string",
+            'coupon' => "nullable|string",
         ]);
 
         $data = [];
@@ -683,9 +698,7 @@ class ProductController extends Controller
 
         $cart_items = getCartItems();
 
-        $data['currency'] = getCurrency();
-        $data['total'] = getCartSubtotal($cart_items);
-        $data['locale'] = app()->getLocale();
+
 
         $shipping_method_id = setting('shipping_method');
 
@@ -696,8 +709,6 @@ class ProductController extends Controller
         }
 
         $free_shipping_count = 0;
-
-
         $shipping_amount = 0;
 
         if ($shipping_method_id == '6') {
@@ -718,8 +729,6 @@ class ProductController extends Controller
         } else {
             $shipping_amount = 0;
         }
-
-
 
         foreach ($cart_items as $item) {
 
@@ -757,9 +766,44 @@ class ProductController extends Controller
         }
 
 
-
         $data['status'] = 1;
         $data['shipping_amount'] = $shipping_amount;
+
+
+        $data['currency'] = getCurrency();
+        $data['total'] = getCartSubtotal($cart_items);
+        $data['locale'] = app()->getLocale();
+
+
+        if (isset($request->coupon)) {
+            $coupon = Coupon::where('code', $request->coupon)->first();
+            if (!isset($coupon)) {
+                $data['coupon_status'] = 0;
+            } else {
+                if (!Auth::check()) {
+                    $data['coupon_status'] = 12;
+                } else {
+                    $orders = Order::where('customer_id', Auth::id())->where('coupon_code', $coupon->code)->get();
+                    if ($orders->count() >= $coupon->frequency) {
+                        $data['coupon_status'] = 13;
+                    } else {
+                        $date = Carbon::now();
+                        if ($date > $coupon->ended_at) {
+                            $data['coupon_status'] = 14;
+                        } else {
+
+                            $discount = calcDiscount($coupon, $data['total']);
+                            $data['coupon_status'] = 1;
+                            $data['total'] = $data['total'] - $discount;
+                        }
+                    }
+                }
+            }
+        } else {
+            $data['coupon_status'] = 11;
+        }
+
+
 
 
         return $data;

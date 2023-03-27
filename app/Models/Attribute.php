@@ -14,7 +14,7 @@ class Attribute extends Model
 
 
     protected $fillable = [
-        'name_ar', 'name_en'
+        'name_ar', 'name_en', 'type'
     ];
 
     public function variations()

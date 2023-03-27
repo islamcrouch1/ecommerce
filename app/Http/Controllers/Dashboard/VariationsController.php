@@ -107,20 +107,20 @@ class VariationsController extends Controller
         $request->validate([
             'name_ar' => "required|string|max:255|unique:variations,name_ar," . $variation->id,
             'name_en' => "required|string|max:255|unique:variations,name_en," . $variation->id,
-            'attribute_id' => "required|string",
             'value' => "nullable|string",
-
         ]);
+
+
 
         $variation->update([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
-            'attribute_id' => $request['attribute_id'],
+            'value' => in_array($variation->attribute->name_en, array('color', 'Color', 'colors', 'Colors'), true) ? $request['value'] : null,
         ]);
 
-        foreach ($variation->products as $product) {
-            CalculateProductPrice($product);
-        }
+        // foreach ($variation->products as $product) {
+        //     CalculateProductPrice($product);
+        // }
 
         alertSuccess('variation updated successfully', 'تم تعديل متغير المنتجات بنجاح');
         return redirect()->route('variations.index');

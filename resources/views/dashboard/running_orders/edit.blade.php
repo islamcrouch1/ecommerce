@@ -1,0 +1,73 @@
+@extends('layouts.dashboard.app')
+
+@section('adminContent')
+    <div class="card mb-3" id="customersTable"
+        data-list='{"valueNames":["name","email","phone","address","joined"],"page":10,"pagination":true}'>
+        <div class="card-header">
+            <div class="row flex-between-center">
+                <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
+                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
+                        {{ __('running order') . ' - ' . getProductName($running_order->product, getCombination($running_order->product_combination_id)) . ' - ' . __($running_order->stock_status) }}
+                    </h5>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+
+            <div class="row g-0 h-100">
+                <div class="col-md-12 d-flex flex-center">
+                    <div class="p-4 p-md-5 flex-grow-1">
+                        <form method="POST"
+                            action="{{ route('running_orders.update', ['running_order' => $running_order->id]) }}"
+                            enctype="multipart/form-data">
+                            @csrf
+                            @method('PUT')
+
+                            <div class="mb-3">
+                                <label class="form-label"
+                                    for="account">{{ __('requested quantity') . ': ' . $running_order->requested_qty }}</label>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="approved_qty">{{ __('approved quantity') }}</label>
+                                <input name="approved_qty" class="form-control @error('approved_qty') is-invalid @enderror"
+                                    value="{{ $running_order->approved_qty }}" min="0" type="number"
+                                    autocomplete="on" id="approved_qty" autofocus required />
+                                @error('approved_qty')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="returned_qty">{{ __('returned quantity') }}</label>
+                                <input name="returned_qty" class="form-control @error('returned_qty') is-invalid @enderror"
+                                    value="{{ $running_order->returned_qty }}" min="0" type="number"
+                                    autocomplete="on" id="returned_qty" autofocus required />
+                                @error('returned_qty')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="notes">{{ __('notes') }}</label>
+                                <textarea name="notes" rows="5" class="form-control @error('notes') is-invalid @enderror" type="text"
+                                    autocomplete="on" id="notes">{{ $running_order->notes }}</textarea>
+                                @error('notes')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <button class="btn btn-primary d-block w-100 mt-3" type="submit"
+                                    name="submit">{{ __('validate') }}</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+@endsection

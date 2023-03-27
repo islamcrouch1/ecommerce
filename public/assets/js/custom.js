@@ -935,3 +935,72 @@ function printInvoice(){
     $('.no-print').hide();
     window.print();
 }
+
+
+
+const elements = document.querySelectorAll('.model-search');
+
+elements.forEach((element) => {
+
+    var choices = new Choices(element , {"removeItemButton":true});
+    element.addEventListener(
+    'search',
+    function(event) {
+
+
+        var search = event.detail.value;
+        var url = $(this).data('url');
+        var locale = $(this).data('locale');
+        var type = $(this).data('type');
+        var parent = $(this).data('parent');
+
+        var formData = new FormData();
+
+        formData.append('search' , search );
+        formData.append('type' , type );
+        formData.append('parent' , parent );
+
+        $.ajax({
+            url: url,
+            data: formData,
+            method: 'POST',
+            processData: false,
+            contentType: false,
+            cache: false,
+            success: function(data) {
+
+                console.log(data);
+
+                if(data.status == 1){
+
+                    choices.clearChoices();
+
+                    var array = data.elements;
+                    array.forEach(element => {
+
+                        choices.setChoices(
+                            [
+                              { value: element.id , label: (locale == 'ar' ? element.name_ar : element.name_en) }
+
+                            ],
+                            'value',
+                            'label',
+                            false,
+                          );
+
+                    });
+
+                }else{
+                    choices.clearChoices();
+                }
+
+            }
+        });
+
+    },
+    false,
+  );
+
+});
+
+

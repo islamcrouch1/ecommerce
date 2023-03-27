@@ -233,17 +233,18 @@ class Product extends Model
 
     public function scopeWhenCategory($query, $category_id)
     {
-        if ($category_id == null) {
-            return $query;
-        } else {
-            return $query->when($category_id, function ($q) use ($category_id) {
-                return $q->whereHas('categories', function ($query)  use ($category_id) {
-                    $query->where('category_id', 'like', $category_id);
-                });
-            })->orWhen($category_id, function ($q) use ($category_id) {
-                return $q->where('category_id', $category_id);
-            });
-        }
+
+        return $query->When($category_id, function ($q) use ($category_id) {
+            return $q->where('category_id', $category_id);
+        });
+
+
+
+        // when($category_id, function ($q) use ($category_id) {
+        //     return $q->whereHas('categories', function ($query)  use ($category_id) {
+        //         $query->where('category_id', 'like', $category_id);
+        //     });
+        // })
     }
 
 

@@ -159,7 +159,7 @@
     <script src="{{ asset('assets/js/custom.js') }}"></script>
 
 
-    @if (Route::is('stock.management.list') || Route::is('stock.management.index'))
+    @if (Route::is('stock.management.list') || Route::is('stock.management.index') || Route::is('running_orders.index'))
         <script src="{{ asset('assets/js/stock-search.js') }}"></script>
     @endif
 

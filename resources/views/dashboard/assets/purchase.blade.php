@@ -28,8 +28,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="price">{{ __('Enter purchase price') }}</label>
                                 <input name="price" class="form-control @error('price') is-invalid @enderror"
-                                    value="{{ old('price') }}" min="1" type="number" autocomplete="on"
-                                    id="price" autofocus required />
+                                    value="{{ old('price') }}" min="1" step="0.01" type="number"
+                                    autocomplete="on" id="price" autofocus required />
                                 @error('price')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror

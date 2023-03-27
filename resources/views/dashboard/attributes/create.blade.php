@@ -36,6 +36,27 @@
                                 @enderror
                             </div>
 
+
+                            <div class="mb-3">
+                                <label class="form-label" for="type">{{ __('attribute type') }}</label>
+
+                                <select class="form-select @error('type') is-invalid @enderror" aria-label=""
+                                    name="type" id="type">
+                                    <option value="">
+                                        {{ __('attribute type') }}
+                                    </option>
+                                    <option value="circle">
+                                        {{ __('circle') }}
+                                    </option>
+                                    <option value="select">
+                                        {{ __('select') }}
+                                    </option>
+                                </select>
+                                @error('type')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"
                                     name="submit">{{ __('Add New') . ' ' . __('attribute') }}</button>

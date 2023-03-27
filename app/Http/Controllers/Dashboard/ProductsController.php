@@ -138,7 +138,6 @@ class ProductsController extends Controller
             'extra_fee'  => "required|numeric",
             'seo_meta_tag' => "nullable|string",
             'seo_desc' => "nullable|string",
-
             'product_weight' => "nullable|numeric",
             'product_length' => "nullable|numeric",
             'product_width' => "nullable|numeric",
@@ -146,7 +145,6 @@ class ProductsController extends Controller
             'shipping_amount' => "nullable|numeric",
             'shipping_method' => "nullable|string",
             'cost' => "nullable|numeric",
-
         ]);
 
 
@@ -202,6 +200,7 @@ class ProductsController extends Controller
 
 
 
+        $category = Category::find($request->category);
 
 
         $product = Product::create([
@@ -232,7 +231,7 @@ class ProductsController extends Controller
             'seo_desc' => $request['seo_desc'],
             'extra_fee' => $request['extra_fee'],
             'digital_file' => $product_type == 'digital' ? $path : null,
-            'country_id' => 1,
+            'country_id' => $category->country_id,
             'status' => $request['status'],
         ]);
 
@@ -252,31 +251,7 @@ class ProductsController extends Controller
         }
 
 
-        function combinations($arrays, $i = 0)
-        {
-            if (!isset($arrays[$i])) {
-                return array();
-            }
-            if ($i == count($arrays) - 1) {
-                return $arrays[$i];
-            }
 
-            // get combinations from subsequent arrays
-            $tmp = combinations($arrays, $i + 1);
-
-            $result = array();
-
-            // concat each array from tmp with each element from $arrays[$i]
-            foreach ($arrays[$i] as $v) {
-                foreach ($tmp as $t) {
-                    $result[] = is_array($t) ?
-                        array_merge(array($v), $t) :
-                        array($v, $t);
-                }
-            }
-
-            return $result;
-        }
 
 
         if ($product_type == 'variable') {
@@ -297,7 +272,7 @@ class ProductsController extends Controller
                 $combination_array[] = $request['variations-' . $attr];
             }
 
-            $arrays = combinations($combination_array);
+            $arrays = getCombinations($combination_array);
 
             if (!is_array($arrays[0])) {
                 $array = $arrays;
@@ -324,30 +299,6 @@ class ProductsController extends Controller
                         'product_id' => $product->id,
                     ]);
                 }
-
-
-                // Account::create([
-                //     'name_ar' => getProductName($product, getCombination($com->id), 'ar'),
-                //     'name_en' => getProductName($product, getCombination($com->id), 'en'),
-                //     'code' => $account->code .  $product->id . $com->id,
-                //     'parent_id' => $account->id,
-                //     'account_type' => $account->account_type,
-                //     'reference_id' => $com->id,
-                //     'type' => 'variable_product',
-                //     'created_by' => Auth::id(),
-                // ]);
-
-
-                // Account::create([
-                //     'name_ar' => 'حساب تكلفة مبيعات - ' . getProductName($product, getCombination($com->id), 'ar'),
-                //     'name_en' => 'cost of sales account - ' . getProductName($product, getCombination($com->id), 'en'),
-                //     'code' => $cs_account->code .  $product->id . $com->id,
-                //     'parent_id' => $cs_account->id,
-                //     'account_type' => $cs_account->account_type,
-                //     'reference_id' => $com->id,
-                //     'type' => 'variable_product_cost',
-                //     'created_by' => Auth::id(),
-                // ]);
             }
         } elseif ($product_type == 'simple') {
             $com = ProductCombination::create([
@@ -356,50 +307,6 @@ class ProductsController extends Controller
                 'discount_price' => $product->discount_price,
                 'sale_price' => $product->sale_price,
             ]);
-
-            // Account::create([
-            //     'name_ar' => getProductName($product, getCombination($com->id), 'ar'),
-            //     'name_en' => getProductName($product, getCombination($com->id), 'en'),
-            //     'code' => $account->code .  $product->id . $com->id,
-            //     'parent_id' => $account->id,
-            //     'account_type' => $account->account_type,
-            //     'reference_id' => $com->id,
-            //     'type' => 'simple_product',
-            //     'created_by' => Auth::id(),
-            // ]);
-
-            // Account::create([
-            //     'name_ar' => 'حساب تكلفة مبيعات - ' . getProductName($product, getCombination($com->id), 'ar'),
-            //     'name_en' => 'cost of sales account - ' . getProductName($product, getCombination($com->id), 'en'),
-            //     'code' => $cs_account->code .  $product->id . $com->id,
-            //     'parent_id' => $cs_account->id,
-            //     'account_type' => $cs_account->account_type,
-            //     'reference_id' => $com->id,
-            //     'type' => 'simple_product_cost',
-            //     'created_by' => Auth::id(),
-            // ]);
-        } else {
-            // Account::create([
-            //     'name_ar' => $product->name_ar,
-            //     'name_en' => $product->name_en,
-            //     'code' => $account->code . $product->id,
-            //     'parent_id' => $account->id,
-            //     'account_type' => $account->account_type,
-            //     'reference_id' => $product->id,
-            //     'type' => $product_type == 'digital' ? 'digital_product' : 'service',
-            //     'created_by' => Auth::id(),
-            // ]);
-
-            // Account::create([
-            //     'name_ar' => 'حساب تكلفة مبيعات - ' . $product->name_ar,
-            //     'name_en' => 'cost of sales account - ' . $product->name_en,
-            //     'code' => $cs_account->code .  $product->id,
-            //     'parent_id' => $cs_account->id,
-            //     'account_type' => $cs_account->account_type,
-            //     'reference_id' => $product->id,
-            //     'type' => $product_type == 'digital' ? 'digital_product_cost' : 'service_cost',
-            //     'created_by' => Auth::id(),
-            // ]);
         }
 
 
@@ -467,8 +374,9 @@ class ProductsController extends Controller
         $brands = Brand::where('status', 'active')->get();
         $countries = Country::all();
         $product = Product::find($product);
+        $attributes = Attribute::all();
         $shipping_methods = ShippingMethod::whereIn('id', [1, 2, 3])->get();
-        return view('dashboard.products.edit', compact('categories', 'countries', 'product', 'brands', 'shipping_methods'));
+        return view('dashboard.products.edit', compact('categories', 'countries', 'product', 'brands', 'shipping_methods', 'attributes'));
     }
 
     /**
@@ -540,7 +448,6 @@ class ProductsController extends Controller
         }
 
 
-
         if ($files = $request->file('images')) {
 
             foreach ($product->images as $image) {
@@ -557,8 +464,7 @@ class ProductsController extends Controller
         }
 
 
-        $vendor = User::findOrFail($product->created_by);
-        if ($vendor->hasRole('vendor')) {
+        if ($product->vendor_id != null) {
             if ($product->status != $request->status) {
 
                 $title_ar = 'اشعار من الإدارة';
@@ -588,6 +494,21 @@ class ProductsController extends Controller
 
                 $url = route('vendor-products.index');
                 addNoty($product->vendor, Auth::user(), $url, $title_en, $title_ar, $body_en, $body_ar);
+            }
+        }
+
+
+        if ($product_type == 'variable') {
+            if (empty($request['attributes'])) {
+                alertError('please select product attribute', 'يرجى تحديد سمات المنتج');
+                return redirect()->back();
+            } else {
+                foreach ($request['attributes'] as $attr) {
+                    if (empty($request['variations-' . $attr])) {
+                        alertError('please select product variations', 'يرجى تحديد متغيرات المنتج');
+                        return redirect()->back();
+                    }
+                }
             }
         }
 
@@ -623,16 +544,11 @@ class ProductsController extends Controller
             'digital_file' => $product_type == 'digital' ? $path : null,
         ]);
 
-
         if ($product_type == 'digital' || $product_type == 'service') {
-
             $product->update([
                 'cost' =>  $request['cost'],
             ]);
         }
-
-
-
 
         if ($product->product_type == 'simple') {
             foreach ($product->combinations as $combination) {
@@ -641,6 +557,135 @@ class ProductsController extends Controller
                     'sale_price' => $request['sale_price'],
                     'discount_price' => $request['discount_price'],
                 ]);
+            }
+        }
+
+
+
+        if ($product_type == 'variable') {
+
+            $attributes = $request['attributes'];
+            $variations = $product->variations->pluck('variation_id')->toArray();
+
+            foreach ($product->attributes as $attribute) {
+
+                if (!in_array($attribute->id, $attributes)) {
+                    foreach ($attribute->variations as $variation) {
+                        if (in_array($variation->id, $variations)) {
+                            $combinations = $product->combinations()->whereHas('variations', function ($q) use ($variation) {
+                                return $q->where('variation_id', $variation->id);
+                            })->get();
+
+                            foreach ($combinations as $combination) {
+                                if ($combination->stocks->count() > 0) {
+                                    alertError('The attribute cannot be deleted', 'لا يمكن حذف المتغير');
+                                    return redirect()->back();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            $product->attributes()->sync($request['attributes']);
+            $attributes = $product->attributes->pluck('id')->toArray();
+
+            $new_variations = [];
+
+            $combination_array = [];
+
+            foreach ($attributes as $attr) {
+                foreach ($request['variations-' . $attr] as $var) {
+
+                    $variation = $product->variations()->where('variation_id', $var)->first();
+                    if ($variation == null) {
+                        ProductVariation::create([
+                            'attribute_id' => $attr,
+                            'variation_id' => $var,
+                            'product_id' => $product->id
+                        ]);
+                    }
+                    array_push($new_variations, $var);
+                }
+
+                $combination_array[$attr] = $request['variations-' . $attr];
+            }
+
+
+            foreach ($variations as $variation) {
+
+                $count = 0;
+
+                if (!in_array($variation, $new_variations)) {
+                    $combinations = $product->combinations()->whereHas('variations', function ($q) use ($variation) {
+                        return $q->where('variation_id', $variation);
+                    })->get();
+
+                    foreach ($combinations as $combination) {
+                        if ($combination->stocks->count() > 0) {
+                            $count++;
+                        } else {
+                            $combination->delete();
+                        }
+                    }
+
+                    if ($count > 0) {
+                        alertError('some attributes cannot be deleted', 'بعض المتغيرات لا يمكن حذفها');
+                        $variation = Variation::findOrFail($variation);
+                        array_push($combination_array[$variation->attribute_id], strval($variation->id));
+                    } else {
+                        $product->variations()->where('variation_id', $variation)->first()->delete();
+                    }
+                }
+            }
+
+
+            $combination_array = array_values($combination_array);
+            $arrays = getCombinations($combination_array);
+
+            if (!is_array($arrays[0])) {
+                $array = $arrays;
+                unset($arrays);
+                foreach ($array as $index => $item) {
+                    $arrays[$index][] = $item;
+                }
+            }
+
+
+            foreach ($arrays as $key => $array) {
+
+
+                $count = count($array);
+
+
+                $combinations = $product->combinations()->where(function ($q) use ($array) {
+                    foreach ($array as $variation) {
+                        $q->whereHas('variations', function ($q) use ($variation) {
+                            $q->where('variation_id', $variation);
+                        });
+                    }
+
+                    return $q;
+                })->get();
+
+
+                if ($combinations->count() == 0) {
+                    $com = ProductCombination::create([
+                        'product_id' => $product->id,
+                        'sku' => $product->sku . '-' . ($key + 1),
+                        'discount_price' => $product->discount_price,
+                        'sale_price' => $product->sale_price,
+                    ]);
+
+                    foreach ($array as $variation) {
+                        ProductCombinationDtl::create([
+                            'product_combination_id' => $com->id,
+                            'variation_id' => $variation,
+                            'product_id' => $product->id,
+                        ]);
+                    }
+                }
             }
         }
 
@@ -698,12 +743,16 @@ class ProductsController extends Controller
 
 
         $product = Product::withTrashed()->where('id', $product)->first();
+
+
+
         if ($product->trashed() && auth()->user()->hasPermission('products-delete')) {
             if ($product->product_type == 'digital') {
-                Storage::disk('public')->delete($product->digital_fil);
+                Storage::disk('public')->delete($product->digital_file);
             }
             foreach ($product->images as $image) {
-                deleteImage($image->media->media_id);
+
+                deleteImage($image->media->id);
                 $image->delete();
             }
             foreach ($product->stocks as $stock) {
@@ -728,6 +777,10 @@ class ProductsController extends Controller
 
     public function trashed()
     {
+
+        $user = Auth::user();
+
+
         $categories = Category::all();
         $countries = Country::all();
         $products = Product::onlyTrashed()
@@ -735,7 +788,7 @@ class ProductsController extends Controller
             ->whenCategory(request()->category_id)
             ->whenCountry(request()->country_id)
             ->paginate(100);
-        return view('dashboard.products.index')->with('products', $products)->with('categories', $categories)->with('countries', $countries);
+        return view('dashboard.products.index', compact('user', 'products', 'categories', 'countries'));
     }
 
     public function restore($product)
@@ -806,6 +859,14 @@ class ProductsController extends Controller
 
         $funding_assets_account = Account::findOrFail(settingAccount('funding_assets_account', $branch_id));
 
+        foreach ($product->combinations as $index => $combination) {
+            $combination->update([
+                'sku' => $request->sku[$index],
+                'sale_price' => $request->sale_price[$index],
+                'discount_price' => $request->discount_price[$index],
+                'limit' => $request->limit[$index],
+            ]);
+        }
 
 
         foreach ($product->combinations as $index => $combination) {

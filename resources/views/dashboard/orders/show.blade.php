@@ -154,6 +154,10 @@
                             <td class="fw-semi-bold">{{ $order->subtotal_price . ' ' . $order->country->currency }}</td>
                         </tr>
                         <tr>
+                            <th class="text-900">{{ __('discount') }}</th>
+                            <td class="fw-semi-bold">{{ $order->discount_amount . ' ' . $order->country->currency }}</td>
+                        </tr>
+                        <tr>
                             <th class="text-900">{{ __('Tax Value:') }}</th>
                             <td class="fw-semi-bold">{{ $order->total_tax . ' ' . $order->country->currency }}</td>
                         </tr>

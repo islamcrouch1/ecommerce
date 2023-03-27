@@ -22,6 +22,8 @@ use Carbon\Carbon;
 use App\Models\Media;
 use App\Models\Product;
 use App\Models\ProductCombination;
+use App\Models\RunningOrder;
+use App\Models\Stock;
 use App\Models\Tax;
 use App\Models\Warehouse;
 use App\Models\WebsiteSetting;
@@ -120,7 +122,35 @@ if (!function_exists('getProductPrice')) {
 
         if ($product->vendor_id == null) {
             if ($product->product_type == 'variable' && $combination == null) {
-                return '<h4>' . __("Variable product") . '</h4>';
+
+                // return '<h4>' . __("Variable product") . '</h4>';
+
+                $combinations = $product->combinations;
+
+                $min_price = 0;
+                $max_price = 0;
+
+                foreach ($combinations as $index => $combination) {
+                    $price = productPrice($product, $combination->id, 'vat');
+                    if ($index == 0) {
+                        $min_price = $price;
+                        $max_price = $price;
+                    } else {
+                        if ($price > $max_price) {
+                            $min_price = $price;
+                        }
+
+                        if ($price < $min_price) {
+                            $min_price = $price;
+                        }
+                    }
+                }
+
+                if ($min_price == $max_price) {
+                    return '<h4>' . $min_price . $product->country->currency . '</h4>';
+                } else {
+                    return '<h4>' . $min_price . $product->country->currency . ' - ' . $max_price . $product->country->currency . '</h4>';
+                }
             } elseif ($product->product_type == 'variable' && $combination != null) {
                 if ($combination->discount_price == 0) {
                     return    '<h4>' . calcWebsiteTax($combination->sale_price)  . $product->country->currency . '</h4>';
@@ -275,6 +305,27 @@ if (!function_exists('getDefaultCountry')) {
 }
 
 
+if (!function_exists('getCountry')) {
+    function getCountry()
+    {
+
+        if (Auth::check()) {
+            $country = Country::find(Auth::user()->country_id);
+        } else {
+            $country = Country::find(setting('country_id'));
+        }
+
+        if ($country == null) {
+            $country = Country::first();
+        }
+        return $country;
+    }
+}
+
+
+
+
+
 if (!function_exists('getFavs')) {
     function getFavs()
     {
@@ -293,7 +344,8 @@ if (!function_exists('getFavs')) {
 if (!function_exists('getBrands')) {
     function getBrands()
     {
-        $brands = Brand::where('country_id', setting('country_id'))->where('status', 'active')->get();
+        $country = getCountry();
+        $brands = Brand::where('country_id', $country->id)->where('status', 'active')->get();
         return $brands;
     }
 }
@@ -302,7 +354,8 @@ if (!function_exists('getBrands')) {
 if (!function_exists('getCategories')) {
     function getCategories()
     {
-        $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
+        $country = getCountry();
+        $categories = Category::whereNull('parent_id')->where('country_id', $country->id)->orderBy('sort_order', 'asc')->get();
         return $categories;
     }
 }
@@ -738,6 +791,7 @@ if (!function_exists('interval')) {
     function interval($old)
     {
         $date = Carbon::now();
+        $old = Carbon::parse($old);
         return $interval = $old->diffForHumans();
     }
 }
@@ -1187,15 +1241,17 @@ if (!function_exists('addNoty')) {
         if (Auth::check()) {
             $media = asset('storage/images/users/' . $sender->profile);
             $sender_id = $sender->id;
+            $sender_name = $sender->name;
         } else {
             $media = asset(websiteSettingMedia('header_icon'));
             $sender_id = $sender;
+            $sender_name = 'guest';
         }
 
         $notification = Notification::create([
             'user_id' => $user->id,
             'sender_id' => $sender_id,
-            'sender_name'  => $sender->name,
+            'sender_name'  => $sender_name,
             'sender_image' => $media,
             'title_ar' => $tAr,
             'body_ar' => $bAr,
@@ -1214,7 +1270,7 @@ if (!function_exists('addNoty')) {
             'notification_id' => $notification->id,
             'user_id' => $user->id,
             'sender_id' => $sender_id,
-            'sender_name'  => $sender->name,
+            'sender_name'  => $sender_name,
             'sender_image' => $media,
             'title_ar' => $tAr,
             'body_ar' => $bAr,
@@ -1298,7 +1354,7 @@ if (!function_exists('websiteSettingMultiple')) {
 if (!function_exists('getCatFromSetting')) {
     function getCatFromSetting($item)
     {
-        $category = Category::findOrFail($item->value_ar);
+        $category = Category::find($item->value_ar);
         return $category ? $category : null;
     }
 }
@@ -2005,6 +2061,32 @@ if (!function_exists('getOrderHistory')) {
 }
 
 
+// get running status
+if (!function_exists('getRunningStatus')) {
+    function getRunningStatus($status)
+    {
+
+        $order_status = '';
+
+        switch ($status) {
+            case 'pending':
+                $order_status = '<span class="badge badge-soft-warning ">' . __($status) . '</span>';
+                break;
+            case 'completed':
+                $order_status = '<span class="badge badge-soft-success ">' . __($status) . '</span>';
+                break;
+            case 'partial':
+                $order_status = '<span class="badge badge-soft-danger ">' . __('partial qty') . '</span>';
+                break;
+            default:
+                $order_status = '';
+                break;
+        }
+
+        return $order_status;
+    }
+}
+
 // get order history
 if (!function_exists('getPaymentStatus')) {
     function getPaymentStatus($status)
@@ -2624,12 +2706,25 @@ if (!function_exists('getEntryDes')) {
             case 'pay_purchase':
                 $des = 'pay for purchase invoice' . ' - ' . 'دفع لفاتورة مشتريات' . ' - #'  . $reference->id;
                 break;
+
             case 'pay_sales':
                 $des = 'pay for sales invoice' . ' - ' . 'دفع لفاتورة مبيعات' . ' - #'  . $reference->id;
                 break;
 
             case 'sales':
                 $des = 'sales order' . ' - ' . 'طلب مبيعات' . ' - #'  . $reference->id;
+                break;
+
+            case 'purchase':
+                $des = 'purchase order' . ' - ' . 'طلب مشتريات' . ' - #'  . $reference->id;
+                break;
+
+            case 'sales_return':
+                $des = 'sales return' . ' - ' . 'مرتجع مبيعات' . ' - #'  . $reference->id;
+                break;
+
+            case 'purchase_return':
+                $des = 'purchase return' . ' - ' . 'مرتجع مشتريات' . ' - #'  . $reference->id;
                 break;
 
             default:
@@ -2724,20 +2819,25 @@ if (!function_exists('checkProductsForOrder')) {
         $check = true;
         $count = 0;
 
-        foreach ($products as $index => $product_id) {
+        foreach ($combinations as $index => $combination_id) {
 
-            $product = Product::findOrFail($product_id);
+            if ($products == null) {
+                $combination = ProductCombination::findOrFail($combination_id);
+                $product = $combination->product;
+            } else {
+                $product = Product::findOrFail($products[$index]);
+            }
 
             if ($product->product_type == 'simple' || $product->product_type == 'variable') {
 
-                $av_qty = productQuantity($product_id, $combinations[$index], $warehouse_id);
+                $av_qty = productQuantity($product->id, $combinations[$index], $warehouse_id);
 
                 if ($qty[$index] > $av_qty || $qty[$index] <= 0) {
                     $count += 1;
                 }
             }
 
-            if ($product->status != 'active') {
+            if ($product->status != 'active' && $products != null) {
                 $count += 1;
             }
         }
@@ -2777,5 +2877,115 @@ if (!function_exists('getProductCost')) {
         }
 
         return $cost;
+    }
+}
+
+
+
+// stock create
+if (!function_exists('stockCreate')) {
+    function stockCreate($combination, $warehouse_id, $qty,  $type, $stock_type, $order_id = null, $user_id = null, $price = 0)
+    {
+
+        $stock = Stock::create([
+            'product_combination_id' => $combination->id,
+            'product_id' => $combination->product_id,
+            'warehouse_id' => $warehouse_id,
+            'qty' => $qty,
+            'stock_status' => $stock_type,
+            'stock_type' => $type,
+            'reference_id' => $order_id,
+            'reference_price' => $price,
+            'created_by' =>  Auth::id(),
+        ]);
+
+        if (!isset(request()->running_order) && request()->running_order != true) {
+            RunningOrder::create([
+                'product_combination_id' => $combination->id,
+                'product_id' => $combination->product_id,
+                'warehouse_id' => $warehouse_id,
+                'requested_qty' => $qty,
+                'stock_status' => $stock_type,
+                'stock_type' => $type,
+                'reference_id' => $order_id,
+                'user_id' => $user_id,
+                'stock_id' => $stock->id,
+                'created_by' => Auth::id(),
+            ]);
+        }
+    }
+}
+
+
+// stock create
+if (!function_exists('getCombinations')) {
+    function getCombinations($arrays, $i = 0)
+    {
+
+        if (!isset($arrays[$i])) {
+            return array();
+        }
+        if ($i == count($arrays) - 1) {
+            return $arrays[$i];
+        }
+
+        // get combinations from subsequent arrays
+        $tmp = getCombinations($arrays, $i + 1);
+
+        $result = array();
+
+        // concat each array from tmp with each element from $arrays[$i]
+        foreach ($arrays[$i] as $v) {
+            foreach ($tmp as $t) {
+                $result[] = is_array($t) ?
+                    array_merge(array($v), $t) :
+                    array($v, $t);
+            }
+        }
+
+
+
+
+        return $result;
+    }
+}
+
+
+
+// get countries
+if (!function_exists('getCountries')) {
+    function getCountries()
+    {
+        $countries = Country::all();
+        return $countries;
+    }
+}
+
+
+// calculate coupon discount
+if (!function_exists('calcDiscount')) {
+    function calcDiscount($coupon, $price)
+    {
+
+        $discount = 0;
+
+        if ($coupon) {
+
+            if ($coupon->type == 'percentage') {
+                $discount = ($price * $coupon->amount) / 100;
+                if ($discount > $coupon->max_value) {
+                    $discount =  $coupon->max_value;
+                }
+            }
+
+            if ($coupon->type == 'amount') {
+                $discount = ($coupon->amount);
+                if ($discount > (($price * $coupon->max_value) / 100)) {
+                    $discount =  (($price * $coupon->max_value) / 100);
+                }
+            }
+        }
+
+        return $discount;
     }
 }

@@ -90,6 +90,12 @@
                                     </tr>
                                     <tr>
                                         <td colspan="2"></td>
+                                        <td class="font-bold text-dark" colspan="2">{{ __('discount') }}</td>
+                                        <td class="font-bold text-theme">
+                                            {{ $order->discount_amount . $order->country->currency }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2"></td>
                                         <td class="font-bold text-dark" colspan="2">{{ __('total') }}</td>
                                         <td class="font-bold text-theme">
                                             {{ $order->total_price . $order->country->currency }}</td>

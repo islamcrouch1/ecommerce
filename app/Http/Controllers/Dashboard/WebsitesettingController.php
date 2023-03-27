@@ -637,7 +637,9 @@ class WebsitesettingController extends Controller
                     'media_id' => $media_id,
                 ]);
             } else {
-                deleteImage($setting->media_id);
+                if ($setting->media_id != null) {
+                    deleteImage($setting->media_id);
+                }
                 $media_id = saveMedia('image', $request['header_logo'], 'settings');
                 $setting->update([
                     'media_id' => $media_id,
@@ -657,7 +659,9 @@ class WebsitesettingController extends Controller
                     'media_id' => $media_id,
                 ]);
             } else {
-                deleteImage($setting->media_id);
+                if ($setting->media_id != null) {
+                    deleteImage($setting->media_id);
+                }
                 $media_id = saveMedia('image', $request['header_icon'], 'settings');
                 $setting->update([
                     'media_id' => $media_id,

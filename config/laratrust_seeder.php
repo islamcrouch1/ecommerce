@@ -65,6 +65,8 @@ return [
             'stock_shortages' => 'c,r,u,d,t,s',
             'vendor_orders' => 'c,r,u,d,t,s',
             'payments' => 'c,r,u,d,t,s',
+            'running_orders' => 'c,r,u,d,t,s',
+            'coupons' => 'c,r,u,d,t,s',
         ],
         'administrator' => [],
         'vendor' => [],

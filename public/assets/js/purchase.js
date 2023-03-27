@@ -76,6 +76,8 @@ $('.purchase-tax').on('change' , function(e){
     e.preventDefault();
     getTotal();
 });
+
+
 const element = document.querySelector('.product-select');
 const choices = new Choices(element , {"removeItemButton":true});
 

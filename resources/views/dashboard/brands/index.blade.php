@@ -55,6 +55,8 @@
                                             data-bulk-select='{"body":"table-customers-body","actions":"table-customers-actions","replacedElement":"table-customers-replace-element"}' />
                                     </div>
                                 </th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">{{ __('ID') }}
+                                </th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">{{ __('Name') }}
                                 </th>
 
@@ -82,6 +84,8 @@
                                                 data-bulk-select-row="data-bulk-select-row" />
                                         </div>
                                     </td>
+                                    <td class="joined align-middle py-2">{{ $brand->id }} </td>
+
                                     <td class="name align-middle white-space-nowrap py-2">
                                         <div class="d-flex d-flex align-items-center">
                                             <div class="avatar avatar-xl me-2">
@@ -115,8 +119,9 @@
                                             <div class="dropdown-menu dropdown-menu-end border py-0"
                                                 aria-labelledby="customer-dropdown-0">
                                                 <div class="bg-white py-2">
-                                                    @if ($brand->trashed() &&
-                                                        auth()->user()->hasPermission('brands-restore'))
+                                                    @if (
+                                                        $brand->trashed() &&
+                                                            auth()->user()->hasPermission('brands-restore'))
                                                         <a class="dropdown-item"
                                                             href="{{ route('brands.restore', ['brand' => $brand->id]) }}">{{ __('Restore') }}</a>
                                                     @elseif(auth()->user()->hasPermission('brands-update'))
@@ -124,7 +129,7 @@
                                                             href="{{ route('brands.edit', ['brand' => $brand->id]) }}">{{ __('Edit') }}</a>
                                                     @endif
                                                     @if (auth()->user()->hasPermission('brands-delete') ||
-                                                        auth()->user()->hasPermission('brands-trash'))
+                                                            auth()->user()->hasPermission('brands-trash'))
                                                         <form method="POST"
                                                             action="{{ route('brands.destroy', ['brand' => $brand->id]) }}">
                                                             @csrf

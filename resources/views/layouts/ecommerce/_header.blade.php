@@ -41,9 +41,9 @@
                                     </a>
                                 </div> --}}
                                 <div class="brand-logo">
-                                    <a href="{{ route('ecommerce.home') }}"><img style="width:179px"
+                                    <a href="{{ route('ecommerce.home') }}"><img
                                             src="{{ asset(websiteSettingMedia('header_logo')) }}"
-                                            class="img-fluid blur-up lazyload" alt=""></a>
+                                            class="img-fluid header-logo blur-up lazyload" alt=""></a>
                                 </div>
                             </div>
                             <div>
@@ -733,9 +733,9 @@
                                 </a>
                             </div>
                             <div class="brand-logo">
-                                <a href="{{ route('ecommerce.home') }}"><img style="width:179px"
+                                <a href="{{ route('ecommerce.home') }}"><img
                                         src="{{ asset(websiteSettingMedia('header_logo')) }}"
-                                        class="img-fluid blur-up lazyload" alt=""></a>
+                                        class="img-fluid blur-up header-logo lazyload" alt=""></a>
                             </div>
                         </div>
                         <div class="ajax-search" style="position:relative">
@@ -827,30 +827,35 @@
                                                 </div>
                                             </div>
                                         </li>
+
                                         <li class="onhover-div mobile-setting">
-                                            <div>
-                                                <a href="{{ route('setlocale') }}" data-bs-toggle="tooltip"
-                                                    data-bs-placement="top" title="{{ __('Switch Language') }}">
-                                                    <img src="{{ asset('e-assets/images/icon/setting.png') }}"
-                                                        class="img-fluid blur-up lazyload" alt=""> <i
-                                                        class="ti-settings"></i>
-                                                </a>
-                                            </div>
-                                            {{-- <div class="show-div setting">
-                                                <h6>language</h6>
+                                            <div><img src="{{ asset('e-assets/images/icon/setting.png') }}"
+                                                    class="img-fluid blur-up lazyload" alt=""> <i
+                                                    class="ti-settings"></i></div>
+                                            <div class="show-div setting">
+                                                <h6>{{ __('Switch Language') }}</h6>
                                                 <ul>
-                                                    <li><a href="#">english</a></li>
-                                                    <li><a href="#">french</a></li>
+                                                    <li><a
+                                                            href="{{ route('setlocale') }}">{{ app()->getLocale() == 'ar' ? 'English' : 'العربية' }}</a>
+                                                    </li>
+
                                                 </ul>
-                                                <h6>currency</h6>
-                                                <ul class="list-inline">
-                                                    <li><a href="#">euro</a></li>
-                                                    <li><a href="#">rupees</a></li>
-                                                    <li><a href="#">pound</a></li>
-                                                    <li><a href="#">doller</a></li>
-                                                </ul>
-                                            </div> --}}
+
+                                                {{-- @if (getCountries()->count() > 1)
+                                                    <h6>{{ __('country') }}</h6>
+                                                    <ul class="list-inline">
+                                                        @foreach (getCountries() as $country)
+                                                            <li><a
+                                                                    href="{{ route('set.country', ['country_id' => $country->id]) }}">{{ getName($country) }}</a>
+                                                            </li>
+                                                        @endforeach
+
+                                                    </ul>
+                                                @endif --}}
+
+                                            </div>
                                         </li>
+
                                         <li class="onhover-div mobile-cart">
                                             <div><img src="{{ asset('e-assets/images/icon/cart.png') }}"
                                                     class="img-fluid blur-up lazyload" alt=""> <i
@@ -1016,7 +1021,7 @@
                     </div>
                     <div class="col-xxl-3 d-none d-xxl-inline-block">
                         <div class="header-options">
-                            <div class="vertical-slider no-arrow">
+                            <div class="vertical-slider no-arrow flash-news">
                                 @if (app()->getLocale() == 'ar')
                                     @foreach (websiteSettingMultiple('flash_news') as $item)
                                         <div>

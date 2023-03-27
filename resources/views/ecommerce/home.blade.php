@@ -43,25 +43,27 @@
         <div class="container-fluid p-0">
             <div class="row m-0">
                 @foreach (websiteSettingMultiple('categories') as $item)
-                    <div class="col-lg-3 col-sm-6 p-0">
-                        <a href="{{ route('ecommerce.products', ['category' => getCatFromSetting($item)->id]) }}">
-                            <div class="collection-banner p-left">
-                                <div class="img-part">
-                                    <img src="{{ asset(getImage(getCatFromSetting($item))) }}"
-                                        class="img-fluid blur-up lazyload bg-img">
-                                </div>
-                                <div class="contain-banner banner-4">
-                                    <div>
-                                        <h4>{{ app()->getLocale() == 'ar' ? getCatFromSetting($item)->subtitle_ar : getCatFromSetting($item)->subtitle_en }}
-                                        </h4>
-                                        <h2 class="text-dark">
-                                            {{ app()->getLocale() == 'ar' ? getCatFromSetting($item)->name_ar : getCatFromSetting($item)->name_en }}
-                                        </h2>
+                    @if (getCatFromSetting($item))
+                        <div class="col-lg-3 col-sm-6 p-0">
+                            <a href="{{ route('ecommerce.products', ['category' => getCatFromSetting($item)->id]) }}">
+                                <div class="collection-banner p-left">
+                                    <div class="img-part">
+                                        <img src="{{ asset(getImage(getCatFromSetting($item))) }}"
+                                            class="img-fluid blur-up lazyload bg-img">
+                                    </div>
+                                    <div class="contain-banner banner-4">
+                                        <div>
+                                            <h4>{{ app()->getLocale() == 'ar' ? getCatFromSetting($item)->subtitle_ar : getCatFromSetting($item)->subtitle_en }}
+                                            </h4>
+                                            <h2 class="text-dark">
+                                                {{ app()->getLocale() == 'ar' ? getCatFromSetting($item)->name_ar : getCatFromSetting($item)->name_en }}
+                                            </h2>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </a>
-                    </div>
+                            </a>
+                        </div>
+                    @endif
                 @endforeach
             </div>
         </div>
@@ -377,23 +379,25 @@
             <div class="row partition2">
                 @foreach (websiteSettingMultiple('categories_2') as $item)
                     <div class="col-md-6">
-                        <a href="{{ route('ecommerce.products', ['category' => getCatFromSetting($item)->id]) }}">
-                            <div class="collection-banner p-right text-center">
-                                <div class="img-part">
-                                    <img src="{{ getimageAsset(getCatFromSetting($item)) }}"
-                                        class="img-fluid blur-up lazyload bg-img" alt="">
-                                </div>
-                                <div class="contain-banner">
-                                    <div>
-                                        <h4>{{ app()->getLocale() == 'ar' ? getCatFromSetting($item)->subtitle_ar : getCatFromSetting($item)->subtitle_en }}
-                                        </h4>
-                                        <h2 class="text-dark">
-                                            {{ app()->getLocale() == 'ar' ? getCatFromSetting($item)->name_ar : getCatFromSetting($item)->name_en }}
-                                        </h2>
+                        @if (getCatFromSetting($item))
+                            <a href="{{ route('ecommerce.products', ['category' => getCatFromSetting($item)->id]) }}">
+                                <div class="collection-banner p-right text-center">
+                                    <div class="img-part">
+                                        <img src="{{ getimageAsset(getCatFromSetting($item)) }}"
+                                            class="img-fluid blur-up lazyload bg-img" alt="">
+                                    </div>
+                                    <div class="contain-banner">
+                                        <div>
+                                            <h4>{{ app()->getLocale() == 'ar' ? getCatFromSetting($item)->subtitle_ar : getCatFromSetting($item)->subtitle_en }}
+                                            </h4>
+                                            <h2 class="text-dark">
+                                                {{ app()->getLocale() == 'ar' ? getCatFromSetting($item)->name_ar : getCatFromSetting($item)->name_en }}
+                                            </h2>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </a>
+                            </a>
+                        @endif
                     </div>
                 @endforeach
             </div>
@@ -412,11 +416,14 @@
                         <div class="offer-slider slide-1">
 
 
+                            @php
+                                $i = 0;
+                            @endphp
+
                             @foreach ($products->where('top_collection', 1) as $index => $product)
-                                @if ($loop->first || $index % 3 == 0)
+                                @if ($i % 3 === 0)
                                     <div>
                                 @endif
-
 
                                 <div class="media">
                                     <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
@@ -453,81 +460,37 @@
                                     </div>
                                 </div>
 
-                                @if (($index + 1) % 3 == 0 || $loop->last)
+                                @if ($i % 3 === 2)
                         </div>
                         @endif
+                        @php
+                            $i++;
+                        @endphp
                         @endforeach
-                    </div>
-                </div>
-            </div>
 
-            <div class="col-lg-3 col-sm-6">
-                <div class="theme-card">
-                    <h5 class="title-border">{{ __('Best seller') }}</h5>
-                    <div class="offer-slider slide-1">
-
-
-                        @foreach ($products->where('best_selling', 1) as $index => $product)
-                            @if ($loop->first || $index % 3 == 0)
-                                <div>
-                            @endif
-
-
-                            <div class="media">
-                                <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                                        class="img-fluid blur-up lazyload"
-                                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
-                                        alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
-                                <div class="media-body align-self-center">
-                                    <div class="">{!! getAverageRatingWithStars($product) !!}
-                                    </div>
-                                    <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
-                                        <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
-                                        </h6>
-                                    </a>
-                                    {!! getProductPrice($product) !!}
-                                    @if ($product->product_type != 'variable')
-                                        <div class="add-btn mt-2">
-                                            <a href="javascript:void(0)" class="add-to-cart"
-                                                data-url="{{ route('ecommerce.cart.store') }}"
-                                                data-locale="{{ app()->getLocale() }}"
-                                                data-product_id="{{ $product->id }}"
-                                                data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
-                                                <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
-                                                    class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
-                                                    role="status">
-                                                </div>
-                                                <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
-                                                    aria-hidden="true"></i>
-                                                <span
-                                                    class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
-                                                <span class="cart-added-{{ $product->id }}"
-                                                    style="display: none;">{{ __('Added to bag') }}</span>
-                                            </a>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-
-                            @if (($index + 1) % 3 == 0 || $loop->last)
+                        @if ($i % 3 !== 0)
                     </div>
                     @endif
-                    @endforeach
+
+
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-sm-6">
             <div class="theme-card">
-                <h5 class="title-border">{{ __('Featured products') }}</h5>
+                <h5 class="title-border">{{ __('Best seller') }}</h5>
                 <div class="offer-slider slide-1">
 
 
-                    @foreach ($products->where('is_featured', 1) as $index => $product)
-                        @if ($loop->first || $index % 3 == 0)
+                    @php
+                        $i = 0;
+                    @endphp
+
+                    @foreach ($products->where('best_selling', 1) as $index => $product)
+                        @if ($i % 3 === 0)
                             <div>
                         @endif
-
 
                         <div class="media">
                             <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
@@ -535,8 +498,7 @@
                                     src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                     alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                             <div class="media-body align-self-center">
-                                <div class="">{!! getAverageRatingWithStars($product) !!}
-                                </div>
+                                <div class="">{!! getAverageRatingWithStars($product) !!}</div>
                                 <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                     <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
                                     </h6>
@@ -564,11 +526,80 @@
                             </div>
                         </div>
 
-                        @if (($index + 1) % 3 == 0 || $loop->last)
+                        @if ($i % 3 === 2)
                 </div>
                 @endif
+                @php
+                    $i++;
+                @endphp
                 @endforeach
+
+                @if ($i % 3 !== 0)
             </div>
+            @endif
+        </div>
+        </div>
+        </div>
+
+        <div class="col-lg-3 col-sm-6">
+            <div class="theme-card">
+                <h5 class="title-border">{{ __('Featured products') }}</h5>
+                <div class="offer-slider slide-1">
+
+                    @php
+                        $i = 0;
+                    @endphp
+                    @foreach ($products->where('is_featured', 1) as $index => $product)
+                        @if ($i % 3 === 0)
+                            <div>
+                        @endif
+
+                        <div class="media">
+                            <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
+                                    class="img-fluid blur-up lazyload"
+                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
+                                    alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
+                            <div class="media-body align-self-center">
+                                <div class="">{!! getAverageRatingWithStars($product) !!}</div>
+                                <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
+                                    <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
+                                    </h6>
+                                </a>
+                                {!! getProductPrice($product) !!}
+                                @if ($product->product_type != 'variable')
+                                    <div class="add-btn mt-2">
+                                        <a href="javascript:void(0)" class="add-to-cart"
+                                            data-url="{{ route('ecommerce.cart.store') }}"
+                                            data-locale="{{ app()->getLocale() }}"
+                                            data-product_id="{{ $product->id }}"
+                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
+                                            <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
+                                                class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
+                                                role="status">
+                                            </div>
+                                            <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
+                                                aria-hidden="true"></i>
+                                            <span class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
+                                            <span class="cart-added-{{ $product->id }}"
+                                                style="display: none;">{{ __('Added to bag') }}</span>
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        @if ($i % 3 === 2)
+                </div>
+                @endif
+                @php
+                    $i++;
+                @endphp
+                @endforeach
+
+                @if ($i % 3 !== 0)
+            </div>
+            @endif
+        </div>
         </div>
         </div>
 
@@ -577,13 +608,14 @@
             <div class="theme-card">
                 <h5 class="title-border">{{ __('Offers and sales') }}</h5>
                 <div class="offer-slider slide-1">
-
+                    @php
+                        $i = 0;
+                    @endphp
 
                     @foreach ($products->where('on_sale', 1) as $index => $product)
-                        @if ($loop->first || $index % 3 == 0)
+                        @if ($i % 3 === 0)
                             <div>
                         @endif
-
 
                         <div class="media">
                             <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
@@ -591,8 +623,7 @@
                                     src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
                                     alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                             <div class="media-body align-self-center">
-                                <div class="">{!! getAverageRatingWithStars($product) !!}
-                                </div>
+                                <div class="">{!! getAverageRatingWithStars($product) !!}</div>
                                 <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
                                     <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
                                     </h6>
@@ -620,11 +651,18 @@
                             </div>
                         </div>
 
-                        @if (($index + 1) % 3 == 0 || $loop->last)
+                        @if ($i % 3 === 2)
                 </div>
                 @endif
+                @php
+                    $i++;
+                @endphp
                 @endforeach
+
+                @if ($i % 3 !== 0)
             </div>
+            @endif
+        </div>
         </div>
         </div>
 
@@ -760,20 +798,44 @@
                                                         </div>
                                                         <div class="col-md-9">
                                                             <div class="size-box attribute-box-{{ $attribute->id }}">
-                                                                <ul>
-                                                                    @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
-                                                                        <li class="attribute-select"
-                                                                            data-attribute-id="{{ $attribute->id }}"
-                                                                            data-variation-id="{{ $variation->variation->id }}"
-                                                                            data-product-id="{{ $product->id }}"
-                                                                            data-url="{{ route('ecommerce.product.price') }}"
-                                                                            data-locale="{{ app()->getLocale() }}"
-                                                                            data-currency="{{ $product->country->currency }}">
-                                                                            <a
-                                                                                href="javascript:void(0)">{{ app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en }}</a>
-                                                                        </li>
-                                                                    @endforeach
-                                                                </ul>
+
+                                                                @if ($attribute->type == 'select')
+                                                                    <select>
+
+                                                                        <option value="">
+                                                                            {{ __('Select') . ' ' . getName($attribute) }}
+                                                                        </option>
+                                                                        @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
+                                                                            <option class="attribute-select"
+                                                                                data-attribute-id="{{ $attribute->id }}"
+                                                                                data-variation-id="{{ $variation->variation->id }}"
+                                                                                data-product-id="{{ $product->id }}"
+                                                                                data-url="{{ route('ecommerce.product.price') }}"
+                                                                                data-locale="{{ app()->getLocale() }}"
+                                                                                data-currency="{{ $product->country->currency }}">
+                                                                                {{ app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en }}
+                                                                            </option>
+                                                                        @endforeach
+
+
+                                                                    </select>
+                                                                @else
+                                                                    <ul>
+                                                                        @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
+                                                                            <li class="attribute-select"
+                                                                                data-attribute-id="{{ $attribute->id }}"
+                                                                                data-variation-id="{{ $variation->variation->id }}"
+                                                                                data-product-id="{{ $product->id }}"
+                                                                                data-url="{{ route('ecommerce.product.price') }}"
+                                                                                data-locale="{{ app()->getLocale() }}"
+                                                                                data-currency="{{ $product->country->currency }}">
+                                                                                <a
+                                                                                    href="javascript:void(0)">{{ app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en }}</a>
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                @endif
+
                                                             </div>
                                                         </div>
                                                     </div>
@@ -846,8 +908,8 @@
                                     <div class="col-6 mt-4">
                                         <div style="display:none !important"
                                             class="alert alert-danger border-2 align-items-center alarm" role="alert">
-                                            <div class="bg-danger me-3 icon-item"><span
-                                                    class="fas fa-times-circle text-white fs-3"></span>
+                                            <div class="bg-danger me-3 icon-item"><i
+                                                    class="fa fa-exclamation-circle text-white fs-3"></i>
                                             </div>
                                             <p class="mb-0 flex-1 alarm-text"></p>
                                         </div>

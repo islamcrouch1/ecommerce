@@ -91,6 +91,10 @@ class SettingController extends Controller
             'website_branch' => "nullable|numeric",
             'website_vat' => "nullable|string",
             'cash_accounts' => "nullable|array",
+            'cash_on_delivery' => "nullable|string",
+            'paymob' => "nullable|string",
+            'upayment' => "nullable|string",
+
         ]);
 
 
@@ -113,6 +117,12 @@ class SettingController extends Controller
         updateAccountSetting('vat_purchase_account', $request);
         updateAccountSetting('cash_accounts', $request);
 
+
+
+
+        updateSetting('cash_on_delivery', $request);
+        updateSetting('paymob', $request);
+        updateSetting('upayment', $request);
 
 
         updateSetting('website_branch', $request);

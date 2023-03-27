@@ -52,12 +52,14 @@ class AttributesController extends Controller
         $request->validate([
             'name_ar' => "required|string|max:255|unique:attributes",
             'name_en' => "required|string|max:255|unique:attributes",
+            'type' => "nullable|string",
         ]);
 
 
         $attribute = Attribute::create([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
+            'type' => $request['type'],
         ]);
 
         alertSuccess('attribute created successfully', 'تم إضافة سمة المنتجات بنجاح');
@@ -99,11 +101,13 @@ class AttributesController extends Controller
         $request->validate([
             'name_ar' => "required|string|max:255|unique:attributes,name_ar," . $attribute->id,
             'name_en' => "required|string|max:255|unique:attributes,name_en," . $attribute->id,
+            'type' => "nullable|string",
         ]);
 
         $attribute->update([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
+            'type' => $request['type'],
         ]);
 
         alertSuccess('attribute updated successfully', 'تم تعديل سمة المنتج بنجاح');

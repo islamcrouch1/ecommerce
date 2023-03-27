@@ -89,8 +89,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="sale_price">{{ __('product price') }}</label>
                                 <input name="sale_price" class="form-control @error('sale_price') is-invalid @enderror"
-                                    value="{{ old('sale_price') }}" type="number" min="0" autocomplete="on"
-                                    id="sale_price" required />
+                                    value="{{ old('sale_price') }}" type="number" min="0" step="0.01"
+                                    autocomplete="on" id="sale_price" required />
                                 @error('sale_price')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
@@ -100,8 +100,8 @@
                                 <label class="form-label" for="discount_price">{{ __('discount price') }}</label>
                                 <input name="discount_price"
                                     class="form-control @error('discount_price') is-invalid @enderror"
-                                    value="{{ old('discount_price') }}" type="number" min="0" autocomplete="on"
-                                    id="discount_price" />
+                                    value="{{ old('discount_price') }}" type="number" min="0" step="0.01"
+                                    autocomplete="on" id="discount_price" />
                                 @error('discount_price')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
@@ -217,7 +217,7 @@
                                         <label class="form-label" for="product_weight">{{ __('product weight') }}</label>
                                         <input name="product_weight"
                                             class="form-control @error('product_weight') is-invalid @enderror"
-                                            value="{{ old('product_weight') }}" type="number" min="0"
+                                            value="0" type="number" min="0" step="0.01"
                                             autocomplete="on" id="product_weight" />
                                         @error('product_weight')
                                             <div class="alert alert-danger">{{ $message }}</div>
@@ -230,7 +230,7 @@
                                         <label class="form-label" for="product_length">{{ __('product length') }}</label>
                                         <input name="product_length"
                                             class="form-control @error('product_length') is-invalid @enderror"
-                                            value="{{ old('product_length') }}" type="number" min="0"
+                                            value="0" type="number" min="0" step="0.01"
                                             autocomplete="on" id="product_length" />
                                         @error('product_length')
                                             <div class="alert alert-danger">{{ $message }}</div>
@@ -243,7 +243,7 @@
                                         <label class="form-label" for="product_width">{{ __('product width') }}</label>
                                         <input name="product_width"
                                             class="form-control @error('product_width') is-invalid @enderror"
-                                            value="{{ old('product_width') }}" type="number" min="0"
+                                            value="0" type="number" min="0" step="0.01"
                                             autocomplete="on" id="product_width" />
                                         @error('product_width')
                                             <div class="alert alert-danger">{{ $message }}</div>
@@ -257,7 +257,7 @@
                                         <label class="form-label" for="product_height">{{ __('product height') }}</label>
                                         <input name="product_height"
                                             class="form-control @error('product_height') is-invalid @enderror"
-                                            value="{{ old('product_height') }}" type="number" min="0"
+                                            value="0" type="number" min="0" step="0.01"
                                             autocomplete="on" id="product_height" />
                                         @error('product_height')
                                             <div class="alert alert-danger">{{ $message }}</div>
@@ -294,8 +294,8 @@
                                             for="shipping_amount">{{ __('extra fee for shipping') }}</label>
                                         <input name="shipping_amount"
                                             class="form-control @error('shipping_amount') is-invalid @enderror"
-                                            value="0" type="number" min="0" autocomplete="on"
-                                            id="shipping_amount" />
+                                            value="0" type="number" min="0" step="0.01"
+                                            autocomplete="on" id="shipping_amount" />
                                         @error('shipping_amount')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
@@ -343,11 +343,15 @@
                                 @enderror
                             </div>
 
-                            @foreach ($attributes as $attribute)
+
+                            @foreach ($attributes as $index => $attribute)
                                 <div class="mb-3 p-variation product-variations-{{ $attribute->id }}"
                                     style="display:none">
-                                    <label class="form-label" for="variations">{{ __('product variations') }}</label>
-                                    <select class="form-select js-choice @error('variations') is-invalid @enderror"
+                                    <label class="form-label"
+                                        for="variations">{{ __('product variations') . ' - ' . getName($attribute) }}</label>
+                                    <select class="form-select model-search @error('variations') is-invalid @enderror"
+                                        data-url="{{ route('model.search') }}" data-locale="{{ app()->getLocale() }}"
+                                        data-parent="{{ $attribute->id }}" data-type="variations"
                                         name="variations-{{ $attribute->id }}[]" multiple="multiple"
                                         data-options='{"removeItemButton":true,"placeholder":true}'>
                                         <option value="">

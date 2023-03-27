@@ -55,6 +55,8 @@
                                             data-bulk-select='{"body":"table-customers-body","actions":"table-customers-actions","replacedElement":"table-customers-replace-element"}' />
                                     </div>
                                 </th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">{{ __('ID') }}
+                                </th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">{{ __('Name') }}
                                 </th>
 
@@ -87,6 +89,8 @@
                                                 data-bulk-select-row="data-bulk-select-row" />
                                         </div>
                                     </td>
+                                    <td class="joined align-middle py-2">{{ $warehouse->id }} </td>
+
                                     <td class="name align-middle white-space-nowrap py-2">
                                         <div class="d-flex d-flex align-items-center">
                                             <div class="flex-1">

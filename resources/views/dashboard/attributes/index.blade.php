@@ -55,6 +55,8 @@
                                             data-bulk-select='{"body":"table-customers-body","actions":"table-customers-actions","replacedElement":"table-customers-replace-element"}' />
                                     </div>
                                 </th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">{{ __('ID') }}
+                                </th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">{{ __('Name') }}
                                 </th>
 
@@ -76,6 +78,8 @@
                                                 data-bulk-select-row="data-bulk-select-row" />
                                         </div>
                                     </td>
+                                    <td class="joined align-middle py-2">{{ $attribute->id }} </td>
+
                                     <td class="name align-middle white-space-nowrap py-2">
                                         <div class="d-flex d-flex align-items-center">
                                             <div class="flex-1">
@@ -101,8 +105,9 @@
                                             <div class="dropdown-menu dropdown-menu-end border py-0"
                                                 aria-labelledby="customer-dropdown-0">
                                                 <div class="bg-white py-2">
-                                                    @if ($attribute->trashed() &&
-                                                        auth()->user()->hasPermission('attributes-restore'))
+                                                    @if (
+                                                        $attribute->trashed() &&
+                                                            auth()->user()->hasPermission('attributes-restore'))
                                                         <a class="dropdown-item"
                                                             href="{{ route('attributes.restore', ['attribute' => $attribute->id]) }}">{{ __('Restore') }}</a>
                                                     @elseif(auth()->user()->hasPermission('attributes-update'))
@@ -110,7 +115,7 @@
                                                             href="{{ route('attributes.edit', ['attribute' => $attribute->id]) }}">{{ __('Edit') }}</a>
                                                     @endif
                                                     @if (auth()->user()->hasPermission('attributes-delete') ||
-                                                        auth()->user()->hasPermission('attributes-trash'))
+                                                            auth()->user()->hasPermission('attributes-trash'))
                                                         <form method="POST"
                                                             action="{{ route('attributes.destroy', ['attribute' => $attribute->id]) }}">
                                                             @csrf

@@ -7,6 +7,7 @@ use App\Models\Account;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Country;
+use App\Models\Coupon;
 use App\Models\Entry;
 use App\Models\Order;
 use App\Models\Product;
@@ -16,6 +17,7 @@ use App\Models\Stock;
 use App\Models\Tax;
 use App\Models\User;
 use App\Models\Warehouse;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -64,12 +66,11 @@ class OrdersController extends Controller
             'shipping_option' => 'required|string|max:255',
             'payment_method' => 'required|string|max:255',
             'create_account' => 'nullable|string|max:255',
+            'coupon' => 'nullable|string',
         ]);
 
 
         if (isset($request->create_account) && $request->create_account == 'create_account') {
-
-
 
             $request->merge(['country' => $request->country_id]);
             $request->merge(['email' => ($request->phone . '@domain.com')]);
@@ -89,8 +90,6 @@ class OrdersController extends Controller
             alertError('An error occurred while processing the request, please try again later', 'حدث خطا اثناء عمل الطلب يرجى المحاولة لاحقا');
             return redirect()->back();
         }
-
-
 
         $cart_items = getCartItems();
 
@@ -145,19 +144,52 @@ class OrdersController extends Controller
             return redirect()->back();
         }
 
+
+
+        $check_coupon = 0;
+
+        if (isset($request->coupon)) {
+            $coupon = Coupon::where('code', $request->coupon)->first();
+            if (!isset($coupon)) {
+                $check_coupon = 1;
+            } else {
+                if (!Auth::check()) {
+                    $check_coupon = 1;
+                } else {
+                    $orders = Order::where('customer_id', Auth::id())->where('coupon_code', $coupon->code)->get();
+                    if ($orders->count() >= $coupon->frequency) {
+                        $check_coupon = 1;
+                    } else {
+                        $date = Carbon::now();
+                        if ($date > $coupon->ended_at) {
+                            $check_coupon = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+
+
         if ($request->payment_method == 'cash') {
-            $order = $this->attach_order($request, 'cash_on_delivery');
+            $order = $this->attach_order($request, 'cash_on_delivery', $check_coupon);
             alertSuccess('Order added successfully', 'تم عمل الطلب بنجاح');
             return redirect()->route('ecommerce.order.success', ['order' => $order]);
         }
 
-        if ($request->payment_method == 'card') {
-            $order = $this->attach_order($request, 'card');
+        if ($request->payment_method == 'paymob') {
+            $order = $this->attach_order($request, 'paymob', $check_coupon);
+            return redirect()->route('ecommerce.payment', ['orderId' => $order->id]);
+        }
+
+
+        if ($request->payment_method == 'upayment') {
+            $order = $this->attach_order($request, 'upayment', $check_coupon);
             return redirect()->route('ecommerce.payment', ['orderId' => $order->id]);
         }
     }
 
-    private function attach_order($request, $payment_method)
+    private function attach_order($request, $payment_method, $check_coupon)
     {
 
         $shipping_amount = 0;
@@ -173,6 +205,14 @@ class OrdersController extends Controller
             $shipping_amount = $this->calculateShipping($request);
             $branch_id = null;
         }
+
+        if ($check_coupon == 0) {
+            $coupon = Coupon::where('code', $request->coupon)->first();
+        } else {
+            $coupon = null;
+        }
+
+
 
 
         $warehouses = getWebsiteWarehouses();
@@ -212,8 +252,7 @@ class OrdersController extends Controller
             // 'total_tax' => null,
             'is_seen' => '0',
 
-            'coupon_code' => null,
-            'coupon_amount' => null,
+
         ]);
 
 
@@ -286,19 +325,19 @@ class OrdersController extends Controller
                     'product_combination_id' => $item->product_combination_id,
                     'product_price' => productPrice($item->product, $item->product_combination_id, 'vat'),
                     'product_tax' => $vat_product,
-                    'product_discount' => null,
+                    // 'product_discount' => null,
                     'qty' => $item->qty,
                     'total' => (productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty),
                     'product_type' => $item->product->product_type,
 
                     'cost' => $cost,
 
-                    'affiliate_price' => null,
-                    'total_affiliate_price' => null,
-                    'commission_per_item' => null,
-                    'profit_per_item' => null,
-                    'total_commission' => null,
-                    'total_profit' => null,
+                    // 'affiliate_price' => null,
+                    // 'total_affiliate_price' => null,
+                    // 'commission_per_item' => null,
+                    // 'profit_per_item' => null,
+                    // 'total_commission' => null,
+                    // 'total_profit' => null,
 
                     'extra_shipping_amount' => $this->calculateShippingForItem($item),
                     'shipping_method_id' => $item->product->shipping_method_id,
@@ -504,24 +543,44 @@ class OrdersController extends Controller
         }
 
 
-        $subtotal = ($total_order_price - $total_order_vendors_products);
-
-
-        if (setting('website_vat')) {
-            $vat_amount = calcTax($subtotal, 'vat');
+        if ($total_order_vendors_products > $total_order_price) {
+            $subtotal = ($total_order_vendors_products - $total_order_price);
         } else {
-            $vat_amount = 0;
+            $subtotal = ($total_order_price - $total_order_vendors_products);
         }
 
 
+        if ($total_order_price > 0 && setting('website_vat')) {
 
+            if ($coupon != null) {
+                $discount = calcDiscount($coupon, $subtotal);
+            } else {
+                $discount = 0;
+            }
+
+            $vat_amount = calcTax($subtotal - $discount, 'vat');
+        } elseif ($total_order_price) {
+            $vat_amount = 0;
+            $discount = calcDiscount($coupon, $subtotal);
+        } else {
+            $vat_amount = 0;
+            $discount = 0;
+        }
 
         // last update for order to add total price and total tax
         $order->update([
-            'total_price' => $total_order_price + $shipping_amount + $vat_amount,
-            'subtotal_price' => $total_order_price,
+            'total_price' => $total_order_price + $shipping_amount + $vat_amount - $discount,
+            'subtotal_price' => $total_order_price - $discount,
             'total_tax' => $vat_amount,
         ]);
+
+        if ($discount > 0) {
+            $order->update([
+                'coupon_code' => $coupon->code,
+                'coupon_amount' => $coupon->amount,
+                'discount_amount' => $discount,
+            ]);
+        }
 
         $vat = Tax::findOrFail(setting('vat'));
         $order->taxes()->attach($vat->id, ['amount' => $vat_amount]);
@@ -534,7 +593,7 @@ class OrdersController extends Controller
         Entry::create([
             'account_id' => $customer_account->id,
             'type' => 'sales',
-            'dr_amount' => $total_order_price + $shipping_amount + $vat_amount,
+            'dr_amount' => $total_order_price + $shipping_amount + $vat_amount - $discount,
             'cr_amount' =>  0,
             'description' => 'sales order# ' . $order->id,
             'branch_id' => $branch_id,

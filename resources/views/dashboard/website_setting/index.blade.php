@@ -189,7 +189,7 @@
 
                                     <div class="mb-3">
                                         <label class="form-label"
-                                            for="website_title_en">{{ __('website title') . ' ' . __('arabic') }}</label>
+                                            for="website_title_en">{{ __('website title') . ' ' . __('english') }}</label>
                                         <input name="website_title_en"
                                             class="form-control @error('website_title_en') is-invalid @enderror"
                                             value="{{ websiteSettingEn('website_title') }}" type="text"

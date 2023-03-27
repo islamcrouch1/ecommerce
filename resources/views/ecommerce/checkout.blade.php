@@ -176,8 +176,11 @@
                                         </div>
                                         <ul class="qty">
                                             @foreach ($cart_items as $item)
-                                                <li>{{ getProductName($item->product, getCombination($item->product_combination_id)) }}
-                                                    × {{ $item->qty }}
+                                                <li>
+                                                    <div style="width:300px; display:inline-block">
+                                                        {{ getProductName($item->product, getCombination($item->product_combination_id)) }}
+                                                        × {{ $item->qty }}
+                                                    </div>
                                                     <span>{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . getCurrency() }}</span>
                                                 </li>
                                             @endforeach
@@ -232,6 +235,45 @@
                                                 </div>
                                             </li>
                                         </ul>
+                                        @if (getCartItems()->count() > 0)
+                                            <div class="row">
+                                                <div class="col-md-12 mt-2 mb-2">
+                                                    <a class="coupon-link"
+                                                        href="">{{ __('Have a promo code?') }}</a>
+                                                </div>
+
+                                                <div style="display: none" class="col-md-6 mt-2 mb-2 coupon-field">
+                                                    <div class="input-group mb-1">
+                                                        <input style="width:60%" type="text"
+                                                            class="form-control coupon-code">
+                                                        <button class="btn btn-outline-secondary coupon-apply"
+                                                            type="button"
+                                                            id="button-addon2">{{ __('apply') }}</button>
+                                                    </div>
+
+                                                    <input style="display: none" name="coupon" style="width:60%"
+                                                        type="text" class="form-control coupon-submit">
+
+                                                </div>
+
+
+
+                                                <div style="display: none" class="col-md-2 coupon-remove mt-2 mb-2">
+                                                    <button class="btn-solid btn"><i class="fa fa-trash"
+                                                            aria-hidden="true"></i>
+                                                    </button>
+                                                </div>
+
+                                                <div class="col-md-12 mt-1 mb-2">
+                                                    <span class="coupon-text"></span>
+                                                </div>
+
+
+                                            </div>
+                                        @endif
+
+
+                                        </ul>
                                         <ul class="total">
                                             <li>{{ __('Total') }} <span
                                                     class="count checkout-total">{{ getCartSubtotal($cart_items) . getCurrency() }}
@@ -253,20 +295,43 @@
                                                                     County, Store Postcode.</span></label>
                                                         </div>
                                                     </li> --}}
-                                                    <li>
-                                                        <div class="radio-option">
-                                                            <input type="radio" value="cash" name="payment_method"
-                                                                id="payment-1" required>
-                                                            <label for="payment-1">{{ __('Cash On Delivery') }}</label>
-                                                        </div>
-                                                    </li>
-                                                    <li>
-                                                        <div class="radio-option">
-                                                            <input type="radio" value="card" name="payment_method"
-                                                                id="payment-2" required>
-                                                            <label for="payment-2">{{ __('Visa and MasterCard') }}</label>
-                                                        </div>
-                                                    </li>
+
+                                                    @if (setting('cash_on_delivery'))
+                                                        <li>
+                                                            <div class="radio-option">
+                                                                <input type="radio" value="cash"
+                                                                    name="payment_method" id="payment-1" required>
+                                                                <label
+                                                                    for="payment-1">{{ __('Cash On Delivery') }}</label>
+                                                            </div>
+                                                        </li>
+                                                    @endif
+
+
+                                                    @if (setting('paymob'))
+                                                        <li>
+                                                            <div class="radio-option">
+                                                                <input type="radio" value="paymob"
+                                                                    name="payment_method" id="payment-2" required>
+                                                                <label
+                                                                    for="payment-2">{{ __('Visa and MasterCard') . ' via paymob' }}</label>
+                                                            </div>
+                                                        </li>
+                                                    @endif
+
+                                                    @if (setting('upayment'))
+                                                        <li>
+                                                            <div class="radio-option">
+                                                                <input type="radio" value="upayment"
+                                                                    name="payment_method" id="payment-2" required>
+                                                                <label
+                                                                    for="payment-2">{{ __('Visa and MasterCard') . ' via upayment' }}</label>
+                                                            </div>
+                                                        </li>
+                                                    @endif
+
+
+
                                                     {{-- <li>
                                                         <div class="radio-option paypal">
                                                             <input type="radio" name="payment-group" id="payment-3">

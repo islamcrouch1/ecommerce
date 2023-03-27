@@ -75,6 +75,18 @@
             .breadcrumb-item+.breadcrumb-item::before {
                 float: right;
             }
+
+            .flash-news {
+                direction: rtl !important;
+            }
+
+            .main-menu .menu-right .icon-nav .onhover-div .show-div.shopping-cart li .total h5 span {
+                float: left;
+            }
+
+            .main-menu .menu-right .icon-nav .onhover-div .show-div.shopping-cart li .total h5 {
+                text-align: right;
+            }
         </style>
     @endif
 
@@ -98,6 +110,47 @@
         .product-wrap .cart-wrap.cart-wrap i {
             color: {{ websiteSettingAr('primary_color') }} !important;
 
+        }
+
+        .header-logo {
+            width: 179px;
+        }
+
+        .icon-item {
+            padding: 5px;
+        }
+
+        .fa-shopping-cart {
+            font-size: 17px !important;
+        }
+
+        .btn-solid {
+            margin-top: 2px;
+            padding: 7px 15px !important;
+        }
+
+        .product-right .color-variant li.active {
+            border: 1px solid {{ websiteSettingAr('primary_color') }};
+        }
+
+        .coupon-link {
+            color: {{ websiteSettingAr('primary_color') }};
+        }
+
+        .coupon-text {
+            color: {{ websiteSettingAr('primary_color') }};
+
+        }
+
+        .coupon-text-green {
+            color: rgb(26, 106, 26) !important;
+        }
+
+        @media screen and (max-width: 600px) {
+            .header-logo {
+                width: 100px;
+                height: 90px !important;
+            }
         }
     </style>
 

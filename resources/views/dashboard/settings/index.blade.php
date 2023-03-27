@@ -58,6 +58,9 @@
                                 <li class="nav-item"><a class="nav-link " id="affiliate-tab" data-bs-toggle="tab"
                                         href="#tab-affiliate" role="tab" aria-controls="tab-affiliate"
                                         aria-selected="true">{{ __('affiliate') }}</a></li>
+                                <li class="nav-item"><a class="nav-link " id="payment-tab" data-bs-toggle="tab"
+                                        href="#tab-payment" role="tab" aria-controls="tab-payment"
+                                        aria-selected="true">{{ __('payment methods') }}</a></li>
 
                             </ul>
 
@@ -697,6 +700,83 @@
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
+
+                                </div>
+
+                                <div class="tab-pane fade show " id="tab-payment" role="tabpanel"
+                                    aria-labelledby="general-tab">
+
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="cash_on_delivery">{{ __('cash on delivery') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="cash_on_delivery"
+                                                    class="form-control @error('cash_on_delivery') is-invalid @enderror"
+                                                    name="cash_on_delivery" type="checkbox"
+                                                    {{ setting('cash_on_delivery') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('cash_on_delivery')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="paymob">{{ __('paymob') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="paymob"
+                                                    class="form-control @error('paymob') is-invalid @enderror"
+                                                    name="paymob" type="checkbox"
+                                                    {{ setting('paymob') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('paymob')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="upayment">{{ __('upayment') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="upayment"
+                                                    class="form-control @error('upayment') is-invalid @enderror"
+                                                    name="upayment" type="checkbox"
+                                                    {{ setting('upayment') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('upayment')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+
+                                    {{-- <div class="mb-3">
+                                        <label class="form-label"
+                                            for="compression_ratio">{{ __('Image Compression Ratio') }}</label>
+                                        <input name="compression_ratio"
+                                            class="form-control @error('compression_ratio') is-invalid @enderror"
+                                            value="{{ setting('compression_ratio') }}" type="number" autocomplete="on"
+                                            id="compression_ratio" />
+                                        @error('compression_ratio')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div> --}}
+
+
+
+
+
+
 
                                 </div>
                             </div>

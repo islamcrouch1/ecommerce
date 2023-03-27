@@ -12,6 +12,7 @@ use App\Models\Entry;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductCombination;
+use App\Models\RunningOrder;
 use App\Models\Stock;
 use App\Models\Tax;
 use App\Models\User;
@@ -20,6 +21,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use PhpParser\Node\Stmt\TryCatch;
 
 class SalesController extends Controller
 {
@@ -108,6 +110,7 @@ class SalesController extends Controller
             'tax' => "nullable|array",
             'qty' => "nullable|array",
             'price' => "nullable|array",
+            'prods' => "required|array",
         ]);
 
 
@@ -414,86 +417,85 @@ class SalesController extends Controller
 
         foreach ($request->qty as $index => $q) {
 
-            $product = Product::findOrFail($request->prods[$index]);
-            $combination = ProductCombination::find($request->combinations[$index]);
+            try {
 
+                $product = Product::findOrFail($request->prods[$index]);
+                //we will not use combination if product type is service or digital
+                $combination = ProductCombination::find($request->combinations[$index]);
 
-            $product_price = ($q * $request->price[$index]);
-            $vat_amount_product =  calcTax($product_price, 'vat');
-            $product_price_with_vat = $product_price + $vat_amount_product;
-            $vat_amount += $vat_amount_product;
-            $subtotal += $product_price;
+                $product_price = ($q * $request->price[$index]);
+                $vat_amount_product =  calcTax($product_price, 'vat');
+                $product_price_with_vat = $product_price + $vat_amount_product;
+                $vat_amount += $vat_amount_product;
+                $subtotal += $product_price;
 
-            if ($product->product_type == 'variable' || $product->product_type == 'simple') {
-                $wht_amount_product = calcTax(($product_price_with_vat), 'wht_products');
-                $wht_products_amount += $wht_amount_product;
-            } else {
-                $wht_amount_product = calcTax(($product_price_with_vat), 'wht_services');
-                $wht_services_amount += $wht_amount_product;
-            }
-
-
-
-            // get cost of goods sold and update ot in simple and variable products
-            $cost = getProductCost($product, $combination, $branch_id, $ref_order, $request->qty[$index], $returned);
-
-
-            $order->products()->attach(
-                $product->id,
-                [
-                    'warehouse_id' => ($product->product_type == 'simple' || $product->product_type == 'variable') ? $request->warehouse_id : null,
-                    'product_combination_id' => ($product->product_type == 'simple' || $product->product_type == 'variable') ? $request->combinations[$index] : null,
-                    'product_price' => $request->price[$index],
-                    'product_tax' => (isset($request->tax) && in_array('vat', $request->tax)) ? $vat_amount_product : 0,
-                    'product_wht' => (isset($request->tax) && in_array('wht', $request->tax) && $sub > setting('wht_invoice_amount')) ? $wht_amount_product : 0,
-                    'qty' => $request->qty[$index],
-                    'total' => $request->price[$index] * $request->qty[$index],
-                    'product_type' => $product->product_type,
-                    'cost' => $cost,
-                ]
-            );
-
-            $order->update([
-                'total_price' => $subtotal + $vat_amount,
-                'subtotal_price' => $subtotal,
-                'total_tax' => $vat_amount,
-                'total_wht_products' => $wht_products_amount,
-                'total_wht_services' => $wht_services_amount,
-            ]);
-
-
-            // add stock update and antries
-            if ($product->product_type == 'variable' || $product->product_type == 'simple') {
-
-                Stock::create([
-                    'product_combination_id' => $request->combinations[$index],
-                    'product_id' => $product->id,
-                    'warehouse_id' => $request->warehouse_id,
-                    'qty' => $request->qty[$index],
-                    'stock_status' => $returned == true ? 'IN' : 'OUT',
-                    'stock_type' => 'Sale',
-                    'reference_id' => $order->id,
-                    'reference_price' => $request->price[$index],
-                    'created_by' => Auth::id(),
-                ]);
-
-                // add noty for stock limit
-                if (productQuantity($product->id, $request->combinations[$index], $request->warehouse_id) <= $combination->limit) {
-                    array_push($stocks_limit_products, $product);
+                if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+                    $wht_amount_product = calcTax(($product_price_with_vat), 'wht_products');
+                    $wht_products_amount += $wht_amount_product;
+                } else {
+                    $wht_amount_product = calcTax(($product_price_with_vat), 'wht_services');
+                    $wht_services_amount += $wht_amount_product;
                 }
 
-                $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
-                $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
+                // get cost of goods sold and update ot in simple and variable products
+                $cost = getProductCost($product, $combination, $branch_id, $ref_order, $request->qty[$index], $returned);
 
-                createEntry($product_account, 'sales', $returned == true ? ($cost * $request->qty[$index]) :  0, $returned == true ? 0 : ($cost * $request->qty[$index]), $branch_id, $order);
-                createEntry($cs_product_account, 'sales', $returned == true ? 0 : ($cost * $request->qty[$index]), $returned == true ? ($cost * $request->qty[$index]) : 0, $branch_id, $order);
+                $order->products()->attach(
+                    $product->id,
+                    [
+                        'warehouse_id' => ($product->product_type == 'simple' || $product->product_type == 'variable') ? $request->warehouse_id : null,
+                        'product_combination_id' => ($product->product_type == 'simple' || $product->product_type == 'variable') ? $request->combinations[$index] : null,
+                        'product_price' => $request->price[$index],
+                        'product_tax' => (isset($request->tax) && in_array('vat', $request->tax)) ? $vat_amount_product : 0,
+                        'product_wht' => (isset($request->tax) && in_array('wht', $request->tax) && $sub > setting('wht_invoice_amount')) ? $wht_amount_product : 0,
+                        'qty' => $request->qty[$index],
+                        'total' => $request->price[$index] * $request->qty[$index],
+                        'product_type' => $product->product_type,
+                        'cost' => $cost,
+                    ]
+                );
 
-                $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
-            } else {
-                $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
+                $order->update([
+                    'total_price' => $subtotal + $vat_amount,
+                    'subtotal_price' => $subtotal,
+                    'total_tax' => $vat_amount,
+                    'total_wht_products' => $wht_products_amount,
+                    'total_wht_services' => $wht_services_amount,
+                ]);
+
+
+                // add stock update and antries
+                if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+
+                    if ($returned == true) {
+                        // calculate product cost in sales return
+                        updateCost($combination, $cost, $request->qty[$index], 'add', $branch_id);
+                    }
+
+
+                    // add stock and running order
+                    stockCreate($combination, $request->warehouse_id, $request->qty[$index], 'Sale', $returned == true ? 'IN' : 'OUT', $order->id, $user->id, $request->price[$index]);
+
+
+                    // add noty for stock limit
+                    if (productQuantity($product->id, $request->combinations[$index], $request->warehouse_id) <= $combination->limit) {
+                        array_push($stocks_limit_products, $product);
+                    }
+
+                    $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
+                    $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
+
+                    createEntry($product_account, $returned == true ? 'sales_return' : 'sales', $returned == true ? ($cost * $request->qty[$index]) :  0, $returned == true ? 0 : ($cost * $request->qty[$index]), $branch_id, $order);
+                    createEntry($cs_product_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($cost * $request->qty[$index]), $returned == true ? ($cost * $request->qty[$index]) : 0, $branch_id, $order);
+
+                    $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
+                } else {
+                    $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
+                }
+
+                createEntry($revenue_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? ($request->price[$index] * $request->qty[$index]) : 0, $returned == true ? 0 : ($request->price[$index] * $request->qty[$index]), $branch_id, $order);
+            } catch (Exception $e) {
             }
-
-            createEntry($revenue_account, 'sales', $returned == true ? ($request->price[$index] * $request->qty[$index]) : 0, $returned == true ? 0 : ($request->price[$index] * $request->qty[$index]), $branch_id, $order);
         }
 
 
@@ -526,17 +528,17 @@ class SalesController extends Controller
         }
 
         $customer_account = getItemAccount($request->user_id, null, 'customers_account', $branch_id);
-        createEntry($customer_account, 'sales', $returned == true ? 0 : ($order->total_price - $wht_amount), $returned == true ? ($order->total_price - $wht_amount) : 0, $branch_id, $order);
+        createEntry($customer_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($order->total_price - $wht_amount), $returned == true ? ($order->total_price - $wht_amount) : 0, $branch_id, $order);
 
 
         if ($wht_amount > 0) {
             $wst_account = Account::findOrFail(settingAccount('wst_account', $branch_id));
-            createEntry($wst_account, 'sales', $returned == true ? 0 : $wht_amount, $returned == true ? $wht_amount : 0, $branch_id, $order);
+            createEntry($wst_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : $wht_amount, $returned == true ? $wht_amount : 0, $branch_id, $order);
         }
 
         if ($vat_amount > 0) {
             $vat_account = Account::findOrFail(settingAccount('vat_sales_account', $branch_id));
-            createEntry($vat_account, 'sales', $returned == true ? $vat_amount : 0, $returned == true ? 0 : $vat_amount, $branch_id, $order);
+            createEntry($vat_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? $vat_amount : 0, $returned == true ? 0 : $vat_amount, $branch_id, $order);
         }
 
 
@@ -589,7 +591,7 @@ class SalesController extends Controller
             if ($request->status == 'returned') {
                 if ($order->payment_status != 'pending') {
                     alertError('The status of the order cannot be changed', 'لا يمكن تغيير حالة الطلب');
-                    return redirect()->route('purchases.index');
+                    return redirect()->route('sales.index');
                 }
             }
 
@@ -611,14 +613,11 @@ class SalesController extends Controller
             $order = Order::findOrFail($order);
             if (!checkPurchaseOrderStatus($request->selected_status, $order->status)) {
                 alertError('The status of some orders cannot be changed', 'لا يمكن تغيير حالة بعض الطلبات');
-            } elseif ($request->status == 'returned' && $order->paynemt_status != 'pending') {
-                alertError('The status of the order cannot be changed', 'لا يمكن تغيير حالة الطلب');
-                return redirect()->route('sales.index');
             } else {
 
                 if ($request->status == 'returned') {
                     if ($order->payment_status != 'pending') {
-                        alertError('The status of the order cannot be changed', 'لا يمكن تغيير حالة الطلب');
+                        alertError('The status of some orders cannot be changed', 'لا يمكن تغيير حالة بعض الطلبات');
                     } else {
                         $this->changeStatus($order, $request->selected_status);
                         alertSuccess('Order status updated successfully', 'تم تحديث حالة طلب المشتريات بنجاح');
@@ -652,10 +651,8 @@ class SalesController extends Controller
 
                     $combination = ProductCombination::findOrFail($product->pivot->product_combination_id);
 
-
                     // calculate product cost in sales return
                     updateCost($combination, $product->pivot->cost, $product->pivot->qty, 'add', $order->branch_id);
-
 
                     Stock::create([
                         'product_combination_id' => $product->pivot->product_combination_id,
@@ -673,30 +670,9 @@ class SalesController extends Controller
                     $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $order->branch_id);
                     $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $order->branch_id);
 
-                    Entry::create([
-                        'account_id' => $product_account->id,
-                        'type' => 'sales',
-                        'dr_amount' => ($product->pivot->cost * $product->pivot->qty),
-                        'cr_amount' => 0,
-                        'description' => 'sales order# ' . $order->id,
-                        'branch_id' => $order->branch_id,
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::check() ? Auth::id() : null,
-                    ]);
-
-
-                    Entry::create([
-                        'account_id' => $cs_product_account->id,
-                        'type' => 'sales',
-                        'dr_amount' => 0,
-                        'cr_amount' => ($product->pivot->cost * $product->pivot->qty),
-                        'description' => 'sales order# ' . $order->id,
-                        'branch_id' => $order->branch_id,
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::check() ? Auth::id() : null,
-                    ]);
+                    createEntry($product_account, 'sales_return', ($product->pivot->cost * $product->pivot->qty),  0, $order->branch_id, $order);
+                    createEntry($cs_product_account, 'sales_return', 0, ($product->pivot->cost * $product->pivot->qty), $order->branch_id, $order);
                 }
-
 
                 if ($product->product_type == 'variable' || $product->product_type == 'simple') {
                     $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $order->branch_id);
@@ -704,17 +680,7 @@ class SalesController extends Controller
                     $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $order->branch_id);
                 }
 
-
-                Entry::create([
-                    'account_id' => $revenue_account->id,
-                    'type' => 'sales',
-                    'dr_amount' =>  $product->pivot->total,
-                    'cr_amount' =>  0,
-                    'description' => 'sales order# ' . $order->id,
-                    'branch_id' => $order->branch_id,
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::id(),
-                ]);
+                createEntry($revenue_account, 'sales_return', $product->pivot->total, 0, $order->branch_id, $order);
             }
 
 
@@ -742,47 +708,17 @@ class SalesController extends Controller
 
             $customer_account = getItemAccount($order->customer_id, null, 'customers_account', $order->branch_id);
 
-            Entry::create([
-                'account_id' => $customer_account->id,
-                'type' => 'sales',
-                'dr_amount' => 0,
-                'cr_amount' =>  $order->total_price - $wht_amount,
-                'description' => 'sales order# ' . $order->id,
-                'branch_id' => $order->branch_id,
-                'reference_id' => $order->id,
-                'created_by' => Auth::id(),
-            ]);
-
+            createEntry($customer_account, 'sales_return', 0, $order->total_price - $wht_amount, $order->branch_id, $order);
 
             if ($wht_amount > 0) {
-
                 $wst_account = Account::findOrFail(settingAccount('wst_account', $order->branch_id));
-                Entry::create([
-                    'account_id' => $wst_account->id,
-                    'type' => 'sales',
-                    'dr_amount' => 0,
-                    'cr_amount' =>  $wht_amount,
-                    'description' => 'sales order# ' . $order->id,
-                    'branch_id' => $order->branch_id,
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::id(),
-                ]);
+                createEntry($wst_account, 'sales_return', 0, $wht_amount, $order->branch_id, $order);
             }
 
 
             if ($vat_amount > 0) {
-
                 $vat_account = Account::findOrFail(settingAccount('vat_sales_account', $order->branch_id));
-                Entry::create([
-                    'account_id' => $vat_account->id,
-                    'type' => 'sales',
-                    'dr_amount' => $vat_amount,
-                    'cr_amount' =>  0,
-                    'description' => 'sales order# ' . $order->id,
-                    'branch_id' => $order->branch_id,
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::id(),
-                ]);
+                createEntry($vat_account, 'sales_return', $vat_amount, 0, $order->branch_id, $order);
             }
         }
     }

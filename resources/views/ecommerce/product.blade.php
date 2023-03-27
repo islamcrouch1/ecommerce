@@ -149,20 +149,42 @@
                                                     </div>
                                                     <div class="col-md-10">
                                                         <div class="size-box attribute-box-{{ $attribute->id }}">
-                                                            <ul>
-                                                                @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
-                                                                    <li class="attribute-select"
-                                                                        data-attribute-id="{{ $attribute->id }}"
-                                                                        data-variation-id="{{ $variation->variation->id }}"
-                                                                        data-product-id="{{ $product->id }}"
-                                                                        data-url="{{ route('ecommerce.product.price') }}"
-                                                                        data-locale="{{ app()->getLocale() }}"
-                                                                        data-currency="{{ $product->country->currency }}">
-                                                                        <a
-                                                                            href="javascript:void(0)">{{ app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en }}</a>
-                                                                    </li>
-                                                                @endforeach
-                                                            </ul>
+                                                            @if ($attribute->type == 'select')
+                                                                <select>
+
+                                                                    <option value="">
+                                                                        {{ __('Select') . ' ' . getName($attribute) }}
+                                                                    </option>
+                                                                    @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
+                                                                        <option class="attribute-select"
+                                                                            data-attribute-id="{{ $attribute->id }}"
+                                                                            data-variation-id="{{ $variation->variation->id }}"
+                                                                            data-product-id="{{ $product->id }}"
+                                                                            data-url="{{ route('ecommerce.product.price') }}"
+                                                                            data-locale="{{ app()->getLocale() }}"
+                                                                            data-currency="{{ $product->country->currency }}">
+                                                                            {{ app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en }}
+                                                                        </option>
+                                                                    @endforeach
+
+
+                                                                </select>
+                                                            @else
+                                                                <ul>
+                                                                    @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
+                                                                        <li class="attribute-select"
+                                                                            data-attribute-id="{{ $attribute->id }}"
+                                                                            data-variation-id="{{ $variation->variation->id }}"
+                                                                            data-product-id="{{ $product->id }}"
+                                                                            data-url="{{ route('ecommerce.product.price') }}"
+                                                                            data-locale="{{ app()->getLocale() }}"
+                                                                            data-currency="{{ $product->country->currency }}">
+                                                                            <a
+                                                                                href="javascript:void(0)">{{ app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en }}</a>
+                                                                        </li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </div>
@@ -225,8 +247,8 @@
 
                             <div class="product-buttons"><a href="javascript:void(0)" id="cartEffect"
                                     class="btn btn-solid hover-solid btn-animation add-to-cart"
-                                    data-url="{{ route('ecommerce.cart.store') }}" data-locale="{{ app()->getLocale() }}"
-                                    data-product_id="{{ $product->id }}"
+                                    data-url="{{ route('ecommerce.cart.store') }}"
+                                    data-locale="{{ app()->getLocale() }}" data-product_id="{{ $product->id }}"
                                     data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}">
 
                                     <div style="display: none; color: #ffffff; margin: 3px; padding: 6px;"
@@ -266,8 +288,8 @@
                             <div class="col-6 mt-4">
                                 <div style="display:none !important"
                                     class="alert alert-danger border-2 align-items-center alarm" role="alert">
-                                    <div class="bg-danger me-3 icon-item"><span
-                                            class="fas fa-times-circle text-white fs-3"></span>
+                                    <div class="bg-danger me-3 icon-item"><i
+                                            class="fa fa-exclamation-circle text-white fs-3"></i>
                                     </div>
                                     <p class="mb-0 flex-1 alarm-text"></p>
                                 </div>
@@ -503,13 +525,13 @@
                                         <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
                                         </h6>
                                     </a>
-                                    <p>
+                                    {{-- <p>
                                         @if (app()->getLocale() == 'ar')
                                             {!! $product->description_ar !!}
                                         @else
                                             {!! $product->description_en !!}
                                         @endif
-                                    </p>
+                                    </p> --}}
                                     <h4>{!! getProductPrice($product) !!}</h4>
 
                                     @if ($product->product_type != 'variable')
@@ -627,20 +649,42 @@
                                                         </div>
                                                         <div class="col-md-9">
                                                             <div class="size-box attribute-box-{{ $attribute->id }}">
-                                                                <ul>
-                                                                    @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
-                                                                        <li class="attribute-select"
-                                                                            data-attribute-id="{{ $attribute->id }}"
-                                                                            data-variation-id="{{ $variation->variation->id }}"
-                                                                            data-product-id="{{ $product->id }}"
-                                                                            data-url="{{ route('ecommerce.product.price') }}"
-                                                                            data-locale="{{ app()->getLocale() }}"
-                                                                            data-currency="{{ $product->country->currency }}">
-                                                                            <a
-                                                                                href="javascript:void(0)">{{ app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en }}</a>
-                                                                        </li>
-                                                                    @endforeach
-                                                                </ul>
+                                                                @if ($attribute->type == 'select')
+                                                                    <select>
+
+                                                                        <option value="">
+                                                                            {{ __('Select') . ' ' . getName($attribute) }}
+                                                                        </option>
+                                                                        @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
+                                                                            <option class="attribute-select"
+                                                                                data-attribute-id="{{ $attribute->id }}"
+                                                                                data-variation-id="{{ $variation->variation->id }}"
+                                                                                data-product-id="{{ $product->id }}"
+                                                                                data-url="{{ route('ecommerce.product.price') }}"
+                                                                                data-locale="{{ app()->getLocale() }}"
+                                                                                data-currency="{{ $product->country->currency }}">
+                                                                                {{ app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en }}
+                                                                            </option>
+                                                                        @endforeach
+
+
+                                                                    </select>
+                                                                @else
+                                                                    <ul>
+                                                                        @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
+                                                                            <li class="attribute-select"
+                                                                                data-attribute-id="{{ $attribute->id }}"
+                                                                                data-variation-id="{{ $variation->variation->id }}"
+                                                                                data-product-id="{{ $product->id }}"
+                                                                                data-url="{{ route('ecommerce.product.price') }}"
+                                                                                data-locale="{{ app()->getLocale() }}"
+                                                                                data-currency="{{ $product->country->currency }}">
+                                                                                <a
+                                                                                    href="javascript:void(0)">{{ app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en }}</a>
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     </div>
@@ -714,8 +758,8 @@
                                     <div class="col-6 mt-4">
                                         <div style="display:none !important"
                                             class="alert alert-danger border-2 align-items-center alarm" role="alert">
-                                            <div class="bg-danger me-3 icon-item"><span
-                                                    class="fas fa-times-circle text-white fs-3"></span>
+                                            <div class="bg-danger me-3 icon-item"><i
+                                                    class="fa fa-exclamation-circle text-white fs-3"></i>
                                             </div>
                                             <p class="mb-0 flex-1 alarm-text"></p>
                                         </div>

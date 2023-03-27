@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Ecommerce;
 
+use App\Http\Classes\PaymentService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Classes\PayMob;
@@ -9,77 +10,109 @@ use App\Models\Account;
 use App\Models\Category;
 use App\Models\Entry;
 use App\Models\Order;
+use App\Models\ProductCombination;
 use App\Models\Stock;
 use App\Models\Tax;
+use App\Models\Warehouse;
 use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
 
 
+    public function orderFailed(Request $request)
+    {
+        $order = Order::findOrFail($request->OrderID);
+        $this->failed($order);
+        alertError('error in payment processing pleasetry again later', 'حدث خطا اثناء عملية الدفع يرجى المحاولة لاحقا');
+        return redirect()->route('ecommerce.home');
+    }
 
 
     public function paymentSuccess(Request $request)
     {
 
-        if (!isset($request->order) || $request->order == null) {
+        if (!isset($request->order) || $request->order == null || !isset($request->OrderID)) {
             return redirect()->route('ecommerce.home');
         }
 
-        $isSuccess  = $request->success;
-        $isVoided  = $request->is_voided;
-        $isRefunded  = $request->is_refunded;
-
-        $amount_cents = $request->amount_cents;
-        $created_at = $request->created_at;
-        $currency = $request->currency;
-        $error_occured = $request->error_occured;
-        $has_parent_transaction = $request->has_parent_transaction;
-        $id = $request->id;
-        $integration_id = $request->integration_id;
-        $is_3d_secure = $request->is_3d_secure;
-        $is_auth = $request->is_auth;
-        $is_capture = $request->is_capture;
-        $is_refunded = $request->is_refunded;
-        $is_standalone_payment = $request->is_standalone_payment;
-        $is_voided = $request->is_voided;
-        $order = $request->order;
-        $owner = $request->owner;
-        $pending = $request->pending;
-        $source_data_pan = $request->source_data_pan;
-        $source_data_sub_type = $request->source_data_sub_type;
-        $source_data_type = $request->source_data_type;
-        $success = $request->success;
-
-        $string = $amount_cents . $created_at . $currency . $error_occured . $has_parent_transaction . $id . $integration_id . $is_3d_secure . $is_auth . $is_capture . $is_refunded . $is_standalone_payment . $is_voided . $order . $owner . $pending . $source_data_pan . $source_data_sub_type . $source_data_type . $success;
-
-        $hmac = $request->hmac;
-
-        $hashed = hash_hmac('SHA512', $string, '6241DBBDF619E22A4F21A91ED9055302');
-
-        if ($hmac != $hashed) {
-            $this->failed($order);
+        if (isset($request->order) && $request->order != null) {
+            $order = Order::where('orderId', $request->order)->first();
         }
 
-        $order = Order::where('orderId', $request->order)->first();
-
-        if (Auth::check() && $order->customer_id != Auth::id()) {
-            return redirect()->route('ecommerce.home');
-        } elseif (!Auth::check() && $order->session_id != $request->session()->token()) {
-            return redirect()->route('ecommerce.home');
+        if (isset($request->OrderID) && $request->OrderID != null) {
+            $order = Order::findOrFail($request->OrderID);
         }
 
-        $order->update([
-            'transaction_id' => $id
-        ]);
+        if ($order->payment_method == 'paymob') {
 
-        if ($isSuccess == 'true' && $isVoided == 'false' && $isRefunded == 'false') {
-            $this->succeeded($order);
-            return redirect()->route('ecommerce.order.success', ['order' => $order->id]);
-        } else {
-            $this->failed($order);
-            alertError('error in payment processing pleasetry again later', 'حدث خطا اثناء عملية الدفع يرجى المحاولة لاحقا');
-            return redirect()->route('ecommerce.home');
+            $isSuccess  = $request->success;
+            $isVoided  = $request->is_voided;
+            $isRefunded  = $request->is_refunded;
+
+            $amount_cents = $request->amount_cents;
+            $created_at = $request->created_at;
+            $currency = $request->currency;
+            $error_occured = $request->error_occured;
+            $has_parent_transaction = $request->has_parent_transaction;
+            $id = $request->id;
+            $integration_id = $request->integration_id;
+            $is_3d_secure = $request->is_3d_secure;
+            $is_auth = $request->is_auth;
+            $is_capture = $request->is_capture;
+            $is_refunded = $request->is_refunded;
+            $is_standalone_payment = $request->is_standalone_payment;
+            $is_voided = $request->is_voided;
+            $order = $request->order;
+            $owner = $request->owner;
+            $pending = $request->pending;
+            $source_data_pan = $request->source_data_pan;
+            $source_data_sub_type = $request->source_data_sub_type;
+            $source_data_type = $request->source_data_type;
+            $success = $request->success;
+
+            $string = $amount_cents . $created_at . $currency . $error_occured . $has_parent_transaction . $id . $integration_id . $is_3d_secure . $is_auth . $is_capture . $is_refunded . $is_standalone_payment . $is_voided . $order . $owner . $pending . $source_data_pan . $source_data_sub_type . $source_data_type . $success;
+
+            $hmac = $request->hmac;
+
+            $hashed = hash_hmac('SHA512', $string, '6241DBBDF619E22A4F21A91ED9055302');
+
+            if ($hmac != $hashed) {
+                $this->failed($order);
+            }
+
+            $order = Order::where('orderId', $request->order)->first();
+
+            if (Auth::check() && $order->customer_id != Auth::id()) {
+                return redirect()->route('ecommerce.home');
+            } elseif (!Auth::check() && $order->session_id != $request->session()->token()) {
+                return redirect()->route('ecommerce.home');
+            }
+
+            $order->update([
+                'transaction_id' => $id
+            ]);
+
+            if ($isSuccess == 'true' && $isVoided == 'false' && $isRefunded == 'false') {
+                $this->succeeded($order);
+                return redirect()->route('ecommerce.order.success', ['order' => $order->id]);
+            } else {
+                $this->failed($order);
+                alertError('error in payment processing pleasetry again later', 'حدث خطا اثناء عملية الدفع يرجى المحاولة لاحقا');
+                return redirect()->route('ecommerce.home');
+            }
+        }
+
+
+        if ($order->payment_method == 'upayment') {
+            if ($request->Result == 'CAPTURED') {
+                $this->succeeded($order);
+                return redirect()->route('ecommerce.order.success', ['order' => $order->id]);
+            } else {
+                $this->failed($order);
+                alertError('error in payment processing pleasetry again later', 'حدث خطا اثناء عملية الدفع يرجى المحاولة لاحقا');
+                return redirect()->route('ecommerce.home');
+            }
         }
     }
 
@@ -95,65 +128,99 @@ class PaymentController extends Controller
             return redirect()->route('ecommerce.home');
         }
 
-        $payment = new PayMob();
+        if ($order->payment_method == 'paymob') {
 
-        $auth = $payment->authPaymob(); // login PayMob servers
+            $payment = new PayMob();
 
-        if (property_exists($auth, 'detail')) { // login to PayMob attempt failed.
-            # code... redirect to previous page with a message.
-        }
+            $auth = $payment->authPaymob(); // login PayMob servers
 
-        $paymobOrder = $payment->makeOrderPaymob( // make order on PayMob
-            $auth->token,
-            $auth->profile->id,
-            $order->total_price * 100,
-            $order->id
-        );
-
-        // Duplicate order id
-        // PayMob saves your order id as a unique id as well as their id as a primary key, thus your order id must not
-        // duplicate in their database.
-        if (isset($paymobOrder->message)) {
-            if ($paymobOrder->message == 'duplicate' && $order->orderId == null) {
-                # code... your order id is duplicate on PayMob database.
-                $this->failed($order);
-                alertError('error in payment processing pleasetry again later', 'حدث خطا اثناء عملية الدفع يرجى المحاولة لاحقا');
-                return redirect()->route('ecommerce.home');
-            } else {
-                $paymobOrder = $payment->getOrder($auth->token, $order->orderId);
+            if (property_exists($auth, 'detail')) { // login to PayMob attempt failed.
+                # code... redirect to previous page with a message.
             }
-        } else {
-            $order->update([
-                'orderId' => $paymobOrder->id
-            ]); // save paymob order id for later usage.
+
+            $paymobOrder = $payment->makeOrderPaymob( // make order on PayMob
+                $auth->token,
+                $auth->profile->id,
+                $order->total_price * 100,
+                $order->id
+            );
+
+            // Duplicate order id
+            // PayMob saves your order id as a unique id as well as their id as a primary key, thus your order id must not
+            // duplicate in their database.
+            if (isset($paymobOrder->message)) {
+                if ($paymobOrder->message == 'duplicate' && $order->orderId == null) {
+                    # code... your order id is duplicate on PayMob database.
+                    $this->failed($order);
+                    alertError('error in payment processing pleasetry again later', 'حدث خطا اثناء عملية الدفع يرجى المحاولة لاحقا');
+                    return redirect()->route('ecommerce.home');
+                } else {
+                    $paymobOrder = $payment->getOrder($auth->token, $order->orderId);
+                }
+            } else {
+                $order->update([
+                    'orderId' => $paymobOrder->id
+                ]); // save paymob order id for later usage.
+            }
+
+
+            if (Auth::check()) {
+                $user_name = Auth::user()->name;
+                $user_phone = Auth::user()->phone;
+            } else {
+                $user_name = 'guast';
+                $user_phone = 'guast';
+            }
+
+            $payment_key = $payment->getPaymentKeyPaymob( // get payment key
+                $auth->token,
+                $order->total_price * 100,
+                $paymobOrder->id,
+                // For billing data
+                // $user->email, // optional
+                $user_name, // optional
+                // $user->lastname, // optional
+                $user_phone, // optional
+                // $city->name, // optional
+                // $country->name // optional
+            );
+
+            $key = $payment_key->token;
+            $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
+
+            return view('ecommerce.pay', compact('key', 'categories'));
         }
 
 
-        if (Auth::check()) {
-            $user_name = Auth::user()->name;
-            $user_phone = Auth::user()->phone;
-        } else {
-            $user_name = 'guast';
-            $user_phone = 'guast';
+        if ($order->payment_method == 'upayment') {
+
+            $payment = new PaymentService();
+
+
+
+            $array['CstFName']                    = $order->full_name;
+            $array['CstEmail']                    = 'user@admin.com';
+            $array['CstMobile']                   = $order->phone;
+            $array['payment_gateway']             = 'knet'; // cc || knet
+            $array['total_price']                 = $order->total_price;
+            $array['order_id']                    = $order->id;
+            $array['products']['ProductName']     = 'Payment for website products - ' .  'order number - ' . $order->id;
+            $array['products']['ProductQty']      = '1';
+            $array['products']['ProductPrice']    = $order->total_price;
+            // $array['CurrencyCode']                = $order->country->currency;
+            $array['CurrencyCode']                = 'KWD';
+            $payment->setSuccessUrl(route('ecommerce.order.success'))->setErrorUrl(route('ecommerce.order.failed'));
+            $result = $payment->pay($array);
+            // dd($result);
+            if ($result['status'] == "success") {
+
+                return redirect(url($result['paymentURL']));
+                // $paymentURL = $result['paymentURL'];
+                // return redirect()->$paymentURL ;
+            } else {
+                return redirect()->route('ecommerce.order.failed', ['orderID' => $order->id]);
+            }
         }
-
-        $payment_key = $payment->getPaymentKeyPaymob( // get payment key
-            $auth->token,
-            $order->total_price * 100,
-            $paymobOrder->id,
-            // For billing data
-            // $user->email, // optional
-            $user_name, // optional
-            // $user->lastname, // optional
-            $user_phone, // optional
-            // $city->name, // optional
-            // $country->name // optional
-        );
-
-        $key = $payment_key->token;
-        $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
-
-        return view('ecommerce.pay', compact('key', 'categories'));
     }
 
     protected function payAPI($order, $payment, $key)
@@ -201,35 +268,48 @@ class PaymentController extends Controller
     protected function succeeded($order)
     {
 
-        if (Auth::check()) {
-            $customer_account = Account::where('reference_id', Auth::id())->where('type', 'customer')->first();
+        $branch_id = $order->branch_id;
+
+
+        if ($order->customer_id != null) {
+            $customer_account = getItemAccount($order->customer_id, null, 'customers_account', $branch_id);
         } else {
-            $customer_account = Account::findOrFail(setting('customers_account'));
+            $customer_account = getItemAccount(null, null, 'customers_account', $branch_id);
         }
 
         Entry::create([
             'account_id' => $customer_account->id,
             'type' => 'sales',
             'dr_amount' => 0,
-            'cr_amount' =>  $order->subtotal_price,
-            'description' => 'sales order# ' . $order->id,
+            'cr_amount' =>  $order->total_price,
+            'description' => 'return sales order# ' . $order->id,
+            'branch_id' => $branch_id,
             'reference_id' => $order->id,
             'created_by' => Auth::id(),
         ]);
 
-        $card_account = Account::findOrFail(setting('card_account'));
+
+        if ($order->payment_method == 'cash_on_delivery') {
+            $cash_account = Account::findOrFail(settingAccount('cash_account', $branch_id));
+        } elseif ($order->payment_method == 'paymob' || $order->payment_method == 'upayment') {
+            $cash_account = Account::findOrFail(settingAccount('card_account', $branch_id));
+        }
+
+
         Entry::create([
-            'account_id' => $card_account->id,
+            'account_id' => $cash_account->id,
             'type' => 'sales',
-            'dr_amount' => $order->subtotal_price,
+            'dr_amount' => $order->total_price,
             'cr_amount' =>  0,
-            'description' => 'sales order# ' . $order->id,
+            'description' => 'return sales order# ' . $order->id,
             'reference_id' => $order->id,
+            'branch_id' => $branch_id,
             'created_by' => Auth::id(),
         ]);
+
 
         $order->update([
-            'payment_status' => 'Paid',
+            'payment_status' => 'paid',
         ]);
     }
 
@@ -254,99 +334,205 @@ class PaymentController extends Controller
             'status' => 'canceled',
         ]);
 
+
+        foreach ($order->vendor_orders as $vendor_order) {
+            changeOutStandingBalance($vendor_order->user, ($vendor_order->total_price - $vendor_order->total_commission), $vendor_order->id, $status, 'sub');
+        }
+
+        $branch_id = $order->branch_id;
+
+        $vendors_tax_account = Account::findOrFail(settingAccount('vendors_tax_account', $branch_id));
+        $total_vendors_tax_ammount = 0;
+        $total_order_vendors_products = 0;
+
+
+
         foreach ($order->products as $product) {
 
             if ($product->product_type == 'variable' || $product->product_type == 'simple') {
 
+
+                $combination = ProductCombination::findOrFail($product->pivot->product_combination_id);
+
+
+                if ($product->vendor_id == null) {
+
+                    $warehouse_id = $product->pivot->warehouse_id;
+
+                    $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
+                    $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
+
+                    updateCost($combination, $product->pivot->cost, $product->pivot->qty, 'add', $order->branch_id);
+
+
+                    Entry::create([
+                        'account_id' => $product_account->id,
+                        'type' => 'sales',
+                        'dr_amount' => ($product->pivot->cost * $product->pivot->qty),
+                        'cr_amount' => 0,
+                        'description' => 'return sales order# ' . $order->id,
+                        'branch_id' => $branch_id,
+                        'reference_id' => $order->id,
+                        'created_by' => Auth::check() ? Auth::id() : null,
+                    ]);
+
+
+                    Entry::create([
+                        'account_id' => $cs_product_account->id,
+                        'type' => 'sales',
+                        'dr_amount' => 0,
+                        'cr_amount' => ($product->pivot->cost * $product->pivot->qty),
+                        'description' => 'return sales order# ' . $order->id,
+                        'branch_id' => $branch_id,
+                        'reference_id' => $order->id,
+                        'created_by' => Auth::check() ? Auth::id() : null,
+                    ]);
+                }
+
+                if ($product->vendor_id != null) {
+
+                    $warehouse = Warehouse::where('vendor_id', $product->vendor_id)->first();
+                    $warehouse_id = $warehouse->id;
+                    $total_vendors_tax_ammount += $vendor_order->total_tax;
+                    $total_order_vendors_products += $vendor_order->total_price;
+
+                    // add return entry for commission tax account
+
+                    $supplier_account = getItemAccount($product->vendor_id, null, 'suppliers_account', $branch_id);
+
+
+                    Entry::create([
+                        'account_id' => $supplier_account->id,
+                        'type' => 'purchase',
+                        'dr_amount' => $vendor_order->total_price - $vendor_order->total_commission,
+                        'cr_amount' => 0,
+                        'description' => 'return sales order# ' . $order->id,
+                        'branch_id' => $branch_id,
+                        'reference_id' => $order->id,
+                        'created_by' => Auth::check() ? Auth::id() : null,
+                    ]);
+
+                    if ($vendor_order->total_commission > 0) {
+
+                        $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
+
+
+                        Entry::create([
+                            'account_id' => $revenue_account->id,
+                            'type' => 'sales',
+                            'dr_amount' => $vendor_order->total_commission - $vendor_order->total_tax,
+                            'cr_amount' =>  0,
+                            'description' => 'return sales order# ' . $order->id,
+                            'branch_id' => $branch_id,
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::check() ? Auth::id() : null,
+                        ]);
+
+
+                        Entry::create([
+                            'account_id' => $vendors_tax_account->id,
+                            'type' => 'sales',
+                            'dr_amount' => $vendor_order->total_tax,
+                            'cr_amount' =>  0,
+                            'description' => 'return sales order# ' . $order->id,
+                            'branch_id' => $branch_id,
+                            'reference_id' => $order->id,
+                            'created_by' => Auth::check() ? Auth::id() : null,
+                        ]);
+                    }
+                }
+
                 Stock::create([
                     'product_combination_id' => $product->pivot->product_combination_id,
                     'product_id' => $product->id,
-                    'warehouse_id' => setting('warehouse_id'),
+                    'warehouse_id' => $warehouse_id,
                     'qty' => $product->pivot->qty,
                     'stock_status' => 'IN',
                     'stock_type' => 'Order',
                     'reference_id' => $order->id,
-                    'reference_price' => productPrice($product, $product->pivot->product_combination_id),
+                    'reference_price' => productPrice($product, $product->pivot->product_combination_id, 'vat'),
                     'created_by' => Auth::check() ? Auth::id() : null,
                 ]);
+            }
 
-                if ($product->product_type == 'variable') {
-                    $product_account = Account::where('reference_id', $product->pivot->product_combination_id)->where('type', 'variable_product')->first();
-                    $cs_account = Account::where('reference_id', $product->pivot->product_combination_id)->where('type', 'variable_product_cost')->first();
+
+            if ($product->vendor_id == null) {
+                if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+                    $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
                 } else {
-                    $product_account = Account::where('reference_id', $product->pivot->product_combination_id)->where('type', 'simple_product')->first();
-                    $cs_account = Account::where('reference_id', $product->pivot->product_combination_id)->where('type', 'simple_product_cost')->first();
+                    $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
                 }
 
                 Entry::create([
-                    'account_id' => $product_account->id,
+                    'account_id' => $revenue_account->id,
                     'type' => 'sales',
-                    'dr_amount' => ($product->pivot->cost * $product->pivot->qty),
+                    'dr_amount' =>   $product->pivot->product_price - $product->pivot->product_tax,
                     'cr_amount' => 0,
-                    'description' => 'sales order# ' . $order->id,
+                    'description' => 'return sales order# ' . $order->id,
+                    'branch_id' => $branch_id,
                     'reference_id' => $order->id,
-                    'created_by' => Auth::check() ? Auth::id() : null,
-                ]);
-
-
-                Entry::create([
-                    'account_id' => $cs_account->id,
-                    'type' => 'sales',
-                    'dr_amount' => 0,
-                    'cr_amount' => ($product->pivot->cost * $product->pivot->qty),
-                    'description' => 'sales order# ' . $order->id,
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::check() ? Auth::id() : null,
+                    'created_by' => Auth::id(),
                 ]);
             }
         }
 
-        $vat = Tax::findOrFail(setting('vat'));
-        if ($vat != null && $vat->tax_rate != null) {
-            $vat_amount = ($order->subtotal_price * $vat->tax_rate) / 100;
+
+        if ($order->customer_id != null) {
+            $customer_account = getItemAccount($order->customer_id, null, 'customers_account', $branch_id);
         } else {
-            $vat_amount = 0;
+            $customer_account = getItemAccount(null, null, 'customers_account', $branch_id);
         }
 
-        if (Auth::check()) {
-            $customer_account = Account::where('reference_id', Auth::id())->where('type', 'customer')->first();
-        } else {
-            $customer_account = Account::findOrFail(setting('customers_account'));
-        }
+
         Entry::create([
             'account_id' => $customer_account->id,
             'type' => 'sales',
             'dr_amount' => 0,
-            'cr_amount' =>  $order->subtotal_price,
-            'description' => 'sales order# ' . $order->id,
+            'cr_amount' =>  $order->total_price,
+            'description' => 'return sales order# ' . $order->id,
+            'branch_id' => $branch_id,
             'reference_id' => $order->id,
             'created_by' => Auth::id(),
         ]);
 
-
-        $vat_account = Account::findOrFail(setting('vat_sales_account'));
-
-        Entry::create([
-            'account_id' => $vat_account->id,
-            'type' => 'sales',
-            'dr_amount' => $vat_amount,
-            'cr_amount' =>  0,
-            'description' => 'sales order# ' . $order->id,
-            'reference_id' => $order->id,
-            'created_by' => Auth::id(),
+        $order->update([
+            'payment_status' => 'faild',
         ]);
 
-        $revenue_account = Account::findOrFail(setting('revenue_account'));
 
-        Entry::create([
-            'account_id' => $revenue_account->id,
-            'type' => 'sales',
-            'dr_amount' => $order->subtotal_price - $vat_amount,
-            'cr_amount' =>  0,
-            'description' => 'sales order# ' . $order->id,
-            'reference_id' => $order->id,
-            'created_by' => Auth::id(),
-        ]);
+        if ($order->total_tax > 0) {
+            $vat_account = Account::findOrFail(settingAccount('vat_sales_account', $branch_id));
+            Entry::create([
+                'account_id' => $vat_account->id,
+                'type' => 'sales',
+                'dr_amount' => $order->total_tax,
+                'cr_amount' =>  0,
+                'description' => 'return sales order# ' . $order->id,
+                'branch_id' => $branch_id,
+                'reference_id' => $order->id,
+                'created_by' => Auth::id(),
+            ]);
+        }
+
+
+        if ($order->shipping_amount > 0) {
+
+            $revenue_account_shipping = getItemAccount(null, null, 'revenue_account_shipping', $branch_id);
+            Entry::create([
+                'account_id' => $revenue_account_shipping->id,
+                'type' => 'sales',
+                'dr_amount' =>   $order->shipping_amount,
+                'cr_amount' => 0,
+                'description' => 'return sales order# ' . $order->id,
+                'branch_id' => $branch_id,
+                'reference_id' => $order->id,
+                'created_by' => Auth::id(),
+            ]);
+        }
+
+        if ($order->affiliate_id != null) {
+            changeOutStandingBalance($order->affiliate, $order->total_commission, $order->id, $order->status, 'sub');
+        }
     }
 
 

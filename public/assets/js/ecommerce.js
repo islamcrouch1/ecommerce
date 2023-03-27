@@ -28,6 +28,21 @@ $('.size-box ul li').on('click', function (e) {
     $(this).parent().addClass('selected');
 });
 
+$('.size-box select').on('change', function (e) {
+    var attribute_id = $(this).find(":selected").data('attribute-id');
+
+    if(attribute_id){
+        $(".attribute-box-"+ attribute_id +" select option").removeClass("active");
+        $('#selectSize').removeClass('cartMove');
+        $(this).find(":selected").addClass("active");
+    }else{
+        $("select option").removeClass("active");
+
+    }
+    // $(this).parent().addClass('selected');
+});
+
+
 
 $('.attribute-select').on('click' , function(e){
 
@@ -205,6 +220,7 @@ $('.add-to-cart').on('click', function (e) {
         variations.push($(this).data('variation-id'));
     });
 
+    console.log(variations);
 
     $(alarm).css('display', 'none');
     $(loader).show();
@@ -315,7 +331,7 @@ $('.add-to-cart').on('click', function (e) {
         }
 
 
-        $(".cart-subtotal").text(parseInt($(".cart-subtotal").text()) + (parseInt(data.qty) * parseInt(data.product_price)));
+        $(".cart-subtotal").text(parseFloat($(".cart-subtotal").text()) + (parseInt(data.qty) * parseFloat(data.product_price)));
 
 
 
@@ -327,7 +343,7 @@ $('.add-to-cart').on('click', function (e) {
             }else if(data.status == 3){
 
                 $(loader).hide();
-                $('.cart-icon').show()
+                $(cart_icon).show()
 
                 if(locale == 'ar'){
                     $(alarm_text).html("يرجى تحديد جميع الخيارات")
@@ -335,14 +351,18 @@ $('.add-to-cart').on('click', function (e) {
                     $(alarm_text).html("please select all options")
                 }
 
+
                 $(alarm).css('display', 'flex');
+                setTimeout(function () {
+                    $(alarm).css('display', 'none');
+                }, 5000);
                 $('.add-to-cart').removeClass( "disabled" )
 
 
             }else if(data.status == 2){
 
                 $(loader).hide();
-                $('.cart-icon').show()
+                $(cart_icon).show()
 
                 if(locale == 'ar'){
                     $(alarm_text).html("الكمية المطلوبة غير متاحه حاليا")
@@ -351,6 +371,12 @@ $('.add-to-cart').on('click', function (e) {
                 }
 
                 $(alarm).css('display', 'flex');
+                setTimeout(function () {
+                    $(alarm).css('display', 'none');
+                }, 5000);
+                $('.add-to-cart').removeClass( "disabled" )
+
+            }else{
                 $('.add-to-cart').removeClass( "disabled" )
 
             }
@@ -414,7 +440,7 @@ $('.cart-quantity').on('click' , function(e){
 
     var url = $(this).data('url');
     var quantity = parseInt($(this).val());
-
+    var span = '.total-' + $(this).data('id');
 
 
     var formData = new FormData();
@@ -433,8 +459,9 @@ $('.cart-quantity').on('click' , function(e){
         cache: false,
         success: function(data) {
 
-            console.log(parseInt(data));
-            qty.val(parseInt(data));
+            console.log(parseInt(data.qty));
+            qty.val(parseInt(data.qty));
+            $(span).html(parseInt(data.qty) * parseFloat(data.product_price));
 
         }
 
@@ -488,6 +515,21 @@ $('input[name="shipping_option"]').on('change' , function(e){
 
 
 
+$('.coupon-link').on('click' , function(e){
+    e.preventDefault();
+    $('.coupon-field').toggle();
+});
+
+
+
+$('.coupon-apply').on('click' , function(e){
+    e.preventDefault();
+    calculateShipping();
+});
+
+
+
+
 $('input[name="create_account"]').on('change' , function(e){
 
     e.preventDefault();
@@ -509,11 +551,28 @@ $('input[name="create_account"]').on('change' , function(e){
 
 
 $(document).ready(function(){
-    getStates()
-
-
+    getStates();
+    $("input[name=shipping_option][value=" + 1 + "]").prop('checked', true);
+    calculateShipping();
 
 });
+
+
+
+$('.coupon-remove').on('click' , function(e){
+    e.preventDefault();
+
+    $('.coupon-code').val('');
+    $(".coupon-code").removeAttr('disabled');
+    $('.coupon-text').html();
+    $('.coupon-apply').removeClass("disabled")
+    $('.coupon-remove').hide();
+    $('.coupon-submit').val('');
+
+
+    calculateShipping();
+});
+
 
 function calculateShipping(){
 
@@ -521,12 +580,19 @@ function calculateShipping(){
     var state_id = $('.state-select').find(":selected").data('state_id');
     var city_id = $('.city-select').find(":selected").data('city_id');
     var url = $('.country-select').data('url_shipping');
+    var coupon = $('.coupon-code').val();
 
     var formData = new FormData();
 
     formData.append('country_id' , country_id );
     formData.append('state_id' , state_id );
     formData.append('city_id' , city_id );
+    formData.append('coupon' , coupon );
+
+    $('.coupon-apply').addClass( "disabled" )
+    $('.coupon-text').html('');
+    $('.coupon-text').removeClass('coupon-text-green');
+
 
     $.ajax({
         url: url,
@@ -539,7 +605,83 @@ function calculateShipping(){
 
             console.log(data);
 
+            $('.coupon-apply').removeClass( "disabled" )
+
+
+
             if(data.status == 1){
+
+
+                if(data.coupon_status == 1){
+
+                    if(data.locale == 'ar'){
+                        text_2 = 'تم تفعيل الكوبون ، استمتع باعلى نسبة خصم يمكن تطبيقها على طلبك';
+                    }else{
+                        text_2 = 'Coupon has been activated, enjoy the highest discount rate that can be applied to your order';
+                    }
+
+                    $('.coupon-text').html(text_2);
+                    $('.coupon-code').attr('disabled','disabled');
+                    $('.coupon-apply').addClass( "disabled" )
+                    $('.coupon-text').addClass('coupon-text-green');
+                    $('.coupon-remove').show();
+                    $('.coupon-submit').val($('.coupon-code').val());
+
+
+
+                }
+
+                if(data.coupon_status == 0 || data.coupon_status == 14){
+
+                    if(data.locale == 'ar'){
+                        text_2 = 'الكود المستخدم غير صالح';
+                    }else{
+                        text_2 = 'Promo code not valid';
+                    }
+
+                    $('.coupon-code').val('');
+                    $('.coupon-text').html(text_2);
+
+                }
+
+                if(data.coupon_status == 12){
+
+                    if(data.locale == 'ar'){
+                        text_2 = 'يرجى تسجيل الدخول لاستخام اكواد الخصم';
+                    }else{
+                        text_2 = 'Please login to use promo code';
+                    }
+
+                    $('.coupon-code').val('');
+                    $('.coupon-text').html(text_2);
+
+                }
+
+                if(data.coupon_status == 13){
+
+                    if(data.locale == 'ar'){
+                        text_2 = 'لقد تعديت الحد الاقصى لاستخدام هذا الكوبون';
+                    }else{
+                        text_2 = 'You have exceeded the maximum limit for using this coupon';
+                    }
+
+                    $('.coupon-code').val('');
+                    $('.coupon-text').html(text_2);
+
+                }
+
+                if(data.coupon_status == 15){
+
+                    if(data.locale == 'ar'){
+                        text_2 = 'عسل';
+                    }else{
+                        text_2 = 'honey';
+                    }
+
+                    $('.coupon-code').val('');
+                    $('.coupon-text').html(text_2);
+
+                }
 
                 var value = $('input[name="shipping_option"]:checked').val();
 
@@ -547,9 +689,11 @@ function calculateShipping(){
                     $('.shipping-amount').text(data.shipping_amount + data.currency);
                     $('.checkout-total').text((data.shipping_amount+data.total) + data.currency);
                 }else if(value == '2'){
+
                     $('.checkout-total').text((data.total) + data.currency);
                 }else{
                     $('.shipping-amount').text(data.shipping_amount + data.currency);
+                    $('.checkout-total').text((data.total) + data.currency);
 
                 }
 

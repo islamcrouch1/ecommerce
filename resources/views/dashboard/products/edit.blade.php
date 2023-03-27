@@ -84,8 +84,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="sale_price">{{ __('product price') }}</label>
                                 <input name="sale_price" class="form-control @error('sale_price') is-invalid @enderror"
-                                    value="{{ $product->sale_price }}" type="number" min="0" autocomplete="on"
-                                    id="sale_price" required />
+                                    value="{{ $product->sale_price }}" type="number" min="0" step="0.01"
+                                    autocomplete="on" id="sale_price" required />
                                 @error('sale_price')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
@@ -96,8 +96,8 @@
                                 <label class="form-label" for="discount_price">{{ __('discount price') }}</label>
                                 <input name="discount_price"
                                     class="form-control @error('discount_price') is-invalid @enderror"
-                                    value="{{ $product->discount_price }}" type="number" min="0" autocomplete="on"
-                                    id="discount_price" required />
+                                    value="{{ $product->discount_price }}" type="number" min="0" step="0.01"
+                                    autocomplete="on" id="discount_price" required />
                                 @error('discount_price')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
@@ -122,7 +122,7 @@
                                                 @include(
                                                     'dashboard.categories._category_options_product_edit',
                                                     [
-                                                        'category' => $subCat,
+                                                        'scategory' => $subCat,
                                                     ]
                                                 )
                                             @endforeach
@@ -188,6 +188,51 @@
                                 @enderror
                             </div>
 
+                            @if ($product->product_type == 'variable')
+                                <div class="mb-3 product-attributes">
+                                    <label class="form-label" for="attributes">{{ __('product attributes') }}</label>
+                                    <select
+                                        class="form-select product-attribute-select js-choice @error('attributes') is-invalid @enderror"
+                                        name="attributes[]" multiple="multiple"
+                                        data-options='{"removeItemButton":true,"placeholder":true}'>
+                                        <option value="">
+                                            {{ __('select attributes') }}</option>
+                                        @foreach ($product->attributes as $attribute)
+                                            <option value="{{ $attribute->id }}"
+                                                {{ $product->attributes()->where('attribute_id', $attribute->id)->first()? 'selected': '' }}>
+                                                {{ app()->getLocale() == 'ar' ? $attribute->name_ar : $attribute->name_en }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('attributes')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+
+                                @foreach ($product->attributes as $attribute)
+                                    <div class="mb-3 p-variation product-variations-{{ $attribute->id }}"
+                                        style=" {{ $product->attributes()->where('attribute_id', $attribute->id)->first()? '': 'display:none' }} ">
+                                        <label class="form-label"
+                                            for="variations">{{ __('product variations') . ' - ' . getName($attribute) }}</label>
+                                        <select class="form-select js-choice @error('variations') is-invalid @enderror"
+                                            name="variations-{{ $attribute->id }}[]" multiple="multiple"
+                                            data-options='{"removeItemButton":true,"placeholder":true}'>
+                                            <option value="">
+                                                {{ __('select variations') }}</option>
+                                            @foreach ($attribute->variations as $variation)
+                                                <option value="{{ $variation->id }}"
+                                                    {{ $product->variations()->where('variation_id', $variation->id)->first()? 'selected': '' }}>
+                                                    {{ app()->getLocale() == 'ar' ? $variation->name_ar : $variation->name_en }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('variations')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                @endforeach
+                            @endif
 
 
                             @if ($product->product_type == 'simple' || $product->product_type == 'variable')
@@ -198,8 +243,8 @@
                                                 for="product_weight">{{ __('product weight') }}</label>
                                             <input name="product_weight"
                                                 class="form-control @error('product_weight') is-invalid @enderror"
-                                                value="{{ $product->product_weight }}" type="number" min="0"
-                                                autocomplete="on" id="product_weight" />
+                                                value="{{ $product->product_weight }}" type="number" step="0.01"
+                                                min="0" autocomplete="on" id="product_weight" />
                                             @error('product_weight')
                                                 <div class="alert alert-danger">{{ $message }}</div>
                                             @enderror
@@ -212,8 +257,8 @@
                                                 for="product_length">{{ __('product length') }}</label>
                                             <input name="product_length"
                                                 class="form-control @error('product_length') is-invalid @enderror"
-                                                value="{{ $product->product_length }}" type="number" min="0"
-                                                autocomplete="on" id="product_length" />
+                                                value="{{ $product->product_length }}" type="number" step="0.01"
+                                                min="0" autocomplete="on" id="product_length" />
                                             @error('product_length')
                                                 <div class="alert alert-danger">{{ $message }}</div>
                                             @enderror
@@ -226,8 +271,8 @@
                                                 for="product_width">{{ __('product width') }}</label>
                                             <input name="product_width"
                                                 class="form-control @error('product_width') is-invalid @enderror"
-                                                value="{{ $product->product_width }}" type="number" min="0"
-                                                autocomplete="on" id="product_width" />
+                                                value="{{ $product->product_width }}" type="number" step="0.01"
+                                                min="0" autocomplete="on" id="product_width" />
                                             @error('product_width')
                                                 <div class="alert alert-danger">{{ $message }}</div>
                                             @enderror
@@ -241,8 +286,8 @@
                                                 for="product_height">{{ __('product height') }}</label>
                                             <input name="product_height"
                                                 class="form-control @error('product_height') is-invalid @enderror"
-                                                value="{{ $product->product_height }}" type="number" min="0"
-                                                autocomplete="on" id="product_height" />
+                                                value="{{ $product->product_height }}" type="number" step="0.01"
+                                                min="0" autocomplete="on" id="product_height" />
                                             @error('product_height')
                                                 <div class="alert alert-danger">{{ $message }}</div>
                                             @enderror
@@ -279,8 +324,8 @@
                                                 for="shipping_amount">{{ __('extra fee for shipping') }}</label>
                                             <input name="shipping_amount"
                                                 class="form-control @error('shipping_amount') is-invalid @enderror"
-                                                value="{{ $product->shipping_amount }}" type="number" min="0"
-                                                autocomplete="on" id="shipping_amount" />
+                                                value="{{ $product->shipping_amount }}" type="number" step="0.01"
+                                                min="0" autocomplete="on" id="shipping_amount" />
                                             @error('shipping_amount')
                                                 <div class="alert alert-danger">{{ $message }}</div>
                                             @enderror

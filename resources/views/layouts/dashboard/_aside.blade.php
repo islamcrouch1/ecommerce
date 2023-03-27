@@ -245,7 +245,7 @@
 
 
 
-                        @if (checkPer(['settings', 'website_setting', 'slides', 'logs', 'messages', 'notifications', 'bonus']))
+                        @if (checkPer(['settings', 'website_setting', 'slides', 'logs', 'messages', 'notifications', 'bonus', 'coupons']))
 
                             <li class="nav-item">
                                 <!-- label-->
@@ -311,6 +311,18 @@
                                         <div class="d-flex align-items-center"><span class="nav-link-icon"><span
                                                     class="fas fa-money-bill"></span></span><span
                                                 class="nav-link-text ps-1">{{ __('Bonus') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('coupons-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('coupons*') ? 'active' : '' }}"
+                                        href="{{ route('coupons.index') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-money-bill"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('Coupons') }}</span>
                                         </div>
                                     </a>
                                 @endif
@@ -429,7 +441,15 @@
                         @endif
 
 
-                        @if (checkPer(['warehouses', 'add_stock', 'stock_lists', 'stock_inventory', 'stock_transfers', 'stock_shortages']))
+                        @if (checkPer([
+                                'warehouses',
+                                'add_stock',
+                                'stock_lists',
+                                'stock_inventory',
+                                'stock_transfers',
+                                'stock_shortages',
+                                'running_orders',
+                            ]))
                             <li class="nav-item">
                                 <!-- label-->
                                 <div class="row navbar-vertical-label-wrapper mt-3 mb-2">
@@ -449,6 +469,18 @@
                                         <div class="d-flex align-items-center"><span class="nav-link-icon"><span
                                                     class="fas fa-sitemap"></span></span><span
                                                 class="nav-link-text ps-1">{{ __('warehouses') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('running_orders-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('running_orders*') ? 'active' : '' }}"
+                                        href="{{ route('running_orders.index') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-layer-group"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('running orders') }}</span>
                                         </div>
                                     </a>
                                 @endif
@@ -493,8 +525,8 @@
                                 @if (auth()->user()->hasPermission('stock_transfers-read'))
                                     <!-- parent pages--><a
                                         class="nav-link {{ Route::is('stock_transfers.index*') ? 'active' : '' }}"
-                                        href="{{ route('stock_transfers.index') }}" role="button" data-bs-toggle=""
-                                        aria-expanded="false">
+                                        href="{{ route('stock_transfers.index') }}" role="button"
+                                        data-bs-toggle="" aria-expanded="false">
                                         <div class="d-flex align-items-center"><span class="nav-link-icon"><span
                                                     class="fas fa-layer-group"></span></span><span
                                                 class="nav-link-text ps-1">{{ __('Stock Transfers') }}</span>

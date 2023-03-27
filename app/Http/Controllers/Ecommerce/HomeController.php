@@ -19,13 +19,17 @@ class HomeController extends Controller
     {
 
 
+        $country = getCountry();
+
         if (Auth::check()) {
             $cart_items = CartItem::where('user_id', Auth::id())->get();
         } else {
             $cart_items = CartItem::where('session_id', $request->session()->token())->get();
         }
 
-        $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
+        $categories = Category::whereNull('parent_id')->where('country_id', $country->id)->orderBy('sort_order', 'asc')->get();
+
+
         $slides = Slide::orderBy('sort_order', 'asc')->get();
 
         // $products = Product::whereHas('stocks', function ($query) {
@@ -39,16 +43,16 @@ class HomeController extends Controller
 
         $digital_products = Product::Where('product_type', 'digital')
             ->where('status', "active")
-            ->where('country_id', setting('country_id'));
+            ->where('country_id', $country->id);
 
 
         $service_products = Product::Where('product_type', 'service')
             ->where('status', "active")
-            ->where('country_id', setting('country_id'));
+            ->where('country_id', $country->id);
 
         $vendor_products = Product::WhereNotNull('vendor_id')
             ->where('status', "active")
-            ->where('country_id', setting('country_id'));
+            ->where('country_id', $country->id);
 
 
         $warehouses = getWebsiteWarehouses();
@@ -56,13 +60,16 @@ class HomeController extends Controller
         $products = Product::whereHas('stocks', function ($query) use ($warehouses) {
             $query->whereIn('warehouse_id', $warehouses);
         })
-            ->where('country_id', setting('country_id'))
+            ->where('country_id', $country->id)
             ->where('status', "active")
             ->union($digital_products)
             ->union($service_products)
             ->union($vendor_products)
             ->latest()
             ->get();
+
+
+
 
         return view('ecommerce.home', compact('categories', 'slides', 'products', 'cart_items'));
     }

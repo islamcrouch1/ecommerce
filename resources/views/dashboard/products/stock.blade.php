@@ -114,8 +114,8 @@
                                                     <td>
                                                         <input name="purchase_price[]"
                                                             class="form-control purchase_price-{{ $combination->id }} @error('purchase_price') is-invalid @enderror"
-                                                            min="0" value="0" type="number" autocomplete="on"
-                                                            id="purchase_price" required />
+                                                            min="0" value="0" step="0.01" type="number"
+                                                            autocomplete="on" id="purchase_price" required />
                                                         @error('purchase_price')
                                                             <div class="alert alert-danger">{{ $message }}</div>
                                                         @enderror
@@ -124,8 +124,9 @@
                                                     <td>
                                                         <input name="sale_price[]"
                                                             class="form-control sale_price-{{ $combination->id }} @error('sale_price') is-invalid @enderror"
-                                                            min="0" value="{{ $combination->sale_price }}"
-                                                            type="number" autocomplete="on" id="sale_price" required />
+                                                            min="0" step="0.01"
+                                                            value="{{ $combination->sale_price }}" type="number"
+                                                            autocomplete="on" id="sale_price" required />
                                                         @error('sale_price')
                                                             <div class="alert alert-danger">{{ $message }}</div>
                                                         @enderror
@@ -134,8 +135,9 @@
                                                     <td>
                                                         <input name="discount_price[]"
                                                             class="form-control discount_price-{{ $combination->id }} @error('discount_price') is-invalid @enderror"
-                                                            min="0" value="{{ $combination->discount_price }}"
-                                                            type="number" autocomplete="on" id="discount_price" required />
+                                                            min="0" step="0.01"
+                                                            value="{{ $combination->discount_price }}" type="number"
+                                                            autocomplete="on" id="discount_price" required />
                                                         @error('discount_price')
                                                             <div class="alert alert-danger">{{ $message }}</div>
                                                         @enderror

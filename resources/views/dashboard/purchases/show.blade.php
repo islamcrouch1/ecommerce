@@ -128,17 +128,13 @@
                             <th class="text-sm-end">{{ __('added value tax') }}</th>
                             <td>{{ $order->total_tax . ' ' . $order->country->currency }}</td>
                         </tr>
-                        @foreach ($order->taxes as $tax)
-                            @if ($tax->id == setting('wht_products'))
-                                @php
-                                    $wht_amount = ($order->subtotal_price * $tax->tax_rate) / 100;
-                                @endphp
-                                <tr>
-                                    <th class="text-sm-end">{{ __('withholding and collection tax') }}</th>
-                                    <td>{{ $wht_amount . ' ' . $order->country->currency }}</td>
-                                </tr>
-                            @endif
-                        @endforeach
+                        @if ($order->total_wht_products + $order->total_wht_services > 0)
+                            <tr>
+                                <th class="text-sm-end">{{ __('withholding and collection tax') }}</th>
+                                <td>{{ $order->total_wht_products + $order->total_wht_services . ' ' . $order->country->currency }}
+                                </td>
+                            </tr>
+                        @endif
                         <tr class="alert-success fw-bold">
                             <th class="text-sm-end">{{ __('Total:') }}</th>
                             <td>{{ $order->total_price . ' ' . $order->country->currency }}</td>

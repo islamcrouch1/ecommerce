@@ -127,7 +127,6 @@
                                                 </div>
                                                 <div class="flex-1">
                                                     <h5 class="mb-0 fs--1">
-                                                        {{ $stock->product->images->count() }}
                                                         {{ getProductName($stock->product, getCombination($stock->product_combination_id)) }}
                                                     </h5>
                                                 </div>

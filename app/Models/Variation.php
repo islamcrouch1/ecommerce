@@ -35,4 +35,11 @@ class Variation extends Model
                 ->orWhere('name_en', 'like', "%$search%");
         });
     }
+
+    public function scopeWhenAttribute($query, $attribute_id)
+    {
+        return $query->when($attribute_id, function ($q) use ($attribute_id) {
+            return $q->where('attribute_id', 'like', "%$attribute_id%");
+        });
+    }
 }

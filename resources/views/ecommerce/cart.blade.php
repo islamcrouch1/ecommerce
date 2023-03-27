@@ -101,6 +101,7 @@
                                                 <input type="number" name="quantity"
                                                     class="form-control input-number cart-quantity quantity-{{ $item->product_id }}"
                                                     value="{{ $item->qty }}"
+                                                    data-id="{{ $item->product_id . '-' . $item->product_combination_id }}"
                                                     data-url={{ route('ecommerce.cart.change', ['product' => $item->product_id, 'combination' => $item->product_combination_id]) }}>
                                             </div>
                                         </div>
@@ -109,7 +110,9 @@
                                             class="icon"><i class="ti-close"></i></a></td>
                                     <td>
                                         <h2 class="td-color">
-                                            {{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . getCurrency() }}
+                                            <span
+                                                class="total-{{ $item->product_id . '-' . $item->product_combination_id }}">{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty }}</span>
+                                            <span>{{ getCurrency() }}</span>
                                         </h2>
                                     </td>
                                 </tr>

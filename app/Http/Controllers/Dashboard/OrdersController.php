@@ -526,7 +526,7 @@ class OrdersController extends Controller
 
             if ($order->payment_method == 'cash_on_delivery') {
                 $cash_account = Account::findOrFail(settingAccount('cash_account', $branch_id));
-            } elseif ($order->payment_method == 'card') {
+            } elseif ($order->payment_method == 'paymob' || $order->payment_method == 'upayment') {
                 $cash_account = Account::findOrFail(settingAccount('card_account', $branch_id));
             }
 

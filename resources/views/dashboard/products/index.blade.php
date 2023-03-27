@@ -198,10 +198,12 @@
                                             {{ __($product->product_type) }}</td>
                                         <td class="phone align-middle white-space-nowrap py-2">
 
-                                            @if ($product->vendor_id == null)
-                                                {{ productQuantity($product->id, null, null, $user->hasPermission('branches-read') ? null : $user->branch->warehouses) }}
-                                            @else
-                                                {{ productQuantity($product->id, null, null, null) }}
+                                            @if (!$product->trashed())
+                                                @if ($product->vendor_id == null)
+                                                    {{ productQuantity($product->id, null, null, $user->hasPermission('branches-read') ? null : $user->branch->warehouses) }}
+                                                @else
+                                                    {{ productQuantity($product->id, null, null, null) }}
+                                                @endif
                                             @endif
 
                                         </td>

@@ -56,6 +56,7 @@ Route::group(['prefix' => 'ecommerce'], function () {
     Route::post('order', [OrdersController::class, 'store'])->name('ecommerce.order.store');
 
     Route::get('order-success', [OrdersController::class, 'orderSuccess'])->name('ecommerce.order.success');
+    Route::get('order-faild', [PaymentController::class, 'orderFailed'])->name('ecommerce.order.failed');
 
 
     Route::get('payment/{orderId}', [PaymentController::class, 'checkingOut'])->name('ecommerce.payment');
@@ -83,4 +84,5 @@ Route::group(['prefix' => 'ecommerce'], function () {
     Route::post('product-search', [ProductController::class, 'search'])->name('ecommerce.product.search');
 
     Route::get('contact', [HomeController::class, 'contact'])->name('ecommerce.contact');
+    Route::get('setCountry/{country_id}', [HomeController::class, 'setCountry'])->name('set.country');
 });

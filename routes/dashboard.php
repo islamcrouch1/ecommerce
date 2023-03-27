@@ -12,6 +12,7 @@ use App\Http\Controllers\Dashboard\CitiesController;
 use App\Http\Controllers\Dashboard\ClientsController;
 use App\Http\Controllers\Dashboard\ColorsController;
 use App\Http\Controllers\Dashboard\CountriesController;
+use App\Http\Controllers\Dashboard\CouponController;
 use App\Http\Controllers\Dashboard\EntriesController;
 use App\Http\Controllers\Dashboard\ExportController;
 use App\Http\Controllers\Dashboard\FinancesController;
@@ -28,7 +29,9 @@ use App\Http\Controllers\Dashboard\PreviewsController;
 use App\Http\Controllers\Dashboard\PurchasesController;
 use App\Http\Controllers\Dashboard\QueriesController;
 use App\Http\Controllers\Dashboard\RoleController;
+use App\Http\Controllers\Dashboard\RunningOrdersController;
 use App\Http\Controllers\Dashboard\SalesController;
+use App\Http\Controllers\Dashboard\SearchController;
 use App\Http\Controllers\Dashboard\SettingController;
 use App\Http\Controllers\Dashboard\ShippingRatesController;
 use App\Http\Controllers\Dashboard\SizesController;
@@ -325,6 +328,20 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     // payments routes
     Route::get('/payments/{order}', [PaymentsController::class, 'create'])->name('payments.create')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('/payments-store/{order}', [PaymentsController::class, 'store'])->name('payments.store')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    // warehouse running orders
+    Route::resource('running_orders', RunningOrdersController::class)->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    // coupons routes
+    Route::resource('coupons', CouponController::class)->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-coupons', [CouponController::class, 'trashed'])->name('coupons.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-coupons/{coupon}', [CouponController::class, 'restore'])->name('coupons.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    // model search
+    Route::post('model/search', [SearchController::class, 'search'])->name('model.search')->middleware('auth', 'checkverified', 'checkstatus');
 
 
 
