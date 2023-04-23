@@ -1,6 +1,6 @@
 @if (!Route::is('ecommerce.invoice'))
     <!-- loader start -->
-    <div class="loader_skeleton">
+    {{-- <div class="loader_skeleton">
 
         <header class="header-style-5 color-style">
             <div class="top-header top-header-theme">
@@ -9,19 +9,24 @@
                         <div class="col-lg-6">
                             <div class="header-contact">
                                 <ul>
-                                    <li>{{ app()->getLocale() == 'ar' ? websiteSettingAr('welcome_text') : websiteSettingEn('welcome_text') }}
-                                    </li>
-                                    <li><i class="fa fa-phone"
-                                            aria-hidden="true"></i>{{ __('Call Us:' . ' ' . websiteSettingAr('header_phone')) }}
-                                    </li>
+                                    @if (websiteSettingAr('welcome_text') || websiteSettingEn('welcome_text'))
+                                        <li>{{ app()->getLocale() == 'ar' ? websiteSettingAr('welcome_text') : websiteSettingEn('welcome_text') }}
+                                        </li>
+                                    @endif
+
+                                    @if (websiteSettingAr('header_phone'))
+                                        <li><i class="fa fa-phone"
+                                                aria-hidden="true"></i>{{ __('Call Us:' . ' ' . websiteSettingAr('header_phone')) }}
+                                        </li>
+                                    @endif
+
                                 </ul>
                             </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="header-contact text-end">
                                 <ul>
-                                    <li><i class="fa fa-truck" aria-hidden="true"></i>Track Order</li>
-                                    <li class="pe-0"><i class="fa fa-gift" aria-hidden="true"></i>Gift Cards</li>
+
                                 </ul>
                             </div>
                         </div>
@@ -33,13 +38,7 @@
                     <div class="col-sm-12">
                         <div class="main-menu">
                             <div class="menu-left">
-                                {{-- <div class="navbar d-block d-xl-none">
-                                    <a href="javascript:void(0)">
-                                        <div class="bar-style" id="toggle-sidebar-res"><i class="fa fa-bars sidebar-bar"
-                                                aria-hidden="true"></i>
-                                        </div>
-                                    </a>
-                                </div> --}}
+
                                 <div class="brand-logo">
                                     <a href="{{ route('ecommerce.home') }}"><img
                                             src="{{ asset(websiteSettingMedia('header_logo')) }}"
@@ -63,6 +62,10 @@
                                 </nav>
                                 <div class="top-header d-block">
                                     <ul class="header-dropdown">
+                                        <li class="mobile-wishlist"><a href="{{ route('ecommerce.home') }}"><img
+                                                    src="{{ asset('e-assets/images/icon/white-icon/home.png') }}"
+                                                    alt=""> </a>
+                                        </li>
                                         <li class="mobile-wishlist"><a href="#"><img
                                                     src="{{ asset('e-assets/images/icon/white-icon/heart.png') }}"
                                                     alt="">
@@ -690,7 +693,7 @@
 
 
 
-    </div>
+    </div> --}}
     <!-- loader end -->
     <!-- header start -->
     <header class="header-style-5 color-style" id="">
@@ -767,6 +770,12 @@
                             </nav>
                             <div class="top-header d-block">
                                 <ul class="header-dropdown">
+
+                                    <li class="mobile-wishlist mobile-home"><a
+                                            href="{{ route('ecommerce.home') }}"><img
+                                                src="{{ asset('e-assets/images/icon/white-icon/home.png') }}"
+                                                alt=""> </a>
+                                    </li>
                                     <li class="mobile-wishlist"><a href="{{ route('ecommerce.wishlist') }}"><img
                                                 src="{{ asset('e-assets/images/icon/white-icon/heart.png') }}"
                                                 alt=""> </a>
@@ -961,8 +970,12 @@
                         <div class="sidenav fixed-sidebar marketplace-sidebar">
                             <nav>
                                 <div>
+
+
+
                                     <div class="sidebar-back text-start d-xl-none d-block"><i
-                                            class="fa fa-angle-left pe-2" aria-hidden="true"></i> Back</div>
+                                            class="fa fa-angle-{{ app()->getLocale() == 'ar' ? 'right' : 'left' }} ps-2"
+                                            aria-hidden="true"></i> {{ __('Back') }}</div>
                                 </div>
                                 <ul id="sub-menu" class="sm pixelstrap sm-vertical">
 
@@ -1005,7 +1018,7 @@
                                         <ul>
                                             @foreach (getBrands() as $brand)
                                                 <li><a
-                                                        href="{{ route('ecommerce.products', ['brand[]' => $brand->id]) }}">{{ getName($brand) }}</a>
+                                                        href="{{ route('ecommerce.products', ['brands[]' => $brand->id]) }}">{{ getName($brand) }}</a>
                                                 </li>
                                             @endforeach
                                         </ul>

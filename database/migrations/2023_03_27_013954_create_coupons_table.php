@@ -21,8 +21,13 @@ return new class extends Migration
             $table->string('user_type')->default('user');
             $table->timestamp('ended_at')->nullable();
             $table->integer('country_id')->nullable();
-            $table->integer('frequency')->default(0);
+            $table->integer('user_frequency')->default(0);
+            $table->integer('all_frequency')->default(0);
             $table->double('max_value', 8, 2)->default(0);
+            $table->double('min_value', 8, 2)->default(0);
+            $table->boolean('free_shipping')->default(false);
+            $table->longText('products')->nullable();
+            $table->longText('categories')->nullable();
             $table->timestamps();
         });
     }

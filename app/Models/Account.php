@@ -77,4 +77,12 @@ class Account extends Model
                 ->orWhere('account_type', 'like', "%$search%");
         });
     }
+
+
+    public function scopeWhenSearchExact($query, $search)
+    {
+        return $query->when($search, function ($q) use ($search) {
+            return $q->where('id', 'like', "$search");
+        });
+    }
 }

@@ -16,7 +16,7 @@
                         @endif
                     </h5>
                 </div>
-                <div class="col-8 col-sm-auto text-end ps-2">
+                <div class="col-8  text-end ps-2">
                     <div class="d-none" id="table-customers-actions">
                         <div class="d-flex">
                             <select class="form-select form-select-sm" aria-label="Bulk actions">
@@ -30,7 +30,17 @@
                     </div>
                     <div id="table-customers-replace-element">
 
-                        <form style="display: inline-block" action="">
+                        <form style="display: inline-block; width:60%" action="">
+
+                            <div style="width: 60%;" class="d-inline-block">
+                                <select class="form-select model-search sonoo-search" data-url="{{ route('model.search') }}"
+                                    data-locale="{{ app()->getLocale() }}" data-parent="" data-type="accounts"
+                                    name="account_id">
+                                    <option value="">
+                                        {{ __('accounts search') }}</option>
+
+                                </select>
+                            </div>
 
 
                             <div class="d-inline-block">
@@ -45,6 +55,7 @@
                                     @endforeach
                                 </select>
                             </div>
+
 
 
                         </form>

@@ -38,6 +38,7 @@
 
 
 
+
     <!-- collection banner -->
     <section class="pt-0 ratio3_2">
         <div class="container-fluid p-0">
@@ -71,159 +72,195 @@
     <!-- collection banner end -->
 
 
-    <!-- Paragraph-->
-    <div class="title6 section-t-space">
-        <h2 class="font-fraunces">
-            {{ app()->getLocale() == 'ar' ? websiteSettingAr('top_collection') : websiteSettingEn('top_collection') }}
-        </h2>
-    </div>
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-6 offset-lg-3">
-                <div class="product-para">
-                    <p class="text-center">
-                        {{ app()->getLocale() == 'ar' ? websiteSettingDAr('top_collection') : websiteSettingDEn('top_collection') }}
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Paragraph end -->
+    @if (getOffers()->count() > 0)
+        @foreach (getOffers() as $offer)
+            @php
+                $products = getOfferProducts($offer);
+            @endphp
+
+            <!-- product deal section start -->
+            <section class="ratio_square">
+                <div class="container">
+                    <div class="row">
 
 
-    <!-- product start -->
-    <section class="bag-product pt-0 section-b-space ratio_square">
-        <div class="container">
-            <div class="row row-cols-xxl-6 row-cols-xl-5 row-cols-lg-4 row-cols-md-3 row-cols-2 gy-sm-4 gy-3">
-
-                @foreach ($products->where('top_collection', 1) as $product)
-                    <div class="product-box product-wrap product-style-3">
-                        <div class="img-wrapper">
-                            <div class="front">
-                                <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                                        alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"
-                                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
-                                        class="img-fluid blur-up lazyload bg-img"></a>
-                            </div>
-                            <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
-                                    title="{{ __('Add to Wishlist') }}"
-                                    data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
-                                    data-product_id="{{ $product->id }}"><i
-                                        style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
-                                        class="fa fa-heart fav-{{ $product->id }} " aria-hidden="true"></i></a>
-
-
-
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#quick-view-{{ $product->id }}"
-                                    title="{{ __('Quick View') }}"><i class="ti-search" aria-hidden="true"></i></a>
-                                {{-- <a
-                                    href="compare.html" title="Compare"><i class="ti-reload" aria-hidden="true"></i></a> --}}
-                            </div>
-                        </div>
-                        <div class="product-info">
-                            <div class="">{!! getAverageRatingWithStars($product) !!}
-                            </div>
-                            <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
-                                <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</h6>
-                            </a>
-                            {!! getProductPrice($product) !!}
-
-                            @if ($product->product_type != 'variable')
-                                <div class="add-btn">
-                                    <a href="javascript:void(0)" class="add-to-cart"
-                                        data-url="{{ route('ecommerce.cart.store') }}"
-                                        data-locale="{{ app()->getLocale() }}" data-product_id="{{ $product->id }}"
-                                        data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
-                                        <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
-                                            class="spinner-border spinner-border-sm spinner spin-{{ $product->id }} "
-                                            role="status">
-                                        </div>
-                                        <i class="fa fa-shopping-cart cart-icon-{{ $product->id }}  me-1"
-                                            aria-hidden="true"></i>
-                                        <span class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
-                                        <span class="cart-added-{{ $product->id }}"
-                                            style="display: none;">{{ __('Added to bag') }}</span>
-                                    </a>
+                        <div class="col-12">
+                            <div class="title-basic">
+                                <h2 class="title"><i class="ti-bolt"></i> {{ getName($offer) }}</h2>
+                                <div class="timer" data-locale="{{ app()->getLocale() }}"
+                                    data-ended_at="{{ $offer->ended_at }}">
+                                    <p id="demo"></p>
                                 </div>
-                            @endif
-
-
-                        </div>
-                    </div>
-                @endforeach
-
-
-            </div>
-        </div>
-    </section>
-    <!-- product end -->
-
-
-    <!-- Parallax banner -->
-    <section class="p-0 product-vertical overflow-hidden">
-        <div class="full-banner parallax text-center p-left bg-theme">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-6 m-auto">
-                        <div class="title6">
-                            <h2 class="font-fraunces text-white">
-                                {{ app()->getLocale() == 'ar' ? websiteSettingAr('best_selling') : websiteSettingEn('best_selling') }}
-                            </h2>
-                        </div>
-                        <div class="product-para">
-                            <p class="text-center text-white">
-                                {{ app()->getLocale() == 'ar' ? websiteSettingDAr('best_selling') : websiteSettingDEn('best_selling') }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="slide-3 no-arrow slick-default-margin full-box">
-
-                            @foreach ($products->where('best_selling', 1) as $product)
-                                <div class="theme-card center-align">
-                                    <div class="offer-slider">
-                                        <div class="sec-1">
-                                            <div class="product-box2">
-                                                <div class="media">
-                                                    <a
-                                                        href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                                                            class="img-fluid blur-up lazyload"
-                                                            src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
-                                                            alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
-                                                    <div class="media-body align-self-center">
-                                                        <div class="">{!! getAverageRatingWithStars($product) !!}</div>
-                                                        <a
-                                                            href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
-                                                            <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
-                                                            </h6>
-                                                        </a>
-                                                        {!! getProductPrice($product) !!}
-                                                        @if ($product->product_type != 'variable')
-                                                            <div class="add-btn">
-                                                                <a href="javascript:void(0)" class="add-to-cart"
-                                                                    data-url="{{ route('ecommerce.cart.store') }}"
-                                                                    data-locale="{{ app()->getLocale() }}"
-                                                                    data-product_id="{{ $product->id }}"
-                                                                    data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
-                                                                    <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
-                                                                        class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
-                                                                        role="status">
-                                                                    </div>
-                                                                    <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
-                                                                        aria-hidden="true"></i>
-                                                                    <span
-                                                                        class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
-                                                                    <span class="cart-added-{{ $product->id }}"
-                                                                        style="display: none;">{{ __('Added to bag') }}</span>
-                                                                </a>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                </div>
+                            </div>
+                            <div class="slide-6-product product-m no-arrow">
+                                @foreach ($products as $product)
+                                    <div class="product-box product-wrap product-style-3">
+                                        <div class="img-wrapper">
+                                            <div class="front">
+                                                <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
+                                                        alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"
+                                                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
+                                                        class="img-fluid blur-up lazyload bg-img"></a>
+                                            </div>
+                                            <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
+                                                    title="{{ __('Add to Wishlist') }}"
+                                                    data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
+                                                    data-product_id="{{ $product->id }}"><i
+                                                        style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
+                                                        class="fa fa-heart fav-{{ $product->id }} "
+                                                        aria-hidden="true"></i></a>
+                                                <a href="#" data-bs-toggle="modal"
+                                                    data-bs-target="#quick-view-{{ $product->id }}"
+                                                    title="{{ __('Quick View') }}"><i class="ti-search"
+                                                        aria-hidden="true"></i></a>
+                                                {{-- <a href="compare.html" title="Compare"><i class="ti-reload"
+                                                    aria-hidden="true"></i></a> --}}
                                             </div>
                                         </div>
+                                        <div class="product-info">
+                                            <div class="">{!! getAverageRatingWithStars($product) !!}
+                                            </div>
+                                            <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
+                                                <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
+                                                </h6>
+                                            </a>
+                                            {!! getProductPrice($product) !!}
+                                            @if ($product->product_type != 'variable')
+                                                <div class="add-btn">
+                                                    <a href="javascript:void(0)" class="add-to-cart"
+                                                        data-url="{{ route('ecommerce.cart.store') }}"
+                                                        data-locale="{{ app()->getLocale() }}"
+                                                        data-product_id="{{ $product->id }}"
+                                                        data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
+                                                        <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
+                                                            class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
+                                                            role="status">
+                                                        </div>
+                                                        <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
+                                                            aria-hidden="true"></i>
+                                                        <span
+                                                            class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
+                                                        <span class="cart-added-{{ $product->id }}"
+                                                            style="display: none;">{{ __('Added to bag') }}</span>
+                                                    </a>
+                                                </div>
+                                            @else
+                                                <div class="add-btn">
+                                                    <a href="3" data-bs-toggle="modal"
+                                                        data-bs-target="#quick-view-{{ $product->id }}">
+                                                        <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
+                                                            aria-hidden="true"></i>
+                                                        <span>{{ __('add to cart') }}</span>
+                                                    </a>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- product deal section start -->
+
+            @foreach ($products as $product)
+                @include('ecommerce._product_modal', [
+                    'product' => $product,
+                ])
+            @endforeach
+        @endforeach
+    @endif
+
+
+
+    @if ($top_collections->count() > 0)
+        <!-- Paragraph-->
+        <div class="title6 section-t-space">
+            <h2 class="font-fraunces">
+                {{ app()->getLocale() == 'ar' ? websiteSettingAr('top_collection') : websiteSettingEn('top_collection') }}
+            </h2>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 offset-lg-3">
+                    <div class="product-para">
+                        <p class="text-center">
+                            {{ app()->getLocale() == 'ar' ? websiteSettingDAr('top_collection') : websiteSettingDEn('top_collection') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Paragraph end -->
+
+        <!-- product slider start -->
+        <section class="bag-product ratio_square pt-0 section-b-space">
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-12">
+                        <div class="slide-6-product product-m no-arrow">
+                            @foreach ($top_collections as $product)
+                                <div class="product-box product-wrap product-style-3">
+                                    <div class="img-wrapper">
+                                        <div class="front">
+                                            <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
+                                                    alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"
+                                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
+                                                    class="img-fluid blur-up lazyload bg-img"></a>
+                                        </div>
+                                        <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
+                                                title="{{ __('Add to Wishlist') }}"
+                                                data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
+                                                data-product_id="{{ $product->id }}"><i
+                                                    style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
+                                                    class="fa fa-heart fav-{{ $product->id }} "
+                                                    aria-hidden="true"></i></a>
+                                            <a href="#" data-bs-toggle="modal"
+                                                data-bs-target="#quick-view-{{ $product->id }}"
+                                                title="{{ __('Quick View') }}"><i class="ti-search"
+                                                    aria-hidden="true"></i></a>
+
+                                        </div>
+                                    </div>
+                                    <div class="product-info">
+                                        <div class="">{!! getAverageRatingWithStars($product) !!}
+                                        </div>
+                                        <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
+                                            <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
+                                            </h6>
+                                        </a>
+                                        {!! getProductPrice($product) !!}
+                                        @if ($product->product_type != 'variable')
+                                            <div class="add-btn">
+                                                <a href="javascript:void(0)" class="add-to-cart"
+                                                    data-url="{{ route('ecommerce.cart.store') }}"
+                                                    data-locale="{{ app()->getLocale() }}"
+                                                    data-product_id="{{ $product->id }}"
+                                                    data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
+                                                    <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
+                                                        class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
+                                                        role="status">
+                                                    </div>
+                                                    <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
+                                                        aria-hidden="true"></i>
+                                                    <span
+                                                        class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
+                                                    <span class="cart-added-{{ $product->id }}"
+                                                        style="display: none;">{{ __('Added to bag') }}</span>
+                                                </a>
+                                            </div>
+                                        @else
+                                            <div class="add-btn">
+                                                <a href="3" data-bs-toggle="modal"
+                                                    data-bs-target="#quick-view-{{ $product->id }}">
+                                                    <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
+                                                        aria-hidden="true"></i>
+                                                    <span>{{ __('add to cart') }}</span>
+                                                </a>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
@@ -232,141 +269,331 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-    <!-- Parallax banner end -->
+        </section>
+        <!-- product slider end -->
+
+        <!-- product start -->
+        {{-- <section class="bag-product pt-0 section-b-space ratio_square">
+            <div class="container">
+                <div class="row row-cols-xxl-6 row-cols-xl-5 row-cols-lg-4 row-cols-md-3 row-cols-2 gy-sm-4 gy-3">
+
+                    @foreach ($products->where('top_collection', 1) as $product)
+                        <div class="product-box product-wrap product-style-3">
+                            <div class="img-wrapper">
+                                <div class="front">
+                                    <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
+                                            alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"
+                                            src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
+                                            class="img-fluid blur-up lazyload bg-img"></a>
+                                </div>
+                                <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
+                                        title="{{ __('Add to Wishlist') }}"
+                                        data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
+                                        data-product_id="{{ $product->id }}"><i
+                                            style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
+                                            class="fa fa-heart fav-{{ $product->id }} " aria-hidden="true"></i></a>
+
+
+
+                                    <a href="#" data-bs-toggle="modal"
+                                        data-bs-target="#quick-view-{{ $product->id }}"
+                                        title="{{ __('Quick View') }}"><i class="ti-search" aria-hidden="true"></i></a>
+
+                                </div>
+                            </div>
+                            <div class="product-info">
+                                <div class="">{!! getAverageRatingWithStars($product) !!}
+                                </div>
+                                <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
+                                    <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</h6>
+                                </a>
+                                {!! getProductPrice($product) !!}
+
+                                @if ($product->product_type != 'variable')
+                                    <div class="add-btn">
+                                        <a href="javascript:void(0)" class="add-to-cart"
+                                            data-url="{{ route('ecommerce.cart.store') }}"
+                                            data-locale="{{ app()->getLocale() }}" data-product_id="{{ $product->id }}"
+                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
+                                            <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
+                                                class="spinner-border spinner-border-sm spinner spin-{{ $product->id }} "
+                                                role="status">
+                                            </div>
+                                            <i class="fa fa-shopping-cart cart-icon-{{ $product->id }}  me-1"
+                                                aria-hidden="true"></i>
+                                            <span class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
+                                            <span class="cart-added-{{ $product->id }}"
+                                                style="display: none;">{{ __('Added to bag') }}</span>
+                                        </a>
+                                    </div>
+                                @endif
+
+
+                            </div>
+                        </div>
+                    @endforeach
+
+
+                </div>
+            </div>
+        </section> --}}
+        <!-- product end -->
+    @endif
+
+    @if ($best_selling->count() > 0)
+        <!-- Parallax banner -->
+        <section class="p-0 product-vertical overflow-hidden">
+            <div class="full-banner parallax text-center p-left bg-theme">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-6 m-auto">
+                            <div class="title6">
+                                <h2 class="font-fraunces text-white">
+                                    {{ app()->getLocale() == 'ar' ? websiteSettingAr('best_selling') : websiteSettingEn('best_selling') }}
+                                </h2>
+                            </div>
+                            <div class="product-para">
+                                <p class="text-center text-white">
+                                    {{ app()->getLocale() == 'ar' ? websiteSettingDAr('best_selling') : websiteSettingDEn('best_selling') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="slide-3 no-arrow slick-default-margin full-box">
+
+                                @foreach ($best_selling as $product)
+                                    <div class="theme-card center-align">
+                                        <div class="offer-slider">
+                                            <div class="sec-1">
+                                                <div class="product-box2">
+                                                    <div class="media">
+                                                        <a
+                                                            href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
+                                                                class="img-fluid blur-up lazyload"
+                                                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
+                                                                alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
+                                                        <div class="media-body align-self-center">
+                                                            <div class="">{!! getAverageRatingWithStars($product) !!}</div>
+                                                            <a
+                                                                href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
+                                                                <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
+                                                                </h6>
+                                                            </a>
+                                                            {!! getProductPrice($product) !!}
+                                                            @if ($product->product_type != 'variable')
+                                                                <div class="add-btn">
+                                                                    <a href="javascript:void(0)" class="add-to-cart"
+                                                                        data-url="{{ route('ecommerce.cart.store') }}"
+                                                                        data-locale="{{ app()->getLocale() }}"
+                                                                        data-product_id="{{ $product->id }}"
+                                                                        data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
+                                                                        <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
+                                                                            class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
+                                                                            role="status">
+                                                                        </div>
+                                                                        <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
+                                                                            aria-hidden="true"></i>
+                                                                        <span
+                                                                            class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
+                                                                        <span class="cart-added-{{ $product->id }}"
+                                                                            style="display: none;">{{ __('Added to bag') }}</span>
+                                                                    </a>
+                                                                </div>
+                                                            @else
+                                                                <div class="add-btn">
+                                                                    <a href="3" data-bs-toggle="modal"
+                                                                        data-bs-target="#quick-view-{{ $product->id }}">
+                                                                        <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
+                                                                            aria-hidden="true"></i>
+                                                                        <span>{{ __('add to cart') }}</span>
+                                                                    </a>
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Parallax banner end -->
+    @endif
+
+
+
+
+
 
 
     <!-- product slider start -->
     <section class="bag-product ratio_square">
         <div class="container">
             <div class="row">
-                <div class="col-12">
-                    <div class="title-basic">
-                        <h2 class="title font-fraunces"><i class="ti-bolt"></i>{{ __('Featured products') }}</h2>
+
+                @if ($is_featured->count() > 0)
+                    <div class="col-12">
+                        <div class="title-basic">
+                            <h2 class="title font-fraunces"><i class="ti-bolt"></i>{{ __('Featured products') }}</h2>
+                        </div>
                     </div>
-                </div>
-                <div class="col-12">
-                    <div class="slide-6-product product-m no-arrow">
-                        @foreach ($products->where('is_featured', 1) as $product)
-                            <div class="product-box product-wrap product-style-3">
-                                <div class="img-wrapper">
-                                    <div class="front">
-                                        <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                                                alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"
-                                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
-                                                class="img-fluid blur-up lazyload bg-img"></a>
-                                    </div>
-                                    <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
-                                            title="{{ __('Add to Wishlist') }}"
-                                            data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
-                                            data-product_id="{{ $product->id }}"><i
-                                                style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
-                                                class="fa fa-heart fav-{{ $product->id }} " aria-hidden="true"></i></a>
-                                        <a href="#" data-bs-toggle="modal"
-                                            data-bs-target="#quick-view-{{ $product->id }}"
-                                            title="{{ __('Quick View') }}"><i class="ti-search"
-                                                aria-hidden="true"></i></a>
-                                        {{-- <a href="compare.html" title="Compare"><i class="ti-reload"
+                    <div class="col-12">
+                        <div class="slide-6-product product-m no-arrow">
+                            @foreach ($is_featured as $product)
+                                <div class="product-box product-wrap product-style-3">
+                                    <div class="img-wrapper">
+                                        <div class="front">
+                                            <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
+                                                    alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"
+                                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
+                                                    class="img-fluid blur-up lazyload bg-img"></a>
+                                        </div>
+                                        <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
+                                                title="{{ __('Add to Wishlist') }}"
+                                                data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
+                                                data-product_id="{{ $product->id }}"><i
+                                                    style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
+                                                    class="fa fa-heart fav-{{ $product->id }} "
+                                                    aria-hidden="true"></i></a>
+                                            <a href="#" data-bs-toggle="modal"
+                                                data-bs-target="#quick-view-{{ $product->id }}"
+                                                title="{{ __('Quick View') }}"><i class="ti-search"
+                                                    aria-hidden="true"></i></a>
+                                            {{-- <a href="compare.html" title="Compare"><i class="ti-reload"
                                                 aria-hidden="true"></i></a> --}}
-                                    </div>
-                                </div>
-                                <div class="product-info">
-                                    <div class="">{!! getAverageRatingWithStars($product) !!}
-                                    </div>
-                                    <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
-                                        <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</h6>
-                                    </a>
-                                    {!! getProductPrice($product) !!}
-                                    @if ($product->product_type != 'variable')
-                                        <div class="add-btn">
-                                            <a href="javascript:void(0)" class="add-to-cart"
-                                                data-url="{{ route('ecommerce.cart.store') }}"
-                                                data-locale="{{ app()->getLocale() }}"
-                                                data-product_id="{{ $product->id }}"
-                                                data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
-                                                <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
-                                                    class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
-                                                    role="status">
-                                                </div>
-                                                <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
-                                                    aria-hidden="true"></i>
-                                                <span
-                                                    class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
-                                                <span class="cart-added-{{ $product->id }}"
-                                                    style="display: none;">{{ __('Added to bag') }}</span>
-                                            </a>
                                         </div>
-                                    @endif
-                                </div>
-                            </div>
-                        @endforeach
-
-                    </div>
-                </div>
-                <div class="col-12 section-t-space">
-                    <div class="title-basic">
-                        <h2 class="title font-fraunces"><i class="ti-bolt"></i>{{ __('Offers and sales') }}</h2>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <div class="slide-6-product product-m no-arrow">
-                        @foreach ($products->where('on_sale', 1) as $product)
-                            <div class="product-box product-wrap product-style-3">
-                                <div class="img-wrapper">
-                                    <div class="front">
-                                        <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                                                alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"
-                                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
-                                                class="img-fluid blur-up lazyload bg-img"></a>
                                     </div>
-                                    <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
-                                            title="{{ __('Add to Wishlist') }}"
-                                            data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
-                                            data-product_id="{{ $product->id }}"><i
-                                                style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
-                                                class="fa fa-heart fav-{{ $product->id }} " aria-hidden="true"></i></a>
-                                        <a href="#" data-bs-toggle="modal"
-                                            data-bs-target="#quick-view-{{ $product->id }}"
-                                            title="{{ __('Quick View') }}"><i class="ti-search"
-                                                aria-hidden="true"></i></a>
-                                        {{-- <a href="compare.html"
+                                    <div class="product-info">
+                                        <div class="">{!! getAverageRatingWithStars($product) !!}
+                                        </div>
+                                        <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
+                                            <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
+                                            </h6>
+                                        </a>
+                                        {!! getProductPrice($product) !!}
+                                        @if ($product->product_type != 'variable')
+                                            <div class="add-btn">
+                                                <a href="javascript:void(0)" class="add-to-cart"
+                                                    data-url="{{ route('ecommerce.cart.store') }}"
+                                                    data-locale="{{ app()->getLocale() }}"
+                                                    data-product_id="{{ $product->id }}"
+                                                    data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
+                                                    <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
+                                                        class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
+                                                        role="status">
+                                                    </div>
+                                                    <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
+                                                        aria-hidden="true"></i>
+                                                    <span
+                                                        class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
+                                                    <span class="cart-added-{{ $product->id }}"
+                                                        style="display: none;">{{ __('Added to bag') }}</span>
+                                                </a>
+                                            </div>
+                                        @else
+                                            <div class="add-btn">
+                                                <a href="3" data-bs-toggle="modal"
+                                                    data-bs-target="#quick-view-{{ $product->id }}">
+                                                    <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
+                                                        aria-hidden="true"></i>
+                                                    <span>{{ __('add to cart') }}</span>
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+
+                        </div>
+                    </div>
+                @endif
+
+                @if ($on_sale->count() > 0)
+                    <div class="col-12 section-t-space">
+                        <div class="title-basic">
+                            <h2 class="title font-fraunces"><i class="ti-bolt"></i>{{ __('Offers and sales') }}</h2>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="slide-6-product product-m no-arrow">
+                            @foreach ($on_sale as $product)
+                                <div class="product-box product-wrap product-style-3">
+                                    <div class="img-wrapper">
+                                        <div class="front">
+                                            <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
+                                                    alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"
+                                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
+                                                    class="img-fluid blur-up lazyload bg-img"></a>
+                                        </div>
+                                        <div class="cart-detail"><a href="javascript:void(0)" class="add-fav"
+                                                title="{{ __('Add to Wishlist') }}"
+                                                data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
+                                                data-product_id="{{ $product->id }}"><i
+                                                    style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
+                                                    class="fa fa-heart fav-{{ $product->id }} "
+                                                    aria-hidden="true"></i></a>
+                                            <a href="#" data-bs-toggle="modal"
+                                                data-bs-target="#quick-view-{{ $product->id }}"
+                                                title="{{ __('Quick View') }}"><i class="ti-search"
+                                                    aria-hidden="true"></i></a>
+                                            {{-- <a href="compare.html"
                                             title="Compare"><i class="ti-reload" aria-hidden="true"></i></a> --}}
-                                    </div>
-                                </div>
-                                <div class="product-info">
-                                    <div class="">{!! getAverageRatingWithStars($product) !!}
-                                    </div>
-                                    <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
-                                        <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</h6>
-                                    </a>
-                                    {!! getProductPrice($product) !!}
-                                    @if ($product->product_type != 'variable')
-                                        <div class="add-btn">
-                                            <a href="javascript:void(0)" class="add-to-cart"
-                                                data-url="{{ route('ecommerce.cart.store') }}"
-                                                data-locale="{{ app()->getLocale() }}"
-                                                data-product_id="{{ $product->id }}"
-                                                data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
-                                                <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
-                                                    class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
-                                                    role="status">
-                                                </div>
-                                                <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
-                                                    aria-hidden="true"></i>
-                                                <span
-                                                    class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
-                                                <span class="cart-added-{{ $product->id }}"
-                                                    style="display: none;">{{ __('Added to bag') }}</span>
-                                            </a>
                                         </div>
-                                    @endif
+                                    </div>
+                                    <div class="product-info">
+                                        <div class="">{!! getAverageRatingWithStars($product) !!}
+                                        </div>
+                                        <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
+                                            <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
+                                            </h6>
+                                        </a>
+                                        {!! getProductPrice($product) !!}
+                                        @if ($product->product_type != 'variable')
+                                            <div class="add-btn">
+                                                <a href="javascript:void(0)" class="add-to-cart"
+                                                    data-url="{{ route('ecommerce.cart.store') }}"
+                                                    data-locale="{{ app()->getLocale() }}"
+                                                    data-product_id="{{ $product->id }}"
+                                                    data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
+                                                    <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
+                                                        class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
+                                                        role="status">
+                                                    </div>
+                                                    <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
+                                                        aria-hidden="true"></i>
+                                                    <span
+                                                        class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
+                                                    <span class="cart-added-{{ $product->id }}"
+                                                        style="display: none;">{{ __('Added to bag') }}</span>
+                                                </a>
+                                            </div>
+                                        @else
+                                            <div class="add-btn">
+                                                <a href="3" data-bs-toggle="modal"
+                                                    data-bs-target="#quick-view-{{ $product->id }}">
+                                                    <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
+                                                        aria-hidden="true"></i>
+                                                    <span>{{ __('add to cart') }}</span>
+                                                </a>
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
 
+                        </div>
                     </div>
-                </div>
+                @endif
+
+
             </div>
         </div>
     </section>
@@ -406,270 +633,101 @@
     <!-- two banner -->
 
 
+
+
+
+
     <!-- product slider -->
     <section class="section-b-space">
         <div class="container">
             <div class="row multiple-slider">
+
                 <div class="col-lg-3 col-sm-6">
-                    <div class="theme-card">
-                        <h5 class="title-border">{{ __('Top collections') }}</h5>
-                        <div class="offer-slider slide-1">
-
-
-                            @php
-                                $i = 0;
-                            @endphp
-
-                            @foreach ($products->where('top_collection', 1) as $index => $product)
-                                @if ($i % 3 === 0)
-                                    <div>
-                                @endif
-
-                                <div class="media">
-                                    <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                                            class="img-fluid blur-up lazyload"
-                                            src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
-                                            alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
-                                    <div class="media-body align-self-center">
-                                        <div class="">{!! getAverageRatingWithStars($product) !!}</div>
-                                        <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
-                                            <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
-                                            </h6>
-                                        </a>
-                                        {!! getProductPrice($product) !!}
-                                        @if ($product->product_type != 'variable')
-                                            <div class="add-btn mt-2">
-                                                <a href="javascript:void(0)" class="add-to-cart"
-                                                    data-url="{{ route('ecommerce.cart.store') }}"
-                                                    data-locale="{{ app()->getLocale() }}"
-                                                    data-product_id="{{ $product->id }}"
-                                                    data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
-                                                    <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
-                                                        class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
-                                                        role="status">
-                                                    </div>
-                                                    <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
-                                                        aria-hidden="true"></i>
-                                                    <span
-                                                        class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
-                                                    <span class="cart-added-{{ $product->id }}"
-                                                        style="display: none;">{{ __('Added to bag') }}</span>
-                                                </a>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                @if ($i % 3 === 2)
-                        </div>
-                        @endif
-                        @php
-                            $i++;
-                        @endphp
-                        @endforeach
-
-                        @if ($i % 3 !== 0)
-                    </div>
+                    @if ($top_collections->count() > 0)
+                        @include('ecommerce._products_slider', [
+                            'products' => $top_collections,
+                            'type' => 'Top collections',
+                        ])
                     @endif
-
-
                 </div>
-            </div>
-        </div>
 
-        <div class="col-lg-3 col-sm-6">
-            <div class="theme-card">
-                <h5 class="title-border">{{ __('Best seller') }}</h5>
-                <div class="offer-slider slide-1">
-
-
-                    @php
-                        $i = 0;
-                    @endphp
-
-                    @foreach ($products->where('best_selling', 1) as $index => $product)
-                        @if ($i % 3 === 0)
-                            <div>
-                        @endif
-
-                        <div class="media">
-                            <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                                    class="img-fluid blur-up lazyload"
-                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
-                                    alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
-                            <div class="media-body align-self-center">
-                                <div class="">{!! getAverageRatingWithStars($product) !!}</div>
-                                <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
-                                    <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
-                                    </h6>
-                                </a>
-                                {!! getProductPrice($product) !!}
-                                @if ($product->product_type != 'variable')
-                                    <div class="add-btn mt-2">
-                                        <a href="javascript:void(0)" class="add-to-cart"
-                                            data-url="{{ route('ecommerce.cart.store') }}"
-                                            data-locale="{{ app()->getLocale() }}"
-                                            data-product_id="{{ $product->id }}"
-                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
-                                            <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
-                                                class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
-                                                role="status">
-                                            </div>
-                                            <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
-                                                aria-hidden="true"></i>
-                                            <span class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
-                                            <span class="cart-added-{{ $product->id }}"
-                                                style="display: none;">{{ __('Added to bag') }}</span>
-                                        </a>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        @if ($i % 3 === 2)
+                <div class="col-lg-3 col-sm-6">
+                    @if ($best_selling->count() > 0)
+                        @include('ecommerce._products_slider', [
+                            'products' => $best_selling,
+                            'type' => 'Best seller',
+                        ])
+                    @endif
                 </div>
-                @endif
-                @php
-                    $i++;
-                @endphp
-                @endforeach
 
-                @if ($i % 3 !== 0)
-            </div>
-            @endif
-        </div>
-        </div>
-        </div>
-
-        <div class="col-lg-3 col-sm-6">
-            <div class="theme-card">
-                <h5 class="title-border">{{ __('Featured products') }}</h5>
-                <div class="offer-slider slide-1">
-
-                    @php
-                        $i = 0;
-                    @endphp
-                    @foreach ($products->where('is_featured', 1) as $index => $product)
-                        @if ($i % 3 === 0)
-                            <div>
-                        @endif
-
-                        <div class="media">
-                            <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                                    class="img-fluid blur-up lazyload"
-                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
-                                    alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
-                            <div class="media-body align-self-center">
-                                <div class="">{!! getAverageRatingWithStars($product) !!}</div>
-                                <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
-                                    <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
-                                    </h6>
-                                </a>
-                                {!! getProductPrice($product) !!}
-                                @if ($product->product_type != 'variable')
-                                    <div class="add-btn mt-2">
-                                        <a href="javascript:void(0)" class="add-to-cart"
-                                            data-url="{{ route('ecommerce.cart.store') }}"
-                                            data-locale="{{ app()->getLocale() }}"
-                                            data-product_id="{{ $product->id }}"
-                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
-                                            <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
-                                                class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
-                                                role="status">
-                                            </div>
-                                            <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
-                                                aria-hidden="true"></i>
-                                            <span class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
-                                            <span class="cart-added-{{ $product->id }}"
-                                                style="display: none;">{{ __('Added to bag') }}</span>
-                                        </a>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        @if ($i % 3 === 2)
+                <div class="col-lg-3 col-sm-6">
+                    @if ($is_featured->count() > 0)
+                        @include('ecommerce._products_slider', [
+                            'products' => $is_featured,
+                            'type' => 'Featured products',
+                        ])
+                    @endif
                 </div>
-                @endif
-                @php
-                    $i++;
-                @endphp
-                @endforeach
 
-                @if ($i % 3 !== 0)
-            </div>
-            @endif
-        </div>
-        </div>
-        </div>
-
-
-        <div class="col-lg-3 col-sm-6">
-            <div class="theme-card">
-                <h5 class="title-border">{{ __('Offers and sales') }}</h5>
-                <div class="offer-slider slide-1">
-                    @php
-                        $i = 0;
-                    @endphp
-
-                    @foreach ($products->where('on_sale', 1) as $index => $product)
-                        @if ($i % 3 === 0)
-                            <div>
-                        @endif
-
-                        <div class="media">
-                            <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                                    class="img-fluid blur-up lazyload"
-                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
-                                    alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
-                            <div class="media-body align-self-center">
-                                <div class="">{!! getAverageRatingWithStars($product) !!}</div>
-                                <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
-                                    <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
-                                    </h6>
-                                </a>
-                                {!! getProductPrice($product) !!}
-                                @if ($product->product_type != 'variable')
-                                    <div class="add-btn mt-2">
-                                        <a href="javascript:void(0)" class="add-to-cart"
-                                            data-url="{{ route('ecommerce.cart.store') }}"
-                                            data-locale="{{ app()->getLocale() }}"
-                                            data-product_id="{{ $product->id }}"
-                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
-                                            <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
-                                                class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
-                                                role="status">
-                                            </div>
-                                            <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
-                                                aria-hidden="true"></i>
-                                            <span class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
-                                            <span class="cart-added-{{ $product->id }}"
-                                                style="display: none;">{{ __('Added to bag') }}</span>
-                                        </a>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        @if ($i % 3 === 2)
+                <div class="col-lg-3 col-sm-6">
+                    @if ($on_sale->count() > 0)
+                        @include('ecommerce._products_slider', [
+                            'products' => $on_sale,
+                            'type' => 'Offers and sales',
+                        ])
+                    @endif
                 </div>
-                @endif
-                @php
-                    $i++;
-                @endphp
-                @endforeach
 
-                @if ($i % 3 !== 0)
+
             </div>
-            @endif
-        </div>
-        </div>
-        </div>
-
-        </div>
         </div>
     </section>
     <!-- product slider end -->
+
+
+    @if ($testimonials->count() > 0)
+        <!--Testimonial start-->
+
+        <div class="title6 section-t-space">
+            <h2 class="font-fraunces">
+                {{ __('Testimonials') }}
+            </h2>
+        </div>
+
+        <section class="testimonial small-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="slide-3 testimonial-slider no-arrow">
+
+                            @foreach ($testimonials as $testimonial)
+                                <div>
+                                    <div class="media d-flex justify-content-center">
+                                        <div class="text-center">
+                                            <img src="{{ asset($testimonial->media->path) }}" alt="#">
+                                            <h5>{{ getName($testimonial) }}</h5>
+                                            <h6>{{ app()->getLocale() == 'ar' ? $testimonial->title_ar : $testimonial->title_en }}
+                                            </h6>
+                                        </div>
+                                        <div style="width:100;" class="media-body text-center">
+                                            <p>{{ app()->getLocale() == 'ar' ? $testimonial->description_ar : $testimonial->description_en }}
+                                            </p>
+                                            <div class="rating">
+                                                {!! getTistimonialStars($testimonial) !!}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!--Testimonial ends-->
+    @endif
 
 
     <!-- service section start -->
@@ -734,194 +792,28 @@
 
     <!-- Quick-view modal popup start-->
 
-    @foreach ($products as $product)
-        <div class="modal fade bd-example-modal-lg theme-modal" id="quick-view-{{ $product->id }}" tabindex="-1"
-            role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-                <div class="modal-content quick-view-modal">
-                    <div style="background: #ffffff" class="modal-body">
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><span
-                                aria-hidden="true">&times;</span></button>
-                        <div class="row">
-                            <div class="col-lg-6 col-xs-12">
-                                <div class="quick-view-img"><img
-                                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
-                                        alt="" class="img-fluid blur-up lazyload"></div>
-                            </div>
-                            <div class="col-lg-6 rtl-text">
-                                <div class="product-right">
-                                    <h2>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}</h2>
-                                    <div class="ecommerce-product-price-{{ $product->id }}">
-                                        {!! getProductPrice($product) !!}
-                                    </div>
-                                    <div class="border-product">
-                                        <h6 class="product-title">{{ __('product details') }}</h6>
-                                        <p>{!! app()->getLocale() == 'ar' ? $product->description_ar : $product->description_en !!}</p>
-                                    </div>
-                                    <div
-                                        class="product-description border-product product-attributes-{{ $product->id }}">
-                                        @if ($product->product_type == 'variable')
-                                            @foreach ($product->attributes as $attribute)
-                                                @if (
-                                                    $attribute->name_en == 'color' ||
-                                                        $attribute->name_en == 'colors' ||
-                                                        $attribute->name_en == 'Color' ||
-                                                        $attribute->name_en == 'Colors')
-                                                    <div class="row">
-                                                        <div
-                                                            class="col-md-3 d-flex justify-content-center align-items-center">
-                                                            <h4>{{ app()->getLocale() == 'ar' ? $attribute->name_ar : $attribute->name_en }}
-                                                            </h4>
-                                                        </div>
-                                                        <div class="col-md-9">
-                                                            <ul class="color-variant">
-                                                                @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
-                                                                    <li style="background-color:{{ $variation->variation->value }} !important; {{ $variation->variation->value == '#ffffff' ? 'border: 1px solid #999999' : '' }}"
-                                                                        class="bg-light0 color-select attribute-select"
-                                                                        data-variation-id="{{ $variation->variation->id }}"
-                                                                        data-product-id="{{ $product->id }}"
-                                                                        data-url="{{ route('ecommerce.product.price') }}"
-                                                                        data-locale="{{ app()->getLocale() }}"
-                                                                        data-currency="{{ $product->country->currency }}">
-                                                                    </li>
-                                                                @endforeach
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                @else
-                                                    <div class="row">
-                                                        <div
-                                                            class="col-md-3 d-flex justify-content-center align-items-center">
-                                                            <h4>{{ app()->getLocale() == 'ar' ? $attribute->name_ar : $attribute->name_en }}
-                                                            </h4>
+    @foreach ($top_collections as $product)
+        @include('ecommerce._product_modal', [
+            'product' => $product,
+        ])
+    @endforeach
 
-                                                        </div>
-                                                        <div class="col-md-9">
-                                                            <div class="size-box attribute-box-{{ $attribute->id }}">
+    @foreach ($best_selling as $product)
+        @include('ecommerce._product_modal', [
+            'product' => $product,
+        ])
+    @endforeach
 
-                                                                @if ($attribute->type == 'select')
-                                                                    <select>
+    @foreach ($is_featured as $product)
+        @include('ecommerce._product_modal', [
+            'product' => $product,
+        ])
+    @endforeach
 
-                                                                        <option value="">
-                                                                            {{ __('Select') . ' ' . getName($attribute) }}
-                                                                        </option>
-                                                                        @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
-                                                                            <option class="attribute-select"
-                                                                                data-attribute-id="{{ $attribute->id }}"
-                                                                                data-variation-id="{{ $variation->variation->id }}"
-                                                                                data-product-id="{{ $product->id }}"
-                                                                                data-url="{{ route('ecommerce.product.price') }}"
-                                                                                data-locale="{{ app()->getLocale() }}"
-                                                                                data-currency="{{ $product->country->currency }}">
-                                                                                {{ app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en }}
-                                                                            </option>
-                                                                        @endforeach
-
-
-                                                                    </select>
-                                                                @else
-                                                                    <ul>
-                                                                        @foreach ($product->variations->where('attribute_id', $attribute->id) as $index => $variation)
-                                                                            <li class="attribute-select"
-                                                                                data-attribute-id="{{ $attribute->id }}"
-                                                                                data-variation-id="{{ $variation->variation->id }}"
-                                                                                data-product-id="{{ $product->id }}"
-                                                                                data-url="{{ route('ecommerce.product.price') }}"
-                                                                                data-locale="{{ app()->getLocale() }}"
-                                                                                data-currency="{{ $product->country->currency }}">
-                                                                                <a
-                                                                                    href="javascript:void(0)">{{ app()->getLocale() == 'ar' ? $variation->variation->name_ar : $variation->variation->name_en }}</a>
-                                                                            </li>
-                                                                        @endforeach
-                                                                    </ul>
-                                                                @endif
-
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                @endif
-                                            @endforeach
-                                        @endif
-                                        <h6 class="product-title">{{ __('quantity') }}</h6>
-                                        <div class="qty-box">
-                                            <div class="input-group">
-                                                <span class="input-group-prepend">
-                                                    <button type="button" class="btn quantity-left-minus"
-                                                        data-type="minus" data-field=""><i
-                                                            class="ti-angle-{{ app()->getLocale() == 'ar' ? 'right' : 'left' }}"></i>
-                                                    </button>
-                                                </span>
-                                                <input type="text" name="quantity"
-                                                    class="form-control qty-input input-number" value="1"
-                                                    data-min="{{ $product->product_min_order }}"
-                                                    data-max="{{ $product->product_max_order }}" disabled>
-                                                <span class="input-group-prepend">
-                                                    <button type="button" class="btn quantity-right-plus"
-                                                        data-type="plus" data-field=""><i
-                                                            class="ti-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }}"></i>
-                                                    </button>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="product-button">
-
-
-                                        <a href="javascript:void(0)" id="cartEffect"
-                                            class="btn btn-solid btn-sm hover-solid btn-animation add-to-cart"
-                                            data-url="{{ route('ecommerce.cart.store') }}"
-                                            data-locale="{{ app()->getLocale() }}"
-                                            data-product_id="{{ $product->id }}"
-                                            data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
-
-                                            <div style="display: none; color: #ffffff; margin: 3px; padding: 6px;"
-                                                class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
-                                                role="status">
-                                                <span class="visually-hidden">{{ __('Loading...') }}</span>
-                                            </div>
-
-
-
-                                            <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
-                                                aria-hidden="true"></i>
-
-                                            <span class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
-                                            <span class="cart-added-{{ $product->id }}"
-                                                style="display: none;">{{ __('Added to bag') }}</span>
-
-
-                                        </a> <a href="#"
-                                            data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
-                                            data-product_id="{{ $product->id }}"
-                                            class="btn btn-solid btn-sm add-fav"><i
-                                                style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
-                                                class="fa fa-heart fav-{{ $product->id }} fz-16 me-2"
-                                                aria-hidden="true"></i>{{ __('wishlist') }}</a>
-
-
-                                        <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"
-                                            class="btn btn-solid btn-sm">{{ __('view detail') }}</a>
-
-
-                                    </div>
-
-                                    <div class="col-6 mt-4">
-                                        <div style="display:none !important"
-                                            class="alert alert-danger border-2 align-items-center alarm" role="alert">
-                                            <div class="bg-danger me-3 icon-item"><i
-                                                    class="fa fa-exclamation-circle text-white fs-3"></i>
-                                            </div>
-                                            <p class="mb-0 flex-1 alarm-text"></p>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    @foreach ($on_sale as $product)
+        @include('ecommerce._product_modal', [
+            'product' => $product,
+        ])
     @endforeach
 
     <!-- Quick-view modal popup end-->
@@ -939,4 +831,37 @@
         <h3>{{ __('added to wishlist') }}</h3>
     </div>
     <!-- added to fav notification -->
+
+    @if (Auth::check())
+        @if (session('modal_auth_count') == null)
+            @php
+                session(['modal_auth_count' => 1]);
+            @endphp
+        @else
+            @php
+                session(['modal_auth_count' => session('modal_auth_count') + 1]);
+            @endphp
+        @endif
+    @else
+        @if (session('modal_count') == null)
+            @php
+                session(['modal_count' => 1]);
+            @endphp
+        @else
+            @php
+                session(['modal_count' => session('modal_count') + 1]);
+            @endphp
+        @endif
+    @endif
+
+    @if ((Auth::check() && session('modal_auth_count') < 4) || (!Auth::check() && session('modal_count') < 4))
+        @include('layouts.ecommerce._modal', [
+            'type' => Auth::check() ? 'front_auth' : 'front',
+        ])
+    @endif
+
+
+
+
+
 @endsection

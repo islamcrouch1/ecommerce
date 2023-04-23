@@ -27,81 +27,23 @@
                         </div>
                     </div>
                     <div id="table-customers-replace-element">
-                        <form style="display: inline-block" action="">
 
-                            <div class="d-inline-block">
-                                {{-- <label class="form-label" for="from">{{ __('From') }}</label> --}}
-                                <input type="date" id="from" name="from" class="form-control form-select-sm"
-                                    value="{{ request()->from }}">
-                            </div>
-
-                            <div class="d-inline-block">
-                                {{-- <label class="form-label" for="to">{{ __('To') }}</label> --}}
-                                <input type="date" id="to" name="to"
-                                    class="form-control form-select-sm sonoo-search" value="{{ request()->to }}">
-                            </div>
-
-                            <div class="d-inline-block">
-                                <select name="role_id" class="form-select form-select-sm sonoo-search"
-                                    id="autoSizingSelect">
-                                    <option value="" selected>{{ __('All Roles') }}</option>
-                                    @foreach ($roles as $role)
-                                        <option value="{{ $role->id }}"
-                                            {{ request()->role_id == $role->id ? 'selected' : '' }}>{{ $role->name }}
-                                            {{ app()->getLocale() == 'ar' ? $role->name_ar : $role->name_en }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="d-inline-block">
-                                <select name="status" class="form-select form-select-sm sonoo-search"
-                                    id="autoSizingSelect">
-                                    <option value="" selected>{{ __('All Status') }}</option>
-                                    <option value="active" {{ request()->status == 'active' ? 'selected' : '' }}>
-                                        {{ __('active') }}</option>
-                                    <option value="inactive" {{ request()->status == 'inactive' ? 'selected' : '' }}>
-                                        {{ __('inactive') }}</option>
-                                    <option value="1" {{ request()->status == '1' ? 'selected' : '' }}>
-                                        {{ __('blocked') }}</option>
-                                </select>
-                            </div>
-
-                            <div class="d-inline-block">
-                                <select name="country_id" class="form-select form-select-sm sonoo-search"
-                                    id="autoSizingSelect">
-                                    <option value="" selected>{{ __('All Countries') }}</option>
-                                    @foreach ($countries as $country)
-                                        <option value="{{ $country->id }}"
-                                            {{ request()->country_id == $country->id ? 'selected' : '' }}>
-                                            {{ app()->getLocale() == 'ar' ? $country->name_ar : $country->name_en }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="d-inline-block">
-                                <select name="branch_id" class="form-select form-select-sm sonoo-search"
-                                    id="autoSizingSelect">
-                                    <option value="" selected>{{ __('All Branches') }}</option>
-                                    @foreach ($branches as $branch)
-                                        <option value="{{ $branch->id }}"
-                                            {{ request()->branch_id == $branch->id ? 'selected' : '' }}>
-                                            {{ getName($branch) }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                        <a href="" data-bs-toggle="modal" data-bs-target="#filter-modal"
+                            class="btn btn-falcon-default btn-sm"><span class="fas fa-filter"
+                                data-fa-transform="shrink-3 down-2"></span><span
+                                class="d-none d-sm-inline-block ms-1">{{ __('Filter') }}</span></a>
 
 
-                        </form>
                         @if (auth()->user()->hasPermission('users-create'))
-                            <a href="{{ route('users.create') }}" class="btn btn-falcon-default btn-sm"
-                                type="button"><span class="fas fa-plus" data-fa-transform="shrink-3 down-2"></span><span
+                            <a href="{{ route('users.create') }}" class="btn btn-falcon-default btn-sm" type="button"><span
+                                    class="fas fa-plus" data-fa-transform="shrink-3 down-2"></span><span
                                     class="d-none d-sm-inline-block ms-1">{{ __('New') }}</span></a>
                         @endif
+
                         <a href="{{ route('users.trashed') }}" class="btn btn-falcon-default btn-sm" type="button"><span
                                 class="fas fa-trash" data-fa-transform="shrink-3 down-2"></span><span
                                 class="d-none d-sm-inline-block ms-1">{{ __('Trash') }}</span></a>
+
                         <a href="{{ route('users.export', ['role_id' => request()->role_id, 'from' => request()->from, 'to' => request()->to]) }}"
                             class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-external-link-alt"
                                 data-fa-transform="shrink-3 down-2"></span><span
@@ -172,10 +114,12 @@
                                             href="tel:{{ $user->phone }}">{{ $user->phone }}</a></td>
                                     <td class="address align-middle white-space-nowrap py-2">
                                         @foreach ($user->roles as $role)
-                                            <div style="display: inline-block">
-                                                <span class="badge badge-soft-primary">{{ $role->name }}
-                                                </span>
-                                            </div>
+                                            @if ($role->name != 'administrator')
+                                                <div style="display: inline-block">
+                                                    <span class="badge badge-soft-primary">{{ __($role->name) }}
+                                                    </span>
+                                                </div>
+                                            @endif
                                         @endforeach
                                     </td>
                                     <td class="phone align-middle white-space-nowrap py-2">
@@ -296,4 +240,108 @@
         </div>
 
     </div>
+
+
+    <!-- start filter modal -->
+    <div class="modal fade" id="filter-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 60%">
+            <div class="modal-content position-relative">
+                <div class="position-absolute top-0 end-0 mt-2 me-2 z-index-1">
+                    <button class="btn-close btn btn-sm btn-circle d-flex flex-center transition-base"
+                        data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="">
+                    <div class="modal-body p-0">
+                        <div class="rounded-top-lg py-3 ps-4 pe-6 bg-light">
+                            <h4 class="mb-1" id="modalExampleDemoLabel">
+                                {{ __('search filters') }}</h4>
+                        </div>
+                        <div class="p-4 pb-0">
+
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <input class="form-control search-input fuzzy-search" type="search"
+                                        value="{{ request()->search }}" name="search" autofocus
+                                        placeholder="{{ __('Search...') }}" />
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <div class="input-group"><span class="input-group-text"
+                                            id="from">{{ __('From') }}</span>
+                                        <input type="date" id="from" name="from" class="form-control"
+                                            value="{{ request()->from }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <div class="input-group"><span class="input-group-text"
+                                            id="to">{{ __('To') }}</span>
+                                        <input type="date" id="to" name="to" class="form-control"
+                                            value="{{ request()->to }}">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3 mb-3">
+                                    <select name="role_id" class="form-select" id="autoSizingSelect">
+                                        <option value="" selected>{{ __('All Roles') }}</option>
+                                        @foreach ($roles as $role)
+                                            <option value="{{ $role->id }}"
+                                                {{ request()->role_id == $role->id ? 'selected' : '' }}>
+                                                {{ __($role->name) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3 mb-3">
+                                    <select name="status" class="form-select" id="autoSizingSelect">
+                                        <option value="" selected>{{ __('All Status') }}</option>
+                                        <option value="active" {{ request()->status == 'active' ? 'selected' : '' }}>
+                                            {{ __('active') }}</option>
+                                        <option value="inactive" {{ request()->status == 'inactive' ? 'selected' : '' }}>
+                                            {{ __('inactive') }}</option>
+                                        <option value="1" {{ request()->status == '1' ? 'selected' : '' }}>
+                                            {{ __('blocked') }}</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3  mb-3">
+                                    <select name="country_id" class="form-select" id="autoSizingSelect">
+                                        <option value="" selected>{{ __('All Countries') }}</option>
+                                        @foreach ($countries as $country)
+                                            <option value="{{ $country->id }}"
+                                                {{ request()->country_id == $country->id ? 'selected' : '' }}>
+                                                {{ getName($country) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3  mb-3">
+                                    <select name="branch_id" class="form-select" id="autoSizingSelect">
+                                        <option value="" selected>{{ __('All Branches') }}</option>
+                                        @foreach ($branches as $branch)
+                                            <option value="{{ $branch->id }}"
+                                                {{ request()->branch_id == $branch->id ? 'selected' : '' }}>
+                                                {{ getName($branch) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" type="button"
+                            data-bs-dismiss="modal">{{ __('Close') }}</button>
+                        <button class="btn btn-primary" type="submit">{{ __('Apply') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- end filter modal -->
+
+
 @endsection

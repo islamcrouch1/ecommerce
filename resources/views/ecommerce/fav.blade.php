@@ -1,4 +1,4 @@
-@extends('layouts.ecommerce.app')
+@extends('layouts.ecommerce.app', ['page_title' => 'Wishlist'])
 @section('content')
 
 
@@ -25,66 +25,77 @@
     </div>
     <!-- breadcrumb End -->
 
+
+
     <!--section start-->
-    <section class="cart-section section-b-space">
+    <section class="wishlist-section section-b-space">
         <div class="container">
             <div class="row">
-                <div class="col-12">
-                    <div class="card dashboard-table mt-0">
-                        <div class="card-body table-responsive-sm">
+                <div class="col-sm-12 table-responsive-xs">
+                    <table class="table cart-table">
+                        <thead>
+                            <tr class="table-head">
+                                <th scope="col">{{ __('image') }}</th>
+                                <th scope="col">{{ __('product') }}</th>
+                                <th scope="col">{{ __('Action') }}</th>
+                            </tr>
+                        </thead>
 
-                            <div class="table-responsive-xl">
-                                <table class="table cart-table wishlist-table">
-                                    <thead>
-                                        <tr class="table-head">
-                                            <th scope="col">{{ __('image') }}</th>
-                                            <th scope="col">{{ __('product') }}</th>
-                                            <th scope="col">{{ __('Action') }}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (getFavs() as $fav)
-                                            <tr>
-                                                <td style="text-align: center">
-                                                    <a href="javascript:void(0)">
-                                                        <img src="{{ asset($fav->product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $fav->product->images[0]->media->path) }}"
-                                                            class="blur-up lazyloaded" alt="">
+                        @foreach (getFavs() as $fav)
+                            <tbody>
+
+                                <tr>
+                                    <td>
+                                        <a href="javascript:void(0)">
+                                            <img src="{{ asset($fav->product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $fav->product->images[0]->media->path) }}"
+                                                class="blur-up lazyloaded" alt="">
+                                        </a>
+                                    </td>
+                                    <td><a
+                                            href="{{ route('ecommerce.product', ['product' => $fav->product->id]) }}">{{ app()->getLocale() == 'ar' ? $fav->product->name_ar : $fav->product->name_en }}</a>
+                                        <div class="mobile-cart-content row">
+                                            <div class="col">
+                                                <p></p>
+                                            </div>
+                                            <div class="col">
+                                                <h2 class="td-color"></h2>
+                                            </div>
+                                            <div class="col">
+                                                <h2 class="td-color"><a
+                                                        href="{{ route('ecommerce.fav.add', ['product' => $fav->product->id]) }}"
+                                                        class="icon me-1"><i class="ti-close"></i>
                                                     </a>
-                                                </td>
+                                                    {{-- <a href="#" class="cart"><i
+                                                            class="ti-shopping-cart"></i></a> --}}
+                                                </h2>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <h2></h2>
+                                    </td>
+                                    <td>
+                                        <p></p>
+                                    </td>
+                                    <td><a href="{{ route('ecommerce.fav.add', ['product' => $fav->product->id]) }}"
+                                            class="icon me-3"><i class="ti-close"></i> </a>
+                                        {{-- <a href="#" class="cart"><i class="ti-shopping-cart"></i></a> --}}
+                                    </td>
 
-                                                <td style="text-align: center">
-                                                    <span>{{ app()->getLocale() == 'ar' ? $fav->product->name_ar : $fav->product->name_en }}
-                                                    </span>
-                                                </td>
-
-                                                <td style="text-align: center">
-                                                    <a href="{{ route('ecommerce.product', ['product' => $fav->product->id]) }}"
-                                                        class="btn btn-xs btn-solid">
-                                                        {{ __('View') }}
-                                                    </a>
-
-                                                    <a href="{{ route('ecommerce.fav.add', ['product' => $fav->product->id]) }}"
-                                                        class="btn btn-xs  btn-danger">
-                                                        {{ __('remove') }}
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-
-
+                                </tr>
+                            </tbody>
+                        @endforeach
 
 
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    </table>
                 </div>
             </div>
-
+            {{-- <div class="row wishlist-buttons">
+                <div class="col-12"><a href="#" class="btn btn-solid">continue shopping</a> <a href="#"
+                        class="btn btn-solid">check out</a></div>
+            </div> --}}
         </div>
     </section>
-
-
+    <!--section end-->
 
 @endsection

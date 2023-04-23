@@ -38,12 +38,19 @@ class AccountsController extends Controller
         }
 
 
+
+
         $accounts = Account::where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
-            ->whenSearch(request()->search)
             ->whenParent(request()->parent_id)
             ->whenBranch(request()->branch_id)
+            ->whenSearch(request()->search)
+            ->orWhere(function ($q) {
+                $q->whenSearchExact(request()->account_id);
+            })
             ->latest()
             ->paginate(100);
+
+
 
 
         return view('dashboard.accounts.index', compact('accounts', 'branches', 'user'));
@@ -184,7 +191,7 @@ class AccountsController extends Controller
             'code' => [
                 'required',
                 'string',
-                Rule::unique('accounts')->where(function ($query) use ($account) {
+                Rule::unique('accounts')->ignore($account->id)->where(function ($query) use ($account) {
                     return $query->where('branch_id', $account->branch_id);
                 }),
             ],

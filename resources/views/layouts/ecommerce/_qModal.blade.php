@@ -1,4 +1,4 @@
-    {{-- <!-- Quick-view modal popup start-->
+    <!-- Quick-view modal popup start-->
     <div class="modal fade bd-example-modal-lg theme-modal" id="quick-view" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content quick-view-modal">
@@ -54,4 +54,4 @@
             </div>
         </div>
     </div>
-    <!-- Quick-view modal popup end--> --}}
+    <!-- Quick-view modal popup end-->

@@ -1,6 +1,129 @@
 @extends('layouts.dashboard.app')
-
 @section('adminContent')
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-7 col-xxl-8">
+            <form style="display: inline-block" action="">
+
+                <div class="d-inline-block">
+                    {{-- <label class="form-label" for="from">{{ __('From') }}</label> --}}
+                    <input type="date" id="from" name="from" class="form-control form-select-sm"
+                        value="{{ request()->from }}">
+                </div>
+
+                <div class="d-inline-block">
+                    {{-- <label class="form-label" for="to">{{ __('To') }}</label> --}}
+                    <input type="date" id="to" name="to" class="form-control form-select-sm sonoo-search"
+                        value="{{ request()->to }}">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Auth::user()->hasRole('superadministrator|administrator') &&
+            auth()->user()->hasPermission('website_traffic-read'))
+        <div class="row g-3 mb-3">
+            <div class="col-lg-7 col-xxl-8">
+                <div class="card h-100" id="table"
+                    data-list='{"valueNames":["path","views","time","exitRate"],"page":8,"pagination":true,"fallback":"pages-table-fallback"}'>
+                    <div class="card-header">
+                        <div class="row flex-between-center">
+                            <div class="col-auto col-sm-6 col-lg-7">
+                                <h6 class="mb-0 text-nowrap py-2 py-xl-0">{{ __('Most viewed pages') }}</h6>
+                            </div>
+                            {{-- <div class="col-auto col-sm-6 col-lg-5">
+                                <div class="h-100">
+                                    <form>
+                                        <div class="input-group">
+                                            <input class="form-control form-control-sm shadow-none search" type="search"
+                                                placeholder="Search for a page" aria-label="search" />
+                                            <div class="input-group-text bg-transparent"><span
+                                                    class="fa fa-search fs--1 text-600"></span></div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div> --}}
+                        </div>
+                    </div>
+                    <div class="card-body px-0 py-0">
+                        <div class="table-responsive scrollbar">
+                            <table class="table fs--1 mb-0 overflow-hidden scroll">
+                                <thead class="bg-200 text-900">
+                                    <tr>
+                                        <th class="sort pe-1 align-middle white-space-nowrap" data-sort="path">
+                                            {{ __('Page Path') }}
+                                        </th>
+                                        <th class="sort pe-1 align-middle white-space-nowrap " data-sort="views">
+                                            {{ __('Page Views') }}
+                                        </th>
+                                        <th class="sort pe-1 align-middle white-space-nowrap" data-sort="time">
+                                            {{ __('action') }}</th>
+                                        {{-- <th class="sort pe-card align-middle white-space-nowrap text-end"
+                                            data-sort="exitRate">Exit
+                                            Rate</th>  --}}
+                                    </tr>
+                                </thead>
+
+
+                                <tbody class="list">
+
+                                    @if ($views->count() > 0)
+                                        @foreach ($views as $view)
+                                            <tr class="btn-reveal-trigger">
+                                                <td class="align-middle path"><a class="text-primary fw-semi-bold"
+                                                        href="{{ $view->full_url }}"
+                                                        target="_blank">{{ $view->full_url }}</a>
+                                                </td>
+                                                <td class="align-middle white-space-nowrap views">{{ $view->total }}
+                                                </td>
+                                                <td class="align-middle white-space-nowrap time">
+                                                    <a class="btn btn-falcon-default me-1 mb-1"
+                                                        href="{{ route('admin.views', ['full_url' => $view->full_url]) }}"
+                                                        type="button">{{ __('details') }}
+                                                    </a>
+                                                </td>
+                                                {{-- <td class="align-middle text-end exitRate text-end pe-card">20.4%</td> --}}
+                                            </tr>
+                                        @endforeach
+                                    @else
+                                        <tr col="3">
+                                            <td>
+                                                <p class="fw-bold fs-1 mt-3">{{ __('No Data To Show') }}</p>
+                                            </td>
+                                        </tr>
+                                    @endif
+
+
+
+                                </tbody>
+                            </table>
+
+                            <div class="card-footer d-flex align-items-center justify-content-center">
+                                {{ $views->appends(request()->query())->links() }}
+                            </div>
+                        </div>
+
+                    </div>
+                    {{-- <div class="card-footer">
+                        <div class="row align-items-center">
+                            <div class="pagination d-none"></div>
+                            <div class="col">
+                                <p class="mb-0 fs--1"><span class="d-none d-sm-inline-block me-2"
+                                        data-list-info="data-list-info"></span></p>
+                            </div>
+                            <div class="col-auto d-flex">
+                                <button class="btn btn-sm btn-primary" type="button"
+                                    data-list-pagination="prev"><span>Previous</span></button>
+                                <button class="btn btn-sm btn-primary px-4 ms-2" type="button"
+                                    data-list-pagination="next"><span>Next</span></button>
+                            </div>
+                        </div>
+                    </div> --}}
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- <div class="row g-3 mb-3">
         <div class="col-xxl-6 col-xl-12">
             <div class="row g-3">

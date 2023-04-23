@@ -57,8 +57,8 @@ class ProductImport implements
             'sku' => "required|string|unique:products",
             'images' => "required|string",
             'category' => "required|integer",
-            'description_ar' => "required|string",
-            'description_en' => "required|string",
+            'description_ar' => "nullable|string",
+            'description_en' => "nullable|string",
             'sale_price' => "required|numeric",
             'discount_price' => "required|numeric",
             'brands' => "nullable|string",
@@ -90,8 +90,8 @@ class ProductImport implements
                 'sku' => "required|string|unique:products",
                 'images' => "required|string",
                 'category' => "required|integer",
-                'description_ar' => "required|string",
-                'description_en' => "required|string",
+                'description_ar' => "nullable|string",
+                'description_en' => "nullable|string",
                 'sale_price' => "required|numeric",
                 'discount_price' => "required|numeric",
                 'brands' => "nullable|string",
@@ -174,7 +174,7 @@ class ProductImport implements
                 'name_ar' => $row['name_ar'],
                 'name_en' => $row['name_en'],
                 'category_id' => $row['category'],
-                // 'product_slug' => createSlug($row['name_en']),
+                'product_slug' => createSlug($row['name_en']),
                 'sku' => $row['sku'],
                 'description_ar' => $row['description_ar'],
                 'description_en' => $row['description_en'],
@@ -261,12 +261,17 @@ class ProductImport implements
                     foreach ($row['variations_' . $attr] as $index => $var) {
 
                         $var = Variation::where('name_ar', $var)->orWhere('name_en', $var)->first();
-                        $variations[$index] = $var->id;
-                        ProductVariation::create([
-                            'attribute_id' => $attr,
-                            'variation_id' => $var->id,
-                            'product_id' => $product->id
-                        ]);
+                        if ($var) {
+                            $variations[$index] = $var->id;
+                            ProductVariation::create([
+                                'attribute_id' => $attr,
+                                'variation_id' => $var->id,
+                                'product_id' => $product->id
+                            ]);
+                        } else {
+                            alertError('some of entered attributes for feature number - ' . $attr . ' - not fount on the system please review your data', 'بعض المتغيرات المدخلة للسمة رقم - ' . $attr . ' - غير معرفة على النظام يرجى مراجعة المدخلات');
+                            return redirect()->back();
+                        }
                     }
 
                     $row['variations_' . $attr] = $variations;

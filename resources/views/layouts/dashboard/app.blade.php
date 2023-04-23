@@ -83,6 +83,18 @@
             }
         </style>
     @endif
+
+    <style>
+        .choices__inner {
+            min-height: 5px !important;
+            padding: 0px 20px !important;
+        }
+
+        .choices[data-type*=select-one] .choices__inner {
+            padding-bottom: 0px !important;
+
+        }
+    </style>
 </head>
 
 
@@ -159,7 +171,10 @@
     <script src="{{ asset('assets/js/custom.js') }}"></script>
 
 
-    @if (Route::is('stock.management.list') || Route::is('stock.management.index') || Route::is('running_orders.index'))
+    @if (Route::is('stock.management.list') ||
+            Route::is('stock.management.index') ||
+            Route::is('running_orders.index') ||
+            Route::is('stock.management.inventory'))
         <script src="{{ asset('assets/js/stock-search.js') }}"></script>
     @endif
 

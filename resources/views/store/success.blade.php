@@ -139,7 +139,7 @@
                             <div class="col-sm-6">
                                 <h4>{{ __('shipping address') }}</h4>
                                 <ul class="order-detail">
-                                    <li>{{ $order->client_name }}</li>
+                                    <li>{{ $order->full_name }}</li>
                                     <li>{{ $order->address }}</li>
                                     <li>{{ $order->client_phone . ' ' . $order->phone2 }}</li>
                                 </ul>

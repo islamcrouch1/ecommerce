@@ -1,6 +1,12 @@
 $(document).ready(function(){
 
 
+
+    var $container = $('.navbar-vertical-content');
+    var $scrollTo = $('.active');
+
+    $container.animate({scrollTop: $scrollTo.offset().top - $container.offset().top + $container.scrollTop(), scrollLeft: 0},300);
+
     $('.colorpicker').colorpicker();
 
     $('.btn').on('click' , function(e){
@@ -761,7 +767,107 @@ $(document).ready(function(){
     });
 
 
+    $('.delete-media').on('click' , function(e){
 
+        e.preventDefault();
+
+
+
+        var media_id = $(this).data('media_id');
+        var div = '.product-image-' + media_id ;
+        var url = $(this).data('url');
+
+        console.log(url , div , media_id);
+
+        var formData = new FormData();
+        formData.append('media_id' , media_id);
+
+        $.ajax({
+            url: url,
+            data: formData,
+            method: 'POST',
+            processData: false,
+            contentType: false,
+            cache: false,
+            success: function(data) {
+                console.log(data);
+
+                if(data == 1){
+                    $(div).remove();
+                }
+                if(data == 0){
+
+                }
+            }
+        });
+    });
+
+    $('.stock-qty').on('change', function() {
+
+        var value = $(this).val();
+        console.log(value);
+
+        $(".qty").each(function(){
+            $(this).val(value);
+       })
+
+    });
+
+    $('.stock-purchase_price').on('change', function() {
+
+        var value = $(this).val();
+        console.log(value);
+
+        $(".purchase_price").each(function(){
+            $(this).val(value);
+       })
+
+    });
+
+    $('.stock-sale_price').on('change', function() {
+
+        var value = $(this).val();
+        console.log(value);
+
+        $(".sale_price").each(function(){
+            $(this).val(value);
+       })
+
+    });
+
+    $('.stock-discount_price').on('change', function() {
+
+        var value = $(this).val();
+        console.log(value);
+
+        $(".discount_price").each(function(){
+            $(this).val(value);
+       })
+
+    });
+
+    $('.stock-limit').on('change', function() {
+
+        var value = $(this).val();
+        console.log(value);
+
+        $(".limit").each(function(){
+            $(this).val(value);
+       })
+
+    });
+
+    $('.stock-status_all').on('change', function() {
+
+        var value = $(this).val();
+        console.log(value);
+
+        $(".status_all").each(function(){
+            $(this).val(value).change();
+
+       })
+
+    });
 
 });
 

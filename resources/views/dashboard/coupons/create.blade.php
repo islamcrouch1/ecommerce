@@ -41,7 +41,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="max_value">{{ __('max value') }}</label>
+                                <label class="form-label" for="max_value">{{ __('max value for discount') }}</label>
                                 <input name="max_value" class="form-control @error('max_value') is-invalid @enderror"
                                     value="{{ old('max_value') }}" min="1" step="0.01" type="number"
                                     autocomplete="on" id="max_value" required />
@@ -50,6 +50,31 @@
                                 @enderror
                             </div>
 
+                            <div class="mb-3">
+                                <label class="form-label" for="min_value">{{ __('min value for invoice') }}</label>
+                                <input name="min_value" class="form-control @error('min_value') is-invalid @enderror"
+                                    value="{{ old('min_value') }}" min="1" step="0.01" type="number"
+                                    autocomplete="on" id="min_value" required />
+                                @error('min_value')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3 col-md-3">
+                                <label class="form-label" for="free_shipping">{{ __('free shipping') }}</label>
+                                <div>
+                                    <label class="switch">
+                                        <input id="free_shipping"
+                                            class="form-control @error('free_shipping') is-invalid @enderror"
+                                            name="free_shipping" type="checkbox">
+                                        <span class="slider round"></span>
+                                    </label>
+                                    @error('free_shipping')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
 
                             <div class="mb-3">
                                 <label class="form-label" for="type">{{ __('type') }}</label>
@@ -69,11 +94,54 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="frequency">{{ __('frequency of use') }}</label>
-                                <input name="frequency" class="form-control @error('amount') is-invalid @enderror"
-                                    value="{{ old('frequency') }}" min="1" type="frequency" autocomplete="on"
-                                    id="frequency" required />
-                                @error('frequency')
+                                <label class="form-label" for="user_frequency">{{ __('user frequency') }}</label>
+                                <input name="user_frequency"
+                                    class="form-control @error('user_frequency') is-invalid @enderror"
+                                    value="{{ old('user_frequency') }}" min="1" type="user_frequency"
+                                    autocomplete="on" id="user_frequency" required />
+                                @error('user_frequency')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="all_frequency">{{ __('all frequency') }}</label>
+                                <input name="all_frequency"
+                                    class="form-control @error('all_frequency') is-invalid @enderror"
+                                    value="{{ old('all_frequency') }}" min="1" type="all_frequency"
+                                    autocomplete="on" id="all_frequency" required />
+                                @error('all_frequency')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3 p-variation product-variations-">
+                                <label class="form-label" for="products">{{ __('products') }}</label>
+                                <select class="form-select model-search @error('products') is-invalid @enderror"
+                                    data-url="{{ route('model.search') }}" data-locale="{{ app()->getLocale() }}"
+                                    data-parent="" data-type="products" name="products[]" multiple="multiple"
+                                    data-options='{"removeItemButton":true,"placeholder":true}'>
+                                    <option value="">
+                                        {{ __('select products') }}</option>
+
+                                </select>
+                                @error('products')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3 p-variation product-variations-">
+                                <label class="form-label" for="categories">{{ __('categories') }}</label>
+                                <select class="form-select model-search @error('categories') is-invalid @enderror"
+                                    data-url="{{ route('model.search') }}" data-locale="{{ app()->getLocale() }}"
+                                    data-parent="" data-type="categories" name="categories[]" multiple="multiple"
+                                    data-options='{"removeItemButton":true,"placeholder":true}'>
+                                    <option value="">
+                                        {{ __('select categories') }}</option>
+
+                                </select>
+                                @error('categories')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>

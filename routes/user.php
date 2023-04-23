@@ -9,7 +9,7 @@ use App\Http\Controllers\User\WithdrawalsController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::group(['prefix' => 'user', 'middleware' => ['role:superadministrator|administrator|affiliate|vendor']], function () {
+Route::group(['prefix' => 'admin', 'middleware' => ['role:superadministrator|administrator|affiliate|vendor']], function () {
 
     // home view route - Dashboard
     Route::get('/', [HomeController::class, 'index'])->name('home')->middleware('auth', 'checkverified', 'checkstatus');

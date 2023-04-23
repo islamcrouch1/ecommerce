@@ -38,7 +38,7 @@
             <div class="row align-items-center">
                 <div class="col">
                     <h6 class="text-500">{{ __('Customer Information') }}</h6>
-                    <h5>{{ $order->client_name }}</h5>
+                    <h5>{{ $order->full_name }}</h5>
                     <p class="fs--1">{{ __('Address:') . $order->address }}<br>
                         @if ($order->house)
                             {{ __('House:') . $order->house }}<br>

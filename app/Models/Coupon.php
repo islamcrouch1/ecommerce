@@ -15,7 +15,7 @@ class Coupon extends Model
 
 
     protected $fillable = [
-        'code', 'amount',  'type', 'user_type', 'ended_at', 'country_id', 'frequency', 'max_value'
+        'code', 'amount',  'type', 'user_type', 'ended_at', 'country_id', 'user_frequency', 'all_frequency', 'max_value', 'min_value', 'free_shipping', 'products', 'categories'
     ];
 
 

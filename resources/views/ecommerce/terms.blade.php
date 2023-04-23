@@ -1,4 +1,4 @@
-@extends('layouts.ecommerce.app')
+@extends('layouts.ecommerce.app', ['page_title' => 'Terms and Conditions'])
 @section('content')
     <!-- breadcrumb start -->
     <div class="breadcrumb-section">

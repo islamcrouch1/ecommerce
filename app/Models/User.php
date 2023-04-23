@@ -119,10 +119,7 @@ class User extends Authenticatable
         return $this->belongsTo(Country::class);
     }
 
-    public function branches()
-    {
-        return $this->belongsToMany(Branch::class);
-    }
+
 
 
     public function notifications()
@@ -143,7 +140,7 @@ class User extends Authenticatable
 
     public function orders()
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(Order::class, 'customer_id');
     }
 
     public function notes()

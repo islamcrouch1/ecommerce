@@ -121,31 +121,11 @@ class OrdersController extends Controller
                         $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
                         $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
 
-                        updateCost($combination, $product->pivot->cost, $product->pivot->qty, 'add', $order->branch_id);
+                        // get cost and update combination cost
+                        $cost = getProductCost($product, $combination, $branch_id, $order, $product->pivot->qty, true);
 
-
-                        Entry::create([
-                            'account_id' => $product_account->id,
-                            'type' => 'sales',
-                            'dr_amount' => ($product->pivot->cost * $product->pivot->qty),
-                            'cr_amount' => 0,
-                            'description' => 'return sales order# ' . $order->id,
-                            'branch_id' => $branch_id,
-                            'reference_id' => $order->id,
-                            'created_by' => Auth::check() ? Auth::id() : null,
-                        ]);
-
-
-                        Entry::create([
-                            'account_id' => $cs_product_account->id,
-                            'type' => 'sales',
-                            'dr_amount' => 0,
-                            'cr_amount' => ($product->pivot->cost * $product->pivot->qty),
-                            'description' => 'return sales order# ' . $order->id,
-                            'branch_id' => $branch_id,
-                            'reference_id' => $order->id,
-                            'created_by' => Auth::check() ? Auth::id() : null,
-                        ]);
+                        createEntry($product_account, 'sales_return', ($product->pivot->cost * $product->pivot->qty), 0, $branch_id, $order);
+                        createEntry($cs_product_account, 'sales_return', 0, ($product->pivot->cost * $product->pivot->qty), $branch_id, $order);
                     }
 
                     if ($product->vendor_id != null) {
@@ -158,60 +138,21 @@ class OrdersController extends Controller
                         // add return entry for commission tax account
 
                         $supplier_account = getItemAccount($product->vendor_id, null, 'suppliers_account', $branch_id);
+                        createEntry($supplier_account, 'sales_return', $vendor_order->total_price - $vendor_order->total_commission, 0, $branch_id, $order);
 
-
-                        Entry::create([
-                            'account_id' => $supplier_account->id,
-                            'type' => 'purchase',
-                            'dr_amount' => $vendor_order->total_price - $vendor_order->total_commission,
-                            'cr_amount' => 0,
-                            'description' => 'return sales order# ' . $order->id,
-                            'branch_id' => $branch_id,
-                            'reference_id' => $order->id,
-                            'created_by' => Auth::check() ? Auth::id() : null,
-                        ]);
 
                         if ($vendor_order->total_commission > 0) {
 
                             $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
+                            createEntry($revenue_account, 'sales_return', $vendor_order->total_commission - $vendor_order->total_tax, 0, $branch_id, $order);
 
-
-                            Entry::create([
-                                'account_id' => $revenue_account->id,
-                                'type' => 'sales',
-                                'dr_amount' => $vendor_order->total_commission - $vendor_order->total_tax,
-                                'cr_amount' =>  0,
-                                'description' => 'return sales order# ' . $order->id,
-                                'branch_id' => $branch_id,
-                                'reference_id' => $order->id,
-                                'created_by' => Auth::check() ? Auth::id() : null,
-                            ]);
-
-
-                            Entry::create([
-                                'account_id' => $vendors_tax_account->id,
-                                'type' => 'sales',
-                                'dr_amount' => $vendor_order->total_tax,
-                                'cr_amount' =>  0,
-                                'description' => 'return sales order# ' . $order->id,
-                                'branch_id' => $branch_id,
-                                'reference_id' => $order->id,
-                                'created_by' => Auth::check() ? Auth::id() : null,
-                            ]);
+                            $vendors_tax_account = Account::findOrFail(settingAccount('vendors_tax_account', $branch_id));
+                            createEntry($vendors_tax_account, 'sales_return', $vendor_order->total_tax, 0, $branch_id, $order);
                         }
                     }
 
-                    Stock::create([
-                        'product_combination_id' => $product->pivot->product_combination_id,
-                        'product_id' => $product->id,
-                        'warehouse_id' => $warehouse_id,
-                        'qty' => $product->pivot->qty,
-                        'stock_status' => 'IN',
-                        'stock_type' => 'Order',
-                        'reference_id' => $order->id,
-                        'reference_price' => productPrice($product, $product->pivot->product_combination_id, 'vat'),
-                        'created_by' => Auth::check() ? Auth::id() : null,
-                    ]);
+                    // add stock and running order
+                    stockCreate($combination, $warehouse_id, $product->pivot->qty, 'Sale', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
                 }
 
 
@@ -221,17 +162,7 @@ class OrdersController extends Controller
                     } else {
                         $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
                     }
-
-                    Entry::create([
-                        'account_id' => $revenue_account->id,
-                        'type' => 'sales',
-                        'dr_amount' =>   $product->pivot->product_price - $product->pivot->product_tax,
-                        'cr_amount' => 0,
-                        'description' => 'return sales order# ' . $order->id,
-                        'branch_id' => $branch_id,
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::id(),
-                    ]);
+                    createEntry($revenue_account, 'sales_return', $product->pivot->product_price - $product->pivot->product_tax, 0, $branch_id, $order);
                 }
             }
 
@@ -242,51 +173,27 @@ class OrdersController extends Controller
                 $customer_account = getItemAccount(null, null, 'customers_account', $branch_id);
             }
 
-
-            Entry::create([
-                'account_id' => $customer_account->id,
-                'type' => 'sales',
-                'dr_amount' => 0,
-                'cr_amount' =>  $order->total_price,
-                'description' => 'return sales order# ' . $order->id,
-                'branch_id' => $branch_id,
-                'reference_id' => $order->id,
-                'created_by' => Auth::id(),
-            ]);
+            createEntry($customer_account, 'sales_return', 0, $order->total_price, $branch_id, $order);
 
             $order->update([
                 'payment_status' => 'faild',
             ]);
 
-
             if ($order->total_tax > 0) {
                 $vat_account = Account::findOrFail(settingAccount('vat_sales_account', $branch_id));
-                Entry::create([
-                    'account_id' => $vat_account->id,
-                    'type' => 'sales',
-                    'dr_amount' => $order->total_tax,
-                    'cr_amount' =>  0,
-                    'description' => 'return sales order# ' . $order->id,
-                    'branch_id' => $branch_id,
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::id(),
-                ]);
+                createEntry($vat_account, 'sales_return', $order->total_tax, 0, $branch_id, $order);
             }
 
 
             if ($order->shipping_amount > 0) {
 
                 $revenue_account_shipping = getItemAccount(null, null, 'revenue_account_shipping', $branch_id);
-                Entry::create([
-                    'account_id' => $revenue_account_shipping->id,
-                    'type' => 'sales',
-                    'dr_amount' =>   $order->shipping_amount,
-                    'cr_amount' => 0,
-                    'description' => 'return sales order# ' . $order->id,
-                    'branch_id' => $branch_id,
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::id(),
-                ]);
+                createEntry($revenue_account_shipping, 'sales_return', $order->shipping_amount, 0, $branch_id, $order);
+            }
+
+            if ($order->discount_amount > 0) {
+                $allowed_discount_account = Account::findOrFail(settingAccount('allowed_discount_account', $branch_id));
+                createEntry($allowed_discount_account, 'sales_return', 0, $order->discount_amount, $branch_id, $order);
             }
 
             if ($order->affiliate_id != null) {
@@ -326,31 +233,11 @@ class OrdersController extends Controller
                         $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
                         $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
 
-                        updateCost($combination, $product->pivot->cost, $product->pivot->qty, 'add', $order->branch_id);
+                        // get cost and update combination cost
+                        $cost = getProductCost($product, $combination, $branch_id, $order, $product->pivot->qty, true);
 
-
-                        Entry::create([
-                            'account_id' => $product_account->id,
-                            'type' => 'sales',
-                            'dr_amount' => ($product->pivot->cost * $product->pivot->qty),
-                            'cr_amount' => 0,
-                            'description' => 'return sales order# ' . $order->id,
-                            'branch_id' => $branch_id,
-                            'reference_id' => $order->id,
-                            'created_by' => Auth::check() ? Auth::id() : null,
-                        ]);
-
-
-                        Entry::create([
-                            'account_id' => $cs_product_account->id,
-                            'type' => 'sales',
-                            'dr_amount' => 0,
-                            'cr_amount' => ($product->pivot->cost * $product->pivot->qty),
-                            'description' => 'return sales order# ' . $order->id,
-                            'branch_id' => $branch_id,
-                            'reference_id' => $order->id,
-                            'created_by' => Auth::check() ? Auth::id() : null,
-                        ]);
+                        createEntry($product_account, 'sales_return', ($product->pivot->cost * $product->pivot->qty), 0, $branch_id, $order);
+                        createEntry($cs_product_account, 'sales_return', 0, ($product->pivot->cost * $product->pivot->qty), $branch_id, $order);
                     }
 
                     if ($product->vendor_id != null) {
@@ -364,60 +251,21 @@ class OrdersController extends Controller
 
 
                         $supplier_account = getItemAccount($product->vendor_id, null, 'suppliers_account', $branch_id);
+                        createEntry($supplier_account, 'sales_return', $vendor_order->total_price - $vendor_order->total_commission, 0, $branch_id, $order);
 
-                        Entry::create([
-                            'account_id' => $supplier_account->id,
-                            'type' => 'purchase',
-                            'dr_amount' => $vendor_order->total_price - $vendor_order->total_commission,
-                            'cr_amount' => 0,
-                            'description' => 'return sales order# ' . $order->id,
-                            'branch_id' => $branch_id,
-                            'reference_id' => $order->id,
-                            'created_by' => Auth::check() ? Auth::id() : null,
-                        ]);
 
                         if ($vendor_order->total_commission > 0) {
 
                             $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
+                            createEntry($revenue_account, 'sales_return', $vendor_order->total_commission - $vendor_order->total_tax, 0, $branch_id, $order);
 
-
-                            Entry::create([
-                                'account_id' => $revenue_account->id,
-                                'type' => 'sales',
-                                'dr_amount' => $vendor_order->total_commission - $vendor_order->total_tax,
-                                'cr_amount' =>  0,
-                                'description' => 'return sales order# ' . $order->id,
-                                'branch_id' => $branch_id,
-                                'reference_id' => $order->id,
-                                'created_by' => Auth::check() ? Auth::id() : null,
-                            ]);
-
-
-                            Entry::create([
-                                'account_id' => $vendors_tax_account->id,
-                                'type' => 'sales',
-                                'dr_amount' => $vendor_order->total_tax,
-                                'cr_amount' =>  0,
-                                'description' => 'return sales order# ' . $order->id,
-                                'branch_id' => $branch_id,
-                                'reference_id' => $order->id,
-                                'created_by' => Auth::check() ? Auth::id() : null,
-                            ]);
+                            $vendors_tax_account = Account::findOrFail(settingAccount('vendors_tax_account', $branch_id));
+                            createEntry($vendors_tax_account, 'sales_return', $vendor_order->total_tax, 0, $branch_id, $order);
                         }
                     }
 
-
-                    Stock::create([
-                        'product_combination_id' => $product->pivot->product_combination_id,
-                        'product_id' => $product->id,
-                        'warehouse_id' => $warehouse_id,
-                        'qty' => $product->pivot->qty,
-                        'stock_status' => 'IN',
-                        'stock_type' => 'Order',
-                        'reference_id' => $order->id,
-                        'reference_price' => productPrice($product, $product->pivot->product_combination_id),
-                        'created_by' => Auth::check() ? Auth::id() : null,
-                    ]);
+                    // add stock and running order
+                    stockCreate($combination, $warehouse_id, $product->pivot->qty, 'Sale', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
                 }
 
 
@@ -429,16 +277,7 @@ class OrdersController extends Controller
                         $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
                     }
 
-                    Entry::create([
-                        'account_id' => $revenue_account->id,
-                        'type' => 'sales',
-                        'dr_amount' =>   $product->pivot->product_price - $product->pivot->product_tax,
-                        'cr_amount' => 0,
-                        'description' => 'return sales order# ' . $order->id,
-                        'branch_id' => $branch_id,
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::id(),
-                    ]);
+                    createEntry($revenue_account, 'sales_return', $product->pivot->product_price - $product->pivot->product_tax, 0, $branch_id, $order);
                 }
             }
 
@@ -449,46 +288,24 @@ class OrdersController extends Controller
                 $cash_account = Account::findOrFail(settingAccount('card_account', $branch_id));
             }
 
-            Entry::create([
-                'account_id' => $cash_account->id,
-                'type' => 'sales',
-                'dr_amount' => 0,
-                'cr_amount' =>  $order->total_price,
-                'description' => 'return sales order# ' . $order->id,
-                'branch_id' => $branch_id,
-                'reference_id' => $order->id,
-                'created_by' => Auth::id(),
-            ]);
+            createEntry($cash_account, 'sales_return', 0, $order->total_price, $branch_id, $order);
 
 
             if ($order->total_tax > 0) {
                 $vat_account = Account::findOrFail(settingAccount('vat_sales_account', $branch_id));
-                Entry::create([
-                    'account_id' => $vat_account->id,
-                    'type' => 'sales',
-                    'dr_amount' => $order->total_tax,
-                    'cr_amount' =>  0,
-                    'description' => 'return sales order# ' . $order->id,
-                    'branch_id' => $branch_id,
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::id(),
-                ]);
+                createEntry($vat_account, 'sales_return', $order->total_tax, 0, $branch_id, $order);
             }
 
 
             if ($order->shipping_amount > 0) {
 
                 $revenue_account_shipping = getItemAccount(null, null, 'revenue_account_shipping', $branch_id);
-                Entry::create([
-                    'account_id' => $revenue_account_shipping->id,
-                    'type' => 'sales',
-                    'dr_amount' =>   $order->shipping_amount,
-                    'cr_amount' => 0,
-                    'description' => 'return sales order# ' . $order->id,
-                    'branch_id' => $branch_id,
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::id(),
-                ]);
+                createEntry($revenue_account_shipping, 'sales_return', $order->shipping_amount, 0, $branch_id, $order);
+            }
+
+            if ($order->discount_amount > 0) {
+                $allowed_discount_account = Account::findOrFail(settingAccount('allowed_discount_account', $branch_id));
+                createEntry($allowed_discount_account, 'sales_return', 0, $order->discount_amount, $branch_id, $order);
             }
 
 
@@ -512,16 +329,7 @@ class OrdersController extends Controller
                 $customer_account = getItemAccount(null, null, 'customers_account', $branch_id);
             }
 
-            Entry::create([
-                'account_id' => $customer_account->id,
-                'type' => 'sales',
-                'dr_amount' => 0,
-                'cr_amount' =>  $order->total_price,
-                'description' => 'return sales order# ' . $order->id,
-                'branch_id' => $branch_id,
-                'reference_id' => $order->id,
-                'created_by' => Auth::id(),
-            ]);
+            createEntry($customer_account, 'sales', 0, $order->total_price, $branch_id, $order);
 
 
             if ($order->payment_method == 'cash_on_delivery') {
@@ -529,19 +337,7 @@ class OrdersController extends Controller
             } elseif ($order->payment_method == 'paymob' || $order->payment_method == 'upayment') {
                 $cash_account = Account::findOrFail(settingAccount('card_account', $branch_id));
             }
-
-
-            Entry::create([
-                'account_id' => $cash_account->id,
-                'type' => 'sales',
-                'dr_amount' => $order->total_price,
-                'cr_amount' =>  0,
-                'description' => 'return sales order# ' . $order->id,
-                'reference_id' => $order->id,
-                'branch_id' => $branch_id,
-                'created_by' => Auth::id(),
-            ]);
-
+            createEntry($customer_account, 'sales', $order->total_price, 0, $branch_id, $order);
 
             $order->update([
                 'payment_status' => 'paid',

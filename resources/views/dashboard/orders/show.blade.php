@@ -37,12 +37,12 @@
             <div class="row align-items-center">
                 <div class="col">
                     <h6 class="text-500">{{ __('Customer Information') }}</h6>
-                    <h5>{{ $order->client_name }}</h5>
+                    <h5>{{ $order->full_name }}</h5>
                     <p class="fs--1">
                         {{ __('Address:') . $order->address }}<br>
 
                         @if ($order->phone)
-                            {{ __('Phone:') . ' ' . $order->phone }}<br>
+                            {{ __('Phone:') . ' ' }} <a href="tel:{{ $order->phone }}">{{ $order->phone }}</a><br>
                         @endif
                         @if ($order->country_id)
                             {{ __('Country:') . ' ' . getName($order->country) }}<br>
@@ -52,6 +52,12 @@
                         @endif
                         @if ($order->city_id)
                             {{ __('City:') . ' ' . getName($order->city) }}<br>
+                        @endif
+                        @if ($order->block)
+                            {{ __('Block:') . $order->block }}<br>
+                        @endif
+                        @if ($order->avenue)
+                            {{ __('Avenue:') . $order->avenue }}<br>
                         @endif
                         @if ($order->house)
                             {{ __('House:') . $order->house }}<br>
@@ -112,16 +118,26 @@
                         @foreach ($order->products as $product)
                             <tr>
                                 <td class="align-middle">
-                                    <h6 class="mb-0 text-nowrap">
-                                        {{ getProductName($product, getCombination($product->pivot->product_combination_id)) }}
-                                    </h6>
+
+                                    <div class="d-flex d-flex align-items-center">
+                                        <div class="avatar avatar-xl me-2">
+                                            <img class="rounded-circle"
+                                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                                alt="" />
+                                        </div>
+                                        <div class="flex-1">
+                                            <h6 class="mb-0 text-nowrap">
+                                                {{ getProductName($product, getCombination($product->pivot->product_combination_id)) }}
+                                            </h6>
+                                        </div>
+                                    </div>
 
 
                                     <span class="badge badge-soft-info">
                                         @if ($product->product_type == 'digital' || $product->product_type == 'service')
                                             SKU:{{ $product->sku }}
                                         @else
-                                            SKU:{{ getCombination($product->pivot->product_combination_id)->sku }}
+                                            SKU:{{ getCombinationData($product->pivot->product_combination_id, 'sku') }}
                                         @endif
                                     </span>
 

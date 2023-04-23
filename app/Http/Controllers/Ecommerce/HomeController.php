@@ -9,9 +9,12 @@ use App\Models\Product;
 use App\Models\ProductCombination;
 use App\Models\ProductCombinationDtl;
 use App\Models\Slide;
+use App\Models\Testimonial;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Twilio\Rest\Client;
+
 
 class HomeController extends Controller
 {
@@ -19,15 +22,18 @@ class HomeController extends Controller
     {
 
 
+        // snapchatEvent('ADD_CART');
+
+
         $country = getCountry();
 
-        if (Auth::check()) {
-            $cart_items = CartItem::where('user_id', Auth::id())->get();
-        } else {
-            $cart_items = CartItem::where('session_id', $request->session()->token())->get();
-        }
+        // if (Auth::check()) {
+        //     $cart_items = CartItem::where('user_id', Auth::id())->get();
+        // } else {
+        //     $cart_items = CartItem::where('session_id', $request->session()->token())->get();
+        // }
 
-        $categories = Category::whereNull('parent_id')->where('country_id', $country->id)->orderBy('sort_order', 'asc')->get();
+        // $categories = Category::whereNull('parent_id')->where('country_id', $country->id)->orderBy('sort_order', 'asc')->get();
 
 
         $slides = Slide::orderBy('sort_order', 'asc')->get();
@@ -41,38 +47,18 @@ class HomeController extends Controller
         //     ->paginate(20);
 
 
-        $digital_products = Product::Where('product_type', 'digital')
-            ->where('status', "active")
-            ->where('country_id', $country->id);
+        $top_collections = getTopCollections();
+        $best_selling = getBestSelling();
+        $is_featured = getIsFeatured();
+        $on_sale = getOnSale();
 
+        $testimonials = Testimonial::where('country_id', $country->id)->get();
 
-        $service_products = Product::Where('product_type', 'service')
-            ->where('status', "active")
-            ->where('country_id', $country->id);
-
-        $vendor_products = Product::WhereNotNull('vendor_id')
-            ->where('status', "active")
-            ->where('country_id', $country->id);
-
-
-        $warehouses = getWebsiteWarehouses();
-
-        $products = Product::whereHas('stocks', function ($query) use ($warehouses) {
-            $query->whereIn('warehouse_id', $warehouses);
-        })
-            ->where('country_id', $country->id)
-            ->where('status', "active")
-            ->union($digital_products)
-            ->union($service_products)
-            ->union($vendor_products)
-            ->latest()
-            ->get();
-
-
-
-
-        return view('ecommerce.home', compact('categories', 'slides', 'products', 'cart_items'));
+        return view('ecommerce.home', compact('slides', 'top_collections', 'best_selling', 'is_featured', 'on_sale', 'testimonials'));
     }
+
+
+
 
 
 
@@ -124,5 +110,23 @@ class HomeController extends Controller
         } else {
             return 2;
         }
+    }
+
+
+    public function whatsapp()
+    {
+
+
+        $otp = rand(1000, 9999);
+        $recipient = '+201121184148';
+        $link = "https://yfbstore.com/ecommerce/product/61";
+
+        $twilio_whatsapp_number = getenv("TWILIO_WHATSAPP_NUMBER");
+        $account_sid = getenv("TWILIO_ACCOUNT_SID");
+        $auth_token = getenv("TWILIO_AUTH_TOKENN");
+
+        $client = new Client($account_sid, $auth_token);
+        $message = "Your registration tyttty pin code is $otp and your link is $link";
+        return $client->messages->create("whatsapp:$recipient", array('from' => "whatsapp:$twilio_whatsapp_number", 'body' => $message));
     }
 }

@@ -1,4 +1,4 @@
-@extends('layouts.ecommerce.app')
+@extends('layouts.ecommerce.app', ['page_title' => 'Checkout'])
 @section('content')
     <!-- breadcrumb start -->
     <div class="breadcrumb-section">
@@ -43,29 +43,23 @@
                                         <div class="field-label">{{ __('full name') }}</div>
                                         <input name="name" class="form-control @error('name') is-invalid @enderror"
                                             value="{{ Auth::check() ? Auth::user()->name : '' }}" type="text"
-                                            autocomplete="on" id="name" autofocus required />
+                                            autocomplete="on" id="name" required />
                                         @error('name')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="form-group col-md-6 col-sm-6 col-xs-12">
                                         <div class="field-label">{{ __('phone') }}</div>
-                                        <input name="phone" class="form-control @error('phone') is-invalid @enderror"
-                                            value="{{ Auth::check() ? Auth::user()->phone : '' }}" type="text"
-                                            autocomplete="on" id="phone" autofocus required />
+                                        <input name="phone"
+                                            class="form-control phone @error('phone') is-invalid @enderror"
+                                            value="{{ Auth::check() ? getPhoneWithoutCode(Auth::user()->phone, Auth::user()->country_id) : old('phone') }}"
+                                            type="tel" maxlength="{{ getCountry()->phone_digits }}" autocomplete="on"
+                                            id="phone" data-phone_digits="{{ getCountry()->phone_digits }}" required />
                                         @error('phone')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                                        <div class="field-label">{{ __('street address') }}</div>
-                                        <input name="address" class="form-control @error('address') is-invalid @enderror"
-                                            value="{{ old('address') }}" type="text" autocomplete="on" id="address"
-                                            autofocus required />
-                                        @error('address')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+
 
                                     <div class="form-group col-md-12 col-sm-12 col-xs-12">
                                         <div class="field-label">{{ __('country') }}</div>
@@ -107,6 +101,50 @@
 
                                         </select>
                                         @error('city_id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('block') . '*' }}</div>
+                                        <input name="block" class="form-control @error('block') is-invalid @enderror"
+                                            value="{{ old('block') }}" type="text" autocomplete="on" id="block"
+                                            required />
+                                        @error('block')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('street address') . '*' }}</div>
+                                        <input name="address" class="form-control @error('address') is-invalid @enderror"
+                                            value="{{ old('address') }}" type="text" autocomplete="on" id="address"
+                                            required />
+                                        @error('address')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+
+                                    @if (getCountry()->name_en == 'Kuwait' || getCountry()->name_en == 'kuwait')
+                                        <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                                            <div class="field-label">{{ __('avenue') }}</div>
+                                            <input name="avenue" class="form-control @error('avenue') is-invalid @enderror"
+                                                value="{{ old('avenue') }}" type="text" autocomplete="on"
+                                                id="avenue" />
+                                            @error('avenue')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    @endif
+
+                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('house') . '*' }}</div>
+                                        <input name="house" class="form-control @error('house') is-invalid @enderror"
+                                            value="{{ old('house') }}" type="text" autocomplete="on" id="house"
+                                            required />
+                                        @error('house')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>

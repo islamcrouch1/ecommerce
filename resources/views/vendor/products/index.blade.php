@@ -185,7 +185,7 @@
                                             <div class="dropdown-menu dropdown-menu-end border py-0"
                                                 aria-labelledby="customer-dropdown-0">
                                                 <div class="bg-white py-2">
-                                                    @if ($product->status == 'pending' || $product->status == 'pause')
+                                                    @if ($product->status != 'active')
                                                         <a class="dropdown-item"
                                                             href="{{ route('vendor-products.edit', ['vendor_product' => $product->id]) }}">{{ __('Edit') }}</a>
 

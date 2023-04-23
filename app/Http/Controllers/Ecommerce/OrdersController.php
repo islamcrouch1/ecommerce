@@ -28,11 +28,12 @@ class OrdersController extends Controller
     public function orderSuccess(Request $request)
     {
 
+
+
         if (!isset($request->order) || $request->order == null) {
             return redirect()->route('ecommerce.home');
         }
 
-        $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         $order  = Order::findOrFail($request->order);
 
 
@@ -42,7 +43,21 @@ class OrdersController extends Controller
             return redirect()->route('ecommerce.home');
         }
 
-        return view('ecommerce.order-success', compact('order', 'categories'));
+
+        if (setting('snapchat_pixel_id') && setting('snapchat_token')) {
+            snapchatEvent('PURCHASE');
+        }
+
+        if (setting('facebook_id') && setting('facebook_token')) {
+            facebookEvent('Purchase');
+        }
+
+
+
+
+        // return view('dashboard.orders.template', compact('order'));
+
+        return view('ecommerce.order-success', compact('order'));
     }
 
 
@@ -56,7 +71,7 @@ class OrdersController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
-            'phone' => 'required|string|max:255',
+            'phone' => 'required|integer',
             'notes' => 'nullable|string|max:255',
             'country_id' => 'required|string|max:255',
             'state_id' => 'required|string|max:255',
@@ -67,6 +82,10 @@ class OrdersController extends Controller
             'payment_method' => 'required|string|max:255',
             'create_account' => 'nullable|string|max:255',
             'coupon' => 'nullable|string',
+            'block' => 'nullable|string|max:255',
+            'house' => 'nullable|string|max:255',
+            'avenue' => 'nullable|string|max:255',
+
         ]);
 
 
@@ -86,7 +105,7 @@ class OrdersController extends Controller
         $branch_id = setting('website_branch');
 
         // accounts check & tax check
-        if (settingAccount('customers_account', $branch_id) == null || settingAccount('vat_sales_account', $branch_id) == null || settingAccount('revenue_account', $branch_id) == null || settingAccount('vendors_tax_account', $branch_id) == null || setting('vat') == null || setting('vendors_tax') == null || setting('website_branch') == null) {
+        if (!checkAccounts($branch_id, ['vendors_tax_account', 'wst_account', 'customers_account', 'revenue_account', 'allowed_discount_account']) || setting('vat') == null || setting('vendors_tax') == null || setting('website_branch') == null) {
             alertError('An error occurred while processing the request, please try again later', 'حدث خطا اثناء عمل الطلب يرجى المحاولة لاحقا');
             return redirect()->back();
         }
@@ -145,35 +164,44 @@ class OrdersController extends Controller
         }
 
 
-
         $check_coupon = 0;
 
         if (isset($request->coupon)) {
+
+
             $coupon = Coupon::where('code', $request->coupon)->first();
             if (!isset($coupon)) {
                 $check_coupon = 1;
+            }
+
+            if (Auth::check()) {
+                $orders = Order::where('customer_id', Auth::id())->where('coupon_code', $coupon->code)->get();
             } else {
-                if (!Auth::check()) {
-                    $check_coupon = 1;
-                } else {
-                    $orders = Order::where('customer_id', Auth::id())->where('coupon_code', $coupon->code)->get();
-                    if ($orders->count() >= $coupon->frequency) {
-                        $check_coupon = 1;
-                    } else {
-                        $date = Carbon::now();
-                        if ($date > $coupon->ended_at) {
-                            $check_coupon = 1;
-                        }
-                    }
-                }
+                $orders = Order::where('session_id', request()->session()->token())->where('coupon_code', $coupon->code)->get();
+            }
+
+            if ($orders->count() >= $coupon->user_frequency) {
+                $check_coupon = 1;
+            }
+
+            $orders = Order::where('coupon_code', $coupon->code)->get();
+            if ($orders->count() >= $coupon->all_frequency) {
+                $check_coupon = 1;
+            }
+
+            $date = Carbon::now();
+            if ($date > $coupon->ended_at) {
+                $check_coupon = 1;
             }
         }
-
-
 
         if ($request->payment_method == 'cash') {
             $order = $this->attach_order($request, 'cash_on_delivery', $check_coupon);
             alertSuccess('Order added successfully', 'تم عمل الطلب بنجاح');
+            if (Auth::check()) {
+                sendEmail('order', $order, 'user');
+            }
+            sendEmail('order', $order, 'admin');
             return redirect()->route('ecommerce.order.success', ['order' => $order]);
         }
 
@@ -181,7 +209,6 @@ class OrdersController extends Controller
             $order = $this->attach_order($request, 'paymob', $check_coupon);
             return redirect()->route('ecommerce.payment', ['orderId' => $order->id]);
         }
-
 
         if ($request->payment_method == 'upayment') {
             $order = $this->attach_order($request, 'upayment', $check_coupon);
@@ -208,11 +235,12 @@ class OrdersController extends Controller
 
         if ($check_coupon == 0) {
             $coupon = Coupon::where('code', $request->coupon)->first();
+            if ($coupon && $coupon->free_shipping == true) {
+                $shipping_amount = 0;
+            }
         } else {
             $coupon = null;
         }
-
-
 
 
         $warehouses = getWebsiteWarehouses();
@@ -226,7 +254,6 @@ class OrdersController extends Controller
             'order_from' => 'web',
             'full_name' => $request->name,
             'phone' => $request->phone,
-            'address' => $request->address,
             'country_id' => $request->country_id,
             'state_id' => $request->state_id,
             'city_id' => $request->city_id,
@@ -241,6 +268,12 @@ class OrdersController extends Controller
             'shipping_amount' => $shipping_amount,
             'shipping_method_id' => $shipping_method_id,
 
+            'address' => $request->address,
+            'block' => $request->block,
+            'house' => $request->house,
+            'avenue' => $request->avenue,
+
+
             // 'total_price_affiliate' => null,
             // 'total_commission' => null,
             // 'total_profit' => null,
@@ -254,7 +287,6 @@ class OrdersController extends Controller
 
 
         ]);
-
 
 
 
@@ -281,34 +313,22 @@ class OrdersController extends Controller
 
         foreach ($cart_items as $item) {
 
-            // get cost for products or services
-            if ($item->product->product_type == 'variable' || $item->product->product_type == 'simple') {
 
-                $combination = ProductCombination::findOrFail($item->product_combination_id);
+            $combination = ProductCombination::findOrFail($item->product_combination_id);
+            $product = $item->product;
 
-
-
-                if ($item->product->vendor_id == null) {
-                    $cost = $combination->costs->where('branch_id', $branch_id)->first()->cost;
-                    $warehouse = getWarehousForOrder(setting('website_branch'), $request->city_id, $combination, $item->qty);
-                    if ($warehouse) {
-                        $warehouse_id = $warehouse->id;
-                    } else {
-                        continue;
-                    }
-                } else {
-
-                    $warehouse = Warehouse::where('vendor_id', $item->product->vendor_id)->first();
-                    if ($warehouse) {
-                        $warehouse_id = $warehouse->id;
-                    } else {
-                        continue;
-                    }
-                    $cost = 0;
-                }
+            if ($item->product->vendor_id == null) {
+                $cost = getProductCost($product, $combination, $branch_id, null, $item->qty, false);
+                $warehouse = getWarehousForOrder(setting('website_branch'), $request->city_id, $combination, $item->qty);
             } else {
-                $cost = $item->product->cost;
-                $warehouse_id = null;
+                $warehouse = Warehouse::where('vendor_id', $item->product->vendor_id)->first();
+                $cost = 0;
+            }
+
+            if ($warehouse) {
+                $warehouse_id = $warehouse->id;
+            } else {
+                continue;
             }
 
             if (setting('website_vat')) {
@@ -345,7 +365,6 @@ class OrdersController extends Controller
                 ]
             );
 
-
             $total_order_price += (productPrice($item->product, $item->product_combination_id) * $item->qty);
 
             // update order after each order product attach
@@ -354,46 +373,20 @@ class OrdersController extends Controller
                 'subtotal_price' => $total_order_price,
             ]);
 
-
-            $product = $item->product;
-
-
             // create cost entries and if the product belong to vendor we don't create the entry - vendor just can sell simple or variable products
             if ($item->product->product_type == 'variable' || $item->product->product_type == 'simple') {
 
                 if ($item->product->vendor_id == null) {
 
-                    $warehouse = getWarehousForOrder(setting('website_branch'), $request->city_id, $combination, $item->qty);
                     $warehouse_id = $warehouse->id;
-
                     $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
                     $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
 
-                    Entry::create([
-                        'account_id' => $product_account->id,
-                        'type' => 'sales',
-                        'dr_amount' => 0,
-                        'cr_amount' => ($cost * $item->qty),
-                        'description' => 'sales order# ' . $order->id,
-                        'branch_id' => $branch_id,
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::check() ? Auth::id() : null,
-                    ]);
-
-                    Entry::create([
-                        'account_id' => $cs_product_account->id,
-                        'type' => 'sales',
-                        'dr_amount' => ($cost * $item->qty),
-                        'cr_amount' => 0,
-                        'description' => 'sales order# ' . $order->id,
-                        'branch_id' => $branch_id,
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::check() ? Auth::id() : null,
-                    ]);
+                    createEntry($product_account, 'sales', 0, ($cost * $item->qty), $branch_id, $order);
+                    createEntry($cs_product_account, 'sales', ($cost * $item->qty),  0, $branch_id, $order);
                 }
 
                 if ($item->product->vendor_id != null) {
-
 
                     $commission_rate = $item->product->category->vendor_profit;
                     $vendor_product_price = productPrice($item->product, $item->product_combination_id);
@@ -419,7 +412,6 @@ class OrdersController extends Controller
                         'user_id' => $item->product->vendor_id,
                         'user_name' => $item->product->vendor->name,
                     ]);
-
 
                     $vendor_order->products()->attach(
                         $item->product->id,
@@ -449,92 +441,42 @@ class OrdersController extends Controller
                     // add entry for commission tax account
 
                     $supplier_account = getItemAccount($item->product->vendor_id, null, 'suppliers_account', $branch_id);
+                    createEntry($supplier_account, 'sales', 0,  $vendor_profit, $branch_id, $order);
 
-                    Entry::create([
-                        'account_id' => $supplier_account->id,
-                        'type' => 'purchase',
-                        'dr_amount' => 0,
-                        'cr_amount' => $vendor_profit,
-                        'description' => 'sales order# ' . $order->id,
-                        'branch_id' => $branch_id,
-                        'reference_id' => $order->id,
-                        'created_by' => Auth::check() ? Auth::id() : null,
-                    ]);
 
                     if ($vendor_commission > 0) {
-
                         $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
-
-                        Entry::create([
-                            'account_id' => $revenue_account->id,
-                            'type' => 'sales',
-                            'dr_amount' => 0,
-                            'cr_amount' =>  $vendor_commission - $vendors_tax_ammount,
-                            'description' => 'sales order# ' . $order->id,
-                            'branch_id' => $branch_id,
-                            'reference_id' => $order->id,
-                            'created_by' => Auth::check() ? Auth::id() : null,
-                        ]);
-
-
-                        Entry::create([
-                            'account_id' => $vendors_tax_account->id,
-                            'type' => 'sales',
-                            'dr_amount' => 0,
-                            'cr_amount' =>  $vendors_tax_ammount,
-                            'description' => 'sales order# ' . $order->id,
-                            'branch_id' => $branch_id,
-                            'reference_id' => $order->id,
-                            'created_by' => Auth::check() ? Auth::id() : null,
-                        ]);
+                        createEntry($revenue_account, 'sales', 0,  $vendor_commission - $vendors_tax_ammount, $branch_id, $order);
+                        createEntry($vendors_tax_account, 'sales', 0,  $vendors_tax_ammount, $branch_id, $order);
                     }
                 }
 
-
-                Stock::create([
-                    'product_combination_id' => $item->product_combination_id,
-                    'product_id' => $item->product->id,
-                    'warehouse_id' => $warehouse_id,
-                    'qty' => $item->qty,
-                    'stock_status' => 'OUT',
-                    'stock_type' => 'Order',
-                    'reference_id' => $order->id,
-                    'reference_price' => productPrice($item->product, $item->product_combination_id, 'vat'),
-                    'created_by' => Auth::check() ? Auth::id() : null,
-                ]);
+                // add stock and running order
+                stockCreate($combination, $warehouse_id, $item->qty, 'Sale', 'OUT', $order->id, Auth::check() ? Auth::id() : null, productPrice($item->product, $item->product_combination_id, 'vat'));
 
                 // add noty for stock limit
 
-                if (productQuantity($item->product->id, $item->combination->id, setting('warehouse_id')) <= $item->combination->limit && $item->product->vendor_id == null) {
+                if (productQuantity($item->product->id, $item->combination->id, $warehouse_id) <= $item->combination->limit && $item->product->vendor_id == null) {
                     array_push($stocks_limit_products, $item->product);
                 }
             }
 
 
-
             if ($item->product->vendor_id == null) {
+
                 if ($product->product_type == 'variable' || $product->product_type == 'simple') {
                     $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
                 } else {
                     $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
                 }
 
-
-                Entry::create([
-                    'account_id' => $revenue_account->id,
-                    'type' => 'sales',
-                    'dr_amount' =>   0,
-                    'cr_amount' => (productPrice($item->product, $item->product_combination_id) * $item->qty),
-                    'description' => 'sales order# ' . $order->id,
-                    'branch_id' => $branch_id,
-                    'reference_id' => $order->id,
-                    'created_by' => Auth::id(),
-                ]);
+                createEntry($revenue_account, 'sales', 0, (productPrice($item->product, $item->product_combination_id) * $item->qty), $branch_id, $order);
             }
 
-            $item->delete();
+            if ($payment_method == 'cash_on_delivery') {
+                $item->delete();
+            }
         }
-
 
         if (Auth::check()) {
             $customer_account = getItemAccount(Auth::id(), null, 'customers_account', $branch_id);
@@ -550,18 +492,20 @@ class OrdersController extends Controller
         }
 
 
-        if ($total_order_price > 0 && setting('website_vat')) {
-
-            if ($coupon != null) {
-                $discount = calcDiscount($coupon, $subtotal);
-            } else {
+        if ($coupon) {
+            if ($coupon->free_shipping == true) {
                 $discount = 0;
+            } else {
+                $discount = calcDiscount($coupon, $subtotal, $cart_items);
             }
+        } else {
+            $discount = 0;
+        }
 
+        if ($total_order_price > 0 && setting('website_vat')) {
             $vat_amount = calcTax($subtotal - $discount, 'vat');
-        } elseif ($total_order_price) {
+        } elseif ($total_order_price > 0) {
             $vat_amount = 0;
-            $discount = calcDiscount($coupon, $subtotal);
         } else {
             $vat_amount = 0;
             $discount = 0;
@@ -589,52 +533,24 @@ class OrdersController extends Controller
             $order->taxes()->attach($vendors_tax->id, ['amount' => $total_vendors_tax_ammount]);
         }
 
+        createEntry($customer_account, 'sales', $total_order_price + $shipping_amount + $vat_amount - $discount, 0, $branch_id, $order);
 
-        Entry::create([
-            'account_id' => $customer_account->id,
-            'type' => 'sales',
-            'dr_amount' => $total_order_price + $shipping_amount + $vat_amount - $discount,
-            'cr_amount' =>  0,
-            'description' => 'sales order# ' . $order->id,
-            'branch_id' => $branch_id,
-            'reference_id' => $order->id,
-            'created_by' => Auth::check() ? Auth::id() : null,
-        ]);
 
         if ($vat_amount > 0) {
             $vat_account = Account::findOrFail(settingAccount('vat_sales_account', $branch_id));
-
-            Entry::create([
-                'account_id' => $vat_account->id,
-                'type' => 'sales',
-                'dr_amount' => 0,
-                'cr_amount' =>  $vat_amount,
-                'description' => 'sales order# ' . $order->id,
-                'branch_id' => $branch_id,
-                'reference_id' => $order->id,
-                'created_by' => Auth::check() ? Auth::id() : null,
-            ]);
+            createEntry($vat_account, 'sales', 0, $vat_amount, $branch_id, $order);
         }
-
 
         if ($shipping_amount > 0) {
-
             $revenue_account_shipping = getItemAccount(null, null, 'revenue_account_shipping', $branch_id);
-            Entry::create([
-                'account_id' => $revenue_account_shipping->id,
-                'type' => 'sales',
-                'dr_amount' =>   0,
-                'cr_amount' => $shipping_amount,
-                'description' => 'sales order# ' . $order->id,
-                'branch_id' => $branch_id,
-                'reference_id' => $order->id,
-                'created_by' => Auth::id(),
-            ]);
+            createEntry($revenue_account_shipping, 'sales', 0, $shipping_amount, $branch_id, $order);
         }
 
 
-
-
+        if ($discount > 0) {
+            $allowed_discount_account = Account::findOrFail(settingAccount('allowed_discount_account', $branch_id));
+            createEntry($allowed_discount_account, 'sales', $discount, 0, $branch_id, $order);
+        }
 
 
         $users = User::whereHas('roles', function ($query) {

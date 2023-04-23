@@ -49,17 +49,24 @@ class AttributesController extends Controller
     public function store(Request $request)
     {
 
+
+
+
         $request->validate([
             'name_ar' => "required|string|max:255|unique:attributes",
             'name_en' => "required|string|max:255|unique:attributes",
             'type' => "nullable|string",
+            'activate_filter' => "nullable|string",
         ]);
+
+
 
 
         $attribute = Attribute::create([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
             'type' => $request['type'],
+            'activate_filter' => $request['activate_filter'] == 'on' ? '1' : 0,
         ]);
 
         alertSuccess('attribute created successfully', 'تم إضافة سمة المنتجات بنجاح');
@@ -102,12 +109,14 @@ class AttributesController extends Controller
             'name_ar' => "required|string|max:255|unique:attributes,name_ar," . $attribute->id,
             'name_en' => "required|string|max:255|unique:attributes,name_en," . $attribute->id,
             'type' => "nullable|string",
+            'activate_filter' => "nullable|string",
         ]);
 
         $attribute->update([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
             'type' => $request['type'],
+            'activate_filter' => $request['activate_filter'] == 'on' ? '1' : 0,
         ]);
 
         alertSuccess('attribute updated successfully', 'تم تعديل سمة المنتج بنجاح');

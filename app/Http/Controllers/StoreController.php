@@ -169,7 +169,7 @@ class StoreController extends Controller
             'address' => $request->address,
             'house' => $request->house,
             'special_mark' => $request->special_mark,
-            'client_name' => $request->name,
+            'full_name' => $request->name,
             'client_phone' => $request->phone1,
             'phone2' => $request->phone2,
             'notes' => $request->notes,

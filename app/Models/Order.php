@@ -12,7 +12,7 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'affiliate_id', 'address', 'status', 'country_id', 'customer_id', 'warehouse_id', 'order_from', 'total_commission', 'total_profit', 'notes', 'full_name', 'total_price', 'special_mark', 'house', 'phone2', 'shipping_amount', 'city_id', 'state_id', 'subtotal_price', 'total_price_affiliate', 'phone', 'shipping_method_id', 'payment_status', 'payment_method', 'transaction_id', 'total_tax', 'is_seen', 'coupon_code', 'coupon_amount', 'branch_id', 'session_id', 'orderId', 'total_wht_products', 'total_wht_services', 'discount_amount'
+        'affiliate_id', 'address', 'status', 'country_id', 'customer_id', 'warehouse_id', 'order_from', 'total_commission', 'total_profit', 'notes', 'full_name', 'total_price', 'special_mark', 'house', 'phone2', 'shipping_amount', 'city_id', 'state_id', 'subtotal_price', 'total_price_affiliate', 'phone', 'shipping_method_id', 'payment_status', 'payment_method', 'transaction_id', 'total_tax', 'is_seen', 'coupon_code', 'coupon_amount', 'branch_id', 'session_id', 'orderId', 'total_wht_products', 'total_wht_services', 'discount_amount', 'avenue', 'block'
     ];
 
 
@@ -132,7 +132,7 @@ class Order extends Model
 
             $orders[$index]->affiliate_id = $product->orders->where('id', $order->order_id)->first()->user_id;
             $orders[$index]->status = $product->orders->where('id', $order->order_id)->first()->status;
-            $orders[$index]->customer_name = $product->orders->where('id', $order->order_id)->first()->client_name;
+            $orders[$index]->customer_name = $product->orders->where('id', $order->order_id)->first()->full_name;
             $orders[$index]->customer_phone = $product->orders->where('id', $order->order_id)->first()->client_phone;
             $orders[$index]->customer_phone2 = $product->orders->where('id', $order->order_id)->first()->phone2;
             $orders[$index]->address = $product->orders->where('id', $order->order_id)->first()->address;
@@ -183,7 +183,7 @@ class Order extends Model
             return $q->where('id', 'like', "%$search%")
                 ->orWhere('total_price', 'like', "%$search%")
                 ->orWhere('user_name', 'like', "%$search%")
-                ->orWhere('client_name', 'like', "%$search%")
+                ->orWhere('full_name', 'like', "%$search%")
                 ->orWhere('client_phone', 'like', "%$search%");
         });
     }

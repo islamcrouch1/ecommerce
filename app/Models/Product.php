@@ -18,6 +18,43 @@ class Product extends Model
 
     // protected $appends = ['profit_percent'];
 
+
+    // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+    // protected static function booted()
+    // {
+    //     static::deleted(function ($product) {
+    //         $product->favItems()->delete();
+    //         $product->cartItems()->delete();
+    //     });
+    // }
+
+    public function delete()
+    {
+        // delete all related fav and cart
+        $this->favItems()->delete();
+        $this->cartItems()->delete();
+        // as suggested by Dirk in comment,
+        // it's an uglier alternative, but faster
+        // Photo::where("user_id", $this->id)->delete()
+
+        // delete the user
+        return parent::delete();
+    }
+
+
+    // delete with forign key
+    public function favItems()
+    {
+        return $this->hasMany(FavItem::class);
+    }
+
+    // delete with forign key
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class);
+    }
+
     public function vendor()
     {
         return $this->belongsTo(User::class, 'vendor_id');
@@ -55,6 +92,7 @@ class Product extends Model
         return $this->hasMany(AffiliateStock::class);
     }
 
+
     public function fav()
     {
         return $this->hasMany(Favorite::class);
@@ -75,7 +113,6 @@ class Product extends Model
     {
         return $this->hasMany(ProductCombination::class);
     }
-
 
 
     public function carts()
@@ -248,6 +285,32 @@ class Product extends Model
     }
 
 
+    public function scopeWhenBrand($query, $brands)
+    {
+        return $query->When($brands, function ($q) use ($brands) {
+            return $q->whereHas('brands', function ($q) use ($brands) {
+                $q->whereIn('brand_id', $brands);
+            });
+        });
+    }
+
+
+    public function scopeWhenCategories($query, $cats)
+    {
+        return $query->When($cats, function ($q) use ($cats) {
+            return $q->whereIn('category_id', $cats);
+        });
+    }
+
+
+    public function scopeWhenVariations($query, $colors)
+    {
+        return $query->when($colors, function ($q) use ($colors) {
+            return $q->whereHas('variations', function ($q) use ($colors) {
+                $q->whereIn('variation_id', $colors);
+            });
+        });
+    }
 
     public function scopeWhenStatus($query, $status)
     {

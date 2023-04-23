@@ -901,9 +901,10 @@
     $('.slide-6-product').slick({
         dots: false,
         infinite: true,
-        speed: 300,
+        speed: 1000,
+        autoplay: true,
         slidesToShow: 6,
-        slidesToScroll: 6,
+        slidesToScroll: 2,
         adaptiveHeight: true,
         responsive: [{
             breakpoint: 1399,
@@ -1725,10 +1726,10 @@
             nextLevel.slideDown(speed);
         }
     });
-    $('.color-selector ul li').on('click', function (e) {
-        $(".color-selector ul li").removeClass("active");
-        $(this).addClass("active");
-    });
+    // $('.color-selector ul li').on('click', function (e) {
+    //     $(".color-selector ul li").removeClass("active");
+    //     $(this).addClass("active");
+    // });
     $('.color-w-name ul li').on('click', function (e) {
         $(".color-w-name ul li").removeClass("active");
         $(this).addClass("active");

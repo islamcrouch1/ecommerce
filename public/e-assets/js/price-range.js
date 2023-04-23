@@ -2391,18 +2391,18 @@ $(function() {
         max = parseInt($('.price-range').data('max'));
         var currency = $('.price-range').data('currency');
 
-        console.log(min , max , currency);
+        // console.log(min , max , currency);
 
     $range.ionRangeSlider({
         type: "double",
         min: min,
         max: max,
         from: 0,
-        to: 3000,
+        to: 1000,
         prefix: currency,
         onStart: updateInputs,
         onChange: updateInputs,
-        step: 100,
+        step: 0.1,
         prettify_enabled: true,
         prettify_separator: ".",
         values_separator: " - ",

@@ -6,68 +6,98 @@
                 <div class="row footer-theme partition-f">
                     <div class="col-lg-4 col-md-6 sub-title">
                         <div class="footer-title footer-mobile-title">
-                            <h4>about</h4>
+                            <h4>{{ __('about') }}</h4>
                         </div>
                         <div class="footer-contant">
                             <div class="footer-logo"><img style="width:130px"
                                     src="{{ asset(websiteSettingMedia('header_logo')) }}" alt="">
                             </div>
-                            <p>{{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_about') : websiteSettingEn('footer_about') }}
-                            </p>
+
                             <ul class="contact-list">
-                                <li><i
-                                        class="fa fa-map-marker"></i>{{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_address') : websiteSettingEn('footer_address') }}
-                                </li>
-                                <li><i
-                                        class="fa fa-phone"></i>{{ __('Call Us:') . ' ' . websiteSettingAr('footer_phone') }}
-                                </li>
-                                <li><i class="fa fa-envelope"></i>{{ __('Email Us:') . ' ' }}<a
-                                        href="#">{{ websiteSettingAr('footer_email') }}</a></li>
+                                @if (websiteSettingAr('footer_address'))
+                                    <li><i
+                                            class="fa fa-map-marker"></i>{{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_address') : websiteSettingEn('footer_address') }}
+                                    </li>
+                                @endif
+                                @if (websiteSettingAr('footer_phone'))
+                                    <li><i
+                                            class="fa fa-phone"></i>{{ __('Call Us:') . ' ' . websiteSettingAr('footer_phone') }}
+                                    </li>
+                                @endif
+
+                                @if (websiteSettingAr('footer_email'))
+                                    <li><i class="fa fa-envelope"></i>{{ __('Email Us:') . ' ' }}<a
+                                            href="#">{{ websiteSettingAr('footer_email') }}</a></li>
+                                @endif
+
                             </ul>
                         </div>
                     </div>
-                    <div class="col-lg-2 col-md-6">
-                        <div class="sub-title">
-                            <div class="footer-title">
-                                <h4>{{ __('Categories') }}</h4>
-                            </div>
-                            <div class="footer-contant">
-                                <ul>
-                                    @foreach (getCategories() as $category)
-                                        <li><a href="{{ route('ecommerce.products', ['category' => $category->id]) }}">
-                                                {{ getName($category) }}
-                                            </a></li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-2 col-md-6">
-                        <div class="sub-title">
-                            <div class="footer-title">
-                                <h4>{{ __('Brands') }}</h4>
-                            </div>
-                            <div class="footer-contant">
-                                <ul>
-                                    @foreach (getBrands() as $brand)
-                                        <li><a href="{{ route('ecommerce.products', ['brand[]' => $brand->id]) }}">
-                                                {{ getName($brand) }}
-                                            </a></li>
-                                    @endforeach
-                                </ul>
+                    @if (getCategories()->count() > 0)
+                        <div class="col-lg-2 col-md-6">
+                            <div class="sub-title">
+                                <div class="footer-title">
+                                    <h4>{{ __('Categories') }}</h4>
+                                </div>
+                                <div class="footer-contant">
+                                    <ul>
+                                        @foreach (getCategories() as $category)
+                                            <div class="col-{{ getCategories()->count() > 10 ? '6' : '12' }}">
+                                                <li><a
+                                                        href="{{ route('ecommerce.products', ['category' => $category->id]) }}">
+                                                        {{ getName($category) }}
+                                                    </a></li>
+                                            </div>
+                                        @endforeach
+
+
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="sub-title">
-                            <div class="footer-title">
-                                <h4>{{ __('follow us') }}</h4>
+                    @endif
+                    @if (getBrands()->count() > 0)
+
+                        <div class="col-lg-2 col-md-6">
+                            <div class="sub-title">
+                                <div class="footer-title">
+                                    <h4>{{ __('Brands') }}</h4>
+                                </div>
+                                <div class="footer-contant">
+                                    <ul>
+                                        <div class="row">
+                                            @foreach (getBrands() as $brand)
+                                                <div class="col-{{ getBrands()->count() > 10 ? '6' : '12' }}">
+                                                    <li><a
+                                                            href="{{ route('ecommerce.products', ['brand[]' => $brand->id]) }}">
+                                                            {{ getName($brand) }}
+                                                        </a></li>
+                                                </div>
+                                            @endforeach
+                                        </div>
+
+                                    </ul>
+                                </div>
                             </div>
-                            <div class="footer-contant">
-                                <p class="mb-cls-content">
-                                    {{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_follow') : websiteSettingEn('footer_follow') }}
-                                </p>
-                                {{-- <form class="form-inline">
+                        </div>
+                    @endif
+
+                    @if (websiteSettingAr('footer_follow') ||
+                            websiteSettingAr('footer_facebook') ||
+                            websiteSettingAr('footer_youtube') ||
+                            websiteSettingAr('footer_instagram') ||
+                            websiteSettingAr('footer_linkedin') ||
+                            websiteSettingAr('footer_about'))
+                        <div class="col-lg-4 col-md-6">
+                            <div class="sub-title">
+                                <div class="footer-title">
+                                    <h4>{{ __('follow us') }}</h4>
+                                </div>
+                                <div class="footer-contant">
+                                    <p class="mb-cls-content">
+                                        {{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_follow') : websiteSettingEn('footer_follow') }}
+                                    </p>
+                                    {{-- <form class="form-inline">
                                 <div class="form-group me-sm-3 mb-2">
                                     <label for="inputPassword2" class="sr-only">Password</label>
                                     <input type="password" class="form-control" id="inputPassword2"
@@ -75,21 +105,45 @@
                                 </div>
                                 <button type="submit" class="btn btn-solid mb-2">subscribe</button>
                             </form> --}}
-                                <div class="footer-social mt-4">
-                                    <ul>
-                                        <li><a href="{{ websiteSettingAr('footer_facebook') }}" target="_blank"><i
-                                                    class="fa fa-facebook-f"></i></a></li>
-                                        <li><a href="{{ websiteSettingAr('footer_youtube') }}" target="_blank"><i
-                                                    class="fa fa-youtube"></i></a></li>
-                                        <li><a href="{{ websiteSettingAr('footer_instagram') }}" target="_blank"><i
-                                                    class="fa fa-instagram"></i></a></li>
-                                        <li><a href="{{ websiteSettingAr('footer_linkedin') }}" target="_blank"><i
-                                                    class="fa fa-linkedin" aria-hidden="true"></i></a></li>
-                                    </ul>
+                                    <div class="footer-social mt-4">
+                                        <ul>
+                                            @if (websiteSettingAr('footer_facebook'))
+                                                <li><a href="{{ websiteSettingAr('footer_facebook') }}"
+                                                        target="_blank"><i class="fa fa-facebook-f"></i></a></li>
+                                            @endif
+                                            @if (websiteSettingAr('footer_youtube'))
+                                                <li><a href="{{ websiteSettingAr('footer_youtube') }}"
+                                                        target="_blank"><i class="fa fa-youtube"></i></a></li>
+                                            @endif
+                                            @if (websiteSettingAr('footer_instagram'))
+                                                <li><a href="{{ websiteSettingAr('footer_instagram') }}"
+                                                        target="_blank"><i class="fa fa-instagram"></i></a></li>
+                                            @endif
+                                            @if (websiteSettingAr('footer_linkedin'))
+                                                <li><a href="{{ websiteSettingAr('footer_linkedin') }}"
+                                                        target="_blank"><i class="fa fa-linkedin"
+                                                            aria-hidden="true"></i></a></li>
+                                            @endif
+                                            @if (websiteSettingAr('footer_snapchat'))
+                                                <li><a href="{{ websiteSettingAr('footer_snapchat') }}"
+                                                        target="_blank"><i class="fa fa-snapchat-square"
+                                                            aria-hidden="true"></i></a></li>
+                                            @endif
+                                            @if (websiteSettingAr('footer_tiktok'))
+                                                <li><a href="{{ websiteSettingAr('footer_tiktok') }}"
+                                                        target="_blank"><i class="fa-brands fa-tiktok"
+                                                            aria-hidden="true"></i></a></li>
+                                            @endif
+                                        </ul>
+                                    </div>
+                                    <p class="mt-3">
+                                        {{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_about') : websiteSettingEn('footer_about') }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    @endif
+
                 </div>
             </div>
         </section>

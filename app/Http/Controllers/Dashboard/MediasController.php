@@ -49,15 +49,26 @@ class MediasController extends Controller
             'images' => "required|array|max:15",
         ]);
 
+        $media = [];
+        $text = '';
+
 
         if ($files = $request->file('images')) {
-            foreach ($files as $file) {
+            foreach ($files as $index => $file) {
                 $media_id = saveMedia('image', $file, 'products');
+                $media[$index] = $media_id;
             }
         }
 
-        alertSuccess('media created successfully', 'تم إضافة الوسائط بنجاح');
-        return redirect()->route('medias.index');
+        foreach ($media as $index => $m) {
+            $image = Media::findOrFail($m);
+            $path = asset($image->path);
+            $text .= $path . ',';
+        }
+
+
+        alertSuccess('media created successfully' . ' - ' . $text, 'تم إضافة الوسائط بنجاح - روابط الميديا - ' . ' ' . $text);
+        return redirect()->route('medias.index', compact('media'));
     }
 
 

@@ -4,6 +4,12 @@
     "description": "The Laravel Framework.",
     "keywords": ["framework", "laravel"],
     "license": "MIT",
+    "repositories": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/Snapchat/business-sdk-php.git"
+        }
+      ],
     "require": {
         "php": "^8.0.2",
         "guzzlehttp/guzzle": "^7.2",
@@ -15,8 +21,12 @@
         "needim/noty": "^3.1",
         "phpoffice/phpspreadsheet": "^1.23",
         "pusher/pusher-php-server": "^7.0",
+        "rachidlaasri/laravel-installer": "^4.1",
         "santigarcor/laratrust": "^7.1",
-        "twilio/sdk": "^6.36"
+        "stevebauman/location": "^6.6",
+        "twilio/sdk": "^7.0",
+        "snapchat/business-sdk-php": "dev-release",
+        "facebook/php-business-sdk": "16.0.*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

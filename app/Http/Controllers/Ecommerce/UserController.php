@@ -145,6 +145,7 @@ class UserController extends Controller
 
 
 
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -152,7 +153,7 @@ class UserController extends Controller
             'country_id' => $request->country,
             'phone' => $request->phone,
             'gender' => 'male',
-            'profile' => ''
+            'profile' => 'avatarmale.png'
         ]);
 
 
@@ -199,6 +200,7 @@ class UserController extends Controller
 
         if (FacadesRoute::is('ecommerce.order.store')) {
         } else {
+            alertError('account created successfully', 'تم انشاء حسابك بنجاح شكرا لك..');
             return redirect(RouteServiceProvider::ECOMMERCE);
         }
     }

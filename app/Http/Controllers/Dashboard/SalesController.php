@@ -323,6 +323,8 @@ class SalesController extends Controller
             'price' => "nullable|array",
         ]);
 
+
+
         $branch_id = getUserBranchId(Auth::user());
         if (isset($request->return) && $request->return == true) {
             $returned = true;
@@ -437,7 +439,7 @@ class SalesController extends Controller
                     $wht_services_amount += $wht_amount_product;
                 }
 
-                // get cost of goods sold and update ot in simple and variable products
+                // get cost of goods sold and update it in simple and variable products
                 $cost = getProductCost($product, $combination, $branch_id, $ref_order, $request->qty[$index], $returned);
 
                 $order->products()->attach(
@@ -466,11 +468,6 @@ class SalesController extends Controller
 
                 // add stock update and antries
                 if ($product->product_type == 'variable' || $product->product_type == 'simple') {
-
-                    if ($returned == true) {
-                        // calculate product cost in sales return
-                        updateCost($combination, $cost, $request->qty[$index], 'add', $branch_id);
-                    }
 
 
                     // add stock and running order

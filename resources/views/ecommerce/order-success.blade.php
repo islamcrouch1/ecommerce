@@ -1,4 +1,4 @@
-@extends('layouts.ecommerce.app')
+@extends('layouts.ecommerce.app', ['page_title' => 'Order success'])
 @section('content')
     <!-- thank-you section start -->
     <section class="section-b-space light-layout">
@@ -158,7 +158,18 @@
                                         </li>
                                         <li>{{ app()->getLocale() == 'ar' ? $order->city->name_ar : $order->city->name_en }}
                                         </li>
-                                        <li>{{ $order->address }}</li>
+                                        @if ($order->block)
+                                            <li> {{ __('Block:') . $order->block }}</li>
+                                        @endif
+                                        @if ($order->address)
+                                            <li>{{ __('Address:') . $order->address }}</li>
+                                        @endif
+                                        @if ($order->avenue)
+                                            <li>{{ __('Avenue:') . $order->avenue }}</li>
+                                        @endif
+                                        @if ($order->house)
+                                            <li>{{ __('House:') . $order->house }}</li>
+                                        @endif
                                     @endif
                                 </ul>
                             </div>

@@ -15,7 +15,7 @@
                             class="toggle-line"></span></span></button>
 
             </div><a class="navbar-brand" href="{{ route('home') }}">
-                <div class="d-flex align-items-center py-3"><img class="me-2"
+                <div class="d-flex align-items-center py-3 "><img class="me-2 admin-logo"
                         src="{{ asset(websiteSettingMedia('header_logo')) }}" alt="" width="150" />
                 </div>
             </a>
@@ -158,6 +158,96 @@
                         @endif
 
 
+                        @if (checkPer(['carts', 'coupons', 'website_traffic', 'offers', 'testimonials']))
+
+                            <li class="nav-item">
+                                <!-- label-->
+                                <div class="row navbar-vertical-label-wrapper mt-3 mb-2">
+                                    <!-- Orders -  -->
+                                    <div class="col-auto navbar-vertical-label">{{ __('Marketing') }}
+                                    </div>
+                                    <div class="col ps-0">
+                                        <hr class="mb-0 navbar-vertical-divider" />
+                                    </div>
+                                </div>
+                                @if (auth()->user()->hasPermission('carts-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('user_carts*') ? 'active' : '' }}"
+                                        href="{{ route('user_carts.index') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-shopping-cart"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('User\'s carts') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('coupons-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('coupons*') ? 'active' : '' }}"
+                                        href="{{ route('coupons.index') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-money-bill"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('Coupons') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('offers-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('offers.index*') ? 'active' : '' }}"
+                                        href="{{ route('offers.index') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon">
+                                                <span class="fas fa-calendar-alt"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('offers') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('testimonials-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('testimonials.index*') ? 'active' : '' }}"
+                                        href="{{ route('testimonials.index') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon">
+                                                <span class="fas fa-comments"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('testimonials') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('reviews-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('reviews.index*') ? 'active' : '' }}"
+                                        href="{{ route('reviews.index') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon">
+                                                <span class="fas fa-comment"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('product reviews') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('website_traffic-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('admin.views*') ? 'active' : '' }}"
+                                        href="{{ route('admin.views') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon">
+                                                <span class="fas fa-chart-bar"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('website traffic') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+
+
+                            </li>
+                        @endif
+
+
                         @if (checkPer(['crm']))
 
                             <li class="nav-item">
@@ -245,7 +335,7 @@
 
 
 
-                        @if (checkPer(['settings', 'website_setting', 'slides', 'logs', 'messages', 'notifications', 'bonus', 'coupons']))
+                        @if (checkPer(['settings', 'website_setting', 'slides', 'logs', 'messages', 'notifications', 'bonus']))
 
                             <li class="nav-item">
                                 <!-- label-->
@@ -315,17 +405,7 @@
                                     </a>
                                 @endif
 
-                                @if (auth()->user()->hasPermission('coupons-read'))
-                                    <!-- parent pages--><a
-                                        class="nav-link {{ Route::is('coupons*') ? 'active' : '' }}"
-                                        href="{{ route('coupons.index') }}" role="button" data-bs-toggle=""
-                                        aria-expanded="false">
-                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
-                                                    class="fas fa-money-bill"></span></span><span
-                                                class="nav-link-text ps-1">{{ __('Coupons') }}</span>
-                                        </div>
-                                    </a>
-                                @endif
+
 
                                 @if (auth()->user()->hasPermission('messages-read'))
                                     <!-- parent pages--><a
@@ -500,8 +580,8 @@
                                 @if (auth()->user()->hasPermission('stock_lists-read'))
                                     <!-- parent pages--><a
                                         class="nav-link {{ Route::is('stock.management.list*') ? 'active' : '' }}"
-                                        href="{{ route('stock.management.list') }}" role="button" data-bs-toggle=""
-                                        aria-expanded="false">
+                                        href="{{ route('stock.management.list') }}" role="button"
+                                        data-bs-toggle="" aria-expanded="false">
                                         <div class="d-flex align-items-center"><span class="nav-link-icon"><span
                                                     class="fas fa-layer-group"></span></span><span
                                                 class="nav-link-text ps-1">{{ __('Stocks Lists') }}</span>
@@ -687,7 +767,7 @@
 
                                 @if (auth()->user()->hasPermission('entries-read'))
                                     <!-- parent pages--><a
-                                        class="nav-link {{ Route::is('entries*') ? 'active' : '' }}"
+                                        class="nav-link {{ Route::is('entries.index*') ? 'active' : '' }}"
                                         href="{{ route('entries.index') }}" role="button" data-bs-toggle=""
                                         aria-expanded="false">
                                         <div class="d-flex align-items-center"><span class="nav-link-icon"><span

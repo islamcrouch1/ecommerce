@@ -576,13 +576,31 @@
 
                             <div class="mb-3">
                                 <div class="col-md-12" id="gallery">
+
+
+                                </div>
+
+                                <div class="product-images row">
+
                                     @foreach ($product->images as $image)
-                                        <img src="{{ asset($image->media->path) }}"
-                                            style="width:100px; border: 1px solid #999" class="img-thumbnail img-prev">
+                                        <div style="width:150px; border: 1px solid #999"
+                                            class="hoverbox rounded-3 text-center m-1 product-image-{{ $image->media->id }}">
+                                            <img class="img-fluid" src="{{ asset($image->media->path) }}"
+                                                alt="" />
+                                            <div class="light hoverbox-content bg-dark p-5 flex-center">
+                                                <div>
+                                                    <a class="btn btn-light btn-sm mt-1 delete-media" href="#"
+                                                        data-url="{{ route('products.delete.media', ['image_id' => $image->id]) }}"
+                                                        data-media_id="{{ $image->media->id }}">{{ __('Delete') }}</a>
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endforeach
 
                                 </div>
                             </div>
+
+
 
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"

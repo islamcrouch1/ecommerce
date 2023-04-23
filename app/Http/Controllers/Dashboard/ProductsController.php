@@ -61,6 +61,22 @@ class ProductsController extends Controller
     }
 
 
+    public function deleteMedia(Request $request)
+    {
+
+        $request->validate([
+            'media_id' => "required|integer",
+            'image_id' => "required|integer",
+        ]);
+
+        deleteImage($request->media_id);
+        $image = ProductImage::findOrFail($request->image_id);
+        $image->delete();
+
+        return 1;
+    }
+
+
     public function vendorsIndex()
     {
         $categories = Category::whereNull('parent_id')->get();
@@ -115,27 +131,29 @@ class ProductsController extends Controller
      */
     public function store(Request $request)
     {
+
+
         $request->validate([
             'name_ar' => "required|string",
             'name_en' => "required|string",
             'sku' => "required|string|unique:products",
             'product_slug' => "required|string|unique:products",
-            'images' => "required|array",
+            'images' => $request->duplicate ? "nullable|array" : "required|array",
             'category' => "required|string",
-            'description_ar' => "required|string",
-            'description_en' => "required|string",
+            'description_ar' => "nullable|string",
+            'description_en' => "nullable|string",
             'sale_price' => "required|numeric",
             'discount_price' => "required|numeric",
             'categories' => "nullable|array",
             'brands' => "nullable|array",
-            'product_type' => "required|string",
+            'product_type' =>  "required|string",
             'digital_file' => "nullable|file",
             'status' => "required|string",
             'video_url' => "nullable|string",
             'attributes' => "nullable|array",
             'product_min_order' => "required|numeric",
             'product_max_order' => "required|numeric",
-            'extra_fee'  => "required|numeric",
+            'extra_fee'  => "nullable|numeric",
             'seo_meta_tag' => "nullable|string",
             'seo_desc' => "nullable|string",
             'product_weight' => "nullable|numeric",
@@ -146,7 +164,6 @@ class ProductsController extends Controller
             'shipping_method' => "nullable|string",
             'cost' => "nullable|numeric",
         ]);
-
 
 
         $product_type = $request['product_type'];
@@ -215,7 +232,6 @@ class ProductsController extends Controller
             'sale_price' => $request['sale_price'],
             'discount_price' => $request['discount_price'],
             'product_type' => $product_type,
-            'cost' =>  $request['cost'],
 
             'product_weight' =>  $request['product_weight'],
             'product_length' =>  $request['product_length'],
@@ -235,20 +251,40 @@ class ProductsController extends Controller
             'status' => $request['status'],
         ]);
 
+
+        if ($product_type == 'digital' || $product_type == 'service') {
+            $product->update([
+                'cost' =>  $request['cost'],
+            ]);
+        }
+
         $product->categories()->attach($request['categories']);
         $product->brands()->attach($request['brands']);
 
         // CalculateProductPrice($product);
 
-        if ($files = $request->file('images')) {
-            foreach ($files as $file) {
-                $media_id = saveMedia('image', $file, 'products');
+        if ($request->duplicate && !isset($request->images)) {
+            $ref_product = Product::find($request->ref_product);
+
+            foreach ($ref_product->images as $image) {
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'media_id' => $media_id,
+                    'media_id' => $image->media_id,
                 ]);
             }
+        } else {
+            if ($files = $request->file('images')) {
+                foreach ($files as $file) {
+                    $media_id = saveMedia('image', $file, 'products');
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'media_id' => $media_id,
+                    ]);
+                }
+            }
         }
+
+
 
 
 
@@ -379,6 +415,17 @@ class ProductsController extends Controller
         return view('dashboard.products.edit', compact('categories', 'countries', 'product', 'brands', 'shipping_methods', 'attributes'));
     }
 
+
+    public function duplicate(Product $product)
+    {
+        $categories = Category::whereNull('parent_id')->get();
+        $brands = Brand::where('status', 'active')->get();
+        $countries = Country::all();
+        $attributes = Attribute::all();
+        $shipping_methods = ShippingMethod::whereIn('id', [1, 2, 3])->get();
+        return view('dashboard.products.duplicate', compact('categories', 'countries', 'product', 'brands', 'shipping_methods', 'attributes'));
+    }
+
     /**
      * Update the specified resource in storage.
      *
@@ -396,8 +443,8 @@ class ProductsController extends Controller
             'product_slug' => "required|string|unique:products,product_slug," . $product->id,
             'images' => "nullable|array",
             'category' => "required|string",
-            'description_ar' => "required|string",
-            'description_en' => "required|string",
+            'description_ar' => "nullable|string",
+            'description_en' => "nullable|string",
             'sale_price' => "required|numeric",
             'discount_price' => "required|numeric",
             'categories' => "nullable|array",
@@ -408,7 +455,7 @@ class ProductsController extends Controller
             'attributes' => "nullable|array",
             'product_min_order' => "required|numeric",
             'product_max_order' => "required|numeric",
-            'extra_fee'  => "required|numeric",
+            'extra_fee'  => "nullable|numeric",
             'seo_meta_tag' => "nullable|string",
             'seo_desc' => "nullable|string",
 
@@ -450,10 +497,10 @@ class ProductsController extends Controller
 
         if ($files = $request->file('images')) {
 
-            foreach ($product->images as $image) {
-                deleteImage($image->media->id);
-                $image->delete();
-            }
+            // foreach ($product->images as $image) {
+            //     deleteImage($image->media->id);
+            //     $image->delete();
+            // }
             foreach ($files as $file) {
                 $media_id = saveMedia('image', $file, 'products');
                 ProductImage::create([
@@ -502,14 +549,17 @@ class ProductsController extends Controller
             if (empty($request['attributes'])) {
                 alertError('please select product attribute', 'يرجى تحديد سمات المنتج');
                 return redirect()->back();
-            } else {
-                foreach ($request['attributes'] as $attr) {
-                    if (empty($request['variations-' . $attr])) {
-                        alertError('please select product variations', 'يرجى تحديد متغيرات المنتج');
-                        return redirect()->back();
-                    }
-                }
             }
+
+            // else {
+            //     foreach ($request['attributes'] as $attr) {
+            //         if (empty($request['variations-' . $attr])) {
+            //             alertError('please select product variations', 'يرجى تحديد متغيرات المنتج');
+            //             return redirect()->back();
+            //         }
+            //     }
+            // }
+
         }
 
 
@@ -596,20 +646,21 @@ class ProductsController extends Controller
             $combination_array = [];
 
             foreach ($attributes as $attr) {
-                foreach ($request['variations-' . $attr] as $var) {
+                if (isset($request['variations-' . $attr])) {
+                    foreach ($request['variations-' . $attr] as $var) {
 
-                    $variation = $product->variations()->where('variation_id', $var)->first();
-                    if ($variation == null) {
-                        ProductVariation::create([
-                            'attribute_id' => $attr,
-                            'variation_id' => $var,
-                            'product_id' => $product->id
-                        ]);
+                        $variation = $product->variations()->where('variation_id', $var)->first();
+                        if ($variation == null) {
+                            ProductVariation::create([
+                                'attribute_id' => $attr,
+                                'variation_id' => $var,
+                                'product_id' => $product->id
+                            ]);
+                        }
+                        array_push($new_variations, $var);
                     }
-                    array_push($new_variations, $var);
+                    $combination_array[$attr] = $request['variations-' . $attr];
                 }
-
-                $combination_array[$attr] = $request['variations-' . $attr];
             }
 
 
@@ -623,9 +674,13 @@ class ProductsController extends Controller
                     })->get();
 
                     foreach ($combinations as $combination) {
-                        if ($combination->stocks->count() > 0) {
+                        $av_qty = productQuantityWebsite($product->id, $combination->id, null, null);
+                        if ($av_qty > 0) {
                             $count++;
                         } else {
+                            foreach ($combination->variations as $com_var) {
+                                $com_var->delete();
+                            }
                             $combination->delete();
                         }
                     }
@@ -642,9 +697,12 @@ class ProductsController extends Controller
 
 
             $combination_array = array_values($combination_array);
+
+
             $arrays = getCombinations($combination_array);
 
-            if (!is_array($arrays[0])) {
+
+            if (!empty($arrays) && !is_array($arrays[0])) {
                 $array = $arrays;
                 unset($arrays);
                 foreach ($array as $index => $item) {
@@ -1388,7 +1446,7 @@ class ProductsController extends Controller
             }
         }
 
-        return redirect()->route('products.index');
+        return redirect()->back();
     }
 
     public function updateStatus(Request $request, Product $product)
@@ -1408,7 +1466,7 @@ class ProductsController extends Controller
             alertError('Product status cannot be updated', 'لا يمكن تحديث حالة المنتج');
         }
 
-        return redirect()->route('products.index');
+        return redirect()->back();
     }
 
     private function changeStatus($product, $status)

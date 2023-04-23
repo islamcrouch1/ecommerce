@@ -23,14 +23,14 @@ return new class extends Migration
             $table->integer('warehouse_id')->nullable();
             $table->enum('order_from', ['androidapp', 'iosapp', 'web', 'pos', 'addsale', 'affiliate', 'addpurchase'])->default('web');
             $table->string('full_name')->nullable();
-            $table->string('address')->nullable();
+            $table->longText('address')->nullable();
             $table->integer('country_id')->nullable();
             $table->integer('state_id')->nullable();
             $table->integer('city_id')->nullable();
 
-            $table->string('house')->nullable();
-            $table->string('special_mark')->nullable();
-            $table->string('notes')->nullable();
+            $table->longText('house')->nullable();
+            $table->longText('special_mark')->nullable();
+            $table->longText('notes')->nullable();
 
             $table->double('total_price', 8, 2)->default(0);
             $table->double('subtotal_price', 8, 2)->default(0);

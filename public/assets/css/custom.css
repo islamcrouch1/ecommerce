@@ -289,6 +289,10 @@ input:checked+.slider:before {
     opacity: 0.8;
   }
 
+  .navbar-vertical.navbar-vibrant .navbar-nav .nav-item .nav-link.active{
+    font-size: 19px;
+  }
+
 
 
   @keyframes ring {
@@ -308,30 +312,30 @@ input:checked+.slider:before {
 
 
 
-  
+
   .cat-title a{
     color: #9da9bb !important;
   }
 
 .gridd{
   background-image: url("../img/2.gif");
-  
+
 }
 .gridd2{
   background-image: url("../img/3.gif");
-  
+
 }
 .gridd3{
   background-image: url("../img/4.gif");
-  
+
 }
 .gridd4{
   background-image: url("../img/5.gif");
-  
+
 }
 .gridd5{
   background-image: url("../img/1.gif");
-  
+
 }
 .one{
   background-image: url("../img/12.jpg");
@@ -362,5 +366,10 @@ input:checked+.slider:before {
 }
 }
 
+@media (max-width: 577px) {
 
+    .admin-logo{
+        width:60px;
+    }
+}
 

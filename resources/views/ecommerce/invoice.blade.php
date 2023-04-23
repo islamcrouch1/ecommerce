@@ -1,4 +1,4 @@
-@extends('layouts.ecommerce.app')
+@extends('layouts.ecommerce.app', ['page_title' => 'Invoice'])
 @section('content')
     <!-- invoice 1 start -->
     <section class="theme-invoice-1 section-b-space">

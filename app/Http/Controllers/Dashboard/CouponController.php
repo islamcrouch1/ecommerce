@@ -64,9 +64,16 @@ class CouponController extends Controller
             'type' => "required|string",
             'amount' => "required|numeric|gt:0",
             'max_value' => "required|numeric|gt:0",
+            'min_value' => "required|numeric|gt:0",
             'ended_at' => "required|string",
-            'frequency' => "required|integer|gt:0",
+            'user_frequency' => "required|integer|gt:0",
+            'all_frequency' => "required|integer|gt:0",
+            'free_shipping' => "nullable|string",
+            'products' => "nullable|array",
+            'categories' => "nullable|array",
+
         ]);
+
 
         $date = $request['ended_at'];
         $coupon = coupon::create([
@@ -75,7 +82,12 @@ class CouponController extends Controller
             'type' => $request['type'],
             'amount' => $request['amount'],
             'max_value' => $request['max_value'],
-            'frequency' => $request['frequency'],
+            'min_value' => $request['min_value'],
+            'user_frequency' => $request['user_frequency'],
+            'all_frequency' => $request['all_frequency'],
+            'free_shipping' => $request['free_shipping'] == 'on' ? true : false,
+            'products' => serialize($request['products']),
+            'categories' => serialize($request['categories']),
             'ended_at' => $date,
         ]);
 
@@ -123,8 +135,13 @@ class CouponController extends Controller
             'type' => "required|string",
             'amount' => "required|numeric|gt:0",
             'max_value' => "required|numeric|gt:0",
+            'min_value' => "required|numeric|gt:0",
             'ended_at' => "required|string",
-            'frequency' => "required|integer|gt:0",
+            'user_frequency' => "required|integer|gt:0",
+            'all_frequency' => "required|integer|gt:0",
+            'free_shipping' => "nullable|string",
+            'products' => "nullable|array",
+            'categories' => "nullable|array",
         ]);
 
 
@@ -134,7 +151,12 @@ class CouponController extends Controller
             'type' => $request['type'],
             'amount' => $request['amount'],
             'max_value' => $request['max_value'],
-            'frequency' => $request['frequency'],
+            'min_value' => $request['min_value'],
+            'user_frequency' => $request['user_frequency'],
+            'all_frequency' => $request['all_frequency'],
+            'free_shipping' => $request['free_shipping'] == 'on' ? true : false,
+            'products' => serialize($request['products']),
+            'categories' => serialize($request['categories']),
             'ended_at' => $request['ended_at'],
         ]);
 

@@ -38,6 +38,10 @@
                                 <li class="nav-item"><a class="nav-link" id="about-tab" data-bs-toggle="tab"
                                         href="#tab-about" role="tab" aria-controls="tab-about"
                                         aria-selected="false">{{ __('about us') }}</a></li>
+
+                                <li class="nav-item"><a class="nav-link" id="popup-tab" data-bs-toggle="tab"
+                                        href="#tab-popup" role="tab" aria-controls="tab-popup"
+                                        aria-selected="false">{{ __('popup window') }}</a></li>
                             </ul>
                             <div class="tab-content border-x border-bottom p-3" id="myTabContent">
                                 <div class="tab-pane fade show active" id="tab-home" role="tabpanel"
@@ -888,6 +892,28 @@
                                         @enderror
                                     </div>
 
+                                    <div class="mb-3">
+                                        <label class="form-label" for="footer_snapchat">{{ __('snapchat') }}</label>
+                                        <input name="footer_snapchat"
+                                            class="form-control @error('footer_snapchat') is-invalid @enderror"
+                                            value="{{ websiteSettingAr('footer_snapchat') }}" type="text"
+                                            autocomplete="on" id="footer_snapchat" />
+                                        @error('footer_snapchat')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="footer_tiktok">{{ __('tiktok') }}</label>
+                                        <input name="footer_tiktok"
+                                            class="form-control @error('footer_tiktok') is-invalid @enderror"
+                                            value="{{ websiteSettingAr('footer_tiktok') }}" type="text"
+                                            autocomplete="on" id="footer_tiktok" />
+                                        @error('footer_tiktok')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
 
                                     <div class="mb-3">
                                         <label class="form-label"
@@ -910,6 +936,36 @@
                                             value="{{ websiteSettingEn('copyright_text') }}" type="text"
                                             autocomplete="on" id="copyright_text_en" />
                                         @error('copyright_text_en')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="whatsapp_check">{{ __('activate whatsapp icon') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="whatsapp_check"
+                                                    class="form-control @error('whatsapp_check') is-invalid @enderror"
+                                                    name="whatsapp_check" type="checkbox"
+                                                    {{ websiteSettingAr('whatsapp_check') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('whatsapp_check')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="whatsapp_phone">{{ __('whatsapp phone') }}</label>
+                                        <input name="whatsapp_phone"
+                                            class="form-control @error('whatsapp_phone') is-invalid @enderror"
+                                            value="{{ websiteSettingEn('whatsapp_phone') }}" type="text"
+                                            autocomplete="on" id="whatsapp_phone" />
+                                        @error('whatsapp_phone')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -1022,6 +1078,207 @@
 
 
                                 </div>
+
+
+
+                                <div class="tab-pane fade" id="tab-popup" role="tabpanel" aria-labelledby="footer-tab">
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="check_front_popup">{{ __('activate front popup') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="check_front_popup"
+                                                    class="form-control @error('check_front_popup') is-invalid @enderror"
+                                                    name="check_front_popup" type="checkbox"
+                                                    {{ websiteSettingAr('check_front_popup') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('check_front_popup')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="front_modal_banar">{{ __('banar') . '( 737 * 131 )' }}</label>
+                                        <input name="front_modal_banar"
+                                            class="img form-control @error('front_modal_banar') is-invalid @enderror"
+                                            type="file" id="front_modal_banar" />
+                                        @error('front_modal_banar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    @if (websiteSettingMedia('front_modal'))
+                                        <div class="mb-3">
+
+                                            <div class="col-md-10">
+                                                <img src="{{ asset(websiteSettingMedia('front_modal')) }}"
+                                                    style="width:100px; border: 1px solid #999"
+                                                    class="img-thumbnail img-prev">
+                                            </div>
+
+                                        </div>
+                                    @endif
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="front_modal_title_ar">{{ __('title') . ' ' . __('arabic') }}</label>
+                                        <input name="front_modal_title_ar"
+                                            class="form-control @error('front_modal_title_ar') is-invalid @enderror"
+                                            value="{{ websiteSettingAr('front_modal') }}" type="text"
+                                            autocomplete="on" id="front_modal_title_ar" />
+                                        @error('front_modal_title_ar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="front_modal_title_en">{{ __('title') . ' ' . __('english') }}</label>
+                                        <input name="front_modal_title_en"
+                                            class="form-control @error('front_modal_title_en') is-invalid @enderror"
+                                            value="{{ websiteSettingAr('front_modal') }}" type="text"
+                                            autocomplete="on" id="front_modal_title_en" />
+                                        @error('front_modal_title_en')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="front_modal_description_ar">{{ __('description') . ' ' . __('arabic') }}</label>
+                                        <input name="front_modal_description_ar"
+                                            class="form-control @error('front_modal_description_ar') is-invalid @enderror"
+                                            value="{{ websiteSettingDAr('front_modal') }}" type="text"
+                                            autocomplete="on" id="front_modal_description_ar" />
+                                        @error('front_modal_description_ar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="front_modal_description_en">{{ __('description') . ' ' . __('english') }}</label>
+                                        <input name="front_modal_description_en"
+                                            class="form-control @error('front_modal_description_en') is-invalid @enderror"
+                                            value="{{ websiteSettingDAr('front_modal') }}" type="text"
+                                            autocomplete="on" id="front_modal_description_en" />
+                                        @error('front_modal_description_en')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div
+                                        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mt-5 mb-5 border-bottom">
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="check_front_auth_popup">{{ __('activate auth front popup') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="check_front_auth_popup"
+                                                    class="form-control @error('check_front_auth_popup') is-invalid @enderror"
+                                                    name="check_front_auth_popup" type="checkbox"
+                                                    {{ websiteSettingAr('check_front_auth_popup') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('check_front_auth_popup')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="front_auth_modal_banar">{{ __('banar') . '( 737 * 131 )' }}</label>
+                                        <input name="front_auth_modal_banar"
+                                            class="img form-control @error('front_auth_modal_banar') is-invalid @enderror"
+                                            type="file" id="front_auth_modal_banar" />
+                                        @error('front_auth_modal_banar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    @if (websiteSettingMedia('front_auth_modal'))
+                                        <div class="mb-3">
+
+                                            <div class="col-md-10">
+                                                <img src="{{ asset(websiteSettingMedia('front_auth_modal')) }}"
+                                                    style="width:100px; border: 1px solid #999"
+                                                    class="img-thumbnail img-prev">
+                                            </div>
+
+                                        </div>
+                                    @endif
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="front_auth_modal_title_ar">{{ __('title') . ' ' . __('arabic') }}</label>
+                                        <input name="front_auth_modal_title_ar"
+                                            class="form-control @error('front_auth_modal_title_ar') is-invalid @enderror"
+                                            value="{{ websiteSettingAr('front_auth_modal') }}" type="text"
+                                            autocomplete="on" id="front_auth_modal_title_ar" />
+                                        @error('front_auth_modal_title_ar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="front_auth_modal_title_en">{{ __('title') . ' ' . __('english') }}</label>
+                                        <input name="front_auth_modal_title_en"
+                                            class="form-control @error('front_auth_modal_title_en') is-invalid @enderror"
+                                            value="{{ websiteSettingAr('front_auth_modal') }}" type="text"
+                                            autocomplete="on" id="front_auth_modal_title_en" />
+                                        @error('front_auth_modal_title_en')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="front_auth_modal_description_ar">{{ __('description') . ' ' . __('arabic') }}</label>
+                                        <input name="front_auth_modal_description_ar"
+                                            class="form-control @error('front_auth_modal_description_ar') is-invalid @enderror"
+                                            value="{{ websiteSettingDAr('front_auth_modal') }}" type="text"
+                                            autocomplete="on" id="front_auth_modal_description_ar" />
+                                        @error('front_auth_modal_description_ar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="front_auth_modal_description_en">{{ __('description') . ' ' . __('english') }}</label>
+                                        <input name="front_auth_modal_description_en"
+                                            class="form-control @error('front_auth_modal_description_en') is-invalid @enderror"
+                                            value="{{ websiteSettingDAr('front_auth_modal') }}" type="text"
+                                            autocomplete="on" id="front_auth_modal_description_en" />
+                                        @error('front_auth_modal_description_en')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+
+                                </div>
+
+
+
+
+
+
 
                                 {{-- data here  --}}
 

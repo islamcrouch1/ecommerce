@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\NewNotification;
+use App\Mail\NewOrder;
 use App\Models\Account;
 use App\Models\Balance;
 use App\Models\Branch;
@@ -20,6 +21,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Carbon\Carbon;
 use App\Models\Media;
+use App\Models\Offer;
 use App\Models\Product;
 use App\Models\ProductCombination;
 use App\Models\RunningOrder;
@@ -27,13 +29,30 @@ use App\Models\Stock;
 use App\Models\Tax;
 use App\Models\Warehouse;
 use App\Models\WebsiteSetting;
+use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Twilio\Rest\Client;
 use Twilio\Exceptions\TwilioException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Image;
 use PhpParser\Node\Stmt\TryCatch;
+
+use SnapBusinessSDK\Api\ConversionApi;
+use SnapBusinessSDK\Model\CapiEvent;
+use SnapBusinessSDK\Util\CapiConstants;
+
+
+use FacebookAds\Api;
+use FacebookAds\Object\ServerSide\CustomData;
+use FacebookAds\Object\ServerSide\Event;
+use FacebookAds\Object\ServerSide\EventRequest;
+use FacebookAds\Object\ServerSide\EventRequestAsync;
+use FacebookAds\Object\ServerSide\UserData;
+
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Promise;
 
 if (!function_exists('saveMedia')) {
     function saveMedia($type, $media, $folder)
@@ -69,18 +88,20 @@ if (!function_exists('saveMedia')) {
 if (!function_exists('deleteImage')) {
     function deleteImage($media_id)
     {
-        $media = Media::findOrFail($media_id);
+        $media = Media::find($media_id);
 
-        if ($media->productImages->count() == 0 && $media->brands->count() == 0 && $media->categories->count() == 0 && $media->countries->count() == 0 && $media->productCombinations->count() == 0 && $media->slides->count() == 0 && $media->websiteOptions->count() == 0 && $media->websiteSettings->count() == 0) {
-            try {
-                Storage::disk('public')->delete(substr($media->path, '7'));
-                $media->forceDelete();
-                return true;
-            } catch (\Throwable $th) {
+        if ($media != null) {
+            if ($media->productImages->count() == 0 && $media->brands->count() == 0 && $media->categories->count() == 0 && $media->countries->count() == 0 && $media->productCombinations->count() == 0 && $media->slides->count() == 0 && $media->websiteOptions->count() == 0 && $media->websiteSettings->count() == 0) {
+                try {
+                    Storage::disk('public')->delete(substr($media->path, '7'));
+                    $media->forceDelete();
+                    return true;
+                } catch (\Throwable $th) {
+                    return null;
+                }
+            } else {
                 return null;
             }
-        } else {
-            return null;
         }
     }
 }
@@ -592,8 +613,12 @@ if (!function_exists('getSettleAmount')) {
 
 
 if (!function_exists('getCartItems')) {
-    function getCartItems()
+    function getCartItems($user = null)
     {
+
+        if ($user) {
+            return CartItem::where('user_id', $user->id)->get();
+        }
 
         if (Auth::check()) {
             $cart_items = CartItem::where('user_id', Auth::id())->get();
@@ -692,8 +717,22 @@ if (!function_exists('getCombination')) {
         if ($combination_id == null) {
             return null;
         } else {
-            $combination = ProductCombination::findOrFail($combination_id);
+            $combination = ProductCombination::find($combination_id);
             return $combination;
+        }
+    }
+}
+
+if (!function_exists('getCombinationData')) {
+    function getCombinationData($combination_id = null, $data = null)
+    {
+        $combination = getCombination($combination_id);
+
+        if ($combination_id == null || $combination == null) {
+            return null;
+        } else {
+            $data = $combination->$data;
+            return $data;
         }
     }
 }
@@ -707,9 +746,8 @@ if (!function_exists('getCombination')) {
 if (!function_exists('setLocaleBySession')) {
     function setLocaleBySession()
     {
-        if (Auth::check()) {
+        if (DB::connection()->getDatabaseName() != '' && Auth::check()) {
             $user = User::findOrFail(Auth::id());
-
             $user->update([
                 'lang' => app()->getLocale() == 'ar' ? 'en' : 'ar',
             ]);
@@ -734,22 +772,45 @@ if (!function_exists('callToVerify')) {
         try {
             $client = new Client(env('TWILIO_SID'), env('TWILIO_AUTH_TOKEN'));
 
-            $client->messages->create(
-                '+201121184148', // to
-                ["body" => "ليس لديك تأمين كافي في حسابكم علي فيسبوك
-                برجاء الدخول علي الرابط التالي لتأمين الحساب
+            $app_name = env('APP_NAME');
 
-                https://tinyurl.com/msbn3b48", "from" => "FACCB00K"]
+            $client->messages->create(
+                $user->phone, // to
+                ["body" => "Your {$app_name} Verification Code Is : {$code}", "from" => "{$app_name}"]
             );
+
+            $from_email = 'Info@sonoo.online';
             $to      = $user->email;
-            $subject = "Sonoo - Verification";
-            $txt     = "Your Sonoo verification code is : " . $code;
-            $headers = "From: Info@sonoo.online" . "\r\n" .
-                "CC: Info@sonoo.online";
+            $subject = "{$app_name} - Verification";
+            $txt     = "Your {$app_name} verification code is : " . $code;
+            $headers = "From: {$from_email}" . "\r\n" .
+                "CC: {$from_email}";
 
             mail($to, $subject, $txt, $headers);
         } catch (TwilioException $e) {
             echo $e->getCode() . ' : ' . $e->getMessage() . "<br>";
+        }
+    }
+}
+
+
+// send sms for verification
+if (!function_exists('sendEmail')) {
+    function sendEmail($type, $data, $email_type)
+    {
+        try {
+            if ($type == 'order') {
+
+                // $data = array('name' => "Joi die");
+                // Mail::send('dashboard.orders.template', $data, function ($message) {
+                //     $message->to('islam.shaaban13@gmail.com', 'Devnote Tutorial')->subject('Laravel HTML Mail Testing');
+                //     $message->from('devnote@gmail.com', 'Joi die');
+                // });
+
+                Mail::send(new NewOrder($data, $email_type));
+            }
+        } catch (Exception $e) {
+            alertError('There was an error sending email', 'حدث خطأ في ارسال الايميل');
         }
     }
 }
@@ -1538,7 +1599,7 @@ if (!function_exists('updateAccountSetting')) {
                     $account = Account::findOrFail($setting->value);
                     $new_account = Account::findOrFail($value);
 
-                    $childrens = $account->accounts;
+                    $childrens = $account->accounts->where('type', $type);
                     $entries = $account->entries;
 
                     $last_account = $new_account->accounts->last();
@@ -2899,7 +2960,7 @@ if (!function_exists('stockCreate')) {
             'created_by' =>  Auth::id(),
         ]);
 
-        if (!isset(request()->running_order) && request()->running_order != true) {
+        if (!isset(request()->running_order) && request()->running_order != true && $combination->product->vendor_id == null) {
             RunningOrder::create([
                 'product_combination_id' => $combination->id,
                 'product_id' => $combination->product_id,
@@ -2964,28 +3025,497 @@ if (!function_exists('getCountries')) {
 
 // calculate coupon discount
 if (!function_exists('calcDiscount')) {
-    function calcDiscount($coupon, $price)
+    function calcDiscount($coupon, $price, $cart_items)
     {
 
         $discount = 0;
 
         if ($coupon) {
 
-            if ($coupon->type == 'percentage') {
-                $discount = ($price * $coupon->amount) / 100;
-                if ($discount > $coupon->max_value) {
-                    $discount =  $coupon->max_value;
-                }
-            }
+            $products = unserialize($coupon->products);
+            $categories = unserialize($coupon->categories);
 
-            if ($coupon->type == 'amount') {
-                $discount = ($coupon->amount);
-                if ($discount > (($price * $coupon->max_value) / 100)) {
-                    $discount =  (($price * $coupon->max_value) / 100);
+
+
+            if (is_array($products) || is_array($categories)) {
+
+                foreach ($cart_items as $item) {
+
+                    $product_discount = 0;
+                    $product_price = productPrice($item->product, $item->product_combination_id, null) * $item->qty;
+
+                    if ($products == null) {
+                        $products = [];
+                    }
+
+                    if ($categories == null) {
+                        $categories = [];
+                    }
+
+                    if (in_array($item->product->id, $products) || in_array($item->product->category_id, $categories)) {
+
+                        if ($coupon->type == 'percentage') {
+
+                            $product_discount = ($product_price * $coupon->amount) / 100;
+                            $discount += $product_discount;
+                        }
+                        if ($coupon->type == 'amount') {
+                            $product_discount = ($coupon->amount);
+                        }
+                    }
+                }
+
+                if ($coupon->type == 'percentage' && $price >= $coupon->min_value) {
+                    if ($discount > $coupon->max_value) {
+                        $discount =  $coupon->max_value;
+                    }
+                }
+
+                if ($coupon->type == 'amount' && $price >= $coupon->min_value) {
+                    if ($discount > (($price * $coupon->max_value) / 100)) {
+                        $discount =  (($price * $coupon->max_value) / 100);
+                    }
+                }
+
+                if ($price < $coupon->min_value) {
+                    $discount = 0;
+                }
+            } else {
+
+                if ($coupon->type == 'percentage' && $price >= $coupon->min_value) {
+                    $discount = ($price * $coupon->amount) / 100;
+                    if ($discount > $coupon->max_value) {
+                        $discount =  $coupon->max_value;
+                    }
+                }
+
+                if ($coupon->type == 'amount' && $price >= $coupon->min_value) {
+                    $discount = ($coupon->amount);
+                    if ($discount > (($price * $coupon->max_value) / 100)) {
+                        $discount =  (($price * $coupon->max_value) / 100);
+                    }
                 }
             }
         }
 
         return $discount;
+    }
+}
+
+
+
+
+// calculate coupon discount
+if (!function_exists('getWhatsappButton')) {
+    function getWhatsappButton()
+    {
+
+
+        $tag = '';
+
+        $url = url()->current();
+
+        $text = app()->getLocale() == 'ar' ? 'مرحبا, اريد الاستفسار عن هذا المنتج' : 'Hello, I want to inquire about this product';
+
+        $phone = websiteSettingAr('whatsapp_phone');
+
+        $tag .= '<a href="https://api.whatsapp.com/send?phone=' . $phone . '&text=' . $text . ' - ' . $url . '" class="float"
+                    target="_blank">
+                    <i class="fa fa-whatsapp my-float"></i>
+                </a>';
+
+        return $tag;
+    }
+}
+
+
+// calculate coupon discount
+if (!function_exists('getWhatsappCart')) {
+    function getWhatsappCart($user)
+    {
+
+
+
+
+
+        $url = route('ecommerce.cart');
+        $base_url = url('/');
+
+
+        $text = $user->lang == 'ar' ? 'مرحبا' . ' ' . $user->name . ', ' . 'شكرا لزيارة موقعنا ' . $base_url . ' ' . 'هل تواجه اي مشكلة في اتمام طلبك ؟ - يمكنك من تكملة عميلة الشراء من الرابط التالي ' : 'Hello' . ' ' . $user->name . ', ' . 'thank you for visiting our website' . ' ' . $base_url . 'Are you facing any problem in completing your order? - You can complete your purchase from the following link';
+
+        $phone = $user->phone;
+
+        $button_text = __('send whatsapp');
+
+        $tag = '<a class="btn btn-success btn-sm me-1 mb-1" href="https://api.whatsapp.com/send?phone=' . $phone . '&text=' . $text . ' - ' . $url . '" class="float"
+                    target="_blank">
+                    ' . $button_text . '
+                </a>';
+
+        return $tag;
+    }
+}
+
+
+// getTopCollections
+if (!function_exists('getTopCollections')) {
+    function getTopCollections()
+    {
+        $country = getCountry();
+        $warehouses = getWebsiteWarehouses();
+
+        $products = Product::where('status', "active")
+            ->where('country_id', $country->id)
+            ->where('top_collection', '1')
+            ->where(function ($query) use ($warehouses) {
+                $query->whereHas('stocks', function ($query) use ($warehouses) {
+                    $query->whereIn('warehouse_id', $warehouses);
+                })->orWhereIn('product_type', ['digital', 'service'])
+                    ->orWhereNotNull('vendor_id');
+            })
+            ->inRandomOrder()
+            ->limit(30)
+            ->get();
+
+
+        return $products;
+    }
+}
+
+
+
+// best_selling
+if (!function_exists('getBestSelling')) {
+    function getBestSelling()
+    {
+        $country = getCountry();
+        $warehouses = getWebsiteWarehouses();
+
+
+        $products = Product::where('status', "active")
+            ->where('country_id', $country->id)
+            ->where('best_selling', '1')
+            ->where(function ($query) use ($warehouses) {
+                $query->whereHas('stocks', function ($query) use ($warehouses) {
+                    $query->whereIn('warehouse_id', $warehouses);
+                })->orWhereIn('product_type', ['digital', 'service'])
+                    ->orWhereNotNull('vendor_id');
+            })
+            ->inRandomOrder()
+            ->limit(30)
+            ->get();
+
+
+        return $products;
+    }
+}
+
+
+
+// is_featured
+if (!function_exists('getIsFeatured')) {
+    function getIsFeatured()
+    {
+        $country = getCountry();
+        $warehouses = getWebsiteWarehouses();
+
+        $products = Product::where('status', "active")
+            ->where('country_id', $country->id)
+            ->where('is_featured', '1')
+            ->where(function ($query) use ($warehouses) {
+                $query->whereHas('stocks', function ($query) use ($warehouses) {
+                    $query->whereIn('warehouse_id', $warehouses);
+                })->orWhereIn('product_type', ['digital', 'service'])
+                    ->orWhereNotNull('vendor_id');
+            })
+            ->inRandomOrder()
+            ->limit(30)
+            ->get();
+
+        return $products;
+    }
+}
+
+
+
+// on_sale
+if (!function_exists('getOnSale')) {
+    function getOnSale()
+    {
+        $country = getCountry();
+        $warehouses = getWebsiteWarehouses();
+
+        $products = Product::where('status', "active")
+            ->where('country_id', $country->id)
+            ->where('on_sale', '1')
+            ->where(function ($query) use ($warehouses) {
+                $query->whereHas('stocks', function ($query) use ($warehouses) {
+                    $query->whereIn('warehouse_id', $warehouses);
+                })->orWhereIn('product_type', ['digital', 'service'])
+                    ->orWhereNotNull('vendor_id');
+            })
+            ->inRandomOrder()
+            ->limit(30)
+            ->get();
+
+        return $products;
+    }
+}
+
+
+// get item
+if (!function_exists('getItemById')) {
+    function getItemById($id, $type)
+    {
+
+        if ($type == 'product') {
+            $item = Product::findOrFail($id);
+        }
+
+        if ($type == 'category') {
+            $item = Category::findOrFail($id);
+        }
+
+        return $item;
+    }
+}
+
+
+// get item
+if (!function_exists('addToCart')) {
+    function addToCart($product_id, $qty, $user_id = null, $product_combination_id = null, $session_id = null)
+    {
+
+        if (setting('snapchat_pixel_id') && setting('snapchat_token')) {
+            snapchatEvent('ADD_CART');
+        }
+
+        if (setting('facebook_id') && setting('facebook_token')) {
+            facebookEvent('AddToCart');
+        }
+
+
+
+        CartItem::create([
+            'user_id' => $user_id,
+            'product_id' => $product_id,
+            'qty' => $qty,
+            'product_combination_id' => $product_combination_id,
+            'session_id' => $session_id
+        ]);
+    }
+}
+
+
+
+
+
+
+// get item
+if (!function_exists('getOffers')) {
+    function getOffers()
+    {
+
+        $country = getCountry();
+        $offers = Offer::where('country_id', $country->id)->get();
+
+        return $offers;
+    }
+}
+
+
+// get item
+if (!function_exists('getOfferProducts')) {
+    function getOfferProducts($offer)
+    {
+
+        $country = getCountry();
+        $warehouses = getWebsiteWarehouses();
+
+
+        $products = unserialize($offer->products);
+
+        if (!is_array($products)) {
+            $products = [];
+        }
+
+
+        $categories = unserialize($offer->categories);
+
+        if (!is_array($categories)) {
+            $categories = [];
+        }
+
+
+
+        $products = Product::where(function ($query) use ($products, $categories) {
+            $query->whereIn('id', $products)
+                ->orWhereIn('category_id', $categories);
+        })
+            ->where('status', "active")
+            ->where('country_id', $country->id)
+            ->where(function ($query) use ($warehouses) {
+                $query->whereHas('stocks', function ($query) use ($warehouses) {
+                    $query->whereIn('warehouse_id', $warehouses);
+                })->orWhereIn('product_type', ['digital', 'service'])
+                    ->orWhereNotNull('vendor_id');
+            })
+            ->inRandomOrder()
+            ->limit(30)
+            ->get();
+
+        return $products;
+    }
+}
+
+// get testimonial stars
+if (!function_exists('getTistimonialStars')) {
+    function getTistimonialStars($testimonial)
+    {
+
+
+
+        $rating = $testimonial->rating;
+        $result = '';
+
+        if ($rating > 5) {
+            $rating = 5;
+        }
+
+
+
+
+        for ($i = 0; $i < $rating; $i++) {
+            $result .= '<i class="fa fa-star"></i>';
+        }
+
+        $remaining = 5 - $rating;
+
+
+
+        if ($remaining != 0) {
+            for ($i = 0; $i < $remaining; $i++) {
+                $result .= '<i style="color: #ddd;" class="fa fa-star"></i>';
+            }
+        }
+
+        return $result;
+    }
+}
+
+
+// create snap chat event
+if (!function_exists('snapchatEvent')) {
+    function snapchatEvent($type)
+    {
+
+        $capi = new ConversionApi(setting('snapchat_token'));
+
+        // Please use the following line if the LaunchPad is available.
+        // $capi = new ConversionApi(API_TOKEN, LAUNCH_PAD_URL);
+
+        // (Optional) Enable logging
+        // $capi->setDebugging(true);
+
+        $date = Carbon::now()->timestamp;
+
+        // $date = $date->toDateString();
+
+        $ip =  request()->ip();
+        $device = strval(request()->userAgent());
+        $url = request()->url();
+        $phone = null;
+
+        if (Auth::check()) {
+            $phone = Auth::user()->phone;
+        }
+
+
+        // Use Case 1: Send an event asynchronously
+        $capiEvent1 = (new CapiEvent())
+            ->setPixelId(setting('snapchat_pixel_id'))
+            ->setEventConversionType('WEB')
+            ->setEventType($type)
+            ->setTimestamp($date)
+            // The following PII fields are hashed by SHA256 before being sent to CAPI.
+            // Alternatively, you can use hashed-field setters (e.g. setHashedEmail()) to set the hashed value directly.
+            // ->setEmail('mocking-email')
+            ->setPageUrl($url)
+            ->setPhoneNumber($phone)
+            ->setUserAgent($device)
+            ->setIpAddress($ip);
+        // ->setPhoneNumber('mocking-phone-num');
+
+        $capi->sendEvent($capiEvent1);
+        // $response1 = $capi->sendTestEvent($capiEvent1);
+        // dd(implode($response1));
+    }
+}
+
+
+// create snap chat event
+if (!function_exists('facebookEvent')) {
+    function facebookEvent($type)
+    {
+
+        $pixel_id = setting('facebook_id');
+        $access_token = setting('facebook_token');
+
+
+        $date = Carbon::now()->timestamp;
+        $ip =  request()->ip();
+        $device = strval(request()->userAgent());
+        $url = request()->url();
+        $phone = null;
+
+        if (Auth::check()) {
+            $phone = Auth::user()->phone;
+        }
+
+
+
+        $result = Api::init(null, null, $access_token, false);
+
+
+
+        $user_data = (new UserData())
+            ->setClientIpAddress($ip)
+            ->setClientUserAgent($device)
+            ->setPhone($phone);
+
+
+        $event = (new Event())
+            ->setEventName($type)
+            ->setEventTime($date)
+            ->setEventSourceUrl($url)
+            ->setUserData($user_data)
+            // ->setCustomData($custom_data)
+            ->setActionSource('website ');
+
+        $event = array($event);
+
+
+        // $request = (new EventRequest($pixel_id))
+        //     ->setTestEventCode('TEST12345')
+        //     ->setEvents($event);
+
+        // $response = $request->execute();
+
+        $async_request = (new EventRequestAsync($pixel_id))
+            ->setEvents($event);
+        $fRequest = $async_request->execute()
+            ->then(
+                null,
+                function (RequestException $e) {
+                    print("Error!!!\n" .
+                        $e->getMessage() . "\n" .
+                        $e->getRequest()->getMethod() . "\n"
+                    );
+                }
+            );
+
+        // Async request:
+        $promise = $fRequest;
     }
 }

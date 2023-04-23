@@ -83,13 +83,20 @@
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
                                     {{ __('max value') }}
                                 </th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
+                                    {{ __('min value') }}
+                                </th>
 
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
                                     {{ __('type') }}
                                 </th>
 
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
-                                    {{ __('frequency of use') }}
+                                    {{ __('user frequency') }}
+                                </th>
+
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
+                                    {{ __('all frequency') }}
                                 </th>
 
 
@@ -137,11 +144,18 @@
                                         {{ $coupon->max_value }}
                                     </td>
                                     <td class="phone align-middle white-space-nowrap py-2">
+                                        {{ $coupon->min_value }}
+                                    </td>
+                                    <td class="phone align-middle white-space-nowrap py-2">
                                         {{ __($coupon->type) }}
                                     </td>
 
                                     <td class="phone align-middle white-space-nowrap py-2">
-                                        {{ __($coupon->frequency) }}
+                                        {{ __($coupon->user_frequency) }}
+                                    </td>
+
+                                    <td class="phone align-middle white-space-nowrap py-2">
+                                        {{ __($coupon->all_frequency) }}
                                     </td>
                                     <td class="joined align-middle py-2">{{ $coupon->ended_at }} <br>
                                         {{ interval($coupon->ended_at) }}</td>

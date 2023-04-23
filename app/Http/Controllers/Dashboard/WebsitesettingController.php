@@ -83,9 +83,153 @@ class WebsitesettingController extends Controller
             'about_title_en' => "nullable|string",
             'about_description_ar' => "nullable|string",
             'about_description_en' => "nullable|string",
+            'whatsapp_check' => "nullable|string",
+            'whatsapp_phone' => "nullable|string",
+
+            'front_modal_banar' => "nullable|image",
+            'front_modal_title_ar' => "nullable|string",
+            'front_modal_title_en' => "nullable|string",
+            'front_modal_description_ar' => "nullable|string",
+            'front_modal_description_en' => "nullable|string",
+            'check_front_popup' => "nullable|string",
+
+            'front_auth_modal_banar' => "nullable|image",
+            'front_auth_modal_title_ar' => "nullable|string",
+            'front_auth_modal_title_en' => "nullable|string",
+            'front_auth_modal_description_ar' => "nullable|string",
+            'front_auth_modal_description_en' => "nullable|string",
+            'check_front_auth_popup' => "nullable|string",
 
         ]);
 
+
+        $setting = WebsiteSetting::where('type', 'check_front_popup')->first();
+        if ($setting == null) {
+            WebsiteSetting::create([
+                'type' => 'check_front_popup',
+                'value_ar' => $request['check_front_popup'],
+                'value_en' => $request['check_front_popup'],
+            ]);
+        } else {
+            $setting->update([
+                'value_ar' => $request['check_front_popup'],
+                'value_en' => $request['check_front_popup'],
+            ]);
+        }
+
+
+
+
+        $setting = WebsiteSetting::where('type', 'whatsapp_check')->first();
+        if ($setting == null) {
+            WebsiteSetting::create([
+                'type' => 'whatsapp_check',
+                'value_ar' => $request['whatsapp_check'],
+                'value_en' => $request['whatsapp_check'],
+            ]);
+        } else {
+            $setting->update([
+                'value_ar' => $request['whatsapp_check'],
+                'value_en' => $request['whatsapp_check'],
+            ]);
+        }
+
+        $setting = WebsiteSetting::where('type', 'whatsapp_phone')->first();
+        if ($setting == null) {
+            WebsiteSetting::create([
+                'type' => 'whatsapp_phone',
+                'value_ar' => $request['whatsapp_phone'],
+                'value_en' => $request['whatsapp_phone'],
+            ]);
+        } else {
+            $setting->update([
+                'value_ar' => $request['whatsapp_phone'],
+                'value_en' => $request['whatsapp_phone'],
+            ]);
+        }
+
+        $setting = WebsiteSetting::where('type', 'check_front_auth_popup')->first();
+        if ($setting == null) {
+            WebsiteSetting::create([
+                'type' => 'check_front_auth_popup',
+                'value_ar' => $request['check_front_auth_popup'],
+                'value_en' => $request['check_front_auth_popup'],
+            ]);
+        } else {
+            $setting->update([
+                'value_ar' => $request['check_front_auth_popup'],
+                'value_en' => $request['check_front_auth_popup'],
+            ]);
+        }
+
+
+        $setting = WebsiteSetting::where('type', 'front_auth_modal')->first();
+        if ($setting == null) {
+            $setting = WebsiteSetting::create([
+                'type' => 'front_auth_modal',
+                'value_ar' => $request['front_auth_modal_title_ar'],
+                'value_en' => $request['front_auth_modal_title_en'],
+                'description_ar' => $request['front_auth_modal_description_ar'],
+                'description_en' => $request['front_auth_modal_description_en'],
+            ]);
+            if ($request->hasFile('front_auth_modal_banar')) {
+                $media_id = saveMedia('image', $request['front_auth_modal_banar'], 'settings');
+                $setting->update([
+                    'media_id' => $media_id,
+                ]);
+            }
+        } else {
+            $setting->update([
+                'value_ar' => $request['front_auth_modal_title_ar'],
+                'value_en' => $request['front_auth_modal_title_en'],
+                'description_ar' => $request['front_auth_modal_description_ar'],
+                'description_en' => $request['front_auth_modal_description_en'],
+            ]);
+            if ($request->hasFile('front_auth_modal_banar')) {
+
+                if ($setting->media_id != null) {
+                    deleteImage($setting->media_id);
+                }
+                $media_id = saveMedia('image', $request['front_auth_modal_banar'], 'settings');
+                $setting->update([
+                    'media_id' => $media_id,
+                ]);
+            }
+        }
+
+        $setting = WebsiteSetting::where('type', 'front_modal')->first();
+        if ($setting == null) {
+            $setting = WebsiteSetting::create([
+                'type' => 'front_modal',
+                'value_ar' => $request['front_modal_title_ar'],
+                'value_en' => $request['front_modal_title_en'],
+                'description_ar' => $request['front_modal_description_ar'],
+                'description_en' => $request['front_modal_description_en'],
+            ]);
+            if ($request->hasFile('front_modal_banar')) {
+                $media_id = saveMedia('image', $request['front_modal_banar'], 'settings');
+                $setting->update([
+                    'media_id' => $media_id,
+                ]);
+            }
+        } else {
+            $setting->update([
+                'value_ar' => $request['front_modal_title_ar'],
+                'value_en' => $request['front_modal_title_en'],
+                'description_ar' => $request['front_modal_description_ar'],
+                'description_en' => $request['front_modal_description_en'],
+            ]);
+            if ($request->hasFile('front_modal_banar')) {
+
+                if ($setting->media_id != null) {
+                    deleteImage($setting->media_id);
+                }
+                $media_id = saveMedia('image', $request['front_modal_banar'], 'settings');
+                $setting->update([
+                    'media_id' => $media_id,
+                ]);
+            }
+        }
 
         $setting = WebsiteSetting::where('type', 'about')->first();
         if ($setting == null) {
@@ -620,6 +764,35 @@ class WebsitesettingController extends Controller
             $setting->update([
                 'value_ar' => $request['footer_linkedin'],
                 'value_en' => $request['footer_linkedin'],
+            ]);
+        }
+
+        $setting = WebsiteSetting::where('type', 'footer_snapchat')->first();
+        if ($setting == null) {
+            WebsiteSetting::create([
+                'type' => 'footer_snapchat',
+                'value_ar' => $request['footer_snapchat'],
+                'value_en' => $request['footer_snapchat'],
+            ]);
+        } else {
+            $setting->update([
+                'value_ar' => $request['footer_snapchat'],
+                'value_en' => $request['footer_snapchat'],
+            ]);
+        }
+
+
+        $setting = WebsiteSetting::where('type', 'footer_tiktok')->first();
+        if ($setting == null) {
+            WebsiteSetting::create([
+                'type' => 'footer_tiktok',
+                'value_ar' => $request['footer_tiktok'],
+                'value_en' => $request['footer_tiktok'],
+            ]);
+        } else {
+            $setting->update([
+                'value_ar' => $request['footer_tiktok'],
+                'value_en' => $request['footer_tiktok'],
             ]);
         }
 

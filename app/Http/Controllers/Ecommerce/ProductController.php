@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Ecommerce;
 
 use App\Http\Controllers\Controller;
+use App\Models\Attribute;
 use App\Models\Brand;
 use App\Models\CartItem;
 use App\Models\Category;
@@ -32,24 +33,40 @@ class ProductController extends Controller
     {
 
         $cat = $product->category->id;
-
         $warehouses = getWebsiteWarehouses();
-
+        $country = getCountry();
 
         $products = Product::whereHas('stocks', function ($query) use ($warehouses) {
-            $query->whereIn('warehouse_id', $warehouses)
-                ->where('qty', '!=', '0');
-        })->orWhereNotNull('vendor_id')
+            $query->whereIn('warehouse_id', $warehouses);
+        })
+            ->orWhereIn('product_type', ['digital', 'service'])
+            ->orWhereNotNull('vendor_id')
 
-            ->whereHas('categories', function ($query) use ($cat) {
-                $cat ? $query->where('category_id', 'like', $cat) : $query;
-            })
-
-            ->orWhere('product_type', 'digital')
-            ->orWhere('product_type', 'service')
+            ->whenCategory($cat)
             ->where('status', "active")
-            ->where('country_id', setting('country_id'))
-            ->inRandomOrder()->limit(6)->get();
+            ->where('country_id', $country->id)
+
+            ->inRandomOrder()
+            ->limit(6)
+            ->get();
+
+
+
+
+        // $products = Product::whereHas('stocks', function ($query) use ($warehouses) {
+        //     $query->whereIn('warehouse_id', $warehouses)
+        //         ->where('qty', '!=', '0');
+        // })->orWhereNotNull('vendor_id')
+
+        //     ->whereHas('categories', function ($query) use ($cat) {
+        //         $cat ? $query->where('category_id', 'like', $cat) : $query;
+        //     })
+
+        //     ->orWhere('product_type', 'digital')
+        //     ->orWhere('product_type', 'service')
+        //     ->where('status', "active")
+        //     ->where('country_id', setting('country_id'))
+        //     ->inRandomOrder()->limit(6)->get();
 
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         return view('ecommerce.product', compact('product', 'categories', 'products'));
@@ -84,220 +101,88 @@ class ProductController extends Controller
     {
 
 
-
+        // dd($request->all());
 
         if (!$request->has('pagination')) {
             $request->merge(['pagination' => 24]);
         }
 
         if (!$request->has('category')) {
-            $request->merge(['category' => null]);
+            $cats = [];
+        } elseif ($request->category == null) {
+            $cats = [];
+        } else {
+
+
+            $category = Category::findOrFail($request->category);
+            $cats = flatten($category->childrenRecursive()->get()->pluck('id')->toArray());
+
+            if (!empty($cats)) {
+                $cats = $cats[0];
+            } else {
+                $cats = [];
+            }
+            array_push($cats, $category->id);
         }
 
-        if (!$request->has('brand')) {
-            $request->merge(['brand' => []]);
+        if (!$request->has('brands')) {
+            $request->merge(['brands' => []]);
         }
 
-        $cat = request()->category;
+        if (!$request->has('variations')) {
+            $request->merge(['variations' => []]);
+        }
 
-        $brand = request()->brand;
 
+
+        if (!$request->has('range')) {
+            $min_price = 0;
+            $max_price = 999999;
+        } else {
+            $rang = explode(';', $request->range);
+            $min_price = $rang[0];
+            $max_price = $rang[1];
+        }
+
+        // dd($min_price, $max_price);
+
+        $country = getCountry();
         $warehouses = getWebsiteWarehouses();
 
-        $digital_products =  !empty($brand) ?
-            Product::whereHas('brands', function ($query) use ($brand) {
-                empty($brand) ? $query : $query->whereIn('brand_id', $brand);
+
+
+
+        $products = Product::where('status', "active")
+            ->where('country_id', $country->id)
+            ->where('sale_price', '>', $min_price)
+            ->where('sale_price',  '<', $max_price)
+
+
+            ->where(function ($query) use ($warehouses) {
+                $query->whereHas('stocks', function ($query) use ($warehouses) {
+                    $query->whereIn('warehouse_id', $warehouses);
+                })->orWhereIn('product_type', ['digital', 'service'])
+                    ->orWhereNotNull('vendor_id');
             })
 
-            ->whereHas('categories', function ($query) use ($cat) {
-                $cat ? $query->where('category_id', 'like', $cat) : $query;
-            })
-            ->Where('product_type', 'digital')
-            ->where('status', "active")
-            ->where('country_id', setting('country_id')) :
-
-            Product::whereHas('categories', function ($query) use ($cat) {
-                $cat ? $query->where('category_id', 'like', $cat) : $query;
-            })
-            ->Where('product_type', 'digital')
-            ->where('status', "active")
-            ->where('country_id', setting('country_id'));
 
 
-        $service_products =  !empty($brand) ?
-            Product::whereHas('brands', function ($query) use ($brand) {
-                empty($brand) ? $query : $query->whereIn('brand_id', $brand);
-            })
-
-            ->whereHas('categories', function ($query) use ($cat) {
-                $cat ? $query->where('category_id', 'like', $cat) : $query;
-            })
-            ->Where('product_type', 'service')
-            ->where('status', "active")
-            ->where('country_id', setting('country_id')) :
-
-            Product::whereHas('categories', function ($query) use ($cat) {
-                $cat ? $query->where('category_id', 'like', $cat) : $query;
-            })
-            ->Where('product_type', 'service')
-            ->where('status', "active")
-            ->where('country_id', setting('country_id'));
-
-
-
-        $vendor_products = Product::WhereNotNull('vendor_id')
-            ->where('status', "active")
-            ->where('country_id', setting('country_id'));
-
-
-
-        $products = !empty($brand) ?
-            Product::whereHas('stocks', function ($query) use ($warehouses) {
-                $query->whereIn('warehouse_id', $warehouses);
-            })
-
-            ->whereHas('brands', function ($query) use ($brand) {
-                !empty($brand) ? $query->whereIn('brand_id', $brand) : $query;
-            })
-
-            // ->whereHas('categories', function ($query) use ($cat) {
-            //     $cat ? $query->where('category_id', 'like', $cat) : $query;
-            // })
-
-            ->WhenCategory($cat)
-            ->where('status', "active")
-            ->where('country_id', setting('country_id'))
-            ->union($digital_products)
-            ->union($service_products)
-            ->union($vendor_products)
-            ->whenSearch(request()->search)
-            ->latest()
-            ->paginate(request()->pagination) :
-
-
-
-            Product::whereHas('stocks', function ($query) use ($warehouses) {
-                $query->whereIn('warehouse_id', $warehouses);
-            })
-
-            ->WhenCategory($cat)
-            ->where('status', "active")
-            ->where('country_id', setting('country_id'))
-            ->union($digital_products)
-            ->union($service_products)
-            ->union($vendor_products)
+            // ->WhenCategory(request()->category)
+            ->WhenCategories($cats)
+            ->WhenVariations(request()->variations)
+            ->WhenBrand(request()->brands)
             ->whenSearch(request()->search)
             ->latest()
             ->paginate(request()->pagination);
 
 
+        $color_text = ['color', 'colors', 'Color', 'Colors', 'الوان', 'لون', 'الالوان', 'الألوان'];
 
+        $color_attribute = Attribute::whereIn('name_en', $color_text)->first();
 
-        $products_all = !empty($brand) ?
-            Product::whereHas('stocks', function ($query) use ($warehouses) {
-                $query->whereIn('warehouse_id', $warehouses);
-            })
+        $attributes = Attribute::where('activate_filter', '1')->get();
 
-            ->whereHas('brands', function ($query) use ($brand) {
-                !empty($brand) ? $query->whereIn('brand_id', $brand) : $query;
-            })
-
-            ->whereHas('categories', function ($query) use ($cat) {
-                $cat ? $query->where('category_id', 'like', $cat) : $query;
-            })
-
-            ->union($digital_products)
-            ->union($service_products)
-            ->union($vendor_products)
-            ->where('status', "active")
-            ->where('country_id', setting('country_id'))
-            ->whenSearch(request()->search)
-            ->latest()
-            ->paginate(request()->pagination) :
-
-            Product::whereHas('stocks', function ($query) use ($warehouses) {
-                $query->whereIn('warehouse_id', $warehouses);
-            })
-
-            ->whereHas('categories', function ($query) use ($cat) {
-                $cat ? $query->where('category_id', 'like', $cat) : $query;
-            })
-
-            ->union($digital_products)
-            ->union($service_products)
-            ->union($vendor_products)
-            ->where('status', "active")
-            ->where('country_id', setting('country_id'))
-            ->whenSearch(request()->search)
-            ->latest()
-            ->get();
-
-        $top_collection =
-            Product::whereHas('stocks', function ($query) use ($warehouses) {
-                $query->whereIn('warehouse_id', $warehouses);
-            })
-
-            ->where('country_id', setting('country_id'))
-            ->where('status', "active")
-            ->union($digital_products)
-            ->union($service_products)
-            ->union($vendor_products)
-            ->where('top_collection', '1')
-            ->latest()
-            ->get();
-
-
-        $best_selling = Product::whereHas('stocks', function ($query) use ($warehouses) {
-            $query->whereIn('warehouse_id', $warehouses);
-        })
-
-
-            ->where('country_id', setting('country_id'))
-            ->where('status', "active")
-            ->union($digital_products)
-            ->union($service_products)
-            ->union($vendor_products)
-            ->where('best_selling', '1')
-            ->latest()
-            ->get();
-
-
-
-        $min_price = 0;
-        $max_price = 0;
-
-        foreach ($products_all as $index => $product) {
-
-            if ($product->product_type == 'variable') {
-
-                foreach ($product->combinations as $combination) {
-                    if (productPrice($product, $combination->id) >  $max_price) {
-                        $max_price = productPrice($product, $combination->id, 'vat');
-                    }
-
-                    if ($index == 0) {
-                        $min_price = productPrice($product, $combination->id, 'vat');
-                    } elseif (productPrice($product, $combination->id, 'vat') <  $min_price) {
-                        $min_price = productPrice($product, $combination->id, 'vat');
-                    }
-                }
-            } else {
-                if (productPrice($product, null, 'vat') >  $max_price) {
-                    $max_price = productPrice($product, null, 'vat');
-                }
-
-                if ($index == 0) {
-                    $min_price = productPrice($product, null, 'vat');
-                } elseif (productPrice($product, null, 'vat') <  $min_price) {
-                    $min_price = productPrice($product, null, 'vat');
-                }
-            }
-        }
-
-        $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
-        $brands = Brand::where('country_id', setting('country_id'))->where('status', 'active')->get();
-
-        return view('ecommerce.products', compact('categories', 'products', 'brands', 'best_selling', 'top_collection', 'min_price', 'max_price'));
+        return view('ecommerce.products', compact('color_attribute', 'products', 'attributes'));
     }
 
     public function store(Request $request)
@@ -394,13 +279,10 @@ class ProductController extends Controller
             }
 
 
-            CartItem::create([
-                'user_id' => $user_id,
-                'product_id' => $request->product_id,
-                'qty' => $request->qty,
-                'product_combination_id' => $com->id,
-                'session_id' => $session_id
-            ]);
+            addToCart($request->product_id, $request->qty, $user_id, $com->id, $session_id);
+
+
+
 
             $data['status'] = 1;
             $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
@@ -451,13 +333,8 @@ class ProductController extends Controller
             }
 
             foreach ($product->combinations as $com) {
-                CartItem::create([
-                    'product_id' => $request->product_id,
-                    'qty' => $request->qty,
-                    'user_id' => $user_id,
-                    'session_id' => $session_id,
-                    'product_combination_id' => $com->id,
-                ]);
+
+                addToCart($request->product_id, $request->qty, $user_id, $com->id, $session_id);
             }
 
 
@@ -495,12 +372,7 @@ class ProductController extends Controller
                 return $data;
             }
 
-            CartItem::create([
-                'product_id' => $request->product_id,
-                'qty' => $request->qty,
-                'user_id' => $user_id,
-                'session_id' => $session_id
-            ]);
+            addToCart($request->product_id, $request->qty, $user_id, null, $session_id);
 
             $data['status'] = 1;
             $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
@@ -593,6 +465,14 @@ class ProductController extends Controller
                 'session_id' => $session_id
             ]);
 
+            if (setting('snapchat_pixel_id') && setting('snapchat_token')) {
+                snapchatEvent('ADD_TO_WISHLIST');
+            }
+
+            if (setting('facebook_id') && setting('facebook_token')) {
+                facebookEvent('AddToWishlist');
+            }
+
             if (url()->previous() == route('ecommerce.wishlist') || url()->previous() == route('ecommerce.account')) {
                 return redirect()->back();
             }
@@ -657,12 +537,25 @@ class ProductController extends Controller
             'qty' => $qty
         ]);
 
+
+        $cart_items = getCartItems();
+        $data['total'] = getCartSubtotal($cart_items);
+
+
         return $data;
     }
 
 
     public function checkout(Request $request)
     {
+
+        if (setting('snapchat_pixel_id') && setting('snapchat_token')) {
+            snapchatEvent('START_CHECKOUT');
+        }
+
+        if (setting('facebook_id') && setting('facebook_token')) {
+            facebookEvent('InitiateCheckout');
+        }
 
         if (Auth::check()) {
             $cart_items = CartItem::where('user_id', Auth::id())->get();
@@ -691,6 +584,8 @@ class ProductController extends Controller
         $data['country_id'] = $request->country_id;
         $data['state_id'] = $request->state_id;
         $data['city_id'] = $request->city_id;
+
+
 
         $country = Country::findOrFail($request->country_id);
         $state = State::findOrFail($request->state_id);
@@ -771,36 +666,57 @@ class ProductController extends Controller
 
 
         $data['currency'] = getCurrency();
-        $data['total'] = getCartSubtotal($cart_items);
+        $data['total'] = round(getCartSubtotal($cart_items), 2);
         $data['locale'] = app()->getLocale();
 
 
         if (isset($request->coupon)) {
+
+
             $coupon = Coupon::where('code', $request->coupon)->first();
+
             if (!isset($coupon)) {
                 $data['coupon_status'] = 0;
-            } else {
-                if (!Auth::check()) {
-                    $data['coupon_status'] = 12;
-                } else {
-                    $orders = Order::where('customer_id', Auth::id())->where('coupon_code', $coupon->code)->get();
-                    if ($orders->count() >= $coupon->frequency) {
-                        $data['coupon_status'] = 13;
-                    } else {
-                        $date = Carbon::now();
-                        if ($date > $coupon->ended_at) {
-                            $data['coupon_status'] = 14;
-                        } else {
-
-                            $discount = calcDiscount($coupon, $data['total']);
-                            $data['coupon_status'] = 1;
-                            $data['total'] = $data['total'] - $discount;
-                        }
-                    }
-                }
+                return $data;
             }
-        } else {
-            $data['coupon_status'] = 11;
+
+            if (Auth::check()) {
+                $orders = Order::where('customer_id', Auth::id())->where('coupon_code', $coupon->code)->get();
+            } else {
+                $orders = Order::where('session_id', request()->session()->token())->where('coupon_code', $coupon->code)->get();
+            }
+
+            if ($orders->count() >= $coupon->user_frequency) {
+                $data['coupon_status'] = 13;
+                return $data;
+            }
+
+
+            $orders = Order::where('coupon_code', $coupon->code)->get();
+
+            if ($orders->count() >= $coupon->all_frequency) {
+                $data['coupon_status'] = 13;
+                return $data;
+            }
+
+
+            $date = Carbon::now();
+
+            if ($date > $coupon->ended_at) {
+                $data['coupon_status'] = 14;
+                return $data;
+            }
+
+
+            if ($coupon->free_shipping == true) {
+                $data['coupon_status'] = 1;
+                $data['shipping_amount'] = 0;
+                return $data;
+            }
+
+            $discount = calcDiscount($coupon, $data['total'], $cart_items);
+            $data['coupon_status'] = 1;
+            $data['total'] = round($data['total'] - $discount, 2);
         }
 
 
@@ -825,7 +741,7 @@ class ProductController extends Controller
             $session = null;
         } else {
             $user = null;
-            $session = $request->session()->token();;
+            $session = $request->session()->token();
         }
 
         $product = Product::findOrFail($product);

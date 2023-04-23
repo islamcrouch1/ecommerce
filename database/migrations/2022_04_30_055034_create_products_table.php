@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('name_en');
             $table->string('name_ar');
             $table->string('sku')->nullable();
-            $table->longText('description_en');
-            $table->longText('description_ar');
+            $table->longText('description_en')->nullable();
+            $table->longText('description_ar')->nullable();
             $table->double('sale_price', 8, 2)->default(0);
             $table->double('max_price', 8, 2)->default(0);
             $table->double('extra_fee', 8, 2)->default(0);

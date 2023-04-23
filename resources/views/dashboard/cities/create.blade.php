@@ -75,8 +75,8 @@
                                 <label class="form-label" for="shipping_amount">{{ __('shipping amount') }}</label>
                                 <input name="shipping_amount"
                                     class="form-control @error('shipping_amount') is-invalid @enderror"
-                                    value="{{ old('shipping_amount') }}" type="number" autocomplete="on"
-                                    id="shipping_amount" required />
+                                    value="{{ old('shipping_amount') }}" type="number" step="0.01" min="0"
+                                    autocomplete="on" id="shipping_amount" required />
                                 @error('shipping_amount')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror

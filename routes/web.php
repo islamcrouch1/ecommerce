@@ -14,10 +14,22 @@ use App\Http\Controllers\FrontController;
 |
 */
 
-Route::redirect('/', '/ecommerce');
+if (!file_exists(storage_path('installed'))) {
+    Route::redirect('/', '/install');
+} else {
+    Route::redirect('/', '/home');
+}
+
+
+
+// Route::get('/sendemail', function () {
+//     sendEmail();
+//     return 'done';
+// })->name('send.eamil');
+
+
+
 //front route
-
-
 Route::get('/front', [FrontController::class, 'index'])->name('front.index');
 Route::get('/fqs', [FrontController::class, 'fqs'])->name('front.fqs');
 Route::get('/about-us', [FrontController::class, 'about'])->name('front.about');

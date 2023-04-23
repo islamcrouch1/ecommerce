@@ -97,7 +97,7 @@
                                         </div>
                                     </td>
                                     <td class="address align-middle white-space-nowrap py-2">
-                                        {{ $order->client_name }}
+                                        {{ $order->full_name }}
                                     </td>
                                     <td class="address align-middle white-space-nowrap py-2">
                                         {{ $order->client_phone }}
@@ -164,11 +164,12 @@
                                                         <a class="dropdown-item"
                                                             href="{{ route('orders.affiliate.cancel', ['order' => $order->id]) }}">{{ __('Cancel') }}</a>
                                                     @endif
-                                                    @if ($order->status != 'canceled' &&
-                                                        $order->status != 'returned' &&
-                                                        $order->status != 'pending' &&
-                                                        $order->status != 'RTO' &&
-                                                        $order->refund == null)
+                                                    @if (
+                                                        $order->status != 'canceled' &&
+                                                            $order->status != 'returned' &&
+                                                            $order->status != 'pending' &&
+                                                            $order->status != 'RTO' &&
+                                                            $order->refund == null)
                                                         <a href="" class="dropdown-item" data-bs-toggle="modal"
                                                             data-bs-target="#refund-modal-{{ $order->id }}">{{ __('refund request') }}</a>
                                                     @endif
@@ -330,11 +331,12 @@
                                 </div>
                                 <!-- end order track modal for each user -->
 
-                                @if ($order->status != 'canceled' &&
-                                    $order->status != 'returned' &&
-                                    $order->status != 'pending' &&
-                                    $order->status != 'RTO' &&
-                                    $order->refund == null)
+                                @if (
+                                    $order->status != 'canceled' &&
+                                        $order->status != 'returned' &&
+                                        $order->status != 'pending' &&
+                                        $order->status != 'RTO' &&
+                                        $order->refund == null)
                                     <!-- start order refund modal for each order -->
                                     <div class="modal fade" id="refund-modal-{{ $order->id }}" tabindex="-1"
                                         role="dialog" aria-hidden="true">

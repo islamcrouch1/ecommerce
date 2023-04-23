@@ -14,7 +14,7 @@ class Country extends Model
 
 
     protected $fillable = [
-        'name_en', 'name_ar', 'code', 'currency', 'media_id', 'status', 'shipping_amount', 'is_default'
+        'name_en', 'name_ar', 'code', 'currency', 'media_id', 'status', 'shipping_amount', 'is_default', 'phone_digits'
     ];
 
 

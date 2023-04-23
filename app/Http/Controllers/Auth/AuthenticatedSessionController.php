@@ -74,9 +74,9 @@ class AuthenticatedSessionController extends Controller
 
 
         if (Auth::user()->hasRole('user')) {
-            $path = '/ecommerce';
-        } else {
             $path = '/';
+        } else {
+            $path = '/admin';
         }
 
         Auth::guard('web')->logout();

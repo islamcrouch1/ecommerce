@@ -174,9 +174,9 @@ class CategoriesController extends Controller
             'subtitle_en' => $request['subtitle_en'],
         ]);
 
-        foreach ($category->products as $product) {
-            CalculateProductPrice($product);
-        }
+        // foreach ($category->products as $product) {
+        //     CalculateProductPrice($product);
+        // }
 
         alertSuccess('Category updated successfully', 'تم تعديل القسم بنجاح');
         return redirect()->route('categories.index', ['parent_id' => $request->parent_id]);

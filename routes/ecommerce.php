@@ -9,11 +9,11 @@ use App\Http\Controllers\Ecommerce\UserController;
 use Illuminate\Support\Facades\Route;
 
 
+// ['prefix' => 'ecommerce'],
+Route::group([], function () {
 
-Route::group(['prefix' => 'ecommerce'], function () {
 
-
-    Route::get('/', [HomeController::class, 'index'])->name('ecommerce.home');
+    Route::get('/home', [HomeController::class, 'index'])->name('ecommerce.home');
 
     Route::post('/product-price', [HomeController::class, 'getProductPrice'])->name('ecommerce.product.price');
 
@@ -85,4 +85,6 @@ Route::group(['prefix' => 'ecommerce'], function () {
 
     Route::get('contact', [HomeController::class, 'contact'])->name('ecommerce.contact');
     Route::get('setCountry/{country_id}', [HomeController::class, 'setCountry'])->name('set.country');
+
+    Route::get('whatsapp', [HomeController::class, 'whatsapp'])->name('whatsapp.send');
 });

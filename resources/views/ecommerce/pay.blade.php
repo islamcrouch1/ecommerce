@@ -1,4 +1,4 @@
-@extends('layouts.ecommerce.app')
+@extends('layouts.ecommerce.app', ['page_title' => 'Paymob payment'])
 @section('content')
     <section class="section-b-space light-layout">
         <div class="container">

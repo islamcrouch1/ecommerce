@@ -1,4 +1,4 @@
-    {{-- <!--modal popup start-->
+    <!--modal popup start-->
     <div class="modal fade bd-example-modal-lg theme-modal" id="exampleModal" tabindex="-1" role="dialog"
         aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -11,21 +11,16 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                                         aria-label="Close"><span aria-hidden="true">&times;</span></button>
                                     <div class="offer-content"> <img
-                                            src="{{ asset('e-assets/images/Offer-banner.png') }}"
-                                            class="img-fluid blur-up lazyload" alt="">
-                                        <h2>newsletter</h2>
-                                        <form
-                                            action="https://pixelstrap.us19.list-manage.com/subscribe/post?u=5a128856334b598b395f1fc9b&amp;id=082f74cbda"
-                                            class="auth-form needs-validation" method="post"
-                                            id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form"
-                                            target="_blank">
-                                            <div class="form-group mx-sm-3">
-                                                <input type="email" class="form-control" name="EMAIL" id="mce-EMAIL"
-                                                    placeholder="Enter your email" required="required">
-                                                <button type="submit" class="btn btn-solid"
-                                                    id="mc-submit">subscribe</button>
-                                            </div>
-                                        </form>
+                                            src="{{ asset(websiteSettingMedia($type . '_modal')) }}"
+                                            class="img-fluid
+                                            blur-up lazyload"
+                                            alt="">
+                                        <h2>{{ app()->getLocale() == 'ar' ? websiteSettingAr($type . '_modal') : websiteSettingEn($type . '_modal') }}
+                                        </h2>
+                                        <h4 class="text-center m-2 b-2">
+                                            {{ app()->getLocale() == 'ar' ? websiteSettingDAr($type . '_modal') : websiteSettingDEn($type . '_modal') }}
+                                        </h4>
+
                                     </div>
                                 </div>
                             </div>
@@ -35,4 +30,4 @@
             </div>
         </div>
     </div>
-    <!--modal popup end--> --}}
+    <!--modal popup end-->

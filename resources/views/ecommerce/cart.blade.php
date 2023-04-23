@@ -1,4 +1,4 @@
-@extends('layouts.ecommerce.app')
+@extends('layouts.ecommerce.app', ['page_title' => 'Cart'])
 @section('content')
     <!-- breadcrumb start -->
     <div class="breadcrumb-section">
@@ -72,14 +72,20 @@
                                             <div class="col">
                                                 <div class="qty-box">
                                                     <div class="input-group">
-                                                        <input type="text" name="quantity"
-                                                            class="form-control input-number" value="1">
+                                                        <input type="number" name="quantity"
+                                                            class="form-control input-number cart-quantity quantity-{{ $item->product_id }}"
+                                                            value="{{ $item->qty }}"
+                                                            data-id="{{ $item->product_id . '-' . $item->product_combination_id }}"
+                                                            data-url={{ route('ecommerce.cart.change', ['product' => $item->product_id, 'combination' => $item->product_combination_id]) }}
+                                                            data-currency="{{ getCurrency() }}">
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="col">
                                                 <h2 class="td-color">
-                                                    {{ productPrice($item->product, $item->product_combination_id, 'vat') . getCurrency() }}
+                                                    <span
+                                                        class="total-{{ $item->product_id . '-' . $item->product_combination_id }}">{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . getCurrency() }}</span>
+
                                                 </h2>
 
                                             </div>
@@ -102,7 +108,8 @@
                                                     class="form-control input-number cart-quantity quantity-{{ $item->product_id }}"
                                                     value="{{ $item->qty }}"
                                                     data-id="{{ $item->product_id . '-' . $item->product_combination_id }}"
-                                                    data-url={{ route('ecommerce.cart.change', ['product' => $item->product_id, 'combination' => $item->product_combination_id]) }}>
+                                                    data-url={{ route('ecommerce.cart.change', ['product' => $item->product_id, 'combination' => $item->product_combination_id]) }}
+                                                    data-currency="{{ getCurrency() }}">
                                             </div>
                                         </div>
                                     </td>
@@ -111,8 +118,8 @@
                                     <td>
                                         <h2 class="td-color">
                                             <span
-                                                class="total-{{ $item->product_id . '-' . $item->product_combination_id }}">{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty }}</span>
-                                            <span>{{ getCurrency() }}</span>
+                                                class="total-{{ $item->product_id . '-' . $item->product_combination_id }}">{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . getCurrency() }}</span>
+
                                         </h2>
                                     </td>
                                 </tr>
@@ -126,7 +133,9 @@
                                 <tr>
                                     <td>{{ __('total price :') }}</td>
                                     <td>
-                                        <h2>{{ getCartSubtotal($cart_items) . getCurrency() }}</h2>
+                                        <h2><span
+                                                class="cart-total">{{ getCartSubtotal($cart_items) . getCurrency() }}</span>
+                                        </h2>
                                     </td>
                                 </tr>
                             </tfoot>

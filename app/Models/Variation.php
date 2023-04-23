@@ -24,7 +24,7 @@ class Variation extends Model
 
     public function combinations()
     {
-        return $this->hasMany(ProductCombination::class);
+        return $this->hasMany(ProductCombinationDtl::class);
     }
 
 

@@ -7,7 +7,7 @@
             aria-expanded="false" aria-label="Toggle Navigation"><span class="navbar-toggle-icon"><span
                     class="toggle-line"></span></span></button>
         <a class="navbar-brand me-1 me-sm-3" href="{{ route('home') }}">
-            <div class="d-flex align-items-center"><img class="me-2"
+            <div class="d-flex align-items-center"><img class="me-2 admin-logo"
                     src="{{ asset(websiteSettingMedia('header_logo')) }}" alt="" width="150" />
             </div>
         </a>

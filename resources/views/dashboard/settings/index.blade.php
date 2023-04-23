@@ -61,6 +61,9 @@
                                 <li class="nav-item"><a class="nav-link " id="payment-tab" data-bs-toggle="tab"
                                         href="#tab-payment" role="tab" aria-controls="tab-payment"
                                         aria-selected="true">{{ __('payment methods') }}</a></li>
+                                <li class="nav-item"><a class="nav-link " id="social-tab" data-bs-toggle="tab"
+                                        href="#tab-social" role="tab" aria-controls="tab-social"
+                                        aria-selected="true">{{ __('social media api') }}</a></li>
 
                             </ul>
 
@@ -349,6 +352,20 @@
                                         {!! getDivForAccountsSetting('expenses_account', 'default expenses account', $expenses_accounts, $branch->id) !!}
 
 
+                                        {!! getDivForAccountsSetting(
+                                            'allowed_discount_account',
+                                            'default allowed discount account',
+                                            $expenses_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+                                        {!! getDivForAccountsSetting(
+                                            'earned_discount_account',
+                                            'default earned discount account',
+                                            $assets_accounts,
+                                            $branch->id,
+                                        ) !!}
+
                                     </div>
                                 @endforeach
 
@@ -486,6 +503,20 @@
 
 
 
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="orders_email">{{ __('email to receive orders') }}</label>
+                                        <input name="orders_email"
+                                            class="form-control @error('orders_email') is-invalid @enderror"
+                                            value="{{ setting('orders_email') }}" type="text" autocomplete="on"
+                                            id="orders_email" />
+                                        @error('orders_email')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+
 
                                 </div>
 
@@ -576,130 +607,6 @@
                                         @enderror
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label class="form-label" for="front_modal">{{ __('Front popup') }}</label>
-                                        <div>
-                                            <label class="switch">
-                                                <input id="front_modal"
-                                                    class="form-control @error('front_modal') is-invalid @enderror"
-                                                    name="front_modal" type="checkbox"
-                                                    {{ setting('front_modal') == 'on' ? 'checked' : '' }}>
-                                                <span class="slider round"></span>
-                                            </label>
-                                            @error('front_modal')
-                                                <div class="alert alert-danger">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="front_modal_title">{{ __('Front popup - title') }}</label>
-                                        <input name="front_modal_title"
-                                            class="form-control @error('front_modal_title') is-invalid @enderror"
-                                            value="{{ setting('front_modal_title') }}" type="text" autocomplete="on"
-                                            id="front_modal_title" />
-                                        @error('front_modal_title')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="front_modal_body">{{ __('Front popup - body') }}</label>
-                                        <input name="front_modal_body"
-                                            class="form-control @error('front_modal_body') is-invalid @enderror"
-                                            value="{{ setting('front_modal_body') }}" type="text" autocomplete="on"
-                                            id="front_modal_body" />
-                                        @error('front_modal_body')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="affiliate_modal">{{ __('Affiliate popup') }}</label>
-                                        <div>
-                                            <label class="switch">
-                                                <input id="affiliate_modal"
-                                                    class="form-control @error('affiliate_modal') is-invalid @enderror"
-                                                    name="affiliate_modal" type="checkbox"
-                                                    {{ setting('affiliate_modal') == 'on' ? 'checked' : '' }}>
-                                                <span class="slider round"></span>
-                                            </label>
-                                            @error('affiliate_modal')
-                                                <div class="alert alert-danger">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="affiliate_modal_title">{{ __('Affiliate popup - title') }}</label>
-                                        <input name="affiliate_modal_title"
-                                            class="form-control @error('affiliate_modal_title') is-invalid @enderror"
-                                            value="{{ setting('affiliate_modal_title') }}" type="text"
-                                            autocomplete="on" id="affiliate_modal_title" />
-                                        @error('affiliate_modal_title')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="affiliate_modal_body">{{ __('Affiliate popup - body') }}</label>
-                                        <input name="affiliate_modal_body"
-                                            class="form-control @error('affiliate_modal_body') is-invalid @enderror"
-                                            value="{{ setting('affiliate_modal_body') }}" type="text"
-                                            autocomplete="on" id="affiliate_modal_body" />
-                                        @error('affiliate_modal_body')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-
-
-                                    <div class="mb-3">
-                                        <label class="form-label" for="vendor_modal">{{ __('Vendor popup') }}</label>
-                                        <div>
-                                            <label class="switch">
-                                                <input id="vendor_modal"
-                                                    class="form-control @error('vendor_modal') is-invalid @enderror"
-                                                    name="vendor_modal" type="checkbox"
-                                                    {{ setting('vendor_modal') == 'on' ? 'checked' : '' }}>
-                                                <span class="slider round"></span>
-                                            </label>
-                                            @error('vendor_modal')
-                                                <div class="alert alert-danger">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="vendor_modal_title">{{ __('Vendor popup - title') }}</label>
-                                        <input name="vendor_modal_title"
-                                            class="form-control @error('vendor_modal_title') is-invalid @enderror"
-                                            value="{{ setting('vendor_modal_title') }}" type="text"
-                                            autocomplete="on" id="vendor_modal_title" />
-                                        @error('vendor_modal_title')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label"
-                                            for="vendor_modal_body">{{ __('Vendor popup - body') }}</label>
-                                        <input name="vendor_modal_body"
-                                            class="form-control @error('vendor_modal_body') is-invalid @enderror"
-                                            value="{{ setting('vendor_modal_body') }}" type="text" autocomplete="on"
-                                            id="vendor_modal_body" />
-                                        @error('vendor_modal_body')
-                                            <div class="alert alert-danger">{{ $message }}</div>
-                                        @enderror
-                                    </div>
 
                                 </div>
 
@@ -779,6 +686,92 @@
 
 
                                 </div>
+
+                                <div class="tab-pane fade show " id="tab-social" role="tabpanel"
+                                    aria-labelledby="general-tab">
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="snapchat_pixel_id">{{ __('snapchat pixel ID') }}</label>
+                                        <input name="snapchat_pixel_id"
+                                            class="form-control @error('snapchat_pixel_id') is-invalid @enderror"
+                                            type="text" id="snapchat_pixel_id"
+                                            value="{{ setting('snapchat_pixel_id') }}">
+                                        @error('snapchat_pixel_id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="snapchat_token">{{ __('snapchat token') }}</label>
+                                        <input name="snapchat_token"
+                                            class="form-control @error('snapchat_token') is-invalid @enderror"
+                                            type="text" id="snapchat_token" value="{{ setting('snapchat_token') }}">
+                                        @error('snapchat_token')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="hotjar_id">{{ __('Hotjar ID') }}</label>
+                                        <input name="hotjar_id"
+                                            class="form-control @error('hotjar_id') is-invalid @enderror" type="text"
+                                            id="hotjar_id" value="{{ setting('hotjar_id') }}">
+                                        @error('hotjar_id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="google_analytics_id">{{ __('google analytics id') }}</label>
+                                        <input name="google_analytics_id"
+                                            class="form-control @error('google_analytics_id') is-invalid @enderror"
+                                            type="text" id="google_analytics_id"
+                                            value="{{ setting('google_analytics_id') }}">
+                                        @error('google_analytics_id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="tiktok_id">{{ __('tiktok pixel id') }}</label>
+                                        <input name="tiktok_id"
+                                            class="form-control @error('tiktok_id') is-invalid @enderror" type="text"
+                                            id="tiktok_id" value="{{ setting('tiktok_id') }}">
+                                        @error('tiktok_id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="facebook_id">{{ __('facebook pixel id') }}</label>
+                                        <input name="facebook_id"
+                                            class="form-control @error('facebook_id') is-invalid @enderror"
+                                            type="text" id="facebook_id" value="{{ setting('facebook_id') }}">
+                                        @error('facebook_id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="facebook_token">{{ __('facebook token') }}</label>
+                                        <input name="facebook_token"
+                                            class="form-control @error('facebook_token') is-invalid @enderror"
+                                            type="text" id="facebook_token" value="{{ setting('facebook_token') }}">
+                                        @error('facebook_token')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                </div>
+
+
+
                             </div>
 
 

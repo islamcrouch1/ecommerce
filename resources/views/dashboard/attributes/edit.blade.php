@@ -59,6 +59,23 @@
                                 @enderror
                             </div>
 
+
+                            <div class="mb-3 col-md-3">
+                                <label class="form-label" for="activate_filter">{{ __('activate filter') }}</label>
+                                <div>
+                                    <label class="switch">
+                                        <input id="activate_filter"
+                                            class="form-control @error('activate_filter') is-invalid @enderror"
+                                            name="activate_filter" type="checkbox"
+                                            {{ $attribute->activate_filter == '1' ? 'checked' : '' }}>
+                                        <span class="slider round"></span>
+                                    </label>
+                                    @error('activate_filter')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"
                                     name="submit">{{ __('Edit') . ' ' . __('attribute') }}</button>

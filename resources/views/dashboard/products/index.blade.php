@@ -198,6 +198,8 @@
                                             {{ __($product->product_type) }}</td>
                                         <td class="phone align-middle white-space-nowrap py-2">
 
+
+
                                             @if (!$product->trashed())
                                                 @if ($product->vendor_id == null)
                                                     {{ productQuantity($product->id, null, null, $user->hasPermission('branches-read') ? null : $user->branch->warehouses) }}
@@ -255,8 +257,11 @@
                                                             <a href="" class="dropdown-item"
                                                                 data-bs-toggle="modal"
                                                                 data-bs-target="#status-modal-{{ $product->id }}">{{ __('Change Status') }}</a>
-                                                            <a class="dropdown-item"
-                                                                href="{{ route('products.stock.create', ['product' => $product->id]) }}">{{ __('Edit Stock') }}</a>
+                                                            @if ($product->product_type == 'simple' || $product->product_type == 'variable')
+                                                                <a class="dropdown-item"
+                                                                    href="{{ route('products.stock.create', ['product' => $product->id]) }}">{{ __('Edit Stock') }}</a>
+                                                            @endif
+
                                                             @if ($product->vendor_id != null)
                                                                 <a class="dropdown-item"
                                                                     href="{{ route('users.show', ['user' => $product->vendor_id]) }}">{{ __('Vendor Info') }}</a>
@@ -271,6 +276,15 @@
                                                                 <a class="dropdown-item"
                                                                     href="{{ route('users.show', ['user' => $product->created_by]) }}">{{ __('Created By') }}</a>
                                                             @endif
+                                                        @endif
+
+                                                        <a class="dropdown-item"
+                                                            href="{{ route('ecommerce.product', ['product' => $product->id]) }}"
+                                                            target="_blank">{{ __('show product') }}</a>
+
+                                                        @if (auth()->user()->hasPermission('products-create'))
+                                                            <a class="dropdown-item"
+                                                                href="{{ route('products.duplicate', ['product' => $product->id]) }}">{{ __('duplicate') }}</a>
                                                         @endif
                                                         @if (auth()->user()->hasPermission('products-delete') ||
                                                                 auth()->user()->hasPermission('products-trash'))

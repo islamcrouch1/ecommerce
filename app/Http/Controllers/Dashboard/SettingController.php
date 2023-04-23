@@ -88,16 +88,27 @@ class SettingController extends Controller
             'funding_assets_account' => "nullable|array",
             'vendors_tax' => "nullable|numeric",
             'vendors_tax_account' => "nullable|array",
+            'allowed_discount_account' => "nullable|array",
+            'earned_discount_account' => "nullable|array",
             'website_branch' => "nullable|numeric",
             'website_vat' => "nullable|string",
             'cash_accounts' => "nullable|array",
             'cash_on_delivery' => "nullable|string",
             'paymob' => "nullable|string",
             'upayment' => "nullable|string",
-
+            'snapchat_pixel_id' => "nullable|string",
+            'snapchat_token' => "nullable|string",
+            'hotjar_id' => "nullable|string",
+            'orders_email' => 'nullable|string|email',
+            'google_analytics_id' => "nullable|string",
+            'tiktok_id' => "nullable|string",
+            'facebook_id' => "nullable|string",
+            'facebook_token' => "nullable|string",
         ]);
 
 
+        updateAccountSetting('allowed_discount_account', $request);
+        updateAccountSetting('earned_discount_account', $request);
         updateAccountSetting('assets_account', $request);
         updateAccountSetting('vendors_tax_account', $request);
         updateAccountSetting('funding_assets_account', $request);
@@ -118,6 +129,14 @@ class SettingController extends Controller
         updateAccountSetting('cash_accounts', $request);
 
 
+        updateSetting('snapchat_pixel_id', $request);
+        updateSetting('snapchat_token', $request);
+        updateSetting('hotjar_id', $request);
+        updateSetting('google_analytics_id', $request);
+        updateSetting('tiktok_id', $request);
+        updateSetting('facebook_id', $request);
+        updateSetting('facebook_token', $request);
+        updateSetting('orders_email', $request);
 
 
         updateSetting('cash_on_delivery', $request);
