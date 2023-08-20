@@ -100,8 +100,34 @@ class WebsitesettingController extends Controller
             'front_auth_modal_description_en' => "nullable|string",
             'check_front_auth_popup' => "nullable|string",
 
+            'seller_section_des_ar' => "nullable|string",
+            'seller_section_des_en' => "nullable|string",
+
+            'show_categories' => "nullable|string",
+            'show_brands' => "nullable|string",
+
+            'quick_links_ar' => "nullable|array",
+            'quick_links_en' => "nullable|array",
+            'quick_links_url' => "nullable|array",
+
+
+
         ]);
 
+
+        $setting = WebsiteSetting::where('type', 'seller_section_des')->first();
+        if ($setting == null) {
+            WebsiteSetting::create([
+                'type' => 'seller_section_des',
+                'description_ar' => $request['seller_section_des_ar'],
+                'description_en' => $request['seller_section_des_en'],
+            ]);
+        } else {
+            $setting->update([
+                'description_ar' => $request['seller_section_des_ar'],
+                'description_en' => $request['seller_section_des_en'],
+            ]);
+        }
 
         $setting = WebsiteSetting::where('type', 'check_front_popup')->first();
         if ($setting == null) {
@@ -114,6 +140,35 @@ class WebsitesettingController extends Controller
             $setting->update([
                 'value_ar' => $request['check_front_popup'],
                 'value_en' => $request['check_front_popup'],
+            ]);
+        }
+
+
+        $setting = WebsiteSetting::where('type', 'show_categories')->first();
+        if ($setting == null) {
+            WebsiteSetting::create([
+                'type' => 'show_categories',
+                'value_ar' => $request['show_categories'],
+                'value_en' => $request['show_categories'],
+            ]);
+        } else {
+            $setting->update([
+                'value_ar' => $request['show_categories'],
+                'value_en' => $request['show_categories'],
+            ]);
+        }
+
+        $setting = WebsiteSetting::where('type', 'show_brands')->first();
+        if ($setting == null) {
+            WebsiteSetting::create([
+                'type' => 'show_brands',
+                'value_ar' => $request['show_brands'],
+                'value_en' => $request['show_brands'],
+            ]);
+        } else {
+            $setting->update([
+                'value_ar' => $request['show_brands'],
+                'value_en' => $request['show_brands'],
             ]);
         }
 
@@ -353,6 +408,8 @@ class WebsitesettingController extends Controller
 
 
 
+
+
         $setting = WebsiteSetting::where('type', 'icon_3')->first();
         if ($setting == null) {
             $setting = WebsiteSetting::create([
@@ -541,6 +598,38 @@ class WebsitesettingController extends Controller
                         'type' => 'flash_news',
                         'value_ar' => $value,
                         'value_en' => $request['flash_news_en'][$index],
+                    ]);
+                }
+            }
+        }
+
+
+        $settings = WebsiteSetting::where('type', 'quick_links')->get();
+        if ($settings == null) {
+            foreach ($request['quick_links_ar'] as $index => $value) {
+                WebsiteSetting::create([
+                    'type' => 'quick_links',
+                    'value_ar' => $value,
+                    'value_en' => $request['quick_links_en'][$index],
+                    'description_ar' => $request['quick_links_url'][$index],
+                    'description_en' => $request['quick_links_url'][$index],
+
+                ]);
+            }
+        } else {
+            if ($settings) {
+                foreach ($settings as $setting) {
+                    $setting->delete();
+                }
+            }
+            if ($request['quick_links_ar']) {
+                foreach ($request['quick_links_ar'] as $index => $value) {
+                    WebsiteSetting::create([
+                        'type' => 'quick_links',
+                        'value_ar' => $value,
+                        'value_en' => $request['quick_links_en'][$index],
+                        'description_ar' => $request['quick_links_url'][$index],
+                        'description_en' => $request['quick_links_url'][$index],
                     ]);
                 }
             }

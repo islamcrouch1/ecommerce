@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard.app')
+@extends('layouts.dashboard.app')
 
 @section('adminContent')
     <div class="card mb-3" id="customersTable"
@@ -18,10 +18,10 @@
                     <div class="d-none" id="table-customers-actions">
                         <div class="d-flex">
                             <select class="form-select form-select-sm" aria-label="Bulk actions">
-                                <option selected="">{{ __('Bulk actions') }}</option>
+                                {{-- <option selected="">{{ __('Bulk actions') }}</option>
                                 <option value="Refund">{{ __('Refund') }}</option>
                                 <option value="Delete">{{ __('Delete') }}</option>
-                                <option value="Archive">{{ __('Archive') }}</option>
+                                <option value="Archive">{{ __('Archive') }}</option> --}}
                             </select>
                             <button class="btn btn-falcon-default btn-sm ms-2" type="button">{{ __('Apply') }}</button>
                         </div>
@@ -41,6 +41,18 @@
                                     class="form-control form-select-sm sonoo-search" value="{{ request()->to }}">
                             </div>
 
+                            <div class="d-inline-block">
+                                <select name="country_id" class="form-select form-select-sm sonoo-search"
+                                    id="autoSizingSelect">
+                                    <option value="" selected>{{ __('All Countries') }}</option>
+                                    @foreach ($countries as $country)
+                                        <option value="{{ $country->id }}"
+                                            {{ request()->country_id == $country->id ? 'selected' : '' }}>
+                                            {{ app()->getLocale() == 'ar' ? $country->name_ar : $country->name_en }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
 
                         </form>
@@ -51,7 +63,7 @@
                         @endif
                         <a href="{{ route('clients.trashed') }}" class="btn btn-falcon-default btn-sm" type="button"><span
                                 class="fas fa-trash" data-fa-transform="shrink-3 down-2"></span><span
-                                class="d-none d-sm-inline-block ms-1">{{ __('Trash') }}</span></a>
+                                class="d-none d-sm-inline-block ms-1">{{ __('Trash ') }}</span></a>
                         {{-- <a href="{{ route('clients.export', ['role_id' => request()->role_id, 'from' => request()->from, 'to' => request()->to]) }}"
                             class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-external-link-alt"
                                 data-fa-transform="shrink-3 down-2"></span><span
@@ -162,7 +174,7 @@
                                                             @csrf
                                                             @method('DELETE')
                                                             <button class="dropdown-item text-danger"
-                                                                type="submit">{{ $client->trashed() ? __('Delete') : __('Trash') }}</button>
+                                                                type="submit">{{ $client->trashed() ? __('Delete') : __('Trash ') }}</button>
                                                         </form>
                                                     @endif
                                                 </div>

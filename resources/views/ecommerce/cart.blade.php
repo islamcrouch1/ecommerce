@@ -58,30 +58,49 @@
                             <tbody>
                                 <tr>
                                     <td>
-                                        <a href="{{ route('ecommerce.product', ['product' => $item->product->id]) }}"><img
+                                        <a
+                                            href="{{ route('ecommerce.product', ['product' => $item->product->id, 'slug' => createSlug(getName($item->product))]) }}"><img
                                                 src="{{ asset($item->product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $item->product->images[0]->media->path) }}"
                                                 alt=""></a>
                                     </td>
-                                    <td><a href="{{ route('ecommerce.product', ['product' => $item->product->id]) }}">
+                                    <td>
+                                        <a
+                                            href="{{ route('ecommerce.product', ['product' => $item->product->id, 'slug' => createSlug(getName($item->product))]) }}">
 
                                             {{ getProductName($item->product, $item->combination) }}
 
 
                                         </a>
                                         <div class="mobile-cart-content row">
-                                            <div class="col">
-                                                <div class="qty-box">
+                                            <div class="col-12">
+                                                <div style="min-width: 150px !important" class="qty-box">
                                                     <div class="input-group">
-                                                        <input type="number" name="quantity"
-                                                            class="form-control input-number cart-quantity quantity-{{ $item->product_id }}"
+                                                        <span class="input-group-prepend">
+                                                            <button type="button" class="btn quantity-left-minus"
+                                                                data-type="minus" data-field=""><i
+                                                                    class="ti-angle-{{ app()->getLocale() == 'ar' ? 'right' : 'left' }}"></i>
+                                                            </button>
+                                                        </span>
+                                                        <input type="text" name="quantity"
+                                                            class="form-control qty-input input-number cart-quantity quantity-{{ $item->product_id }}"
                                                             value="{{ $item->qty }}"
+                                                            data-min="{{ $item->product->product_min_order }}"
+                                                            data-max="{{ $item->product->product_max_order }}"
                                                             data-id="{{ $item->product_id . '-' . $item->product_combination_id }}"
                                                             data-url={{ route('ecommerce.cart.change', ['product' => $item->product_id, 'combination' => $item->product_combination_id]) }}
-                                                            data-currency="{{ getCurrency() }}">
+                                                            data-currency="{{ getCurrency() }}" disabled>
+                                                        <span class="input-group-prepend">
+                                                            <button type="button" class="btn quantity-right-plus"
+                                                                data-type="plus" data-field=""><i
+                                                                    class="ti-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }}"></i>
+                                                            </button>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col">
+
+
+                                            <div class="col p-2">
                                                 <h2 class="td-color">
                                                     <span
                                                         class="total-{{ $item->product_id . '-' . $item->product_combination_id }}">{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . getCurrency() }}</span>
@@ -89,7 +108,7 @@
                                                 </h2>
 
                                             </div>
-                                            <div class="col">
+                                            <div class="col p-2">
                                                 <h2 class="td-color"><a
                                                         href="{{ route('ecommerce.cart.destroy', ['product' => $item->product->id, 'combination' => $item->product_combination_id]) }}"
                                                         class="icon"><i class="ti-close"></i></a>
@@ -97,21 +116,40 @@
                                             </div>
                                         </div>
                                     </td>
+
+
+
                                     <td>
                                         <h2>{{ productPrice($item->product, $item->product_combination_id, 'vat') . getCurrency() }}
                                         </h2>
                                     </td>
                                     <td>
-                                        <div class="qty-box">
+
+                                        <div style="min-width: 150px !important" class="qty-box">
                                             <div class="input-group">
-                                                <input type="number" name="quantity"
-                                                    class="form-control input-number cart-quantity quantity-{{ $item->product_id }}"
+                                                <span class="input-group-prepend">
+                                                    <button type="button" class="btn quantity-left-minus" data-type="minus"
+                                                        data-field=""><i
+                                                            class="ti-angle-{{ app()->getLocale() == 'ar' ? 'right' : 'left' }}"></i>
+                                                    </button>
+                                                </span>
+                                                <input type="text" name="quantity"
+                                                    class="form-control qty-input input-number cart-quantity quantity-{{ $item->product_id }}"
                                                     value="{{ $item->qty }}"
+                                                    data-min="{{ $item->product->product_min_order }}"
+                                                    data-max="{{ $item->product->product_max_order }}"
                                                     data-id="{{ $item->product_id . '-' . $item->product_combination_id }}"
                                                     data-url={{ route('ecommerce.cart.change', ['product' => $item->product_id, 'combination' => $item->product_combination_id]) }}
-                                                    data-currency="{{ getCurrency() }}">
+                                                    data-currency="{{ getCurrency() }}" disabled>
+                                                <span class="input-group-prepend">
+                                                    <button type="button" class="btn quantity-right-plus" data-type="plus"
+                                                        data-field=""><i
+                                                            class="ti-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }}"></i>
+                                                    </button>
+                                                </span>
                                             </div>
                                         </div>
+
                                     </td>
                                     <td><a href="{{ route('ecommerce.cart.destroy', ['product' => $item->product->id, 'combination' => $item->product_combination_id]) }}"
                                             class="icon"><i class="ti-close"></i></a></td>
@@ -131,10 +169,18 @@
                         <table class="table cart-table ">
                             <tfoot>
                                 <tr>
+                                    <td>{{ __('discount :') }}</td>
+                                    <td>
+                                        <h2><span
+                                                class="cart-discount">{{ calcDiscount($cart_items) . getCurrency() }}</span>
+                                        </h2>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td>{{ __('total price :') }}</td>
                                     <td>
                                         <h2><span
-                                                class="cart-total">{{ getCartSubtotal($cart_items) . getCurrency() }}</span>
+                                                class="cart-total">{{ getCartSubtotal($cart_items) - calcDiscount($cart_items) . getCurrency() }}</span>
                                         </h2>
                                     </td>
                                 </tr>

@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Ecommerce;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Models\Address;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\Coupon;
 use App\Models\Entry;
+use App\Models\InstallmentCompany;
+use App\Models\InstallmentRequest;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductCombination;
@@ -49,10 +52,13 @@ class OrdersController extends Controller
         }
 
         if (setting('facebook_id') && setting('facebook_token')) {
-            facebookEvent('Purchase');
+            facebookEvent('Purchase', $order->total_price, $order->country->currency);
         }
 
 
+
+
+        addViewRecord();
 
 
         // return view('dashboard.orders.template', compact('order'));
@@ -71,8 +77,8 @@ class OrdersController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
-            'phone' => 'required|integer',
-            'notes' => 'nullable|string|max:255',
+            'phone' => 'required|string',
+            'notes' => 'nullable|string|max:1000',
             'country_id' => 'required|string|max:255',
             'state_id' => 'required|string|max:255',
             'city_id' => 'required|string|max:255',
@@ -85,14 +91,18 @@ class OrdersController extends Controller
             'block' => 'nullable|string|max:255',
             'house' => 'nullable|string|max:255',
             'avenue' => 'nullable|string|max:255',
+            'floor_no' => 'nullable|string|max:255',
+            'delivery_time' => 'nullable|string|max:255',
+            'phone2' => 'nullable|string|max:255',
 
         ]);
+
 
 
         if (isset($request->create_account) && $request->create_account == 'create_account') {
 
             $request->merge(['country' => $request->country_id]);
-            $request->merge(['email' => ($request->phone . '@domain.com')]);
+            $request->merge(['email' => ($request->phone . '@example.com')]);
             $request->merge(['check' => 'on']);
 
             $user_cr = new UserController();
@@ -107,7 +117,7 @@ class OrdersController extends Controller
         // accounts check & tax check
         if (!checkAccounts($branch_id, ['vendors_tax_account', 'wst_account', 'customers_account', 'revenue_account', 'allowed_discount_account']) || setting('vat') == null || setting('vendors_tax') == null || setting('website_branch') == null) {
             alertError('An error occurred while processing the request, please try again later', 'حدث خطا اثناء عمل الطلب يرجى المحاولة لاحقا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         $cart_items = getCartItems();
@@ -149,18 +159,18 @@ class OrdersController extends Controller
 
         if ($count > 0) {
             alertError('Some products do not have enough quantity in stock or the ordered quantity does not match the appropriate order limit', 'بعض المنتجات ليس بها كمية كافية في المخزون او الكمية المطلوبة غير متطابقة مع الحد المناسب للطلب');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if ($count_product > 0) {
             alertError('Some products not available please remove it from your cart', 'بعض المنتجات غير متاحة للطلب في الوقت الحالي يرجى حذفها من سلة المشتريات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         // check if cart empty
         if ($cart_items->count() <= 0) {
             alertError('Your cart is empty. You cannot complete your order at this time', 'سلة مشترياتك فارغة لا يمكنك من اتمام الطلب في الوقت الحالي');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
@@ -214,10 +224,140 @@ class OrdersController extends Controller
             $order = $this->attach_order($request, 'upayment', $check_coupon);
             return redirect()->route('ecommerce.payment', ['orderId' => $order->id]);
         }
+
+        if ($request->payment_method == 'paypal') {
+            $order = $this->attach_order($request, 'paypal', $check_coupon);
+            return redirect()->route('ecommerce.payment', ['orderId' => $order->id]);
+        }
     }
+
+
+    public function orderCancle(Request $request, $order)
+    {
+
+        $order = Order::findOrFail($order);
+
+        if (!checkOrderStatus('faild', $order->status)) {
+            alertError('It is not possible to cancel the order at this time', 'لا يمكن من الغاء الطلب حاليا');
+            return redirect()->back();
+        } else {
+
+
+            $order->update([
+                'status' => 'canceled',
+            ]);
+
+            foreach ($order->vendor_orders as $vendor_order) {
+                changeOutStandingBalance($vendor_order->user, ($vendor_order->total_price - $vendor_order->total_commission), $vendor_order->id, $status, 'sub');
+            }
+
+            $branch_id = $order->branch_id;
+
+            $vendors_tax_account = Account::findOrFail(settingAccount('vendors_tax_account', $branch_id));
+            $total_vendors_tax_ammount = 0;
+            $total_order_vendors_products = 0;
+
+            foreach ($order->products as $product) {
+
+                if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+
+                    $combination = ProductCombination::findOrFail($product->pivot->product_combination_id);
+
+
+                    if ($product->vendor_id == null) {
+
+                        $warehouse_id = $product->pivot->warehouse_id;
+
+                        $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
+                        $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
+
+                        // get cost and update combination cost
+                        $cost = getProductCost($product, $combination, $branch_id, $order, $product->pivot->qty, true);
+
+                        createEntry($product_account, 'sales_return', ($product->pivot->cost * $product->pivot->qty), 0, $branch_id, $order);
+                        createEntry($cs_product_account, 'sales_return', 0, ($product->pivot->cost * $product->pivot->qty), $branch_id, $order);
+                    }
+
+                    if ($product->vendor_id != null) {
+
+                        $warehouse = Warehouse::where('vendor_id', $product->vendor_id)->first();
+                        $warehouse_id = $warehouse->id;
+                        $total_vendors_tax_ammount += $vendor_order->total_tax;
+                        $total_order_vendors_products += $vendor_order->total_price;
+
+                        // add return entry for commission tax account
+
+                        $supplier_account = getItemAccount($product->vendor_id, null, 'suppliers_account', $branch_id);
+                        createEntry($supplier_account, 'sales_return', $vendor_order->total_price - $vendor_order->total_commission, 0, $branch_id, $order);
+
+
+                        if ($vendor_order->total_commission > 0) {
+
+                            $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
+                            createEntry($revenue_account, 'sales_return', $vendor_order->total_commission - $vendor_order->total_tax, 0, $branch_id, $order);
+
+                            $vendors_tax_account = Account::findOrFail(settingAccount('vendors_tax_account', $branch_id));
+                            createEntry($vendors_tax_account, 'sales_return', $vendor_order->total_tax, 0, $branch_id, $order);
+                        }
+                    }
+
+                    // add stock and running order
+                    stockCreate($combination, $warehouse_id, $product->pivot->qty, 'Sale', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
+                }
+
+                if ($product->vendor_id == null) {
+                    if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+                        $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
+                    } else {
+                        $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
+                    }
+                    createEntry($revenue_account, 'sales_return', $product->pivot->product_price - $product->pivot->product_tax, 0, $branch_id, $order);
+                }
+            }
+
+            if ($order->customer_id != null) {
+                $customer_account = getItemAccount($order->customer_id, null, 'customers_account', $branch_id);
+            } else {
+                $customer_account = getItemAccount(null, null, 'customers_account', $branch_id);
+            }
+
+            createEntry($customer_account, 'sales_return', 0, $order->total_price, $branch_id, $order);
+
+            $order->update([
+                'payment_status' => 'faild',
+            ]);
+
+            if ($order->total_tax > 0) {
+                $vat_account = Account::findOrFail(settingAccount('vat_sales_account', $branch_id));
+                createEntry($vat_account, 'sales_return', $order->total_tax, 0, $branch_id, $order);
+            }
+
+
+            if ($order->shipping_amount > 0) {
+                $revenue_account_shipping = getItemAccount(null, null, 'revenue_account_shipping', $branch_id);
+                createEntry($revenue_account_shipping, 'sales_return', $order->shipping_amount, 0, $branch_id, $order);
+            }
+
+            if ($order->discount_amount > 0) {
+                $allowed_discount_account = Account::findOrFail(settingAccount('allowed_discount_account', $branch_id));
+                createEntry($allowed_discount_account, 'sales_return', 0, $order->discount_amount, $branch_id, $order);
+            }
+
+            if ($order->affiliate_id != null) {
+                changeOutStandingBalance($order->affiliate, $order->total_commission, $order->id, $order->status, 'sub');
+            }
+        }
+
+        alertSuccess('Your order has been successfully cancelled', 'تم الغاء طلبك بنجاح');
+        return redirect()->back();
+    }
+
+
 
     private function attach_order($request, $payment_method, $check_coupon)
     {
+
+
 
         $shipping_amount = 0;
         $cart_items = getCartItems();
@@ -243,6 +383,7 @@ class OrdersController extends Controller
         }
 
 
+
         $warehouses = getWebsiteWarehouses();
         $branch_id = setting('website_branch');
 
@@ -254,6 +395,7 @@ class OrdersController extends Controller
             'order_from' => 'web',
             'full_name' => $request->name,
             'phone' => $request->phone,
+            'phone2' => $request->phone2,
             'country_id' => $request->country_id,
             'state_id' => $request->state_id,
             'city_id' => $request->city_id,
@@ -272,6 +414,8 @@ class OrdersController extends Controller
             'block' => $request->block,
             'house' => $request->house,
             'avenue' => $request->avenue,
+            'floor_no' => $request->floor_no,
+            'delivery_time' => $request->delivery_time,
 
 
             // 'total_price_affiliate' => null,
@@ -287,6 +431,46 @@ class OrdersController extends Controller
 
 
         ]);
+
+        if (getAddress()) {
+            getAddress()->update([
+                'user_id' => Auth::check() ? Auth::id() : null,
+                'session_id' => Auth::check() ? null : $request->session()->token(),
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'country_id' => $request->country_id,
+                'state_id' => $request->state_id,
+                'city_id' => $request->city_id,
+                'house' => null,
+                'special_mark' => null,
+                'address' => $request->address,
+                'block' => $request->block,
+                'house' => $request->house,
+                'avenue' => $request->avenue,
+                'floor_no' => $request->floor_no,
+                'delivery_time' => $request->delivery_time,
+                'phone2' => $request->phone2,
+            ]);
+        } else {
+            $address = Address::create([
+                'user_id' => Auth::check() ? Auth::id() : null,
+                'session_id' => Auth::check() ? null : $request->session()->token(),
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'country_id' => $request->country_id,
+                'state_id' => $request->state_id,
+                'city_id' => $request->city_id,
+                'house' => null,
+                'special_mark' => null,
+                'address' => $request->address,
+                'block' => $request->block,
+                'house' => $request->house,
+                'avenue' => $request->avenue,
+                'floor_no' => $request->floor_no,
+                'delivery_time' => $request->delivery_time,
+                'phone2' => $request->phone2,
+            ]);
+        }
 
 
 
@@ -496,10 +680,10 @@ class OrdersController extends Controller
             if ($coupon->free_shipping == true) {
                 $discount = 0;
             } else {
-                $discount = calcDiscount($coupon, $subtotal, $cart_items);
+                $discount = calcDiscount($cart_items, $coupon, $subtotal);
             }
         } else {
-            $discount = 0;
+            $discount = calcDiscount($cart_items);
         }
 
         if ($total_order_price > 0 && setting('website_vat')) {
@@ -520,8 +704,8 @@ class OrdersController extends Controller
 
         if ($discount > 0) {
             $order->update([
-                'coupon_code' => $coupon->code,
-                'coupon_amount' => $coupon->amount,
+                'coupon_code' => isset($coupon) ? $coupon->code : null,
+                'coupon_amount' => isset($coupon) ? $coupon->amount : 0,
                 'discount_amount' => $discount,
             ]);
         }
@@ -553,9 +737,10 @@ class OrdersController extends Controller
         }
 
 
-        $users = User::whereHas('roles', function ($query) {
-            $query->where('name', 'superadministrator')
-                ->orwhere('name', 'administrator');
+        $admins = unserialize(setting('orders_notifications'));
+
+        $users = User::whereHas('roles', function ($query) use ($admins) {
+            $query->whereIn('name', $admins ? $admins : []);
         })->get();
 
 
@@ -678,6 +863,7 @@ class OrdersController extends Controller
 
         $request->validate([
             'country_id' => "required|string",
+            'selected_state' => "nullable|string",
         ]);
 
 
@@ -685,7 +871,10 @@ class OrdersController extends Controller
 
         $country = Country::findOrFail($request->country_id);
 
-        $states  = $country->states;
+        $selected_state = $request->selected_state;
+
+        $states  = State::where('country_id', $request->country_id)
+            ->orWhere('id', $selected_state)->get();
 
         $data['status'] = 1;
 
@@ -703,14 +892,20 @@ class OrdersController extends Controller
 
         $request->validate([
             'state_id' => "required|string",
+            'selected' => "nullable|string",
+
         ]);
 
 
         $data = [];
 
+        $selected = $request->selected;
+
+
         $state = State::findOrFail($request->state_id);
 
-        $cities  = $state->cities;
+        $cities  = City::where('state_id', $request->state_id)
+            ->orWhere('id', $selected)->get();
 
         $data['status'] = 1;
 
@@ -719,5 +914,175 @@ class OrdersController extends Controller
         $data['cities'] = $cities;
 
         return $data;
+    }
+
+
+
+    public function installmentStore(Request $request)
+    {
+
+
+
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'phone' => 'required|string',
+            'notes' => 'nullable|string|max:1000',
+            'country_id' => 'required|string|max:255',
+            'state_id' => 'required|string|max:255',
+            'city_id' => 'required|string|max:255',
+            'password' => "nullable|string|min:8|confirmed",
+            'create_account' => 'nullable|string|max:255',
+            'block' => 'nullable|string|max:255',
+            'house' => 'nullable|string|max:255',
+            'avenue' => 'nullable|string|max:255',
+            'floor_no' => 'nullable|string|max:255',
+            'phone2' => 'nullable|string|max:255',
+            'company' => 'required|integer',
+            'amount' => 'required|numeric',
+            'months' => 'required|integer',
+            'product_type' => 'required|string|max:255',
+            'product_id' => 'required|integer',
+            'combination_id' => 'nullable|integer',
+
+
+
+        ]);
+
+
+
+
+
+
+
+        if (isset($request->create_account) && $request->create_account == 'create_account') {
+
+            $request->merge(['country' => $request->country_id]);
+            $request->merge(['email' => ($request->phone . '@example.com')]);
+            $request->merge(['check' => 'on']);
+
+            $user_cr = new UserController();
+
+            $user_cr->store($request);
+        }
+
+
+        if (getAddress()) {
+            getAddress()->update([
+                'user_id' => Auth::check() ? Auth::id() : null,
+                'session_id' => Auth::check() ? null : $request->session()->token(),
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'country_id' => $request->country_id,
+                'state_id' => $request->state_id,
+                'city_id' => $request->city_id,
+                'house' => null,
+                'special_mark' => null,
+                'address' => $request->address,
+                'block' => $request->block,
+                'house' => $request->house,
+                'avenue' => $request->avenue,
+                'floor_no' => $request->floor_no,
+                'delivery_time' => $request->delivery_time,
+                'phone2' => $request->phone2,
+            ]);
+        } else {
+            $address = Address::create([
+                'user_id' => Auth::check() ? Auth::id() : null,
+                'session_id' => Auth::check() ? null : $request->session()->token(),
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'country_id' => $request->country_id,
+                'state_id' => $request->state_id,
+                'city_id' => $request->city_id,
+                'house' => null,
+                'special_mark' => null,
+                'address' => $request->address,
+                'block' => $request->block,
+                'house' => $request->house,
+                'avenue' => $request->avenue,
+                'floor_no' => $request->floor_no,
+                'delivery_time' => $request->delivery_time,
+                'phone2' => $request->phone2,
+            ]);
+        }
+
+
+        if ($request->product_type == 'variable' && $request->combination_id == null) {
+            alertError('please select all product attributes like color or size', 'يرجى تحديد متعيرات المنتج مثل اللون او المقاس لاستكمال طلب التقسيط');
+            return redirect()->back()->withInput();
+        }
+
+
+        $product = Product::findOrFail($request->product_id);
+
+        if ($product->product_type == 'variable') {
+            $price = productPrice($product, $request->combination_id, 'vat');
+        } else {
+            $price = productPrice($product, null, 'vat');
+        }
+
+
+        $company = InstallmentCompany::findOrFail($request->company);
+
+        if ($company->type == 'amount') {
+            $admin_expenses = $company->admin_expenses;
+        } else {
+            $admin_expenses = ($price * $company->admin_expenses) / 100;
+        }
+
+
+        $installment_amount = $price - $request->amount;
+
+        $percentage = $company->amount * $request->months;
+        $installment = ($percentage * $installment_amount) / 100;
+
+        $total = $installment + $installment_amount;
+        $installment_amount = $total / $request->months;
+
+        $installment_amount = round($installment_amount, 2);
+
+        // dd($price, $installment_amount, $admin_expenses);
+
+
+        // if (Auth::check()) {
+        //     sendEmail('order', $order, 'user');
+        // }
+        // sendEmail('order', $order, 'admin');
+
+
+
+        $installment_request = InstallmentRequest::create([
+            'user_id' => Auth::check() ? Auth::id() : null,
+            'session_id' => Auth::check() ? null : $request->session()->token(),
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'country_id' => $request->country_id,
+            'state_id' => $request->state_id,
+            'city_id' => $request->city_id,
+            'house' => null,
+            'special_mark' => null,
+            'address' => $request->address,
+            'block' => $request->block,
+            'house' => $request->house,
+            'avenue' => $request->avenue,
+            'floor_no' => $request->floor_no,
+            'phone2' => $request->phone2,
+            'product_id' => $request->product_id,
+            'product_combination_id' => $request->combination_id,
+            'product_price' => $price,
+            'installment_company_id' => $company->id,
+            'advanced_amount' => $request->amount,
+            'admin_expenses' => $admin_expenses,
+            'months' => $request->months,
+            'installment_amount' => $installment_amount,
+
+        ]);
+
+
+
+        alertSuccess('installment request added successfully', 'تم عمل طلب التقسيط بنجاح');
+        return redirect()->back()->withInput();
     }
 }

@@ -180,6 +180,22 @@
                             </div>
 
                             <div class="mb-3">
+                                <label class="form-label" for="status">{{ __('Status') }}</label>
+                                <select class="form-select @error('status') is-invalid @enderror" aria-label=""
+                                    name="status" id="status" required>
+                                    <option value="active" {{ $category->status == 'active' ? 'selected' : '' }}>
+                                        {{ __('Active') }}
+                                    </option>
+                                    <option value="inactive" {{ $category->status == 'inactive' ? 'selected' : '' }}>
+                                        {{ __('Inactive') }}
+                                    </option>
+                                </select>
+                                @error('status')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
                                 <label class="form-label" for="image">{{ __('Category image') }}</label>
                                 <input name="image" class="img form-control @error('image') is-invalid @enderror"
                                     type="file" id="image" accept="image/*" />

@@ -14,10 +14,10 @@
                     <div class="d-none" id="table-customers-actions">
                         <div class="d-flex">
                             <select class="form-select form-select-sm" aria-label="Bulk actions">
-                                <option selected="">{{ __('Bulk actions') }}</option>
+                                {{-- <option selected="">{{ __('Bulk actions') }}</option>
                                 <option value="Refund">{{ __('Refund') }}</option>
                                 <option value="Delete">{{ __('Delete') }}</option>
-                                <option value="Archive">{{ __('Archive') }}</option>
+                                <option value="Archive">{{ __('Archive') }}</option> --}}
                             </select>
                             <button class="btn btn-falcon-default btn-sm ms-2" type="button">{{ __('Apply') }}</button>
                         </div>
@@ -222,7 +222,7 @@
                                                                 @enderror
                                                             </div>
 
-                                                            <div class="mb-3">
+                                                            {{-- <div class="mb-3">
                                                                 <label class="form-label"
                                                                     for="account_id">{{ __('select cash account') }}</label>
 
@@ -233,7 +233,7 @@
                                                                     <option value="">{{ __('select cash account') }}
                                                                     </option>
 
-                                                                    @foreach ($cash_accounts->accounts as $account)
+                                                                    @foreach (getCashAccounts() as $account)
                                                                         <option value="{{ $account->id }}">
                                                                             {{ getName($account) }}
                                                                         </option>
@@ -242,7 +242,7 @@
                                                                 @error('account_id')
                                                                     <div class="alert alert-danger">{{ $message }}</div>
                                                                 @enderror
-                                                            </div>
+                                                            </div> --}}
                                                         </div>
                                                     </div>
                                                     <div class="modal-footer">

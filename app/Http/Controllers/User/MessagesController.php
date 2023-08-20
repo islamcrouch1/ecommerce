@@ -14,9 +14,10 @@ class MessagesController extends Controller
     public function index()
     {
         $messages = Message::where('user_id', Auth::id())
+            ->orWhere('sender_id',  Auth::id())
             ->whenSearch(request()->search)
             ->latest()
-            ->paginate(20);
+            ->paginate(50);
 
         return view('dashboard.messages.index', compact('messages'));
     }
@@ -31,14 +32,19 @@ class MessagesController extends Controller
         $user = Auth::user();
         $message = Message::create([
             'message' => $request['message'],
-            'user_id' => $user->id,
+            'user_id' => 0,
             'sender_id' => $user->id,
         ]);
 
-        $users = User::whereHas('roles', function ($query) {
-            $query->where('name', 'superadministrator')
-                ->orwhere('name', 'administrator');
+        $admins = unserialize(setting('messages_notifications'));
+
+        $users = User::whereHas('roles', function ($query) use ($admins) {
+            $query->whereIn('name', $admins ? $admins : []);
         })->get();
+
+
+
+
         foreach ($users as $admin) {
 
             $title_ar = 'يوجد رسالة جديدة للدعم الفني';

@@ -110,8 +110,9 @@
                             <div class="mb-3">
                                 <label class="form-label" for="category">{{ __('Select Category') }}</label>
 
-                                <select class="form-select @error('category') is-invalid @enderror" name="category"
-                                    id="category" data-options='{"removeItemButton":true,"placeholder":true}' required>
+                                <select class="form-select js-choice @error('category') is-invalid @enderror"
+                                    name="category" id="category"
+                                    data-options='{"removeItemButton":true,"placeholder":true}' required>
                                     <option value="">
                                         {{ __('Select Category') }}</option>
                                     @foreach ($categories as $category)
@@ -233,6 +234,28 @@
 
 
 
+                            <div class="mb-3">
+                                <label class="form-label" for="image">{{ __('main image') }}</label>
+                                <input name="image" class="img form-control @error('image') is-invalid @enderror"
+                                    type="file" id="image" />
+                                @error('image')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+
+                                <div class="col-md-10">
+                                    @if ($product->media != null)
+                                        <img src="{{ asset($product->media->path) }}"
+                                            style="width:100px; border: 1px solid #999" class="img-thumbnail img-prev">
+                                    @endif
+                                </div>
+
+                            </div>
+
+
 
                             <div class="mb-3">
                                 <label class="form-label" for="image">{{ __('Product images') }}</label>
@@ -245,9 +268,25 @@
 
                             <div class="mb-3">
                                 <div class="col-md-12" id="gallery">
+
+
+                                </div>
+
+                                <div class="product-images row">
+
                                     @foreach ($product->images as $image)
-                                        <img src="{{ asset($image->media->path) }}"
-                                            style="width:100px; border: 1px solid #999" class="img-thumbnail img-prev">
+                                        <div style="width:150px; border: 1px solid #999"
+                                            class="hoverbox rounded-3 text-center m-1 product-image-{{ $image->media->id }}">
+                                            <img class="img-fluid" src="{{ asset($image->media->path) }}"
+                                                alt="" />
+                                            <div class="light hoverbox-content bg-dark p-5 flex-center">
+                                                <div>
+                                                    <a class="btn btn-light btn-sm mt-1 delete-media" href="#"
+                                                        data-url="{{ route('products.delete.media', ['image_id' => $image->id]) }}"
+                                                        data-media_id="{{ $image->media->id }}">{{ __('Delete') }}</a>
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endforeach
 
                                 </div>

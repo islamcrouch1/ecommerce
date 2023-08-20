@@ -5,7 +5,7 @@
         <div class="card-body">
             <div class="row justify-content-between align-items-center">
                 <div class="col-md">
-                    <h5 class="mb-2 mb-md-0">{{ __('Order #') }}{{ $order->id }}</h5>
+                    <h5 class="mb-2 mb-md-0">{{ __('Order #') }}{{ getOrderSerial($order) }}</h5>
                 </div>
                 <div class="col-auto">
                     <button onclick="printInvoice();" class="btn btn-falcon-default btn-sm me-1 mb-2 mb-sm-0"
@@ -20,7 +20,13 @@
                 <div class="col-sm-6 text-sm-start"><img src="{{ asset(websiteSettingMedia('header_logo')) }}"
                         alt="invoice" width="150" /></div>
                 <div class="col text-sm-end mt-3 mt-sm-0">
-                    <h2 class="mb-3">{{ __('Purchase Invoice') }}</h2>
+                    <h2 class="mb-3">
+                        @if ($order->order_type == 'RFQ')
+                            {{ __('request for quotation') }}
+                        @elseif($order->order_type == 'PO')
+                            {{ __('purchases order') }}
+                        @endif
+                    </h2>
                     <h5>{{ Request::root() }}</h5>
                     <p class="fs--1 mb-0">
                         {{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_address') : websiteSettingEn('footer_address') }}
@@ -39,7 +45,6 @@
                     <h6 class="text-500">{{ __('Supplier Information') }}</h6>
                     <h5>{{ $order->full_name }}</h5>
                     <p class="fs--1">
-                        {{ __('Name:') . $order->customer->name }}<br>
 
                         @if ($order->country_id)
                             {{ __('Country:') . ' ' . getName($order->country) }}<br>
@@ -50,6 +55,12 @@
                     </p>
                     <p class="fs--1"><a href="tel:{{ $order->customer->phone }}">{{ $order->customer->phone }}</a>
                     </p>
+
+                    {{-- @if ($order->description)
+                        <p class="fs--1"> {{ __('Order Notes:') . ' ' . $order->description }}
+                        </p>
+                    @endif --}}
+
                 </div>
                 <div class="col-sm-auto ms-auto">
                     <div class="table-responsive">
@@ -57,7 +68,7 @@
                             <tbody>
                                 <tr>
                                     <th class="text-sm-end">{{ __('Order Number:') }}</th>
-                                    <td>#{{ $order->id }}</td>
+                                    <td>#{{ getOrderSerial($order) }}</td>
                                 </tr>
                                 <tr>
                                     <th class="text-sm-end">{{ __('Invoice Date:') }}</th>
@@ -66,7 +77,8 @@
 
                                 <tr class="alert-success fw-bold">
                                     <th class="text-sm-end">{{ __('Total Price:') }}</th>
-                                    <td>{{ $order->total_price . ' ' . $order->country->currency }}</td>
+                                    <td>{{ $order->total_price + $order->shipping_amount . ' ' . $order->country->currency }}
+                                    </td>
                                 </tr>
 
                             </tbody>
@@ -77,7 +89,8 @@
             <div class="table-responsive scrollbar mt-4 fs--1">
                 <table class="table table-striped border-bottom">
                     <thead class="light">
-                        <tr class="bg-primary text-white dark__bg-1000">
+                        <tr style="background-color: {{ websiteSettingAr('primary_color') }}"
+                            class=" text-white dark__bg-1000">
                             <th class="border-0">{{ __('Products') }}</th>
                             <th class="border-0 text-center">{{ __('Quantity') }}</th>
                             <th class="border-0 text-end">{{ __('Item Price') }}</th>
@@ -122,30 +135,96 @@
                     <table class="table table-sm table-borderless fs--1 text-end">
                         <tr>
                             <th class="text-900">{{ __('Total Without Tax:') }}</th>
-                            <td class="fw-semi-bold">{{ $order->subtotal_price . ' ' . $order->country->currency }}</td>
+                            <td class="fw-semi-bold">
+                                {{ $order->subtotal_price + $order->discount_amount . ' ' . $order->country->currency }}
+                            </td>
                         </tr>
-                        <tr>
-                            <th class="text-sm-end">{{ __('added value tax') }}</th>
-                            <td>{{ $order->total_tax . ' ' . $order->country->currency }}</td>
-                        </tr>
-                        @if ($order->total_wht_products + $order->total_wht_services > 0)
+
+                        @foreach ($order->taxes as $tax)
                             <tr>
-                                <th class="text-sm-end">{{ __('withholding and collection tax') }}</th>
-                                <td>{{ $order->total_wht_products + $order->total_wht_services . ' ' . $order->country->currency }}
-                                </td>
+                                <th class="text-sm-end">{{ getName($tax) }}</th>
+                                <td>{{ $tax->pivot->amount . ' ' . $order->country->currency }}</td>
                             </tr>
-                        @endif
+                        @endforeach
+
+                        <tr>
+                            <th class="text-900">{{ __('discount') }}</th>
+                            <td class="fw-semi-bold">{{ $order->discount_amount * -1 . ' ' . $order->country->currency }}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th class="text-900">{{ __('shipping fees') }}</th>
+                            <td class="fw-semi-bold">{{ $order->shipping_amount . ' ' . $order->country->currency }}</td>
+                        </tr>
+
+
                         <tr class="alert-success fw-bold">
                             <th class="text-sm-end">{{ __('Total:') }}</th>
-                            <td>{{ $order->total_price . ' ' . $order->country->currency }}</td>
+                            <td>{{ $order->total_price + $order->shipping_amount . ' ' . $order->country->currency }}</td>
                         </tr>
                     </table>
                 </div>
             </div>
+
+            <div class="row">
+                <div class="col-md-12 content-block">
+                    <h4>{{ __('General Conditions') }}</h4>
+                    <p>
+                        {!! $order->notes !!}
+                    </p>
+                </div>
+            </div>
+
         </div>
-        {{-- <div class="card-footer bg-light">
-            <p class="fs--1 mb-0"><strong>Notes: </strong>We really appreciate your business and if there’s anything
-                else we can do, please let us know!</p>
-        </div> --}}
+        <div class="card-footer bg-light">
+            <p class="fs--1 mb-0">
+
+                {{ 'unitedtoys-eg.com' . ' - ' }}
+                {{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_address') : websiteSettingEn('footer_address') }}
+
+            </p>
+        </div>
     </div>
+
+
+
+
+    <style>
+        .card-footer {
+            font-size: 15px;
+            color: {{ websiteSettingAr('primary_color') }};
+            padding: 20px;
+        }
+
+        @page {
+            size: A4;
+            margin: 11mm 17mm 17mm 17mm;
+        }
+
+        @media print {
+            .card-footer {
+                position: fixed;
+                bottom: 0;
+            }
+
+            .content-block,
+            p {
+                page-break-inside: avoid;
+
+            }
+
+            .content-block {
+                padding: 50px;
+                margin-top: 50px;
+                margin-bottom: 50px;
+            }
+
+            html,
+            body {
+                width: 210mm;
+                height: 297mm;
+            }
+        }
+    </style>
 @endsection

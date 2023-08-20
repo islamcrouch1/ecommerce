@@ -31,6 +31,8 @@ class VendorProductsController extends Controller
 
     public function index()
     {
+
+
         $categories = Category::whereNull('parent_id')->get();
         $countries = Country::all();
 
@@ -78,6 +80,8 @@ class VendorProductsController extends Controller
             'product_length' => "nullable|numeric",
             'product_width' => "nullable|numeric",
             'product_height'  => "nullable|numeric",
+            'image' => "nullable|image",
+
 
         ]);
 
@@ -88,35 +92,44 @@ class VendorProductsController extends Controller
 
             if (!isset($request['product_weight']) || !isset($request['product_length']) || !isset($request['product_width']) || !isset($request['product_height'])) {
                 alertError('You must enter product information such as weight, length, width and height', 'يجب ادخال معلومات المنتج من وزن وطول وعرض وارتفاع ');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
         }
 
         if ($request->sale_price <= $request->discount_price) {
             alertError('discount price must be lower than regular price', 'يجب ان يكون سعر الخصم اقل من السعر العادي');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if ($product_type == 'variable') {
             if (empty($request['attributes'])) {
                 alertError('please select product attribute', 'يرجى تحديد سمات المنتج');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             } else {
                 foreach ($request['attributes'] as $attr) {
                     if (empty($request['variations-' . $attr])) {
                         alertError('please select product variations', 'يرجى تحديد متغيرات المنتج');
-                        return redirect()->back();
+                        return redirect()->back()->withInput();
                     }
                 }
             }
         }
+
+        if ($request->hasFile('image')) {
+            $media_id = saveMedia('image', $request['image'], 'products');
+        } else {
+            $media_id = null;
+        }
+
 
         $product = Product::create([
             'vendor_id' => Auth::id(),
             'created_by' => Auth::id(),
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
-            'product_slug' => createSlug($request['name_en']),
+            'media_id' => $media_id,
+
+            // 'product_slug' => createSlug($request['name_en']),
             'description_ar' => $request['description_ar'],
             'description_en' => $request['description_en'],
             'sale_price' => $request['sale_price'],
@@ -286,6 +299,8 @@ class VendorProductsController extends Controller
             'product_length' => "nullable|numeric",
             'product_width' => "nullable|numeric",
             'product_height'  => "nullable|numeric",
+            'image' => "nullable|image",
+
 
         ]);
 
@@ -294,14 +309,14 @@ class VendorProductsController extends Controller
 
         if ($request->sale_price <= $request->discount_price) {
             alertError('discount price must be lower than regular price', 'يجب ان يكون سعر الخصم اقل من السعر العادي');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if ($product_type == 'simple' || $product_type == 'variable') {
 
             if (!isset($request['product_weight']) || !isset($request['product_length']) || !isset($request['product_width']) || !isset($request['product_height'])) {
                 alertError('You must enter product information such as weight, length, width and height', 'يجب ادخال معلومات المنتج من وزن وطول وعرض وارتفاع ');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
         }
 
@@ -321,12 +336,19 @@ class VendorProductsController extends Controller
             }
         }
 
+        if ($request->hasFile('image')) {
+            deleteImage($vendor_product->media_id);
+            $media_id = saveMedia('image', $request['image'], 'products');
+            $vendor_product->update([
+                'media_id' => $media_id,
+            ]);
+        }
 
         $vendor_product->update([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
             'sku' => $request['sku'],
-            'product_slug' => createSlug($request['name_en']),
+            // 'product_slug' => createSlug($request['name_en']),
             'description_ar' => $request['description_ar'],
             'description_en' => $request['description_en'],
             'sale_price' => $request['sale_price'],
@@ -358,7 +380,7 @@ class VendorProductsController extends Controller
             return redirect()->route('vendor-products.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the product cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو المنتج لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 
@@ -392,14 +414,14 @@ class VendorProductsController extends Controller
                     if (url()->previous() == route('products.stock.add')) {
                         return redirect()->route('products.stock.create', ['product' => $product->id]);
                     } else {
-                        return redirect()->back();
+                        return redirect()->back()->withInput();
                     }
                 }
 
 
                 if (Auth::user()->warehouses->count() == 0) {
                     alertError('Please select the store to add stock quantities', 'يرجى تحديد المخزن لاضافة كميات المخزون');
-                    return redirect()->back();
+                    return redirect()->back()->withInput();
                 }
 
 
@@ -410,7 +432,7 @@ class VendorProductsController extends Controller
                 if ($request->stock_status[$index] == 'OUT') {
                     if ($request->qty[$index] > productQuantity($product->id, $combination->id, $warehouse->id)) {
                         alertError('There are not enough quantities in the specified warehouse for stock exchange', 'لا توجد كميات كافية في المخزن المحدد لصرف المخزون');
-                        return redirect()->back();
+                        return redirect()->back()->withInput();
                     }
                 }
 

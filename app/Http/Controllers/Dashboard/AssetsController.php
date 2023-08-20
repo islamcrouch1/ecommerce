@@ -19,7 +19,7 @@ class AssetsController extends Controller
         $this->middleware('permission:assets-read')->only('index', 'show');
         $this->middleware('permission:assets-create')->only('create', 'store');
         $this->middleware('permission:assets-update')->only('edit', 'update');
-        $this->middleware('permission:assets-delete|accounts-trash')->only('destroy', 'trashed');
+        $this->middleware('permission:assets-delete|assets-trash')->only('destroy', 'trashed');
         $this->middleware('permission:assets-restore')->only('restore');
     }
 
@@ -87,7 +87,7 @@ class AssetsController extends Controller
 
         if ($request->dep_rate > 100 || $request->dep_rate < 0) {
             alertError('depreciation rate must be less than or equal 100%', 'نسبة الاهلاك يجب ان تكون اقل او تساوي 100%');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
@@ -96,12 +96,12 @@ class AssetsController extends Controller
 
         if (settingAccount('fixed_assets_account', $branch_id) == null) {
             alertError('please select the default non current assets account in settings page', 'الرجاء تحديد حساب الأصول الغير متداولة الافتراضية في صفحة الإعدادات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if (settingAccount('dep_expenses_account', $branch_id) == null) {
             alertError('please select the default depreciation expenses account in settings page', 'الرجاء تحديد حساب مصاريف الاهلاك الافتراضية في صفحة الإعدادات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         $fixed_assets_account = Account::findOrFail(settingAccount('fixed_assets_account', $branch_id));
@@ -176,21 +176,15 @@ class AssetsController extends Controller
 
     public function sellCreate(Account $account)
     {
-
         $branch_id = getUserBranchId(Auth::user());
-        $assets_accounts = Account::where('account_type', 'assets')->where('parent_id', null)->where('branch_id', $branch_id)->get();
-
-        return view('dashboard.assets.sell', compact('account', 'assets_accounts'));
+        return view('dashboard.assets.sell', compact('account'));
     }
 
 
     public function purchaseCreate(Account $account)
     {
-
         $branch_id = getUserBranchId(Auth::user());
-        $assets_accounts = Account::where('account_type', 'assets')->where('parent_id', null)->where('branch_id', $branch_id)->get();
-
-        return view('dashboard.assets.purchase', compact('account', 'assets_accounts'));
+        return view('dashboard.assets.purchase', compact('account'));
     }
 
 
@@ -200,30 +194,33 @@ class AssetsController extends Controller
 
         $request->validate([
             'price' => "required|numeric",
-            'accounts' => "required|array",
+            'account_id' => "nullable|numeric",
+            'description' => "required|string",
+            'doc_num' => "nullable|integer",
+            'image' => "nullable|image",
         ]);
 
         $branch_id = getUserBranchId(Auth::user());
 
         if (settingAccount('fixed_assets_account', $branch_id) == null) {
             alertError('please select the default non current assets account in settings page', 'الرجاء تحديد حساب الأصول الغير متداولة الافتراضية في صفحة الإعدادات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if (settingAccount('dep_expenses_account', $branch_id) == null) {
             alertError('please select the default depreciation expenses account in settings page', 'الرجاء تحديد حساب مصاريف الاهلاك الافتراضية في صفحة الإعدادات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
         if (settingAccount('revenue_account', $branch_id) == null) {
             alertError('please select the default revenue account in settings page', 'الرجاء تحديد حساب الايرادات الافتراضية في صفحة الإعدادات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if (settingAccount('expenses_account', $branch_id) == null) {
             alertError('please select the default expenses account in settings page', 'الرجاء تحديد حساب المصروفات الافتراضية في صفحة الإعدادات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         $fixed_assets_account = Account::findOrFail(settingAccount('fixed_assets_account', $branch_id));
@@ -233,7 +230,7 @@ class AssetsController extends Controller
 
 
 
-        $cach_account = Account::findOrFail($request['accounts'][0]);
+        $cach_account = Account::findOrFail($request->account_id);
         $price = $request['price'];
 
 
@@ -242,7 +239,7 @@ class AssetsController extends Controller
 
         if ($asset <= 0) {
             alertError('the asset doas not have net value to sell it now please review your data and try again later', 'لا توجد قيمة دفترية للاصل لبيعها يرجى مراجعة الادخال والمحاولة مرة اخرى');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
@@ -362,6 +359,11 @@ class AssetsController extends Controller
         }
 
 
+        if ($request->hasFile('image')) {
+            $media_id = saveMedia('image', $request['image'], 'entries');
+        } else {
+            $media_id = null;
+        }
 
         if ($value > 0) {
 
@@ -372,6 +374,8 @@ class AssetsController extends Controller
                 'cr_amount' => $asset,
                 'description' => 'sell non current assets' . ' - ' . 'بيع اصل غير متداول' . ' - ' . getName($account),
                 'branch_id' => $branch_id,
+                'media_id' => $media_id,
+                'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
             ]);
 
@@ -382,6 +386,8 @@ class AssetsController extends Controller
                 'cr_amount' => $value,
                 'description' => 'sell non current assets' . ' - ' . 'بيع اصل غير متداول' . ' - ' . getName($account),
                 'branch_id' => $branch_id,
+                'media_id' => $media_id,
+                'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
             ]);
 
@@ -395,6 +401,8 @@ class AssetsController extends Controller
                     'cr_amount' => 0,
                     'description' => 'sell non current assets' . ' - ' . 'بيع اصل غير متداول' . ' - ' . getName($account),
                     'branch_id' => $branch_id,
+                    'media_id' => $media_id,
+                    'doc_num' => $request->doc_num,
                     'created_by' => Auth::id(),
                 ]);
             }
@@ -407,6 +415,8 @@ class AssetsController extends Controller
                 'cr_amount' => 0,
                 'description' => 'sell non current assets' . ' - ' . 'بيع اصل غير متداول' . ' - ' . getName($account),
                 'branch_id' => $branch_id,
+                'media_id' => $media_id,
+                'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
             ]);
         }
@@ -420,6 +430,8 @@ class AssetsController extends Controller
                 'cr_amount' => $asset,
                 'description' => 'sell non current assets' . ' - ' . 'بيع اصل غير متداول' . ' - ' . getName($account),
                 'branch_id' => $branch_id,
+                'media_id' => $media_id,
+                'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
             ]);
 
@@ -432,6 +444,8 @@ class AssetsController extends Controller
                     'cr_amount' => 0,
                     'description' => 'sell non current assets' . ' - ' . 'بيع اصل غير متداول' . ' - ' . getName($account),
                     'branch_id' => $branch_id,
+                    'media_id' => $media_id,
+                    'doc_num' => $request->doc_num,
                     'created_by' => Auth::id(),
                 ]);
             }
@@ -443,6 +457,8 @@ class AssetsController extends Controller
                 'cr_amount' => 0,
                 'description' => 'sell non current assets' . ' - ' . 'بيع اصل غير متداول' . ' - ' . getName($account),
                 'branch_id' => $branch_id,
+                'media_id' => $media_id,
+                'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
             ]);
         }
@@ -456,6 +472,8 @@ class AssetsController extends Controller
                 'cr_amount' => $asset,
                 'description' => 'sell non current assets' . ' - ' . 'بيع اصل غير متداول' . ' - ' . getName($account),
                 'branch_id' => $branch_id,
+                'media_id' => $media_id,
+                'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
             ]);
 
@@ -467,6 +485,8 @@ class AssetsController extends Controller
                 'cr_amount' => 0,
                 'description' => 'sell non current assets' . ' - ' . 'بيع اصل غير متداول' . ' - ' . getName($account),
                 'branch_id' => $branch_id,
+                'media_id' => $media_id,
+                'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
             ]);
 
@@ -479,6 +499,8 @@ class AssetsController extends Controller
                     'cr_amount' => 0,
                     'description' => 'sell non current assets' . ' - ' . 'بيع اصل غير متداول' . ' - ' . getName($account),
                     'branch_id' => $branch_id,
+                    'media_id' => $media_id,
+                    'doc_num' => $request->doc_num,
                     'created_by' => Auth::id(),
                 ]);
             }
@@ -490,6 +512,8 @@ class AssetsController extends Controller
                 'cr_amount' => 0,
                 'description' => 'sell non current assets' . ' - ' . 'بيع اصل غير متداول' . ' - ' . getName($account),
                 'branch_id' => $branch_id,
+                'media_id' => $media_id,
+                'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
             ]);
         }
@@ -520,27 +544,38 @@ class AssetsController extends Controller
 
         $request->validate([
             'price' => "required|numeric",
-            'accounts' => "required|array",
+            'account_id' => "nullable|numeric",
+            'description' => "required|string",
+            'doc_num' => "nullable|integer",
+            'image' => "nullable|image",
         ]);
 
         $branch_id = getUserBranchId(Auth::user());
 
-        $cach_account = Account::findOrFail($request['accounts'][0]);
+        $cach_account = Account::findOrFail($request->account_id);
         $price = $request['price'];
 
         if ($price <= 0) {
             alertError('please enter purchase price to complete the request', 'يرجى اضافة سعر الشراء لاكمال العملية');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if ($cach_account->id == settingAccount('fixed_assets_account', $branch_id) || $cach_account->id == settingAccount('dep_expenses_account', $branch_id)) {
             alertError('please go to non current assets section to handle this request', 'الرجاء الذهاب الى قسم ادارة الاصول الثابتة لمعالجة هذه العملية');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
 
+
+
         if ($branch_id != null && $account->type == 'fixed_assets') {
+
+            if ($request->hasFile('image')) {
+                $media_id = saveMedia('image', $request['image'], 'entries');
+            } else {
+                $media_id = null;
+            }
 
 
             Entry::create([
@@ -550,6 +585,8 @@ class AssetsController extends Controller
                 'cr_amount' => 0,
                 'description' => 'purchase non current assets' . ' - ' . 'شراء اصل غير متداول' . ' - ' . getName($account),
                 'branch_id' => $branch_id,
+                'media_id' => $media_id,
+                'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
             ]);
 
@@ -561,6 +598,8 @@ class AssetsController extends Controller
                 'cr_amount' => $price,
                 'description' => 'purchase non current assets' . ' - ' . 'شراء اصل غير متداول' . ' - ' . getName($account),
                 'branch_id' => $branch_id,
+                'media_id' => $media_id,
+                'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
             ]);
 
@@ -596,6 +635,8 @@ class AssetsController extends Controller
                         'description' => 'accumulated depreciation',
                         'branch_id' => $branch_id,
                         'created_by' => Auth::id(),
+                        'media_id' => $media_id,
+                        'doc_num' => $request->doc_num,
                         'created_at' => $date->toDateString()
                     ]);
 
@@ -607,6 +648,8 @@ class AssetsController extends Controller
                         'description' => 'depreciation expenses',
                         'branch_id' => $branch_id,
                         'created_by' => Auth::id(),
+                        'media_id' => $media_id,
+                        'doc_num' => $request->doc_num,
                         'created_at' => $date->toDateString()
                     ]);
                 }

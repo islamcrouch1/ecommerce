@@ -19,7 +19,7 @@ class RouteServiceProvider extends ServiceProvider
      */
 
     public const HOME = '/admin';
-    public const ECOMMERCE = '/home';
+    public const ECOMMERCE = '/';
 
 
     /**

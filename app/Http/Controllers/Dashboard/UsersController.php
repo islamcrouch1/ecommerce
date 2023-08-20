@@ -8,7 +8,10 @@ use App\Models\Balance;
 use App\Models\Branch;
 use App\Models\Cart;
 use App\Models\Category;
+use App\Models\Client;
 use App\Models\Country;
+use App\Models\EmployeeInfo;
+use App\Models\EmployeeInfoImage;
 use App\Models\Message;
 use App\Models\Note;
 use App\Models\Order;
@@ -65,6 +68,7 @@ class UsersController extends Controller
             ->with('roles')
             ->latest()
             ->paginate(100);
+
 
 
         return view('dashboard.users.index', compact('users', 'roles', 'countries', 'branches'));
@@ -247,7 +251,7 @@ class UsersController extends Controller
         }
 
 
-        if ($request['role'] != '3' && $request['role'] != '4') {
+        if ($request['role'] != '3' && $request['role'] != '4' && $request['role'] != '5') {
             $user->detachRoles($user->roles);
             $user->attachRoles(['administrator', $request['role']]);
         }
@@ -268,16 +272,30 @@ class UsersController extends Controller
         $user = User::withTrashed()->where('id', $user)->first();
         if ($user->trashed() && auth()->user()->hasPermission('users-delete')) {
             Storage::disk('public')->delete('/images/users/' . $user->profile);
+
+            $client = Client::withTrashed()->where('user_id', $user->id)->first();
+
+            if ($client) {
+                $client->forceDelete();
+            }
+
             $user->forceDelete();
             alertSuccess('user deleted successfully', 'تم حذف المستخدم بنجاح');
             return redirect()->route('users.trashed');
         } elseif (!$user->trashed() && auth()->user()->hasPermission('users-trash') && checkUserForTrash($user)) {
+
+            $client = Client::where('user_id', $user->id)->first();
+
+            if ($client) {
+                $client->delete();
+            }
+
             $user->delete();
             alertSuccess('user trashed successfully', 'تم حذف المستخدم مؤقتا');
             return redirect()->route('users.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the user cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو المستخدم لا يمكن حذفه حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 
@@ -304,6 +322,13 @@ class UsersController extends Controller
     public function restore($user)
     {
         $user = User::withTrashed()->where('id', $user)->first()->restore();
+
+        $client = Client::withTrashed()->where('user_id', $user->id)->first();
+
+        if ($client) {
+            $client->restore();
+        }
+
         alertSuccess('user restored successfully', 'تم استعادة المستخدم بنجاح');
         return redirect()->route('users.index');
     }
@@ -409,10 +434,32 @@ class UsersController extends Controller
             ->latest()
             ->paginate(100);
 
-        $messages = Message::where('user_id', $user->id)
-            ->whenSearch(request()->search)
-            ->latest()
-            ->paginate(20);
+
+        if ($user->hasRole('administrator')) {
+            $messages = Message::where([
+                ['user_id', '=', $user->id],
+                ['sender_id', '=', Auth::user()->id],
+            ])
+                ->orwhere([
+                    ['user_id', '=', Auth::user()->id],
+                    ['sender_id', '=', $user->id],
+                ])
+                ->whenSearch(request()->search)
+                ->latest()
+                ->paginate(20);
+        } else {
+            $messages = Message::where([
+                ['user_id', '=', $user->id],
+            ])
+                ->orwhere([
+                    ['sender_id', '=', $user->id],
+                ])
+                ->whenSearch(request()->search)
+                ->latest()
+                ->paginate(20);
+        }
+
+
 
 
         $notes = Note::where('user_id', $user->id)
@@ -434,56 +481,85 @@ class UsersController extends Controller
     }
 
 
-
-
-
-    public function export()
-    {
-        return Excel::download(new UsersExport, 'users.xlsx');
-    }
-
-
-    public function ordersExport($lang, Request $request)
-    {
-        return Excel::download(new ProductExport($request->status, $request->from, $request->to), 'orders.xlsx');
-    }
-
-    public function withdrawalsExport($lang, Request $request)
+    public function employeesStore(Request $request, User $user)
     {
 
-        return Excel::download(new WithdrawalsExport($request->status, $request->from, $request->to), 'withdrawals.xlsx');
-    }
+
+        $request->validate([
+            'address' => "nullable|string",
+            'national_id' => "nullable|string",
+            'job_title' => "nullable|string|max:255",
+            'branch_id' => "nullable|integer",
+            'basic_salary' => "nullable|numeric|gt:0",
+            'variable_salary' => "nullable|numeric|gt:0",
+            'Weekend_days' => "nullable|array",
+            'work_hours' => "nullable|numeric|gt:0",
+            'images' => "nullable|array",
+        ]);
 
 
-
-    public function productsExport($lang, Request $request)
-    {
-        return Excel::download(new Product1Export($request->status, $request->category), 'products.xlsx');
-    }
-
-    public function import(Request $request)
-    {
-        $file = $request->file('file')->store('import');
-
-
-        $import = new ProductImport;
-        $import->import($file);
-
-
-        if ($import->failures()->isNotEmpty()) {
-            return back()->withFailures($import->failures());
-        }
-
-
-        if (!session('status')) {
-
-            if (app()->getLocale() == 'ar') {
-                return back()->withStatus('تم رفع الملف بنجاح.');
-            } else {
-                return back()->withStatus('The file has been uploaded successfully.');
-            }
+        if (getEmployeeInfo($user) == null) {
+            $employee_info = EmployeeInfo::create([
+                'address' =>  $request->address,
+                'national_id' =>  $request->national_id,
+                'job_title' =>  $request->job_title,
+                'branch_id' =>  $request->branch_id,
+                'Weekend_days' => is_array($request->Weekend_days) ? serialize($request->Weekend_days) : serialize(null),
+                'basic_salary' =>  $request->basic_salary,
+                'variable_salary' =>  $request->variable_salary,
+                'work_hours' =>  $request->work_hours,
+                'user_id' => $user->id,
+            ]);
         } else {
-            return back();
+            $employee_info = getEmployeeInfo($user);
+            $employee_info->update([
+                'address' =>  $request->address,
+                'national_id' =>  $request->national_id,
+                'job_title' =>  $request->job_title,
+                'branch_id' =>  $request->branch_id,
+                'Weekend_days' => is_array($request->Weekend_days) ? serialize($request->Weekend_days) : serialize(null),
+                'basic_salary' =>  $request->basic_salary,
+                'variable_salary' =>  $request->variable_salary,
+                'work_hours' =>  $request->work_hours,
+            ]);
         }
+
+        if ($request->branch_id != null) {
+            $user->update([
+                'branch_id' => $request->branch_id,
+            ]);
+        }
+
+
+        if ($files = $request->file('images')) {
+            foreach ($files as $file) {
+                $media_id = saveMedia('image', $file, 'users');
+                EmployeeInfoImage::create([
+                    'employee_info_id' => $employee_info->id,
+                    'media_id' => $media_id,
+                ]);
+            }
+        }
+
+
+
+        alertSuccess('Employee data stored successfully', 'تم تحديث بيانات الموظف بنجاح');
+        return redirect()->back()->withInput();
+    }
+
+
+    public function deleteMedia(Request $request)
+    {
+
+        $request->validate([
+            'media_id' => "required|integer",
+            'image_id' => "required|integer",
+        ]);
+
+        deleteImage($request->media_id);
+        $image = EmployeeInfoImage::findOrFail($request->image_id);
+        $image->delete();
+
+        return 1;
     }
 }

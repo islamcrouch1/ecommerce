@@ -105,6 +105,11 @@ class BranchesController extends Controller
                 $user->update([
                     'branch_id' => $branch->id,
                 ]);
+
+                $employee_info = getEmployeeInfo($user);
+                $employee_info->update([
+                    'branch_id' => $branch->id,
+                ]);
             }
         }
 
@@ -250,7 +255,7 @@ class BranchesController extends Controller
             return redirect()->route('branches.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the branch cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو الفرع لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

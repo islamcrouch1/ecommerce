@@ -25,6 +25,7 @@ class UserController extends Controller
 {
     public function create()
     {
+        addViewRecord();
         $countries = Country::all();
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         return view('ecommerce.register', compact('countries', 'categories'));
@@ -32,14 +33,16 @@ class UserController extends Controller
 
     public function account()
     {
+        addViewRecord();
         $user = Auth::user();
-        $orders = Order::where('customer_id', $user->id)->latest()->get();
+        $orders = Order::where('customer_id', $user->id)->where('order_from', 'web')->latest()->get();
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         return view('ecommerce.account', compact('categories', 'orders', 'user'));
     }
 
     public function show(Request $request)
     {
+        addViewRecord();
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         return view('ecommerce.login', compact('categories'));
     }
@@ -114,13 +117,13 @@ class UserController extends Controller
         #Match The Old Password
         if (!Hash::check($request->old_password, $user->password)) {
             alertError('old password is not correct', 'كلمة المرور القديمة غير صحيحة');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         } else {
             $user->update([
                 'password' => Hash::make($request->password),
             ]);
             alertError('password changed successfully', 'تم تغيير كلمة المرور بنجاح');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 
@@ -136,7 +139,7 @@ class UserController extends Controller
 
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', 'min:8', Rules\Password::defaults()],
             'country' => ['required'],
             'phone' => ['required', 'numeric', 'unique:users'],
@@ -145,10 +148,16 @@ class UserController extends Controller
 
 
 
+        if (!isset($request->email)) {
+            $email = $request->phone . '@example.com';
+        } else {
+            $email = $request->email;
+        }
+
 
         $user = User::create([
             'name' => $request->name,
-            'email' => $request->email,
+            'email' => $email,
             'password' => Hash::make($request->password),
             'country_id' => $request->country,
             'phone' => $request->phone,

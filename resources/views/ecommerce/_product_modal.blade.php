@@ -7,9 +7,8 @@
                         aria-hidden="true">&times;</span></button>
                 <div class="row">
                     <div class="col-lg-6 col-xs-12">
-                        <div class="quick-view-img"><img
-                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
-                                alt="" class="img-fluid blur-up lazyload"></div>
+                        <div class="quick-view-img"><img src="{{ getProductImage($product) }}" alt=""
+                                class="img-fluid blur-up lazyload"></div>
                     </div>
                     <div class="col-lg-6 rtl-text">
                         <div class="product-right">
@@ -133,7 +132,7 @@
                                     class="btn btn-solid btn-sm hover-solid btn-animation add-to-cart"
                                     data-url="{{ route('ecommerce.cart.store') }}"
                                     data-locale="{{ app()->getLocale() }}" data-product_id="{{ $product->id }}"
-                                    data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
+                                    data-image="{{ getProductImage($product) }}">
 
                                     <div style="display: none; color: #ffffff; margin: 3px; padding: 6px;"
                                         class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
@@ -165,7 +164,7 @@
                                         aria-hidden="true"></i>{{ __('wishlist') }}</a>
 
 
-                                <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"
+                                <a href="{{ route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]) }}"
                                     class="btn btn-solid btn-sm">{{ __('view detail') }}</a>
 
 
@@ -173,11 +172,12 @@
 
                             <div class="col-6 mt-4">
                                 <div style="display:none !important"
-                                    class="alert alert-danger border-2 align-items-center alarm" role="alert">
+                                    class="alert alert-danger border-2 align-items-center alarm-{{ $product->id }}"
+                                    role="alert">
                                     <div class="bg-danger me-3 icon-item"><i
                                             class="fa fa-exclamation-circle text-white fs-3"></i>
                                     </div>
-                                    <p class="mb-0 flex-1 alarm-text"></p>
+                                    <p class="mb-0 flex-1 alarm-text-{{ $product->id }}"></p>
                                 </div>
                             </div>
 

@@ -20,6 +20,63 @@
                             @csrf
                             @method('PUT')
 
+                            <div class="mb-3">
+                                <label class="form-label" for="type">{{ __('offers type') }}</label>
+                                <select class="form-select offer-type @error('type') is-invalid @enderror" aria-label=""
+                                    name="type" id="type" required>
+                                    <option value="">
+                                        {{ __('Select offer type') }}
+                                    </option>
+                                    <option value="home_page_offer"
+                                        {{ $offer->type == 'home_page_offer' ? 'selected' : '' }}>
+                                        {{ __('Countdown timer on home page') }}
+                                    </option>
+                                    <option value="product_page_offer"
+                                        {{ $offer->type == 'product_page_offer' ? 'selected' : '' }}>
+                                        {{ __('Countdown timer on product page') }}
+                                    </option>
+                                    <option value="product_quantity_discount"
+                                        {{ $offer->type == 'product_quantity_discount' ? 'selected' : '' }}>
+                                        {{ __('Quantity discount on product page') }}
+                                    </option>
+                                    <option value="product_page_sticker"
+                                        {{ $offer->type == 'product_page_sticker' ? 'selected' : '' }}>
+                                        {{ __('Stickers on product page') }}
+                                    </option>
+                                    <option value="bundles_offer"{{ $offer->type == 'bundles_offer' ? 'selected' : '' }}>
+                                        {{ __('bundles offer') }}
+                                    </option>
+                                </select>
+                                @error('type')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            @if ($offer->type == 'product_quantity_discount' || $offer->type == 'bundles_offer')
+                                <div class="mb-3 amount">
+                                    <label class="form-label " for="amount">{{ __('offer amount %') }}</label>
+                                    <input name="amount"
+                                        class="form-control amount-field @error('amount') is-invalid @enderror"
+                                        value="{{ $offer->amount }}" step="0.01" type="number" id="amount" />
+                                    @error('amount')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endif
+
+
+
+                            @if ($offer->type == 'product_quantity_discount')
+                                <div class="mb-3 qty">
+                                    <label class="form-label "
+                                        for="qty">{{ __('product quantity to apply the discount') }}</label>
+                                    <input name="qty" class="form-control qty-field @error('qty') is-invalid @enderror"
+                                        value="{{ $offer->qty }}" type="number" id="qty" />
+                                    @error('qty')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endif
 
 
                             <div class="mb-3">

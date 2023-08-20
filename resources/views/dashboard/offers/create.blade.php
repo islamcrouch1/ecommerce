@@ -18,6 +18,54 @@
                         <form method="POST" action="{{ route('offers.store') }}" enctype="multipart/form-data">
                             @csrf
 
+                            <div class="mb-3">
+                                <label class="form-label" for="type">{{ __('offers type') }}</label>
+                                <select class="form-select offer-type @error('type') is-invalid @enderror" aria-label=""
+                                    name="type" id="type" required>
+                                    <option value="">
+                                        {{ __('Select offer type') }}
+                                    </option>
+                                    <option value="home_page_offer">
+                                        {{ __('Countdown timer on home page') }}
+                                    </option>
+                                    <option value="product_page_offer">
+                                        {{ __('Countdown timer on product page') }}
+                                    </option>
+                                    <option value="product_quantity_discount">
+                                        {{ __('Quantity discount on product page') }}
+                                    </option>
+                                    <option value="product_page_sticker">
+                                        {{ __('Stickers on product page') }}
+                                    </option>
+                                    <option value="bundles_offer">
+                                        {{ __('bundles offer') }}
+                                    </option>
+                                </select>
+                                @error('type')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div style="display:none" class="mb-3 amount">
+                                <label class="form-label " for="amount">{{ __('offer amount %') }}</label>
+                                <input name="amount"
+                                    class="form-control amount-field @error('amount') is-invalid @enderror"
+                                    value="{{ old('amount') }}" min="0.1" step="0.01" type="number"
+                                    id="amount" />
+                                @error('amount')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div style="display:none" class="mb-3 qty">
+                                <label class="form-label "
+                                    for="qty">{{ __('product quantity to apply the discount') }}</label>
+                                <input name="qty" class="form-control qty-field @error('qty') is-invalid @enderror"
+                                    value="{{ old('qty') }}" min="1" type="number" id="qty" />
+                                @error('qty')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
 
 
                             <div class="mb-3">

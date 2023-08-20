@@ -15,10 +15,10 @@
                     <div class="d-none" id="table-customers-actions">
                         <div class="d-flex">
                             <select class="form-select form-select-sm" aria-label="Bulk actions">
-                                <option selected="">{{ __('Bulk actions') }}</option>
+                                {{-- <option selected="">{{ __('Bulk actions') }}</option>
                                 <option value="Refund">{{ __('Refund') }}</option>
                                 <option value="Delete">{{ __('Delete') }}</option>
-                                <option value="Archive">{{ __('Archive') }}</option>
+                                <option value="Archive">{{ __('Archive') }}</option> --}}
                             </select>
                             <button class="btn btn-falcon-default btn-sm ms-2" type="button">{{ __('Apply') }}</button>
                         </div>
@@ -52,6 +52,8 @@
                                     class="form-control form-select-sm sonoo-search" value="{{ request()->to }}">
                             </div>
                         </form>
+                        <button onclick="printInvoice();" class="btn btn-falcon-default btn-sm me-1 mb-2 mb-sm-0 no-print"
+                            type="button"><span class="fas fa-print me-1"> </span>{{ __('Print') }}</button>
                     </div>
                 </div>
             </div>
@@ -92,7 +94,7 @@
                                     @endphp
 
                                     <tr class="table-primary">
-                                        <td>
+                                        <td class="no-print">
                                             @if ($account->accounts->count() > 0)
                                                 <a class="btn btn-falcon-primary" data-bs-toggle="collapse"
                                                     href="#col-{{ $account->id }}" role="button" aria-expanded="false"
@@ -102,8 +104,8 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a class="dropdown-item"
-                                                href="{{ route('entries.index', ['account_id' => $account->هي]) }}">
+                                            <a class="dropdown-item" target="_blank"
+                                                href="{{ route('entries.index', ['account_id' => $account->id]) }}">
                                                 {{ getName($account) }}
                                             </a>
                                         </td>
@@ -121,8 +123,8 @@
                                                 $count = 2;
                                             @endphp
 
-                                            <tr class="collapse show table-success" id="col-{{ $account->id }}">
-                                                <td>
+                                            <tr class="collapse  table-success" id="col-{{ $account->id }}">
+                                                <td class="no-print">
                                                     @if ($subAccount->accounts->count() > 0)
                                                         <a class="btn btn-falcon-primary" data-bs-toggle="collapse"
                                                             href="#col-{{ $subAccount->id }}" role="button"
@@ -133,7 +135,13 @@
                                                     @endif
 
                                                 </td>
-                                                <td>{{ getName($subAccount) }}</td>
+                                                <td>
+
+                                                    <a class="dropdown-item" target="_blank"
+                                                        href="{{ route('entries.index', ['account_id' => $subAccount->id]) }}">
+                                                        {{ getName($subAccount) }}
+                                                    </a>
+                                                </td>
                                                 <td class="text-end">{{ $balance . ' ' . getCurrency() }}</td>
                                             </tr>
 

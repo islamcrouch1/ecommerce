@@ -61,7 +61,7 @@ class NotesController extends Controller
 
     public function edit(Note $note)
     {
-        return view('Dashboard.users.note ')->with('note', $note);
+        return view('dashboard.users.note ')->with('note', $note);
     }
 
     public function update(Request $request, Note $note)
@@ -117,6 +117,6 @@ class NotesController extends Controller
         ]);
 
         alertSuccess('order note created successfully', 'تم إضافة ملاحظة على الطلب بنجاح');
-        return redirect()->back();
+        return redirect()->back()->withInput();
     }
 }

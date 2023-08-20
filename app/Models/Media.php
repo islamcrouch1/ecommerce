@@ -29,6 +29,12 @@ class Media extends Model
         return $this->hasMany(Brand::class);
     }
 
+    public function installment_companies()
+    {
+        return $this->hasMany(InstallmentCompany::class);
+    }
+
+
     public function categories()
     {
         return $this->hasMany(Category::class);

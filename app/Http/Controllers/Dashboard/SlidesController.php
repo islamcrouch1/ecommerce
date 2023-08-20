@@ -161,7 +161,7 @@ class SlidesController extends Controller
             return redirect()->route('slides.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the slide cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو الصورة لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

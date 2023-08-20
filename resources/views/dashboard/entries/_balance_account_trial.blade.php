@@ -6,7 +6,7 @@
         @endphp
 
         <tr class="collapse table-warning" id="col-{{ $account->id }}">
-            <td>
+            <td class="no-print">
                 @if ($subAccount->accounts->count() > 0)
                     <a class="btn btn-falcon-primary" data-bs-toggle="collapse" href="#col-{{ $subAccount->id }}"
                         role="button" aria-expanded="false" aria-controls="col-{{ $subAccount->id }}">
@@ -15,7 +15,10 @@
                 @endif
 
             </td>
-            <td>{{ getName($subAccount) }}</td>
+            <td><a class="dropdown-item" target="_blank"
+                    href="{{ route('entries.index', ['account_id' => $subAccount->id]) }}">
+                    {{ getName($subAccount) }}
+                </a></td>
             <td>
                 {{ getAccountBalance($subAccount->id, 'cr', request()->from, request()->to) . ' ' . getCurrency() }}
             </td>

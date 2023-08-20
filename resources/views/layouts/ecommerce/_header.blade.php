@@ -715,8 +715,12 @@
                     <div class="col-lg-6">
                         <div class="header-contact text-end">
                             <ul>
-                                <li><i class="fa fa-truck" aria-hidden="true"></i>Track Order</li>
-                                <li class="pe-0"><i class="fa fa-gift" aria-hidden="true"></i>Gift Cards</li>
+                                <a href="{{ route('register') }}" target="_blank">
+                                    <li> <i class="fa fa-user" aria-hidden="true"></i>{{ __('become a seller') }}
+                                    </li>
+                                </a>
+                                {{-- <li><i class="fa fa-truck" aria-hidden="true"></i>Track Order</li>
+                                <li class="pe-0"><i class="fa fa-gift" aria-hidden="true"></i>Gift Cards</li> --}}
                             </ul>
                         </div>
                     </div>
@@ -897,12 +901,12 @@
                                                         <li>
                                                             <div class="media">
                                                                 <a
-                                                                    href="{{ route('ecommerce.product', ['product' => $item->product->id]) }}"><img
+                                                                    href="{{ route('ecommerce.product', ['product' => $item->product->id, 'slug' => createSlug(getName($item->product))]) }}"><img
                                                                         alt="" class="me-3"
                                                                         src="{{ asset($item->product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $item->product->images[0]->media->path) }}"></a>
                                                                 <div class="media-body">
                                                                     <a
-                                                                        href="{{ route('ecommerce.product', ['product' => $item->product->id]) }}">
+                                                                        href="{{ route('ecommerce.product', ['product' => $item->product->id, 'slug' => createSlug(getName($item->product))]) }}">
                                                                         <h4>{{ app()->getLocale() == 'ar' ? $item->product->name_ar : $item->product->name_en }}
                                                                         </h4>
                                                                     </a>
@@ -1024,8 +1028,12 @@
                                         </ul>
                                     </li>
 
-                                    <li><a href="{{ route('ecommerce.about') }}">{{ __('about us') }}</a>
+                                    <li>
+                                        <a href="{{ route('ecommerce.about') }}">{{ __('about us') }}</a>
+                                    </li>
 
+                                    <li>
+                                        <a href="{{ route('ecommerce.contact') }}">{{ __('contact us') }}</a>
                                     </li>
 
                                 </ul>

@@ -10,12 +10,24 @@ class Refund extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'order_id', 'reason', 'status', 'refuse_reason',
+        'user_id', 'order_id', 'reason', 'status', 'refuse_reason', 'type', 'product_id', 'combination_id', 'qty'
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+
+    public function combination()
+    {
+        return $this->belongsTo(ProductCombination::class);
     }
 
 

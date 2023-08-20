@@ -8,17 +8,17 @@
                 <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
                     <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
 
-                        {{ __('Balance sheet') }}
+                        {{ __('Trial Balance') }}
                     </h5>
                 </div>
                 <div class="col-8 col-sm-auto text-end ps-2">
                     <div class="d-none" id="table-customers-actions">
                         <div class="d-flex">
                             <select class="form-select form-select-sm" aria-label="Bulk actions">
-                                <option selected="">{{ __('Bulk actions') }}</option>
+                                {{-- <option selected="">{{ __('Bulk actions') }}</option>
                                 <option value="Refund">{{ __('Refund') }}</option>
                                 <option value="Delete">{{ __('Delete') }}</option>
-                                <option value="Archive">{{ __('Archive') }}</option>
+                                <option value="Archive">{{ __('Archive') }}</option> --}}
                             </select>
                             <button class="btn btn-falcon-default btn-sm ms-2" type="button">{{ __('Apply') }}</button>
                         </div>
@@ -52,6 +52,8 @@
                                     class="form-control form-select-sm sonoo-search" value="{{ request()->to }}">
                             </div>
                         </form>
+                        <button onclick="printInvoice();" class="btn btn-falcon-default btn-sm me-1 mb-2 mb-sm-0 no-print"
+                            type="button"><span class="fas fa-print me-1"> </span>{{ __('Print') }}</button>
                     </div>
                 </div>
             </div>
@@ -69,7 +71,7 @@
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th></th>
+                                    <th class="no-print"></th>
                                     <th scope="col">{{ __('Account Name') }}</th>
                                     <th scope="col">{{ __('cr') }}</th>
                                     <th scope="col">{{ __('dr') }}</th>
@@ -85,6 +87,10 @@
                                     <td class="text-end">{{ $cs - $services_cost . ' ' . getCurrency() }}</td>
                                 </tr> --}}
 
+                                @php
+                                    $dr = 0;
+                                    $cr = 0;
+                                @endphp
 
 
                                 @foreach ($all_accounts as $account)
@@ -94,7 +100,7 @@
                                     @endphp
 
                                     <tr class="table-primary">
-                                        <td>
+                                        <td class="no-print">
                                             @if ($account->accounts->count() > 0)
                                                 <a class="btn btn-falcon-primary" data-bs-toggle="collapse"
                                                     href="#col-{{ $account->id }}" role="button" aria-expanded="false"
@@ -104,15 +110,26 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a class="dropdown-item"
-                                                href="{{ route('entries.index', ['account_id' => $account->هي]) }}">
+                                            <a class="dropdown-item" target="_blank"
+                                                href="{{ route('entries.index', ['account_id' => $account->id]) }}">
                                                 {{ getName($account) }}
                                             </a>
                                         </td>
                                         <td>
+
+                                            @php
+                                                $cr = $cr + getAccountBalance($account->id, 'cr', request()->from, request()->to);
+                                            @endphp
+
+
                                             {{ getAccountBalance($account->id, 'cr', request()->from, request()->to) . ' ' . getCurrency() }}
                                         </td>
                                         <td>
+
+                                            @php
+                                                $dr = $dr + getAccountBalance($account->id, 'dr', request()->from, request()->to);
+                                            @endphp
+
                                             {{ getAccountBalance($account->id, 'dr', request()->from, request()->to) . ' ' . getCurrency() }}
                                         </td>
                                         <td class="text-end">{{ $balance . ' ' . getCurrency() }}</td>
@@ -130,7 +147,7 @@
                                             @endphp
 
                                             <tr class="collapse table-success" id="col-{{ $account->id }}">
-                                                <td>
+                                                <td class="no-print">
                                                     @if ($subAccount->accounts->count() > 0)
                                                         <a class="btn btn-falcon-primary" data-bs-toggle="collapse"
                                                             href="#col-{{ $subAccount->id }}" role="button"
@@ -141,7 +158,12 @@
                                                     @endif
 
                                                 </td>
-                                                <td>{{ getName($subAccount) }}</td>
+                                                <td>
+                                                    <a class="dropdown-item" target="_blank"
+                                                        href="{{ route('entries.index', ['account_id' => $subAccount->id]) }}">
+                                                        {{ getName($subAccount) }}
+                                                    </a>
+                                                </td>
                                                 <td>
                                                     {{ getAccountBalance($subAccount->id, 'cr', request()->from, request()->to) . ' ' . getCurrency() }}
                                                 </td>
@@ -159,6 +181,47 @@
                                         @endforeach
                                     @endif
                                 @endforeach
+
+
+                            </tbody>
+                        </table>
+                    </div>
+
+
+                </div>
+            </div>
+
+
+
+            <div class="card-body">
+                <div class="row g-0">
+
+
+
+
+                    <div class="table-responsive scrollbar">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">{{ __('cr') }}</th>
+                                    <th scope="col">{{ __('dr') }}</th>
+                                    <th scope="col">{{ __('Balance') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+
+                                <tr class="table-primary">
+                                    <td>
+                                        {{ $cr }}
+                                    </td>
+                                    <td>
+                                        {{ $dr }}
+                                    </td>
+                                    <td>
+                                        {{ $dr - $cr }}
+                                    </td>
+                                </tr>
 
 
                             </tbody>

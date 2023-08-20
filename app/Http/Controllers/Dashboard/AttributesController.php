@@ -142,7 +142,7 @@ class AttributesController extends Controller
             return redirect()->route('attributes.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the attribute cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو سمة المنتج لا يمكن حذفه حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

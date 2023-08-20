@@ -120,6 +120,12 @@
                                     type="button"><span class="fas fa-plus"
                                         data-fa-transform="shrink-3 down-2"></span><span
                                         class="d-none d-sm-inline-block ms-1">{{ __('Add return') }}</span></a>
+
+
+                                <a href="{{ route('sales.refunds') }}" class="btn btn-falcon-default btn-sm"
+                                    type="button"><span class="fas fa-backward"
+                                        data-fa-transform="shrink-3 down-2"></span><span
+                                        class="d-none d-sm-inline-block ms-1">{{ __('Refunds Requsets') }}</span></a>
                             @endif
 
                             {{-- <a href="{{ route('orders.export', ['status' => request()->status, 'from' => request()->from, 'to' => request()->to]) }}"
@@ -155,9 +161,7 @@
                                     </th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="status">
                                         {{ __('warehouse') }}</th>
-                                    <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
-                                        {{ __('Total') }}
-                                    </th>
+
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                         {{ __('Total Without Tax') }}
                                     </th>
@@ -165,13 +169,20 @@
 
 
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
-                                        {{ __('added value tax') }}
+                                        {{ __('discount') }}
                                     </th>
 
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
-                                        {{ __('withholding at source tax') }}
+                                        {{ __('taxes') }}
                                     </th>
 
+                                    <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                        {{ __('shipping fees') }}
+                                    </th>
+
+                                    <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                        {{ __('Total') }}
+                                    </th>
 
 
                                     <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
@@ -192,7 +203,10 @@
                                         <td class="name align-middle white-space-nowrap py-2">
                                             <div class="d-flex d-flex align-items-center">
                                                 <div class="flex-1">
-                                                    <h5 class="mb-0 fs--1">{{ $order->id }}</h5>
+                                                    <h5 class="mb-0 fs--1">
+                                                        {{ __('Serial') . ': ' . getOrderSerial($order) }} <br>
+                                                        {{ __('ID') . ': ' . $order->id }}
+                                                    </h5>
                                                 </div>
                                             </div>
                                         </td>
@@ -205,6 +219,24 @@
                                         <td class="phone align-middle white-space-nowrap py-2">
                                             {!! getOrderHistory($order->status) !!}
 
+                                            @if ($order->order_type == 'Q')
+                                                <span class="badge badge-soft-info">{{ __('Quotation') }}</span>
+                                            @elseif($order->order_type == 'SO')
+                                                <span class="badge badge-soft-info">{{ __('SO') }}</span>
+                                            @endif
+
+                                            @if ($order->refunds->count() > 0 && $order->status != 'returned')
+                                                @foreach ($order->refunds as $refund)
+                                                    @if ($refund->status == 'pending')
+                                                        <br><span
+                                                            class="badge badge-soft-danger ">{{ __('There is a refund request') }}</span>
+                                                    @elseif ($order->refund->status == 1)
+                                                        <br><span
+                                                            class="badge badge-soft-danger ">{{ __('Return request denied') }}</span>
+                                                    @endif
+                                                @endforeach
+                                            @endif
+
                                         </td>
                                         <td class="address align-middle white-space-nowrap py-2">
                                             {!! getPaymentStatus($order->payment_status) !!}
@@ -216,23 +248,33 @@
                                             {{ getName($order->warehouse) }}
 
                                         </td>
-                                        <td class="address align-middle white-space-nowrap py-2">
-                                            {{ $order->total_price . ' ' . $order->country->currency }}
-                                        </td>
+
 
                                         <td class="address align-middle white-space-nowrap py-2">
                                             {{ $order->subtotal_price . ' ' . $order->country->currency }}
                                         </td>
 
                                         <td class="address align-middle white-space-nowrap py-2">
-                                            {{ $order->total_tax . ' ' . $order->country->currency }}
+                                            {{ $order->discount_amount . ' ' . $order->country->currency }}
                                         </td>
 
                                         <td class="address align-middle white-space-nowrap py-2">
-
-                                            {{ $order->total_wht_products + $order->total_wht_services . ' ' . $order->country->currency }}
-
+                                            @foreach ($order->taxes as $tax)
+                                                {{ getName($tax) . ': ' . $tax->pivot->amount . ' ' . $order->country->currency }}
+                                                <br>
+                                            @endforeach
                                         </td>
+
+                                        <td class="address align-middle white-space-nowrap py-2">
+                                            {{ $order->shipping_amount . ' ' . $order->country->currency }}
+                                        </td>
+
+
+                                        <td class="address align-middle white-space-nowrap py-2">
+                                            {{ $order->total_price + $order->shipping_amount . ' ' . $order->country->currency }}
+                                        </td>
+
+
 
 
                                         <td class="joined align-middle py-2">{{ $order->created_at }} <br>
@@ -257,13 +299,24 @@
                                                             @endif
                                                             <a class="dropdown-item" target="_blank"
                                                                 href="{{ route('sales.show', ['sale' => $order->id]) }}">{{ __('Display order') }}</a>
-                                                            <a href="" class="dropdown-item"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#status-modal-{{ $order->id }}">{{ __('Change Status') }}</a>
-                                                            @if ($order->refund)
+
+
+
+                                                            @if ($order->order_type == 'SO')
                                                                 <a href="" class="dropdown-item"
                                                                     data-bs-toggle="modal"
-                                                                    data-bs-target="#refund-modal-{{ $order->id }}">{{ __('reason for refund request') }}</a>
+                                                                    data-bs-target="#status-modal-{{ $order->id }}">{{ __('Change Status') }}</a>
+                                                            @endif
+
+
+                                                            <a class="dropdown-item"
+                                                                href="{{ route('sales.edit', ['sale' => $order->id]) }}">{{ __('Edit') }}</a>
+
+
+                                                            @if ($order->refunds->count() > 0)
+                                                                <a href="" class="dropdown-item"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#refund-modal-{{ $order->id }}">{{ __('show refund requests') }}</a>
                                                             @endif
                                                             <a href="" class="dropdown-item"
                                                                 data-bs-toggle="modal"
@@ -427,6 +480,94 @@
                                                 </div>
                                             </div>
                                         </div>
+
+
+                                        @if ($order->refunds->count() > 0)
+                                            <!-- start order refund modal for each order -->
+                                            <div class="modal fade" id="refund-modal-{{ $order->id }}" tabindex="-1"
+                                                role="dialog" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document"
+                                                    style="max-width: 600px">
+                                                    <div class="modal-content position-relative">
+                                                        <div class="position-absolute top-0 end-0 mt-2 me-2 z-index-1">
+                                                            <button
+                                                                class="btn-close btn btn-sm btn-circle d-flex flex-center transition-base"
+                                                                data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+
+                                                        {{-- <form method="POST"
+                                                            action="{{ route('orders.refund.reject', ['order' => $order->id]) }}">
+                                                            @csrf --}}
+                                                        <div class="modal-body p-0">
+                                                            <div class="rounded-top-lg py-3 ps-4 pe-6 bg-light">
+                                                                <h4 class="mb-1" id="modalExampleDemoLabel">
+                                                                    {{ __('refund requests') . ' #' . $order->id }}
+                                                                </h4>
+                                                            </div>
+                                                            <div class="m-2">
+                                                                <ul class="list-group">
+
+                                                                    @foreach ($order->refunds as $refund)
+                                                                        <li class="list-group-item">
+                                                                            <div class="row">
+                                                                                <div class="col-md-4">
+
+                                                                                    <div
+                                                                                        class="d-flex d-flex align-items-center">
+                                                                                        <div class="avatar avatar-xl me-2">
+                                                                                            <img class="rounded-circle"
+                                                                                                src="{{ asset($refund->product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $refund->product->images[0]->media->path) }}"
+                                                                                                alt="" />
+                                                                                        </div>
+                                                                                        <div class="flex-1">
+                                                                                            <h5 class="mb-0 fs--1">
+                                                                                                {{ getProductName($refund->product, $refund->combination) }}
+                                                                                            </h5>
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                </div>
+                                                                                {{-- <div class="col-md-3">
+                                                                                    {{ productPrice($item->product, $item->product_combination_id, 'vat') . $user->country->currency }}
+                                                                                </div> --}}
+                                                                                <div class="col-md-2">
+                                                                                    {{ __('refund quantity') . ' :' . $refund->qty }}
+                                                                                </div>
+                                                                                {{-- <div class="col-md-3">
+                                                                                    {{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . $user->country->currency }}
+                                                                                </div> --}}
+
+                                                                                <div class="col-md-3">
+                                                                                    {{ __('refund reason') . ' :' . $refund->reason }}
+                                                                                </div>
+
+                                                                                <div class="col-md-3">
+
+                                                                                    <a
+                                                                                        href="{{ route('users.show', ['user' => $refund->user_id]) }}">{{ $refund->user->name }}
+                                                                                    </a>
+                                                                                </div>
+                                                                            </div>
+                                                                        </li>
+                                                                    @endforeach
+                                                                </ul>
+
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button class="btn btn-secondary" type="button"
+                                                                data-bs-dismiss="modal">{{ __('Close') }}</button>
+                                                            {{-- @if (auth()->user()->hasPermission('orders-update'))
+                                                                    <button class="btn btn-primary"
+                                                                        type="submit">{{ __('Reject the return request') }}</button>
+                                                                @endif --}}
+                                                        </div>
+                                                        {{-- </form> --}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- end order refund modal for each user -->
+                                        @endif
                                     @endif
 
 

@@ -169,6 +169,7 @@
     <script src="{{ asset('vendors/swiper/swiper-bundle.min.js') }}"></script>
     <script src="{{ asset('vendors/rater-js/index.js') }}"></script>
     <script src="{{ asset('assets/js/custom.js') }}"></script>
+    <script src="{{ asset('assets/js/entries.js') }}"></script>
 
 
     @if (Route::is('stock.management.list') ||
@@ -184,12 +185,16 @@
     @endif
 
 
-    @if (Route::is('purchases.create') || Route::is('purchases.create.return'))
+    @if (!Route::is('admin.home') && !Route::is('login'))
+        <script src="{{ asset('assets/js/menu.js') }}"></script>
+    @endif
+
+    @if (Route::is('purchases.create') || Route::is('purchases.create.return') || Route::is('purchases.edit'))
         <script src="{{ asset('assets/js/purchase.js') }}"></script>
     @endif
 
 
-    @if (Route::is('sales.create') || Route::is('sales.create.return'))
+    @if (Route::is('sales.create') || Route::is('sales.create.return') || Route::is('sales.edit'))
         <script src="{{ asset('assets/js/sale.js') }}"></script>
     @endif
 

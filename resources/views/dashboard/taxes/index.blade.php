@@ -18,10 +18,10 @@
                     <div class="d-none" id="table-customers-actions">
                         <div class="d-flex">
                             <select class="form-select form-select-sm" aria-label="Bulk actions">
-                                <option selected="">{{ __('Bulk actions') }}</option>
+                                {{-- <option selected="">{{ __('Bulk actions') }}</option>
                                 <option value="Refund">{{ __('Refund') }}</option>
                                 <option value="Delete">{{ __('Delete') }}</option>
-                                <option value="Archive">{{ __('Archive') }}</option>
+                                <option value="Archive">{{ __('Archive') }}</option> --}}
                             </select>
                             <button class="btn btn-falcon-default btn-sm ms-2" type="button">{{ __('Apply') }}</button>
                         </div>
@@ -36,7 +36,7 @@
                         @endif
                         <a href="{{ route('taxes.trashed') }}" class="btn btn-falcon-default btn-sm" type="button"><span
                                 class="fas fa-trash" data-fa-transform="shrink-3 down-2"></span><span
-                                class="d-none d-sm-inline-block ms-1">{{ __('Trash') }}</span></a>
+                                class="d-none d-sm-inline-block ms-1">{{ __('Trash ') }}</span></a>
                         <button class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-external-link-alt"
                                 data-fa-transform="shrink-3 down-2"></span><span
                                 class="d-none d-sm-inline-block ms-1">{{ __('Export') }}</span></button>
@@ -65,6 +65,8 @@
                                     {{ __('description') }}</th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                     {{ __('tax rate') }}</th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                    {{ __('tax type') }}</th>
 
                                 <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
                                     data-sort="joined">{{ __('Created at') }}</th>
@@ -92,7 +94,13 @@
 
                                             <div class="flex-1">
                                                 <h5 class="mb-0 fs--1">
-                                                    {{ $tax->name }}
+                                                    {{ getName($tax) }}
+
+                                                    @if ($tax->status == 'active')
+                                                        <span class="badge badge-soft-primary">{{ __('active') }}
+                                                        </span>
+                                                    @endif
+
                                                 </h5>
                                             </div>
                                         </div>
@@ -101,6 +109,9 @@
                                     </td>
                                     <td class="phone align-middle white-space-nowrap py-2">
                                         {{ __($tax->tax_rate) }} </td>
+
+                                    <td class="phone align-middle white-space-nowrap py-2">
+                                        {{ __($tax->type) }} </td>
 
                                     <td class="joined align-middle py-2">{{ $tax->created_at }} <br>
                                         {{ interval($tax->created_at) }} </td>
@@ -117,8 +128,9 @@
                                             <div class="dropdown-menu dropdown-menu-end border py-0"
                                                 aria-labelledby="customer-dropdown-0">
                                                 <div class="bg-white py-2">
-                                                    @if ($tax->trashed() &&
-                                                        auth()->user()->hasPermission('taxes-restore'))
+                                                    @if (
+                                                        $tax->trashed() &&
+                                                            auth()->user()->hasPermission('taxes-restore'))
                                                         <a class="dropdown-item"
                                                             href="{{ route('taxes.restore', ['tax' => $tax->id]) }}">{{ __('Restore') }}</a>
                                                     @elseif(auth()->user()->hasPermission('taxes-update'))
@@ -126,13 +138,13 @@
                                                             href="{{ route('taxes.edit', ['tax' => $tax->id]) }}">{{ __('Edit') }}</a>
                                                     @endif
                                                     @if (auth()->user()->hasPermission('taxes-delete') ||
-                                                        auth()->user()->hasPermission('taxes-trash'))
+                                                            auth()->user()->hasPermission('taxes-trash'))
                                                         <form method="POST"
                                                             action="{{ route('taxes.destroy', ['tax' => $tax->id]) }}">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button class="dropdown-item text-danger"
-                                                                type="submit">{{ $tax->trashed() ? __('Delete') : __('Trash') }}</button>
+                                                                type="submit">{{ $tax->trashed() ? __('Delete') : __('Trash ') }}</button>
                                                         </form>
                                                     @endif
                                                 </div>

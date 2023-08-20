@@ -50,6 +50,32 @@
                                 @enderror
                             </div>
 
+
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="parent_id">{{ __('parent account') }}</label>
+
+                                <select class="form-select model-search" data-url="{{ route('model.search') }}"
+                                    data-locale="{{ app()->getLocale() }}"
+                                    data-account_type="{{ $account->account_type }}" data-account_id="{{ $account->id }}"
+                                    data-type="accounts_edit" name="parent_id">
+                                    <option value="">
+                                        {{ __('select parent account') }}</option>
+                                    @if ($account->parent_id)
+                                        <option value="{{ $account->parent_id }}" selected>
+                                            {{ getName($account->parent) }}</option>
+                                    @endif
+
+
+                                </select>
+
+
+                                @error('parent_id')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"
                                     name="submit">{{ __('Edit') . ' ' . __('account') }}</button>

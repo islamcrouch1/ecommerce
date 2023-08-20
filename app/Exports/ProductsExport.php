@@ -12,13 +12,12 @@ class ProductsExport implements FromCollection, WithHeadings
 
 
 
-    protected $status, $category_id;
+    protected $request, $is_vendors;
 
-    public function __construct($status, $category_id)
+    public function __construct($request, $is_vendors)
     {
-
-        $this->status     = $status;
-        $this->category_id     = $category_id;
+        $this->request     = $request;
+        $this->is_vendors     = $is_vendors;
     }
 
     public function headings(): array
@@ -28,19 +27,14 @@ class ProductsExport implements FromCollection, WithHeadings
 
             'id',
             'SKU',
-            'vendor_id',
             'status',
             'country_id',
+            'category_id',
             'name_ar',
             'name_en',
             'description_ar',
             'description_en',
-            'vendor_price',
-            'extra_fee',
-            'colors',
-            'sizes',
-            'quantities',
-            'images',
+            'product_type',
 
         ];
     }
@@ -48,6 +42,6 @@ class ProductsExport implements FromCollection, WithHeadings
 
     public function collection()
     {
-        return collect(Product::getProducts($this->status, $this->category_id));
+        return collect(Product::getProducts($this->request, $this->is_vendors));
     }
 }

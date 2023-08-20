@@ -1,5 +1,5 @@
 @if (!Route::is('purchases.show') && !Route::is('orders.show') && !Route::is('sales.show'))
-    <footer class="footer">
+    <footer class="footer no-print">
         <div class="row g-0 justify-content-between fs--1 mt-4 mb-3">
             <div style="direction: ltr !important" class="col-12 col-sm-auto text-center">
                 <p style="{{ app()->getLocale() == 'ar' ? 'direction:rtl' : '' }}" class="mb-0 text-600"><i

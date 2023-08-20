@@ -33,10 +33,15 @@ class ReviewsController extends Controller
     }
 
 
-    public function reviewsDelete()
+    public function reviewsDelete(Request $request)
     {
 
-        $reviews = Review::where('session_id', '100094')->get();
+        $request->validate([
+            'review' => "required|string|max:255",
+        ]);
+
+
+        $reviews = Review::where('session_id', '100094')->where('review', $request->review)->get();
 
         foreach ($reviews as $review) {
             $review->delete();

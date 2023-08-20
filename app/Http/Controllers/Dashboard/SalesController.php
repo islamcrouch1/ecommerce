@@ -69,6 +69,41 @@ class SalesController extends Controller
         return view('dashboard.sales.index', compact('orders', 'countries', 'branches'));
     }
 
+    public function refundsIndex(Request $request)
+    {
+
+
+        $countries = Country::all();
+        if (!$request->has('from') || !$request->has('to')) {
+            $request->merge(['from' => Carbon::now()->subDay(365)->toDateString()]);
+            $request->merge(['to' => Carbon::now()->toDateString()]);
+        }
+
+        $user = Auth::user();
+
+        if ($user->hasPermission('branches-read')) {
+            $branches = Branch::all();
+        } else {
+            $branches = Branch::where('id', $user->branch_id)->get();
+        }
+
+        $orders = Order::has('refunds')
+            ->whereDate('created_at', '>=', request()->from)
+            ->whereDate('created_at', '<=', request()->to)
+            ->where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
+            ->where('order_from', 'addsale')
+            ->whenSearch(request()->search)
+            ->whenCountry(request()->country_id)
+            ->whenBranch(request()->branch_id)
+            ->whenStatus(request()->status)
+            ->whenPaymentStatus(request()->payment_status)
+            ->latest()
+            ->paginate(100);
+
+
+        return view('dashboard.sales.index', compact('orders', 'countries', 'branches'));
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -83,7 +118,26 @@ class SalesController extends Controller
         $users = User::whereHas('roles', function ($query) {
             $query->where('name', '=', 'user');
         })->get();
-        return view('dashboard.sales.create', compact('warehouses', 'users'));
+
+        $taxes = Tax::where('status', 'active')->get();
+
+
+        return view('dashboard.sales.create', compact('warehouses', 'users', 'taxes'));
+    }
+
+    public function edit($sale)
+    {
+        $user = Auth::user();
+        $warehouses = Warehouse::where('branch_id', $user->branch_id)
+            ->where('vendor_id', null)
+            ->get();
+        $users = User::whereHas('roles', function ($query) {
+            $query->where('name', '=', 'user');
+        })->get();
+
+        $taxes = Tax::where('status', 'active')->get();
+        $order = Order::findOrFail($sale);
+        return view('dashboard.sales.edit', compact('warehouses', 'users', 'order', 'taxes'));
     }
 
     public function craeteReturn()
@@ -95,7 +149,10 @@ class SalesController extends Controller
         $users = User::whereHas('roles', function ($query) {
             $query->where('name', '=', 'user');
         })->get();
-        return view('dashboard.sales.create-return', compact('warehouses', 'users'));
+
+        $taxes = Tax::where('status', 'active')->get();
+
+        return view('dashboard.sales.create-return', compact('warehouses', 'users', 'taxes'));
     }
 
     public function storeReturn(Request $request)
@@ -119,28 +176,28 @@ class SalesController extends Controller
 
         if ($order->order_from != 'addsale' && $order->order_from != 'web') {
             alertError('reference order number is not correct', 'رقم الطلب المرجعي غير صحيح');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
         // if ($order->warehouse_id != $request->warehouse_id) {
         //     alertError('The specified warehouse does not match', 'المخزن المحدد غير متطابق');
-        //     return redirect()->back();
+        //     return redirect()->back()->withInput();
         // }
 
         if ($order->customer_id != $request->user_id) {
             alertError('The specified customer does not match', 'العميل المحدد غير متطابق');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if ($order->status == 'returned' || $order->status == 'RTO' || $order->status == 'canceled') {
             alertError('The status of the specified order is not suitable', 'حالة الطلب المحدد غير مناسبة');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         // if ($order->payment_status != 'pending') {
         //     alertError('The payment status of the specified order is not suitable', 'حالة الدفع للطلب المحدد غير مناسبة');
-        //     return redirect()->back();
+        //     return redirect()->back()->withInput();
         // }
 
 
@@ -188,7 +245,7 @@ class SalesController extends Controller
         }
 
         if ($count > 0) {
-            alertError('Some products not in reference order or quantity requested not available for return', 'بعض المنتجات غير موجودة في الطلب المرجعي او الكميات المكلوبة غير مناسبة للمرتجع');
+            alertError('Some products not in reference order or quantity requested not available for return', 'بعض المنتجات غير موجودة في الطلب المرجعي او الكميات المطلوبة غير مناسبة للمرتجع');
             return redirect()->route('sales.create.return');
         }
 
@@ -248,7 +305,7 @@ class SalesController extends Controller
 
         $qty = explode(',', $request->qty);
         $price = explode(',', $request->price);
-        $tax = explode(',', $request->tax);
+        $taxes = explode(',', $request->tax);
         $compinations = explode(',', $request->compinations);
         $products = explode(',', $request->products);
 
@@ -260,47 +317,84 @@ class SalesController extends Controller
         $vat_rate = 0;
         $wht_rate = 0;
 
+        $discount = $request->discount;
+        $shipping = $request->shipping;
 
-        $wht_products_amount = 0;
-        $wht_services_amount = 0;
 
+
+
+        // if (!isset($request->discount)) {
+        //     $discount = 0;
+        //     $discountForItem = 0;
+        // } elseif ($request->discount < 0) {
+        //     $discount = 0;
+        //     $discountForItem = 0;
+        // } else {
+        //     $discount = $request->discount;
+        //     $discountForItem = $discount / count($qty);
+        // }
+
+
+        // $wht_products_amount = 0;
+        // $wht_services_amount = 0;
+
+        $taxes_data = [];
 
 
         foreach ($qty as $index => $q) {
             $subtotal = $subtotal + ($q * $price[$index]);
         }
 
-        if (isset($tax) && in_array('vat', $tax)) {
-            $vat_amount = calcTax($subtotal, 'vat');
+        if ($discount > $subtotal) {
+            $discount = $subtotal;
         }
 
-        $total = $subtotal + $vat_amount;
+        $subtotal = $subtotal - $discount;
 
-        if (isset($tax) && in_array('wht', $tax) && $subtotal > setting('wht_invoice_amount')) {
-            foreach ($qty as $index => $q) {
 
-                $product_price = ($q * $price[$index]);
-                $product = Product::findOrFail($products[$index]);
-                $product_price = $product_price + calcTax($product_price, 'vat');
+        $total = $subtotal;
 
-                if ($product->product_type == 'variable' || $product->product_type == 'simple') {
-                    $wht_amount = calcTax(($product_price), 'wht_products');
-                    $wht_products_amount += $wht_amount;
-                } else {
-                    $wht_amount = calcTax(($product_price), 'wht_services');
-                    $wht_services_amount += $wht_amount;
-                }
-            }
 
-            $wht_amount = $wht_services_amount + $wht_products_amount;
+        foreach ($taxes as $index => $tax) {
+            $tax_data = calcTaxByID($subtotal, $tax);
+            $taxes_data[$index] = $tax_data;
+            $total += $tax_data['tax_amount'];
         }
+
+        // if (isset($tax) && in_array('vat', $tax)) {
+        //     $vat_amount = calcTax($subtotal, 'vat');
+        // }
+
+        // $total = $subtotal + $vat_amount;
+
+        // if (isset($tax) && in_array('wht', $tax) && $subtotal > setting('wht_invoice_amount')) {
+        //     foreach ($qty as $index => $q) {
+
+        //         $product_price = ($q * $price[$index]) - $discountForItem;
+        //         $product = Product::findOrFail($products[$index]);
+        //         // $product_price = $product_price + calcTax($product_price, 'vat');
+
+        //         if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+        //             $wht_amount = calcTax(($product_price), 'wht_products');
+        //             $wht_products_amount += $wht_amount;
+        //         } else {
+        //             $wht_amount = calcTax(($product_price), 'wht_services');
+        //             $wht_services_amount += $wht_amount;
+        //         }
+        //     }
+
+        //     $wht_amount = $wht_services_amount + $wht_products_amount;
+        // }
 
 
         $data['status'] = 1;
-        $data['total'] = round($total, 2);
+        $data['total'] = round($total + $shipping, 2);
         $data['subtotal'] = round($subtotal, 2);
-        $data['vat_amount'] = round($vat_amount, 2);
-        $data['wht_amount'] = round($wht_amount, 2);
+        // $data['vat_amount'] = round($vat_amount, 2);
+        // $data['wht_amount'] = round($wht_amount, 2);
+        $data['discount'] = round($discount * -1, 2);
+        $data['shipping'] = $shipping;
+        $data['taxes'] = $taxes_data;
 
         return $data;
     }
@@ -313,6 +407,9 @@ class SalesController extends Controller
      */
     public function store(Request $request)
     {
+
+
+
         $request->validate([
             'combinations' => "required|array",
             'warehouse_id' => "required|numeric",
@@ -321,6 +418,7 @@ class SalesController extends Controller
             'tax' => "nullable|array",
             'qty' => "nullable|array",
             'price' => "nullable|array",
+            'discount' => "nullable|numeric",
         ]);
 
 
@@ -335,20 +433,20 @@ class SalesController extends Controller
         // tax check
         if (isset($request->tax) && (in_array('wht', $request->tax) && !in_array('vat', $request->tax))) {
             alertError('Error happen please review taxes options and try again', 'حدث حطا اثناء معالجة قيمة الضريبة يرجى مراجعة البيانات والمحاولة مرة اخرى');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         // accounts check
-        if (!checkAccounts($branch_id, ['vat_sales_account', 'wst_account', 'customers_account', 'revenue_account'])) {
+        if (!checkAccounts($branch_id, ['vat_sales_account', 'wst_account', 'customers_account', 'revenue_account', 'allowed_discount_account'])) {
             alertError('Please set the default accounts settings from the settings page', 'يرجى ضبط اعدادات الحسابات الافتراضية من صفحة الاعدادات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         // prices and quantities check
         foreach ($request->combinations as $index => $combination_id) {
             if ($request->qty[$index] <= 0 || $request->price[$index] <= 0) {
                 alertError('Please add quantity or sale price to complete the order', 'يرجى ادخال الكميات واسعار البيع لاستكمال الطلب');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
         }
 
@@ -356,14 +454,14 @@ class SalesController extends Controller
         if ($returned == false) {
             if (!checkProductsForOrder($request->prods, $request->combinations, $request->qty,  $request->warehouse_id)) {
                 alertError('Some products do not have enough quantity in stock or the product not active', 'بعض المنتجات ليس بها كمية كافية في المخزون او بعض المنتجات غير نشظة ');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
         }
 
         // check if cart empty
         if (count($request->prods) <= 0) {
             alertError('Your cart is empty. You cannot complete your order at this time', 'سلة مشترياتك فارغة لا يمكنك من اتمام الطلب في الوقت الحالي');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         $order = $this->attach_order($request, 'cash_on_delivery', $branch_id);
@@ -403,6 +501,17 @@ class SalesController extends Controller
         ]);
 
 
+        if (!isset($request->discount)) {
+            $discount = 0;
+            $discountForItem = 0;
+        } elseif ($request->discount < 0) {
+            $discount = 0;
+            $discountForItem = 0;
+        } else {
+            $discount = $request->discount;
+            $discountForItem = $discount / count($request->qty);
+        }
+
         $stocks_limit_products = [];
 
         $subtotal = 0;
@@ -417,6 +526,9 @@ class SalesController extends Controller
             $sub = $sub + ($q * $request->price[$index]);
         }
 
+        $sub = $sub - $discount;
+
+
         foreach ($request->qty as $index => $q) {
 
             try {
@@ -425,17 +537,17 @@ class SalesController extends Controller
                 //we will not use combination if product type is service or digital
                 $combination = ProductCombination::find($request->combinations[$index]);
 
-                $product_price = ($q * $request->price[$index]);
+                $product_price = ($q * $request->price[$index]) - $discountForItem;
                 $vat_amount_product =  calcTax($product_price, 'vat');
                 $product_price_with_vat = $product_price + $vat_amount_product;
                 $vat_amount += $vat_amount_product;
                 $subtotal += $product_price;
 
                 if ($product->product_type == 'variable' || $product->product_type == 'simple') {
-                    $wht_amount_product = calcTax(($product_price_with_vat), 'wht_products');
+                    $wht_amount_product = calcTax(($product_price), 'wht_products');
                     $wht_products_amount += $wht_amount_product;
                 } else {
-                    $wht_amount_product = calcTax(($product_price_with_vat), 'wht_services');
+                    $wht_amount_product = calcTax(($product_price), 'wht_services');
                     $wht_services_amount += $wht_amount_product;
                 }
 
@@ -496,6 +608,15 @@ class SalesController extends Controller
         }
 
 
+
+
+
+        if ($discount > 0) {
+            $order->update([
+                'discount_amount' => $discount,
+            ]);
+        }
+
         $wht_amount = $wht_services_amount + $wht_products_amount;
 
 
@@ -524,9 +645,12 @@ class SalesController extends Controller
             }
         }
 
-        $customer_account = getItemAccount($request->user_id, null, 'customers_account', $branch_id);
-        createEntry($customer_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($order->total_price - $wht_amount), $returned == true ? ($order->total_price - $wht_amount) : 0, $branch_id, $order);
 
+
+        if ($discount > 0) {
+            $allowed_discount_account = Account::findOrFail(settingAccount('allowed_discount_account', $branch_id));
+            createEntry($allowed_discount_account, $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : $discount, $returned == true ? $discount : 0, $branch_id, $order);
+        }
 
         if ($wht_amount > 0) {
             $wst_account = Account::findOrFail(settingAccount('wst_account', $branch_id));
@@ -539,10 +663,16 @@ class SalesController extends Controller
         }
 
 
+        $customer_account = getItemAccount($request->user_id, null, 'customers_account', $branch_id);
+        createEntry($customer_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($order->total_price - $wht_amount), $returned == true ? ($order->total_price - $wht_amount) : 0, $branch_id, $order);
+
+
+
         if ($returned == false) {
-            $users = User::whereHas('roles', function ($query) {
-                $query->where('name', 'superadministrator')
-                    ->orwhere('name', 'administrator');
+            $admins = unserialize(setting('orders_notifications'));
+
+            $users = User::whereHas('roles', function ($query) use ($admins) {
+                $query->whereIn('name', $admins ? $admins : []);
             })->get();
 
             // send noti to admins about new order and stock limit
@@ -576,7 +706,7 @@ class SalesController extends Controller
             'status' => "required|string",
         ]);
 
-        if (!checkPurchaseOrderStatus($request->status, $order->status)) {
+        if (!checkPurchaseOrderStatus($request->status, $order->status)  || $order->order_type == 'Q') {
             alertError('The status of the order cannot be changed', 'لا يمكن تغيير حالة الطلب');
             return redirect()->route('sales.index');
         } elseif ($request->status == 'returned' && $order->paynemt_status != 'pending') {
@@ -738,11 +868,10 @@ class SalesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($sale)
-    {
-        $sale = sale::findOrFail($sale);
-        return view('dashboard.sales.edit ')->with('sale', $sale);
-    }
+
+
+
+
 
     /**
      * Update the specified resource in storage.
@@ -789,7 +918,7 @@ class SalesController extends Controller
             return redirect()->route('sales.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the sale cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو الضريبه لا يمكن حذفه حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

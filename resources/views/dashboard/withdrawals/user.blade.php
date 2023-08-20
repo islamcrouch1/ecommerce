@@ -1,6 +1,9 @@
 @extends('layouts.dashboard.app')
 
 @section('adminContent')
+
+
+
     <div class="row g-3 mb-3">
         <div class="col-xxl-6 col-xl-12">
             <div class="card py-3 mb-3">
@@ -154,6 +157,25 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-7 col-xxl-8">
+            <form style="display: inline-block" action="">
+
+                <div class="d-inline-block">
+                    {{-- <label class="form-label" for="from">{{ __('From') }}</label> --}}
+                    <input type="date" id="from" name="from" class="form-control form-select-sm"
+                        value="{{ request()->from }}">
+                </div>
+
+                <div class="d-inline-block">
+                    {{-- <label class="form-label" for="to">{{ __('To') }}</label> --}}
+                    <input type="date" id="to" name="to" class="form-control form-select-sm sonoo-search"
+                        value="{{ request()->to }}">
+                </div>
+            </form>
         </div>
     </div>
 

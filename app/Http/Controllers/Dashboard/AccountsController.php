@@ -30,23 +30,14 @@ class AccountsController extends Controller
         }
 
         $user = Auth::user();
-
-        if ($user->hasPermission('branches-read')) {
-            $branches = Branch::all();
-        } else {
-            $branches = Branch::where('id', $user->branch_id)->get();
-        }
+        $branches = getUserBranches($user);
 
 
-
-
-        $accounts = Account::where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
-            ->whenParent(request()->parent_id)
+        $accounts = Account::whereIn('branch_id', $branches->pluck('id')->toArray())
+            ->whenParent(request()->parent_id, request()->account_id)
             ->whenBranch(request()->branch_id)
             ->whenSearch(request()->search)
-            ->orWhere(function ($q) {
-                $q->whenSearchExact(request()->account_id);
-            })
+            ->whenAccount(request()->account_id)
             ->latest()
             ->paginate(100);
 
@@ -87,6 +78,7 @@ class AccountsController extends Controller
     {
 
 
+
         if (!request()->has('parent_id')) {
             request()->merge(['parent_id' => null]);
         }
@@ -102,7 +94,7 @@ class AccountsController extends Controller
                 }),
             ],
             // 'code' => "required|string|max:255",
-            'parent_id' => "nullable|string",
+            'parent_id' => "nullable|integer",
             'branches' => "required|array",
             'account_type' => "required|string|max:255",
         ]);
@@ -188,6 +180,7 @@ class AccountsController extends Controller
         $request->validate([
             'name_ar' => "required|string|max:255",
             'name_en' => "required|string|max:255",
+            'parent_id' => "nullable|integer",
             'code' => [
                 'required',
                 'string',
@@ -197,9 +190,20 @@ class AccountsController extends Controller
             ],
         ]);
 
+        if (isset($request->parent_id)) {
+            $parent = Account::findOrFail($request->parent_id);
+            if ($account->branch_id !== $parent->branch_id) {
+                alertError('error in branches', 'فروع الحسابات غير متطابقة');
+                return redirect()->back()->withInput();
+            }
+        }
+
+
+
         $account->update([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
+            'parent_id' => $request->parent_id,
             'code' => $request['code'],
             'updated_by' => Auth::id(),
         ]);
@@ -227,7 +231,7 @@ class AccountsController extends Controller
             return redirect()->route('accounts.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the account cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو الحساب لا يمكن حذفه حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

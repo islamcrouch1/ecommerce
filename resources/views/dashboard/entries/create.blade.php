@@ -67,6 +67,36 @@
 
 
                             <div class="mb-3">
+                                <label class="form-label" for="doc_num">{{ __('document number') }}</label>
+                                <input name="doc_num" class="form-control @error('description') is-invalid @enderror"
+                                    value="{{ old('doc_num') }}" type="number" min="1" autocomplete="on"
+                                    id="doc_num" />
+                                @error('doc_num')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="image">{{ __('document image') }}</label>
+                                <input name="image" class="img form-control @error('image') is-invalid @enderror"
+                                    type="file" id="image" required />
+                                @error('image')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+
+                                <div class="col-md-10">
+                                    <img src="" style="width:100px; border: 1px solid #999"
+                                        class="img-thumbnail img-prev">
+                                </div>
+
+                            </div>
+
+
+                            <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"
                                     name="submit">{{ __('Add New') . ' ' . __('entry') }}</button>
                             </div>

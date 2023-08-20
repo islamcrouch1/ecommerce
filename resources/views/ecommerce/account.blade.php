@@ -237,10 +237,13 @@
                                                             {{-- <th scope="col">Product Details</th> --}}
                                                             <th scope="col">{{ __('Status') }}</th>
                                                             <th scope="col">{{ __('Price') }}</th>
+                                                            <th scope="col">{{ __('Action') }}</th>
                                                             <th scope="col">{{ __('View') }}</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
+
+
 
                                                         @foreach ($orders as $order)
                                                             <tr>
@@ -264,18 +267,180 @@
                                                                         class="theme-color fs-6">{{ $order->total_price . $order->country->currency }}</span>
                                                                 </td>
                                                                 <td>
+                                                                    @if ($order->status == 'pending')
+                                                                        <a data-bs-toggle="modal"
+                                                                            data-bs-target="#cancle-{{ $order->id }}"
+                                                                            class="btn btn-outline btn-sm btn-xs me-3">
+                                                                            {{ __('Cancle Order') }}
+                                                                        </a>
+                                                                    @endif
+
+                                                                    @if ($order->status == 'delivered' && setting('order_review'))
+                                                                        <a data-bs-toggle="modal"
+                                                                            data-bs-target="#review-{{ $order->id }}"
+                                                                            class="btn btn-outline btn-sm btn-xs me-3">
+                                                                            {{ __('Products rating') }}
+                                                                        </a>
+                                                                    @endif
+                                                                </td>
+                                                                <td>
                                                                     <a href="{{ route('ecommerce.invoice', ['order' => $order->id]) }}"
                                                                         target="_blank">
                                                                         <i class="fa fa-eye text-theme"></i>
                                                                     </a>
                                                                 </td>
                                                             </tr>
+
+                                                            @if ($order->status == 'delivered' && setting('order_review'))
+                                                                <!-- Modal start -->
+                                                                <div class="modal logout-modal fade"
+                                                                    id="review-{{ $order->id }}" tabindex="-1"
+                                                                    role="dialog">
+                                                                    <div class="modal-dialog modal-dialog-centered"
+                                                                        role="document">
+                                                                        <div class="modal-content">
+                                                                            <div class="modal-header">
+                                                                                <h5 class="modal-title"
+                                                                                    id="exampleModalLabel">
+                                                                                    {{ __('Products rating') }}</h5>
+                                                                                <button type="button" class="btn-close"
+                                                                                    data-bs-dismiss="modal"
+                                                                                    aria-label="Close">
+                                                                                    <span aria-hidden="true">&times;</span>
+                                                                                </button>
+                                                                            </div>
+                                                                            <form method="POST"
+                                                                                action="{{ route('ecommerce.order.review', ['order' => $order->id]) }}">
+                                                                                @csrf
+                                                                                <div class="modal-body">
+
+
+
+                                                                                    @foreach ($order->products as $product)
+                                                                                        <div class="product-right">
+                                                                                            <div class="border-product">
+
+                                                                                                <h4>{{ getProductName($product, getCombination($product->pivot->product_combination_id)) }}
+                                                                                                </h4>
+
+
+
+
+                                                                                                <div class="col-md-6 mb-2">
+                                                                                                    <label
+                                                                                                        class="form-label">{{ __('Rating') }}</label>
+
+
+                                                                                                    <div style="direction: ltr !important"
+                                                                                                        class="d-block rate"
+                                                                                                        id="rate-{{ $order->id }}-{{ $product->id }}"
+                                                                                                        data-rater='{"starSize":32,"step":0.5}'
+                                                                                                        data-product="{{ $product->id }}"
+                                                                                                        data-order="{{ $order->id }}">
+                                                                                                    </div>
+
+
+                                                                                                </div>
+
+                                                                                                <div style="display: none"
+                                                                                                    class="mb-3">
+                                                                                                    <label
+                                                                                                        class="form-label"
+                                                                                                        for="rating">{{ __('Rating') }}</label>
+                                                                                                    <input
+                                                                                                        name="rating[{{ $product->id }}]"
+                                                                                                        class="form-control rating-{{ $order->id }}-{{ $product->id }} @error('rating') is-invalid @enderror"
+                                                                                                        value="{{ old('rating') }}"
+                                                                                                        type="text"
+                                                                                                        autocomplete="on"
+                                                                                                        id="rating-{{ $order->id }}-{{ $product->id }}"
+                                                                                                        required />
+                                                                                                    @error('rating')
+                                                                                                        <div
+                                                                                                            class="alert alert-danger">
+                                                                                                            {{ $message }}
+                                                                                                        </div>
+                                                                                                    @enderror
+                                                                                                </div>
+
+
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    @endforeach
+
+                                                                                    <div class="col-md-12 mb-2">
+                                                                                        <label
+                                                                                            for="review">{{ __('Write Review') }}</label>
+                                                                                        <textarea class="form-control @error('review') is-invalid @enderror" rows="5" name="review" required></textarea>
+                                                                                        @error('review')
+                                                                                            <div class="alert alert-danger">
+                                                                                                {{ $message }}
+                                                                                            </div>
+                                                                                        @enderror
+                                                                                    </div>
+
+                                                                                </div>
+                                                                                <div class="modal-footer">
+                                                                                    <a href="#"
+                                                                                        class="btn btn-dark btn-custom"
+                                                                                        data-bs-dismiss="modal">{{ __('no') }}</a>
+
+                                                                                    <button
+                                                                                        class="btn btn-solid btn-custom review-order-btn"
+                                                                                        type="submit">{{ __('Submit your review') }}</button>
+
+                                                                                </div>
+                                                                            </form>
+
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- modal end -->
+                                                            @endif
+
+                                                            <!-- Modal start -->
+                                                            <div class="modal logout-modal fade"
+                                                                id="cancle-{{ $order->id }}" tabindex="-1"
+                                                                role="dialog">
+                                                                <div class="modal-dialog modal-dialog-centered"
+                                                                    role="document">
+                                                                    <div class="modal-content">
+                                                                        <div class="modal-header">
+                                                                            <h5 class="modal-title"
+                                                                                id="exampleModalLabel">
+                                                                                {{ __('Cancle Order') }}</h5>
+                                                                            <button type="button" class="btn-close"
+                                                                                data-bs-dismiss="modal"
+                                                                                aria-label="Close">
+                                                                                <span aria-hidden="true">&times;</span>
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="modal-body">
+                                                                            {{ __('Do you want to cancle the order?') }}
+                                                                        </div>
+                                                                        <div class="modal-footer">
+                                                                            <a href="#"
+                                                                                class="btn btn-dark btn-custom"
+                                                                                data-bs-dismiss="modal">{{ __('no') }}</a>
+
+                                                                            <a class="btn btn-solid btn-custom"
+                                                                                href="{{ route('ecommerce.order.cancle', ['order' => $order->id]) }}">{{ __('yes') }}
+                                                                            </a>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!-- modal end -->
                                                         @endforeach
 
 
 
                                                     </tbody>
                                                 </table>
+
+
+
+
                                             </div>
                                         </div>
                                     </div>
@@ -315,7 +480,7 @@
                                                                 </td>
 
                                                                 <td>
-                                                                    <a href="{{ route('ecommerce.product', ['product' => $fav->product->id]) }}"
+                                                                    <a href="{{ route('ecommerce.product', ['product' => $fav->product->id, 'slug' => createSlug(getName($fav->product))]) }}"
                                                                         class="btn btn-xs btn-solid">
                                                                         {{ __('View') }}
                                                                     </a>
@@ -695,6 +860,9 @@
         </div>
     </section>
     <!--  dashboard section end -->
+
+
+
 
 
     <!-- Modal start -->

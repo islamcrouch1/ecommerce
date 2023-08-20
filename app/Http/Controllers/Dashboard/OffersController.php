@@ -62,6 +62,9 @@ class OffersController extends Controller
             'name_en' => "required|string|max:255|unique:offers",
             'country_id' => "required|string",
             'ended_at' => "required|string",
+            'type' => "required|string",
+            'amount' => "nullable|numeric|gt:0",
+            'qty' => "nullable|integer|gt:0",
             'products' => "nullable|array",
             'categories' => "nullable|array",
         ]);
@@ -72,8 +75,11 @@ class OffersController extends Controller
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
             'country_id' => $request['country_id'],
+            'type' => $request['type'],
+            'amount' => $request['amount'] ? $request['amount'] : 0,
+            'qty' => $request['qty'] ? $request['qty'] : 0,
             'products' => serialize($request['products']),
-            'categories' => serialize($request['categories']),
+            'categories' => ($request->type == 'bundles_offer') ? serialize(null) : serialize($request['categories']),
             'ended_at' => $date,
         ]);
 
@@ -119,18 +125,25 @@ class OffersController extends Controller
             'name_ar' => "required|string|max:255|unique:offers,name_ar," . $offer->id,
             'name_en' => "required|string|max:255|unique:offers,name_en," . $offer->id,
             'country_id' => "required|string",
+            'type' => "required|string",
+            'amount' => "nullable|numeric|gt:0",
+            'qty' => "nullable|integer|gt:0",
             'ended_at' => "required|string",
             'products' => "nullable|array",
             'categories' => "nullable|array",
         ]);
 
 
+
         $offer->update([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
             'country_id' => $request['country_id'],
+            'type' => $request['type'],
+            'amount' => $request['amount'] ? $request['amount'] : 0,
+            'qty' => $request['qty'] ? $request['qty'] : 0,
             'products' => serialize($request['products']),
-            'categories' => serialize($request['categories']),
+            'categories' => ($request->type == 'bundles_offer') ? serialize(null) : serialize($request['categories']),
             'ended_at' => $request['ended_at'],
         ]);
 
@@ -159,7 +172,7 @@ class OffersController extends Controller
             return redirect()->route('offers.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the offer cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو العرض لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

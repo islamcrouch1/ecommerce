@@ -185,7 +185,7 @@ class CouponController extends Controller
             return redirect()->route('coupons.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the coupon cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو الكوبون لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

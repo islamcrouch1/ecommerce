@@ -1,7 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FrontController;
+
+
+
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -14,12 +18,13 @@ use App\Http\Controllers\FrontController;
 |
 */
 
+
+Route::get('/ali', [FrontController::class, 'aliexpress'])->name('front.aliexpress');
+
+
 if (!file_exists(storage_path('installed'))) {
     Route::redirect('/', '/install');
-} else {
-    Route::redirect('/', '/home');
 }
-
 
 
 // Route::get('/sendemail', function () {
@@ -29,24 +34,24 @@ if (!file_exists(storage_path('installed'))) {
 
 
 
-//front route
-Route::get('/front', [FrontController::class, 'index'])->name('front.index');
-Route::get('/fqs', [FrontController::class, 'fqs'])->name('front.fqs');
-Route::get('/about-us', [FrontController::class, 'about'])->name('front.about');
-Route::get('/terms-conditions', [FrontController::class, 'terms'])->name('front.terms');
+Route::get('/', function () {
+    return redirect()->route('ecommerce.home');
+})->name('base.url');
 
 
 Route::get('/setlocale', function () {
     setLocaleBySession();
-    return redirect()->back();
+    return redirect()->back()->withInput();
 })->name('setlocale');
 
-
 require __DIR__ . '/auth.php';
-require __DIR__ . '/dashboard.php';
 require __DIR__ . '/affiliate.php';
 require __DIR__ . '/vendor.php';
 require __DIR__ . '/verification.php';
 require __DIR__ . '/user.php';
 require __DIR__ . '/store.php';
 require __DIR__ . '/ecommerce.php';
+require __DIR__ . '/dashboard.php';
+require __DIR__ . '/front.php';
+require __DIR__ . '/export.php';
+require __DIR__ . '/import.php';

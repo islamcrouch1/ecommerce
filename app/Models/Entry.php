@@ -10,7 +10,7 @@ class Entry extends Model
     use HasFactory;
 
     protected $fillable = [
-        'account_id', 'reference_id', 'type', 'warehouse_id', 'dr_amount', 'cr_amount', 'description', 'created_by', 'updated_by', 'created_at', 'branch_id'
+        'account_id', 'reference_id', 'type', 'warehouse_id', 'dr_amount', 'cr_amount', 'description', 'created_by', 'updated_by', 'created_at', 'branch_id', 'media_id', 'doc_num', 'due_date'
     ];
 
     public function user()
@@ -22,6 +22,11 @@ class Entry extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function media()
+    {
+        return $this->belongsTo(Media::class);
     }
 
     public function scopeWhenAccount($query, $account_id)
@@ -46,7 +51,8 @@ class Entry extends Model
                 ->orWhere('dr_amount', 'like', "%$search%")
                 ->orWhere('cr_amount', 'like', "%$search%")
                 ->orWhere('account_id', 'like', "$search")
-                ->orWhere('branch_id', 'like', "$search");
+                ->orWhere('branch_id', 'like', "$search")
+                ->orWhere('doc_num', 'like', "$search");
         });
     }
 }

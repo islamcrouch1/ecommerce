@@ -12,9 +12,8 @@ class Tax extends Model
     use HasFactory;
     use SoftDeletes;
 
-
     protected $fillable = [
-        'name', 'description', 'tax_rate', 'created_by', 'updated_by',
+        'name', 'description', 'tax_rate', 'created_by', 'updated_by', 'status', 'type', 'name_en', 'name_ar'
     ];
 
 

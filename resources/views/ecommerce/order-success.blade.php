@@ -77,9 +77,8 @@
 
                         @foreach ($order->products as $product)
                             <div class="row product-order-detail">
-                                <div class="col-3"><img
-                                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
-                                        alt="" class="img-fluid blur-up lazyload"></div>
+                                <div class="col-3"><img src="{{ getProductImage($product) }}" alt=""
+                                        class="img-fluid blur-up lazyload"></div>
                                 <div class="col-3 order_detail">
                                     <div>
                                         <h4>{{ __('product name') }}</h4>
@@ -112,16 +111,16 @@
                         <div class="total-sec">
                             <ul>
                                 <li>{{ __('subtotal') }}
-                                    <span>{{ $order->subtotal_price . $order->country->currency }}</span>
+                                    <span>{{ round($order->subtotal_price, 2) . $order->country->currency }}</span>
                                 </li>
                                 <li>{{ __('discount') }}
-                                    <span>{{ $order->discount_amount . $order->country->currency }}</span>
+                                    <span>{{ round($order->discount_amount, 2) . $order->country->currency }}</span>
                                 </li>
                                 <li>{{ __('tax value') }}
-                                    <span>{{ $order->total_tax . $order->country->currency }}</span>
+                                    <span>{{ round($order->total_tax, 2) . $order->country->currency }}</span>
                                 </li>
                                 <li>{{ __('shipping') }}
-                                    <span>{{ $order->shipping_amount . $order->country->currency }}</span>
+                                    <span>{{ round($order->shipping_amount, 2) . $order->country->currency }}</span>
                                 </li>
                                 {{-- <li>tax(GST) <span>$10.00</span></li> --}}
                             </ul>

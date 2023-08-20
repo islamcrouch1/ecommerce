@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name_ar')->nullable();
             $table->string('name_en')->nullable();
             $table->string('code')->nullable();
-            $table->enum('account_type', ['assets', 'revenue', 'liability', 'expenses'])->default('assets');
+            $table->enum('account_type', ['assets', 'revenue', 'liability', 'expenses', 'owners_equity'])->default('assets');
             $table->tinyInteger('status')->default('1')->comment('1 for active & 0 for inactive');
             $table->integer('parent_id')->nullable();
             $table->integer('branch_id')->nullable();

@@ -12,7 +12,7 @@ class PhoneVerificationController extends Controller
     public function show(Request $request)
     {
         return hasVerifiedPhone($request->user())
-            ? redirect()->route('home')
+            ? redirect()->route('admin.home')
             : view('dashboard.auth.verifyphone');
     }
 
@@ -39,7 +39,7 @@ class PhoneVerificationController extends Controller
 
         markPhoneAsVerified($request->user());
 
-        // return redirect()->route('home')->with('status', 'Your phone was successfully verified!');
+        // return redirect()->route('admin.home')->with('status', 'Your phone was successfully verified!');
 
         $request->user()->forceFill([
             'verification_code' => null
@@ -53,6 +53,6 @@ class PhoneVerificationController extends Controller
     public function resend(Request $request)
     {
         callToVerify($request->user());
-        return redirect()->back();
+        return redirect()->back()->withInput();
     }
 }

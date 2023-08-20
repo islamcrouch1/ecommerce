@@ -163,7 +163,7 @@
                                         @if ($category->children->count() > 0)
                                             @foreach ($category->children as $subCat)
                                                 @include(
-                                                    'dashboard.categories._category_options_product_edit',
+                                                    'dashboard.categories._categories_options_product_edit',
                                                     [
                                                         'scategory' => $subCat,
                                                         'product' => $product,

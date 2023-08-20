@@ -86,6 +86,24 @@
 
 
 
+                            <div class="mb-3">
+                                <label class="form-label" for="shipping_company_id">{{ __('shipping company') }}</label>
+
+                                <select class="form-select @error('shipping_company_id') is-invalid @enderror"
+                                    aria-label="" name="shipping_company_id" id="shipping_company_id">
+                                    <option value="">{{ __('select shipping company') }}</option>
+                                    @foreach ($shipping_companies as $company)
+                                        <option value="{{ $company->id }}"
+                                            {{ old('shipping_company_id') == $company->id ? 'selected' : '' }}>
+                                            {{ getName($company) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('shipping_company_id')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
 
 
 

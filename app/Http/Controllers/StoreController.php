@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Balance;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\ShippingRate;
 use App\Models\Stock;
 use App\Models\StoreProduct;
@@ -19,27 +20,27 @@ class StoreController extends Controller
             $request->merge(['pagination' => 24]);
         }
 
-        $user = User::findOrFail($user);
+        $user = User::find($user);
         if ($user == null) {
             return redirect()->route('home.front', app()->getLocale());
         }
 
-        $products = StoreProduct::where('user_id', $user->id)
-            ->whereHas('product', function ($query) use ($request) {
-                $query->where('name_ar', 'like', "%$request->search%")
-                    ->orWhere('name_en', 'like', "%$request->search%")
-                    ->orWhere('description_ar', 'like', "%$request->search%")
-                    ->orWhere('description_en', 'like', "%$request->search%")
-                    ->orWhere('sku', 'like', "%$request->search%");
-            })
+        if (!checkUserInfo($user)) {
+            return redirect()->route('ecommerce.home');
+        }
+
+        $country = getCountry();
+
+
+        $products = Product::where('status', "active")
+            ->where('country_id', $country->id)
+            ->where('vendor_id', $user->id)
+            ->whenSearch(request()->search)
             ->latest()
             ->paginate(request()->pagination);
 
 
-
-        // $products = Aproduct::latest()
-        // ->join('products', 'products.id', '=', 'aproducts.product_id')
-        // ->paginate(request()->pagination);
+        addViewRecord();
 
         return view('store.index')->with('products', $products)->with('user', $user);
     }
@@ -282,9 +283,10 @@ class StoreController extends Controller
         //     }
         // }
 
-        $users = User::whereHas('roles', function ($query) {
-            $query->where('name', 'superadministrator')
-                ->orwhere('name', 'administrator');
+        $admins = unserialize(setting('orders_notifications'));
+
+        $users = User::whereHas('roles', function ($query) use ($admins) {
+            $query->whereIn('name', $admins ? $admins : []);
         })->get();
 
         foreach ($users as $admin) {

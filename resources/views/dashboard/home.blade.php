@@ -20,6 +20,199 @@
         </div>
     </div>
 
+
+    @if (Auth::user()->hasRole('administrator'))
+
+
+
+        @if (isMobileDevice())
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            {{ __('Attendance and leave') }}
+                        </div>
+                        <div class="card-body">
+
+                            @if (getUserAttendance())
+                                <div class="notification-body">
+                                    <p class="mb-1">{{ __('Your attendance has been registered') }}</p>
+                                    <span class="notification-time"><span class="me-2" role="img"
+                                            aria-label="Emoji">📢</span>
+                                        {{ getUserAttendance()->attendance_date }}
+                                        <span
+                                            class="badge badge-soft-info ">{{ interval(getUserAttendance()->attendance_date) }}</span>
+
+                                    </span>
+                                </div>
+
+                                <hr class="hr hr-blurry" />
+                            @endif
+
+
+                            @if (getUserLeave())
+                                <div class="notification-body">
+                                    <p class="mb-1">{{ __('Your leave has been registered') }}</p>
+                                    <span class="notification-time"><span class="me-2" role="img"
+                                            aria-label="Emoji">📢</span>
+                                        {{ getUserLeave()->leave_date }}
+                                        <span
+                                            class="badge badge-soft-info ">{{ interval(getUserLeave()->leave_date) }}</span>
+
+                                    </span>
+                                </div>
+
+                                <hr class="hr hr-blurry" />
+                            @endif
+
+
+                            @if (!getUserAttendance() || !getUserLeave())
+
+                                <form method="POST"
+                                    action="{{ route('employee.attendance.store', ['user' => $user->id]) }}"
+                                    enctype="multipart/form-data">
+                                    @csrf
+
+                                    <div class="mb-3 col-sm-6">
+                                        <label class="form-label" for="password">{{ __('enter your password') }}</label>
+                                        <input class="form-control  @error('password') is-invalid @enderror" type="password"
+                                            autocomplete="on" id="password" name="password" required />
+                                        @error('password')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <input style="display:none" class="form-control latitude-input" type="text"
+                                        id="latitude" name="latitude" required />
+
+                                    <input style="display:none" class="form-control longitude-input" type="text"
+                                        id="longitude" name="longitude" required />
+
+                                    <div class="mb-3">
+                                        <button class="btn btn-primary d-block w-100 mt-3" type="submit" name="submit">
+                                            @if (getUserAttendance() == null)
+                                                {{ __('Save attendance record') }}
+                                            @else
+                                                @if (getUserLeave() == null)
+                                                    {{ __('Save leave record') }}
+                                                @endif
+                                            @endif
+                                        </button>
+                                    </div>
+
+                                </form>
+
+                            @endif
+
+
+
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+
+
+
+        @php
+            $account = getItemAccount(Auth::id(), null, 'petty_cash_account', Auth::user()->branch_id);
+            $petty_amount = getTrialBalance($account->id, null, null);
+            $settlement_amount = getSettlementAmount(Auth::user());
+            
+        @endphp
+
+        @if ($petty_amount > 0)
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            {{ __('Petty cash settlement') }}
+                        </div>
+                        <div class="card-body">
+
+                            <div class="notification-body">
+                                <p class="mb-1"><span class="notification-time"><span class="me-2" role="img"
+                                            aria-label="Emoji">📢</span>
+
+                                        <span style="font-size:15px"
+                                            class="badge badge-soft-info ">{{ __('your petty cash amount') . ' : ' . $petty_amount }}</span>
+                                </p>
+
+
+                                </span>
+                            </div>
+                            <hr class="hr hr-blurry" />
+
+
+                            @if ($settlement_amount > 0)
+                                @foreach (Auth::user()->sheets->where('admin_id', null) as $sheet)
+                                    <div class="notification-body">
+                                        <a href="{{ route('employee.settlement.create', ['sheet' => $sheet->id]) }}"
+                                            class="btn btn-primary d-block w-100 mt-3">
+                                            {{ __('Add expenses to petty cash sheet settlement') . ' - ' . __('petty cash amount') . ' : ' . $sheet->amount }}
+                                        </a>
+                                    </div>
+                                    <hr class="hr hr-blurry" />
+                                @endforeach
+                            @endif
+
+
+
+
+
+
+
+
+                            @if ($settlement_amount < $petty_amount)
+                                <form method="POST" action="{{ route('employee.settlement.sheet_create') }}"
+                                    enctype="multipart/form-data">
+                                    @csrf
+
+                                    <div class="mb-3 col-sm-6">
+                                        <label class="form-label"
+                                            for="amount">{{ __('Enter the amount of the petty cash to be settled') }}</label>
+                                        <input class="form-control @error('amount') is-invalid @enderror" type="numbet"
+                                            id="amount" name="amount" min="0" step="0.01"
+                                            value="{{ $petty_amount - $settlement_amount }}" required />
+                                        @error('amount')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <button class="btn btn-primary d-block w-100 mt-3" type="submit" name="submit">
+                                            {{ __('Preparing the settlement sheet') }}
+                                        </button>
+                                    </div>
+
+                                </form>
+                            @endif
+
+
+
+
+
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+
+
+
+
+    @endif
+
+
     @if (Auth::user()->hasRole('superadministrator|administrator') &&
             auth()->user()->hasPermission('website_traffic-read'))
         <div class="row g-3 mb-3">
@@ -542,35 +735,284 @@
                 </div>
             </div>
         </div>
-    @endif
 
 
-    @if (Auth::user()->hasRole('affiliate'))
-        <div class="row g-3 mb-3">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        {{ __('New feature from Sonoo!') }}
-                        <span class="badge badge-soft-warning">New</span>
+
+
+        @if (!checkUserInfo(Auth::user()))
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="alert alert-info" role="alert">
+                        {{ __('Please complete your account information to use this service!') }}</div>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <form method="POST" action="{{ route('user.store.update') }}" enctype="multipart/form-data">
+                    @csrf
+                    <div class="card-header position-relative min-vh-25 mb-7">
+
+                        <div class="cover-image">
+                            <div class="bg-holder rounded-3 rounded-bottom-0 img-prev-cover"
+                                style="background-image:url({{ getUserInfo(Auth::user()) != null && getUserInfo(Auth::user())->store_cover != null ? getMediaPath(getUserInfo(Auth::user())->store_cover) : asset('assets/img/store_cover.jpg') }});">
+                            </div>
+                            <!--/.bg-holder-->
+
+                            <input name="store_cover" class="d-none cover" id="upload-cover-image" type="file" />
+                            <label class="cover-image-file-input" for="upload-cover-image"><span
+                                    class="fas fa-camera me-2"></span><span>{{ __('Change cover photo') }}</span></label>
+                        </div>
+                        <div class="avatar avatar-5xl avatar-profile shadow-sm img-thumbnail rounded-circle">
+                            <div class="h-100 w-100 rounded-circle overflow-hidden position-relative"> <img
+                                    src="{{ getUserInfo(Auth::user()) != null && getUserInfo(Auth::user())->store_profile != null ? getMediaPath(getUserInfo(Auth::user())->store_profile) : asset('storage/images/users/' . $user->profile) }}"
+                                    width="200" alt="" data-dz-thumbnail="data-dz-thumbnail"
+                                    class="img-prev" />
+                                <input name="store_profile" class="d-none img" id="profile-image" type="file" />
+                                <label class="mb-0 overlay-icon d-flex flex-center" for="profile-image"><span
+                                        class="bg-holder overlay overlay-0"></span><span
+                                        class="z-index-1 text-white dark__text-white text-center fs--1"><span
+                                            class="fas fa-camera"></span><span
+                                            class="d-block">Update</span></span></label>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <h5 class="card-title">{{ __('Products listing page for affiliate:') }}</h5>
-                        <p class="card-text pt-2">
-                            {{ __('You can now choose your list of products and display them on a sale page ready to complete the order directly from your customers, a new feature that enables you to market in an easier way without the need to create a website or a landing page for products, all you need now is to choose the products and create your advertising campaigns and get profits') }}
-                        </p>
-                        <a href="{{ route('store.show', ['user' => Auth::id()]) }}" target="_blank"
-                            class="btn btn-primary">{{ __('Visit your page') }}</a>
-                        <button id="copy" class="btn btn-info">{{ __('Copy link') }}</button>
-                        <input style="display: none" type="text"
-                            value="{{ route('store.show', ['user' => Auth::id()]) }}" id="page-link">
+                        <div class="row">
+                            <div class="col-lg-12">
 
-                        <input style="display: none" type="text" value="{{ app()->getLocale() }}" id="locale">
+                                <div class="mb-3">
+                                    <label class="form-label" for="store_name">{{ __('Your store name') }}</label>
+                                    <input name="store_name"
+                                        class="form-control @error('store_name') is-invalid @enderror"
+                                        value="{{ getUserInfo(Auth::user()) != null ? getUserInfo(Auth::user())->store_name : '' }}"
+                                        type="text" autocomplete="on" id="store_name" />
+                                    @error('store_name')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
 
 
+                                <div class="mb-3">
+                                    <label class="form-label"
+                                        for="store_description">{{ __('Your store description') }}</label>
+                                    <textarea name="store_description" class="form-control @error('store_description') is-invalid @enderror"
+                                        type="text" id="store_description">{{ getUserInfo(Auth::user()) != null ? getUserInfo(Auth::user())->store_description : '' }}</textarea>
+                                    @error('store_description')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+
+
+                                <div class="mb-3">
+                                    <label class="form-label"
+                                        for="commercial_record">{{ __('commercial record photo') }}</label>
+                                    <input name="commercial_record"
+                                        class=" form-control @error('commercial_record') is-invalid @enderror"
+                                        type="file" id="commercial_record" />
+                                    @error('commercial_record')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+
+                                @if (getUserInfo(Auth::user()) != null && getUserInfo(Auth::user())->commercial_record != null)
+                                    <div class="mb-3">
+                                        <div class="col-md-10">
+                                            <a href="{{ getMediaPath(getUserInfo(Auth::user())->commercial_record) }}"
+                                                target="_blank">
+                                                <img src="{{ getMediaPath(getUserInfo(Auth::user())->commercial_record) }}"
+                                                    style="width:150px; border: 1px solid #999" class="img-thumbnail">
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
+
+
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="tax_card">{{ __('tax card photo') }}</label>
+                                    <input name="tax_card" class=" form-control @error('tax_card') is-invalid @enderror"
+                                        type="file" id="tax_card" />
+                                    @error('tax_card')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                @if (getUserInfo(Auth::user()) != null && getUserInfo(Auth::user())->tax_card != null)
+                                    <div class="mb-3">
+                                        <div class="col-md-10">
+                                            <a href="{{ getMediaPath(getUserInfo(Auth::user())->tax_card) }}"
+                                                target="_blank">
+                                                <img src="{{ getMediaPath(getUserInfo(Auth::user())->tax_card) }}"
+                                                    style="width:150px; border: 1px solid #999" class="img-thumbnail">
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="id_card_front">{{ __('ID card front') }}</label>
+                                    <input name="id_card_front"
+                                        class=" form-control @error('id_card_front') is-invalid @enderror" type="file"
+                                        id="id_card_front" />
+                                    @error('id_card_front')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                @if (getUserInfo(Auth::user()) != null && getUserInfo(Auth::user())->id_card_front != null)
+                                    <div class="mb-3">
+                                        <div class="col-md-10">
+                                            <a href="{{ getMediaPath(getUserInfo(Auth::user())->id_card_front) }}"
+                                                target="_blank">
+                                                <img src="{{ getMediaPath(getUserInfo(Auth::user())->id_card_front) }}"
+                                                    style="width:150px; border: 1px solid #999" class="img-thumbnail">
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="id_card_back">{{ __('ID card back') }}</label>
+                                    <input name="id_card_back"
+                                        class=" form-control @error('id_card_back') is-invalid @enderror" type="file"
+                                        id="id_card_back" />
+                                    @error('id_card_back')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                @if (getUserInfo(Auth::user()) != null && getUserInfo(Auth::user())->id_card_back != null)
+                                    <div class="mb-3">
+                                        <div class="col-md-10">
+                                            <a href="{{ getMediaPath(getUserInfo(Auth::user())->id_card_back) }}"
+                                                target="_blank">
+                                                <img src="{{ getMediaPath(getUserInfo(Auth::user())->id_card_back) }}"
+                                                    style="width:150px; border: 1px solid #999" class="img-thumbnail">
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="bank_account">{{ __('bank account number') }}</label>
+                                    <input name="bank_account"
+                                        class="form-control @error('bank_account') is-invalid @enderror"
+                                        value="{{ getUserInfo(Auth::user()) != null ? getUserInfo(Auth::user())->bank_account : '' }}"
+                                        type="text" autocomplete="on" id="bank_account" />
+                                    @error('bank_account')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="company_address">{{ __('company address') }}</label>
+                                    <input name="company_address"
+                                        class="form-control @error('company_address') is-invalid @enderror"
+                                        value="{{ getUserInfo(Auth::user()) != null ? getUserInfo(Auth::user())->company_address : '' }}"
+                                        type="text" autocomplete="on" id="company_address" />
+                                    @error('company_address')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="website">{{ __('website') }}</label>
+                                    <input name="website" class="form-control @error('website') is-invalid @enderror"
+                                        value="{{ getUserInfo(Auth::user()) != null ? getUserInfo(Auth::user())->website : '' }}"
+                                        type="text" autocomplete="on" id="website" />
+                                    @error('website')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="facebook_page">{{ __('facebook page') }}</label>
+                                    <input name="facebook_page"
+                                        class="form-control @error('facebook_page') is-invalid @enderror"
+                                        value="{{ getUserInfo(Auth::user()) != null ? getUserInfo(Auth::user())->facebook_page : '' }}"
+                                        type="text" autocomplete="on" id="facebook_page" />
+                                    @error('facebook_page')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+
+
+
+                                <div class="mb-3">
+                                    <button class="btn btn-primary d-block w-100 mt-3" type="submit"
+                                        name="submit">{{ __('Save') }}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        @endif
+    @endif
+
+    @if (checkUserInfo(Auth::user()))
+        @if (Auth::user()->hasRole('affiliate'))
+            <div class="row g-3 mb-3">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            {{ __('New feature from Sonoo!') }}
+                            <span class="badge badge-soft-warning">New</span>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ __('Products listing page for affiliate:') }}</h5>
+                            <p class="card-text pt-2">
+                                {{ __('You can now choose your list of products and display them on a sale page ready to complete the order directly from your customers, a new feature that enables you to market in an easier way without the need to create a website or a landing page for products, all you need now is to choose the products and create your advertising campaigns and get profits') }}
+                            </p>
+                            <a href="{{ route('store.show', ['user' => Auth::id()]) }}" target="_blank"
+                                class="btn btn-primary">{{ __('Visit your page') }}</a>
+                            <button id="copy" class="btn btn-info">{{ __('Copy link') }}</button>
+                            <input style="display: none" type="text"
+                                value="{{ route('store.show', ['user' => Auth::id()]) }}" id="page-link">
+
+                            <input style="display: none" type="text" value="{{ app()->getLocale() }}"
+                                id="locale">
+
+
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        @endif
+        @if (Auth::user()->hasRole('vendor'))
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            {{ __('your store is active') }}
+                            {{-- <span class="badge badge-soft-warning">New</span> --}}
+                        </div>
+                        <div class="card-body">
+                            @if (getUserInfo(Auth::user()) != null && getUserInfo(Auth::user())->store_name != null)
+                                <a href="{{ route('store.show', ['user' => Auth::id(), 'store_name' => getUserInfo(Auth::user())->store_name]) }}"
+                                    target="_blank" class="btn btn-primary">{{ __('Visit your page') }}</a>
+                                <button id="copy" class="btn btn-info">{{ __('Copy link') }}</button>
+                                <input style="display: none" type="text"
+                                    value="{{ route('store.show', ['user' => Auth::id(), 'store_name' => getUserInfo(Auth::user())->store_name]) }}"
+                                    id="page-link">
+
+                                <input style="display: none" type="text" value="{{ app()->getLocale() }}"
+                                    id="locale">
+                            @endif
+
+
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     @endif
 
 
@@ -625,4 +1067,9 @@
             </div>
         </div>
     @endif
+
+
+
+
+
 @endsection

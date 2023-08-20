@@ -18,10 +18,10 @@
                     <div class="d-none" id="table-customers-actions">
                         <div class="d-flex">
                             <select class="form-select form-select-sm" aria-label="Bulk actions">
-                                <option selected="">{{ __('Bulk actions') }}</option>
+                                {{-- <option selected="">{{ __('Bulk actions') }}</option>
                                 <option value="Refund">{{ __('Refund') }}</option>
                                 <option value="Delete">{{ __('Delete') }}</option>
-                                <option value="Archive">{{ __('Archive') }}</option>
+                                <option value="Archive">{{ __('Archive') }}</option> --}}
                             </select>
                             <button class="btn btn-falcon-default btn-sm ms-2" type="button">{{ __('Apply') }}</button>
                         </div>
@@ -52,7 +52,7 @@
                         @endif
                         <a href="{{ route('offers.trashed') }}" class="btn btn-falcon-default btn-sm" type="button"><span
                                 class="fas fa-trash" data-fa-transform="shrink-3 down-2"></span><span
-                                class="d-none d-sm-inline-block ms-1">{{ __('Trash') }}</span></a>
+                                class="d-none d-sm-inline-block ms-1">{{ __('Trash ') }}</span></a>
                         <button class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-external-link-alt"
                                 data-fa-transform="shrink-3 down-2"></span><span
                                 class="d-none d-sm-inline-block ms-1">{{ __('Export') }}</span></button>
@@ -73,6 +73,9 @@
                                     </div>
                                 </th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">{{ __('Name') }}
+                                </th>
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
+                                    {{ __('Offer type') }}
                                 </th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">{{ __('country') }}
                                 </th>
@@ -113,6 +116,10 @@
                                             </div>
                                         </div>
                                     </td>
+
+                                    <td class="phone align-middle white-space-nowrap py-2">
+                                        {{ __($offer->type) }}
+                                    </td>
                                     <td class="phone align-middle white-space-nowrap py-2">
                                         {{ getName($offer->country) }}
                                     </td>
@@ -152,7 +159,7 @@
                                                             @csrf
                                                             @method('DELETE')
                                                             <button class="dropdown-item text-danger"
-                                                                type="submit">{{ $offer->trashed() ? __('Delete') : __('Trash') }}</button>
+                                                                type="submit">{{ $offer->trashed() ? __('Delete') : __('Trash ') }}</button>
                                                         </form>
                                                     @endif
                                                 </div>

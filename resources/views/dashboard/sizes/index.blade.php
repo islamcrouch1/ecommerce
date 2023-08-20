@@ -18,10 +18,10 @@
                     <div class="d-none" id="table-customers-actions">
                         <div class="d-flex">
                             <select class="form-select form-select-sm" aria-label="Bulk actions">
-                                <option selected="">{{ __('Bulk actions') }}</option>
+                                {{-- <option selected="">{{ __('Bulk actions') }}</option>
                                 <option value="Refund">{{ __('Refund') }}</option>
                                 <option value="Delete">{{ __('Delete') }}</option>
-                                <option value="Archive">{{ __('Archive') }}</option>
+                                <option value="Archive">{{ __('Archive') }}</option> --}}
                             </select>
                             <button class="btn btn-falcon-default btn-sm ms-2" type="button">{{ __('Apply') }}</button>
                         </div>
@@ -35,7 +35,7 @@
                         @endif
                         <a href="{{ route('sizes.trashed') }}" class="btn btn-falcon-default btn-sm" type="button"><span
                                 class="fas fa-trash" data-fa-transform="shrink-3 down-2"></span><span
-                                class="d-none d-sm-inline-block ms-1">{{ __('Trash') }}</span></a>
+                                class="d-none d-sm-inline-block ms-1">{{ __('Trash ') }}</span></a>
                         <button class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-external-link-alt"
                                 data-fa-transform="shrink-3 down-2"></span><span
                                 class="d-none d-sm-inline-block ms-1">{{ __('Export') }}</span></button>
@@ -107,8 +107,9 @@
                                             <div class="dropdown-menu dropdown-menu-end border py-0"
                                                 aria-labelledby="customer-dropdown-0">
                                                 <div class="bg-white py-2">
-                                                    @if ($size->trashed() &&
-                                                        auth()->user()->hasPermission('sizes-restore'))
+                                                    @if (
+                                                        $size->trashed() &&
+                                                            auth()->user()->hasPermission('sizes-restore'))
                                                         <a class="dropdown-item"
                                                             href="{{ route('sizes.restore', ['size' => $size->id]) }}">{{ __('Restore') }}</a>
                                                     @elseif(auth()->user()->hasPermission('sizes-update'))
@@ -116,13 +117,13 @@
                                                             href="{{ route('sizes.edit', ['size' => $size->id]) }}">{{ __('Edit') }}</a>
                                                     @endif
                                                     @if (auth()->user()->hasPermission('sizes-delete') ||
-                                                        auth()->user()->hasPermission('sizes-trash'))
+                                                            auth()->user()->hasPermission('sizes-trash'))
                                                         <form method="POST"
                                                             action="{{ route('sizes.destroy', ['size' => $size->id]) }}">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button class="dropdown-item text-danger"
-                                                                type="submit">{{ $size->trashed() ? __('Delete') : __('Trash') }}</button>
+                                                                type="submit">{{ $size->trashed() ? __('Delete') : __('Trash ') }}</button>
                                                         </form>
                                                     @endif
                                                 </div>

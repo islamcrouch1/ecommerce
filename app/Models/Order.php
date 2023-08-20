@@ -12,8 +12,9 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'affiliate_id', 'address', 'status', 'country_id', 'customer_id', 'warehouse_id', 'order_from', 'total_commission', 'total_profit', 'notes', 'full_name', 'total_price', 'special_mark', 'house', 'phone2', 'shipping_amount', 'city_id', 'state_id', 'subtotal_price', 'total_price_affiliate', 'phone', 'shipping_method_id', 'payment_status', 'payment_method', 'transaction_id', 'total_tax', 'is_seen', 'coupon_code', 'coupon_amount', 'branch_id', 'session_id', 'orderId', 'total_wht_products', 'total_wht_services', 'discount_amount', 'avenue', 'block'
+        'affiliate_id', 'order_deadline', 'serial', 'is_sent', 'expected_delivery', 'order_type', 'address', 'status', 'country_id', 'customer_id', 'warehouse_id', 'order_from', 'total_commission', 'total_profit', 'notes', 'full_name', 'total_price', 'special_mark', 'house',  'shipping_amount', 'city_id', 'state_id', 'subtotal_price', 'total_price_affiliate', 'phone', 'shipping_method_id', 'payment_status', 'payment_method', 'transaction_id', 'total_tax', 'is_seen', 'coupon_code', 'coupon_amount', 'branch_id', 'session_id', 'orderId', 'total_wht_products', 'total_wht_services', 'discount_amount', 'avenue', 'block', 'description', 'phone2', 'floor_no', 'delivery_time'
     ];
+
 
 
     public function affiliate()
@@ -44,9 +45,9 @@ class Order extends Model
         return $this->belongsTo(User::class, 'customer_id');
     }
 
-    public function refund()
+    public function refunds()
     {
-        return $this->hasOne(Refund::class);
+        return $this->hasMany(Refund::class);
     }
 
 
@@ -116,51 +117,73 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
-    public static function getOrders($status = null, $from = null, $to = null)
+    public static function getOrders($data = null)
     {
 
-        $orders = DB::table('order_product')->select('id', 'order_id', 'created_at', 'updated_at', 'product_id', 'vendor_price', 'selling_price', 'commission_per_item', 'profit_per_item', 'total_selling_price', 'total_commission', 'quantity', 'stock_id', 'product_type', 'color_en', 'size_en')
-            ->whereDate('created_at', '>=', $from)
-            ->whereDate('created_at', '<=', $to)
-            ->get()->toArray();
+        // $orders = DB::table('order_product')->select('id', 'order_id', 'created_at', 'updated_at', 'product_id', 'vendor_price', 'selling_price', 'commission_per_item', 'profit_per_item', 'total_selling_price', 'total_commission', 'quantity', 'stock_id', 'product_type', 'color_en', 'size_en')
+        //     ->whereDate('created_at', '>=', $from)
+        //     ->whereDate('created_at', '<=', $to)
+        //     ->get()->toArray();
 
-        foreach ($orders as $index => $order) {
+        // foreach ($orders as $index => $order) {
 
-            $product = Product::where('id', $order->product_id)->first();
-            $orders[$index]->product_name_ar = $product->name_ar;
-            $orders[$index]->product_name_en = $product->name_en;
+        //     $product = Product::where('id', $order->product_id)->first();
+        //     $orders[$index]->product_name_ar = $product->name_ar;
+        //     $orders[$index]->product_name_en = $product->name_en;
 
-            $orders[$index]->affiliate_id = $product->orders->where('id', $order->order_id)->first()->user_id;
-            $orders[$index]->status = $product->orders->where('id', $order->order_id)->first()->status;
-            $orders[$index]->customer_name = $product->orders->where('id', $order->order_id)->first()->full_name;
-            $orders[$index]->customer_phone = $product->orders->where('id', $order->order_id)->first()->client_phone;
-            $orders[$index]->customer_phone2 = $product->orders->where('id', $order->order_id)->first()->phone2;
-            $orders[$index]->address = $product->orders->where('id', $order->order_id)->first()->address;
-            $orders[$index]->house = $product->orders->where('id', $order->order_id)->first()->house;
-            $orders[$index]->special_mark = $product->orders->where('id', $order->order_id)->first()->special_mark;
-            $orders[$index]->notes = $product->orders->where('id', $order->order_id)->first()->notes;
+        //     $orders[$index]->affiliate_id = $product->orders->where('id', $order->order_id)->first()->user_id;
+        //     $orders[$index]->status = $product->orders->where('id', $order->order_id)->first()->status;
+        //     $orders[$index]->customer_name = $product->orders->where('id', $order->order_id)->first()->full_name;
+        //     $orders[$index]->customer_phone = $product->orders->where('id', $order->order_id)->first()->client_phone;
+        //     $orders[$index]->customer_phone2 = $product->orders->where('id', $order->order_id)->first()->phone2;
+        //     $orders[$index]->address = $product->orders->where('id', $order->order_id)->first()->address;
+        //     $orders[$index]->house = $product->orders->where('id', $order->order_id)->first()->house;
+        //     $orders[$index]->special_mark = $product->orders->where('id', $order->order_id)->first()->special_mark;
+        //     $orders[$index]->notes = $product->orders->where('id', $order->order_id)->first()->notes;
 
-            $orders[$index]->SKU = $product->sku;
-            $orders[$index]->vendor_id = $product->vendor_id;
+        //     $orders[$index]->SKU = $product->sku;
+        //     $orders[$index]->vendor_id = $product->vendor_id;
 
 
-            if ($order->product_type == '0') {
-                $orders[$index]->product_type = 'Sonoo stock';
-            } else {
-                $orders[$index]->product_type = 'Affiliate stock';
-            }
+        //     if ($order->product_type == '0') {
+        //         $orders[$index]->product_type = 'Sonoo stock';
+        //     } else {
+        //         $orders[$index]->product_type = 'Affiliate stock';
+        //     }
 
-            $order2 = Order::find($order->order_id);
-            $total = intval($order2->shipping_rate->cost) + $order->total_selling_price;
-            $orders[$index]->total_selling_price = $total;
+        //     $order2 = Order::find($order->order_id);
+        //     $total = intval($order2->shipping_rate->cost) + $order->total_selling_price;
+        //     $orders[$index]->total_selling_price = $total;
 
-            if ($status != null) {
-                if ($orders[$index]->status != $status) {
+        //     if ($status != null) {
+        //         if ($orders[$index]->status != $status) {
 
-                    unset($orders[$index]);
-                }
-            }
-        }
+        //             unset($orders[$index]);
+        //         }
+        //     }
+        // }
+
+
+        $data = (object) $data;
+
+        $user = Auth::user();
+        $branches = getUserBranches($user);
+
+
+        $orders = self::select('id', 'full_name', 'phone', 'address', 'status', 'payment_method', 'payment_status', 'total_price', 'shipping_amount',  'created_at')
+            ->whereDate('created_at', '>=', $data->from ?? null)
+            ->whereDate('created_at', '<=', $data->to ?? null)
+            ->whereIn('branch_id', $branches->pluck('id')->toArray())
+            ->where('order_from', 'web')
+            ->whenSearch($data->search ?? null)
+            ->whenPaymentStatus($data->payment_status ?? null)
+            ->whenCountry($data->country_id ?? null)
+            ->whenBranch($data->branch_id ?? null)
+            ->whenStatus($data->status ?? null)
+            ->get()
+            ->toArray();
+
+
 
         $description_ar =  'تم تنزيل شيت الطلبات';
         $description_en  = 'Orders file has been downloaded ';
@@ -184,7 +207,8 @@ class Order extends Model
                 ->orWhere('total_price', 'like', "%$search%")
                 ->orWhere('user_name', 'like', "%$search%")
                 ->orWhere('full_name', 'like', "%$search%")
-                ->orWhere('client_phone', 'like', "%$search%");
+                ->orWhere('client_phone', 'like', "%$search%")
+                ->orWhere('serial', 'like', "%$search%");
         });
     }
 

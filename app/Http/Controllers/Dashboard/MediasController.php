@@ -140,7 +140,7 @@ class MediasController extends Controller
             return redirect()->route('medias.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the media cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو الوسائط لا يمكن حذفه حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 }

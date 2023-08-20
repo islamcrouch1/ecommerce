@@ -15,10 +15,10 @@
                     <div class="d-none" id="table-customers-actions">
                         <div class="d-flex">
                             <select class="form-select form-select-sm" aria-label="Bulk actions">
-                                <option selected="">{{ __('Bulk actions') }}</option>
+                                {{-- <option selected="">{{ __('Bulk actions') }}</option>
                                 <option value="Refund">{{ __('Refund') }}</option>
                                 <option value="Delete">{{ __('Delete') }}</option>
-                                <option value="Archive">{{ __('Archive') }}</option>
+                                <option value="Archive">{{ __('Archive') }}</option> --}}
                             </select>
                             <button class="btn btn-falcon-default btn-sm ms-2" type="button">{{ __('Apply') }}</button>
                         </div>
@@ -54,6 +54,8 @@
                                     class="form-control form-select-sm sonoo-search" value="{{ request()->to }}">
                             </div>
                         </form>
+                        <button onclick="printInvoice();" class="btn btn-falcon-default btn-sm me-1 mb-2 mb-sm-0 no-print"
+                            type="button"><span class="fas fa-print me-1"> </span>{{ __('Print') }}</button>
                     </div>
                 </div>
             </div>
@@ -78,13 +80,26 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>{{ __('Sales Revenue') }}</td>
+                                    <td>
+                                        <a class="dropdown-item"
+                                            href="{{ route('entries.index', ['account_id' => $revenue_account->id]) }}"
+                                            target="_blank">
+                                            {{ __('Sales Revenue') }}
+                                        </a>
+                                    </td>
                                     <td>(+)</td>
                                     <td class="text-end">{{ $revenue . ' ' . getCurrency() }}</td>
                                 </tr>
 
+
+
                                 <tr>
-                                    <td>{{ __('Sales Cost') }}</td>
+                                    <td><a class="dropdown-item"
+                                            href="{{ route('entries.index', ['account_id' => $cs_account->id]) }}"
+                                            target="_blank">
+                                            {{ __('Sales Cost') }}
+                                        </a>
+                                    </td>
                                     <td>(-)</td>
                                     <td class="text-end">{{ abs($cs) . ' ' . getCurrency() }}</td>
                                 </tr>
@@ -109,11 +124,20 @@
                                     @endphp
 
                                     <tr>
-                                        <td>{{ getName($account) }}</td>
+                                        <td>
+                                            <a class="dropdown-item"
+                                                href="{{ route('entries.index', ['account_id' => $account->id]) }}"
+                                                target="_blank">
+                                                {{ getName($account) }}
+                                            </a>
+                                        </td>
                                         <td>(-)</td>
                                         <td class="text-end">{{ $expenses . ' ' . getCurrency() }}</td>
                                     </tr>
                                 @endforeach
+
+
+
 
 
                                 <tr class="table-secondary">

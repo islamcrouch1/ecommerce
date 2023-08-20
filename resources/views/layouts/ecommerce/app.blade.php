@@ -16,6 +16,22 @@
     <link rel="shortcut icon" href="{{ asset(websiteSettingMedia('header_icon')) }}" type="image/x-icon">
 
 
+    @isset($product)
+        <meta name='description' itemprop='description'
+            content='{{ $product->seo_desc != null ? $product->seo_desc : $product->description_ar }}'>
+        <meta name='keywords' content='{{ $product->seo_meta_tag }}'>
+        <meta property="og:description"
+            content="{{ $product->seo_desc != null ? $product->seo_desc : $product->description_ar }}">
+        <meta property="og:title" content="{{ getName($product) }}">
+        <meta property="og:type" content="product">
+        <meta property="og:url"
+            content="{{ route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]) }}">
+        <meta property="og:site_name"
+            content="{{ app()->getLocale() == 'ar' ? websiteSettingAr('website_title') : websiteSettingEn('website_title') }}">
+        <meta property="og:image" content="{{ getProductImage($product) }}">
+        <meta property="og:image" content="{{ getProductImage2($product) }}">
+    @endisset
+
 
 
     <title>
@@ -36,7 +52,10 @@
         rel="stylesheet">
 
     <!-- Icons -->
-    <link rel="stylesheet" type="text/css" href="{{ asset('e-assets/css/vendors/font-awesome.css') }}">
+    {{-- <link rel="stylesheet" type="text/css" href="{{ asset('e-assets/css/vendors/font-awesome.css') }}"> --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!--Slick slider css-->
     <link rel="stylesheet" type="text/css" href="{{ asset('e-assets/css/vendors/slick.css') }}">
@@ -57,7 +76,6 @@
     <!-- Theme css -->
     <link rel="stylesheet" type="text/css" href="{{ asset('e-assets/css/style.css') }}">
 
-    <link href="https://cdn.jsdelivr.net/npm/rater-js@1.0.1/lib/style.min.css" rel="stylesheet">
 
     <link href='https://fonts.googleapis.com/css?family=Cairo' rel='stylesheet'>
 
@@ -197,6 +215,23 @@
     @endif
 
 
+    @if (setting('tagmanager_id'))
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-B4QJRZ19MH"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+
+            gtag('config', '{{ setting('tagmanager_id') }}');
+        </script>
+    @endif
+
+
+
+
     @if (app()->getLocale() == 'ar')
         <style>
             p,
@@ -281,6 +316,14 @@
             text-overflow: ellipsis;
         }
 
+        .pixelstrap ul {
+            background-color: {{ $secondry_color }} !important;
+        }
+
+        .pixelstrap ul li a {
+            color: #ffffff !important;
+        }
+
         .add-btn a {
             color: var(--theme-color);
         }
@@ -305,6 +348,15 @@
         .btn-category {
             background-color: {{ $primary_color }} !important;
             border-color: {{ $primary_color }} !important;
+        }
+
+        .badge-grey-color {
+            background-color: {{ $primary_color }} !important;
+
+        }
+
+        .primary-color {
+            color: {{ $primary_color }} !important;
         }
 
         .color-selector-custome {
@@ -516,6 +568,12 @@
             font-family: 'FontAwesome' !important;
         }
 
+        .ratio_asos .bg-size:before {
+            padding-top: 100%;
+            content: "";
+            display: block;
+        }
+
         @media screen and (max-width: 600px) {
             .header-logo {
                 width: 80px;
@@ -611,7 +669,7 @@
     <script src="{{ asset('e-assets/js/timer.js') }}"></script>
     <script src="{{ asset('assets/js/ecommerce.js') }}"></script>
 
-    @if (Route::is('ecommerce.checkout'))
+    @if (Route::is('ecommerce.checkout') || Route::is('ecommerce.product'))
         <script src="{{ asset('assets/js/checkout.js') }}"></script>
     @endif
 
@@ -619,8 +677,29 @@
 
 
 
+    @if (Route::is('ecommerce.account'))
+        <script src="{{ asset('vendors/rater-js/index.js') }}"></script>
+
+
+        <script>
+            const elements = document.querySelectorAll('.rate');
+            elements.forEach((element) => {
+                var starRatingStep = raterJs({
+                    starSize: 32,
+                    step: 0.5,
+                    element: element,
+                    rateCallback: function rateCallback(rating, done) {
+                        this.setRating(rating);
+                        done();
+                    }
+                });
+            });
+        </script>
+    @endif
+
+
     @if (Route::is('ecommerce.product'))
-        <script src="https://cdn.jsdelivr.net/npm/rater-js@1.0.1/index.min.js"></script>
+        <script src="{{ asset('vendors/rater-js/index.js') }}"></script>
         <script>
             var starRatingStep = raterJs({
                 starSize: 32,
@@ -633,6 +712,8 @@
             });
         </script>
     @endif
+
+
 
 
 

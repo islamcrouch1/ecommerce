@@ -11,6 +11,7 @@ use App\Models\Category;
 use App\Models\Color;
 use App\Models\Country;
 use App\Models\Entry;
+use App\Models\InstallmentCompany;
 use App\Models\Product;
 use App\Models\ProductCombination;
 use App\Models\ProductCombinationDtl;
@@ -26,6 +27,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Image;
+use Goutte;
+use Drnxloc\LaravelHtmlDom\HtmlDomParser;
+use Spatie\Crawler\Crawler;
 
 class ProductsController extends Controller
 {
@@ -39,6 +43,18 @@ class ProductsController extends Controller
         $this->middleware('permission:products-restore')->only('restore');
     }
 
+
+    public function urlImport()
+    {
+
+
+
+        // ->setNodeBinary('C:\Programs\\nodejs\\node.exe')
+        // ->setNpmBinary('/C:/Program Files/nodejs/node_modules/npm/bin')
+
+
+        $url = 'https://ar.aliexpress.com/item/1005005279555903.html';
+    }
 
 
     public function index()
@@ -59,6 +75,9 @@ class ProductsController extends Controller
 
         return view('dashboard.products.index', compact('products', 'categories', 'countries', 'user'));
     }
+
+
+
 
 
     public function deleteMedia(Request $request)
@@ -82,6 +101,7 @@ class ProductsController extends Controller
         $categories = Category::whereNull('parent_id')->get();
         $countries = Country::all();
 
+        $is_vendors = true;
 
         $products = Product::whereNotNull('vendor_id')
             ->whenSearch(request()->search)
@@ -91,7 +111,7 @@ class ProductsController extends Controller
             ->latest()
             ->paginate(100);
 
-        return view('dashboard.products.index', compact('products', 'categories', 'countries'));
+        return view('dashboard.products.index', compact('products', 'categories', 'countries', 'is_vendors'));
     }
 
     public function show(Product $product)
@@ -118,7 +138,8 @@ class ProductsController extends Controller
         $brands = Brand::where('status', 'active')->get();
         $attributes = Attribute::all();
         $shipping_methods = ShippingMethod::whereIn('id', [1, 2, 3])->get();
-        return view('dashboard.products.create', compact('attributes', 'categories', 'countries', 'brands', 'shipping_methods'));
+        $installment_companies = InstallmentCompany::all();
+        return view('dashboard.products.create', compact('attributes', 'categories', 'countries', 'brands', 'shipping_methods', 'installment_companies'));
     }
 
 
@@ -136,14 +157,14 @@ class ProductsController extends Controller
         $request->validate([
             'name_ar' => "required|string",
             'name_en' => "required|string",
-            'sku' => "required|string|unique:products",
-            'product_slug' => "required|string|unique:products",
-            'images' => $request->duplicate ? "nullable|array" : "required|array",
+            'sku' => "nullable|string|unique:products",
+            'product_slug' => "nullable|string|unique:products",
+            'images' => "nullable|array",
             'category' => "required|string",
             'description_ar' => "nullable|string",
             'description_en' => "nullable|string",
-            'sale_price' => "required|numeric",
-            'discount_price' => "required|numeric",
+            'sale_price' => "required|numeric|gte:0",
+            'discount_price' => "required|numeric|gte:0",
             'categories' => "nullable|array",
             'brands' => "nullable|array",
             'product_type' =>  "required|string",
@@ -151,68 +172,65 @@ class ProductsController extends Controller
             'status' => "required|string",
             'video_url' => "nullable|string",
             'attributes' => "nullable|array",
-            'product_min_order' => "required|numeric",
-            'product_max_order' => "required|numeric",
+            'product_min_order' => "required|numeric|gte:0",
+            'product_max_order' => "required|numeric|gte:0",
             'extra_fee'  => "nullable|numeric",
             'seo_meta_tag' => "nullable|string",
             'seo_desc' => "nullable|string",
-            'product_weight' => "nullable|numeric",
-            'product_length' => "nullable|numeric",
-            'product_width' => "nullable|numeric",
-            'product_height'  => "nullable|numeric",
-            'shipping_amount' => "nullable|numeric",
+            'product_weight' => "nullable|numeric|gte:0",
+            'product_length' => "nullable|numeric|gte:0",
+            'product_width' => "nullable|numeric|gte:0",
+            'product_height'  => "nullable|numeric|gte:0",
+            'shipping_amount' => "nullable|numeric|gte:0",
             'shipping_method' => "nullable|string",
-            'cost' => "nullable|numeric",
+            'cost' => "nullable|numeric|gte:0",
+            'image' => "nullable|image",
+            'installment_companies' => "nullable|array",
+
+            'code' => "nullable|string",
+            'can_sold' => "nullable|string",
+            'can_purchased' => "nullable|string",
+            'can_manufactured' => "nullable|string",
         ]);
 
 
         $product_type = $request['product_type'];
+        $slug = createSlug($request->product_slug);
 
-        if ($product_type == 'digital') {
-            if ($request->hasFile('digital_file')) {
-                $extension = $request->digital_file->extension();
-                $path = $request->file('digital_file')->store('files/products');
-            } else {
-                alertError('please upload digital file', 'يرجى ارفاق الملف الرقمي للمنتج الرقمي');
-                return redirect()->back();
-            }
+        // for digital product
+        if ($product_type == 'digital' && !$request->hasFile('digital_file')) {
+            alertError('please upload digital file', 'يرجى ارفاق الملف الرقمي للمنتج الرقمي');
+            return redirect()->back()->withInput();
         }
 
-        if ($product_type == 'simple' || $product_type == 'variable') {
-
-            if (!isset($request['product_weight']) || !isset($request['product_length']) || !isset($request['product_width']) || !isset($request['product_height'])) {
-                alertError('You must enter product information such as weight, length, width and height', 'يجب ادخال معلومات المنتج من وزن وطول وعرض وارتفاع ');
-                return redirect()->back();
-            }
+        if ($product_type == 'digital' && $request->hasFile('digital_file')) {
+            $path = storeFile($request->file('digital_file'), 'products');
         }
 
-        if ($request->sale_price <= $request->discount_price) {
+        if ($request->sale_price < $request->discount_price) {
             alertError('discount price must be lower than regular price', 'يجب ان يكون سعر الخصم اقل من السعر العادي');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
-        // if (!checkVendor($request->vendor_id)) {
-        //     alertError('The vendor ID entered is incorrect', 'رقم التاجر المدخل غير صحيح');
-        //     return redirect()->route('products.index');
-        // }
-
-
-
-
-
+        // for variable product
         if ($product_type == 'variable') {
             if (empty($request['attributes'])) {
                 alertError('please select product attribute', 'يرجى تحديد سمات المنتج');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             } else {
                 foreach ($request['attributes'] as $attr) {
                     if (empty($request['variations-' . $attr])) {
                         alertError('please select product variations', 'يرجى تحديد متغيرات المنتج');
-                        return redirect()->back();
+                        return redirect()->back()->withInput();
                     }
                 }
             }
+        }
+
+
+        if ($request->hasFile('image')) {
+            $media_id = saveMedia('image', $request['image'], 'products');
         }
 
 
@@ -225,7 +243,8 @@ class ProductsController extends Controller
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
             'category_id' => $request['category'],
-            'product_slug' => createSlug($request['product_slug']),
+            'media_id' => isset($media_id) ? $media_id : null,
+            'product_slug' => $slug,
             'sku' => $request['sku'],
             'description_ar' => $request['description_ar'],
             'description_en' => $request['description_en'],
@@ -246,22 +265,27 @@ class ProductsController extends Controller
             'seo_meta_tag' => $request['seo_meta_tag'],
             'seo_desc' => $request['seo_desc'],
             'extra_fee' => $request['extra_fee'],
-            'digital_file' => $product_type == 'digital' ? $path : null,
+            'digital_file' => isset($path) ? $path : null,
             'country_id' => $category->country_id,
             'status' => $request['status'],
+
+            'code' => $request['code'],
+            'can_sold' => $request['can_sold'],
+            'can_purchased' => $request['can_purchased'],
+            'can_manufactured' => $request['can_manufactured'],
+
+
+            'cost' => ($product_type == 'digital' || $product_type == 'service') ? $request['cost'] : 0,
         ]);
 
 
-        if ($product_type == 'digital' || $product_type == 'service') {
-            $product->update([
-                'cost' =>  $request['cost'],
-            ]);
-        }
 
         $product->categories()->attach($request['categories']);
         $product->brands()->attach($request['brands']);
+        $product->installment_companies()->sync($request->installment_companies);
 
-        // CalculateProductPrice($product);
+
+
 
         if ($request->duplicate && !isset($request->images)) {
             $ref_product = Product::find($request->ref_product);
@@ -283,11 +307,6 @@ class ProductsController extends Controller
                 }
             }
         }
-
-
-
-
-
 
 
         if ($product_type == 'variable') {
@@ -323,7 +342,7 @@ class ProductsController extends Controller
             foreach ($arrays as $key => $array) {
                 $com = ProductCombination::create([
                     'product_id' => $product->id,
-                    'sku' => $product->sku . '-' . ($key + 1),
+                    'sku' => ($product->sku != null ? $product->sku : $product->id) . '-' . ($key + 1),
                     'discount_price' => $product->discount_price,
                     'sale_price' => $product->sale_price,
                 ]);
@@ -381,13 +400,14 @@ class ProductsController extends Controller
         $description_en  = "product added " . " product ID " . ' #' . $product->id . ' - SKU ' . $product->sku;
         addLog('admin', 'products', $description_ar, $description_en);
 
-        if ($product->product_type == 'simple' || $product->product_type == 'variable') {
-            alertSuccess('Product Created successfully, Please enter stock details', 'تم إنشاء المنتج بنجاح, يرجى ادخال تفاصيل المخزون للمتغيرات');
-            return redirect()->route('products.stock.create', ['product' => $product->id]);
-        } else {
-            alertSuccess('Product Created successfully', 'تم إنشاء المنتج بنجاح');
-            return redirect()->route('products.index');
-        }
+
+        alertSuccess('Product Created successfully', 'تم إنشاء المنتج بنجاح');
+        return redirect()->route('products.index');
+
+        // if ($product->product_type == 'simple' || $product->product_type == 'variable') {
+        //     alertSuccess('Product Created successfully, Please enter stock details', 'تم إنشاء المنتج بنجاح, يرجى ادخال تفاصيل المخزون للمتغيرات');
+        //     return redirect()->route('products.stock.create', ['product' => $product->id]);
+        // }
     }
 
     /**
@@ -412,7 +432,8 @@ class ProductsController extends Controller
         $product = Product::find($product);
         $attributes = Attribute::all();
         $shipping_methods = ShippingMethod::whereIn('id', [1, 2, 3])->get();
-        return view('dashboard.products.edit', compact('categories', 'countries', 'product', 'brands', 'shipping_methods', 'attributes'));
+        $installment_companies = InstallmentCompany::all();
+        return view('dashboard.products.edit', compact('categories', 'countries', 'product', 'brands', 'shipping_methods', 'attributes', 'installment_companies'));
     }
 
 
@@ -439,68 +460,64 @@ class ProductsController extends Controller
         $request->validate([
             'name_ar' => "required|string",
             'name_en' => "required|string",
-            'sku' => "required|string|unique:products,sku," . $product->id,
-            'product_slug' => "required|string|unique:products,product_slug," . $product->id,
+            'sku' => "nullable|string|unique:products,sku," . $product->id,
+            // 'product_slug' => "required|string|unique:products,product_slug," . $product->id,
             'images' => "nullable|array",
             'category' => "required|string",
             'description_ar' => "nullable|string",
             'description_en' => "nullable|string",
-            'sale_price' => "required|numeric",
-            'discount_price' => "required|numeric",
+            'sale_price' => "required|numeric|gte:0",
+            'discount_price' => "required|numeric|gte:0",
             'categories' => "nullable|array",
             'brands' => "nullable|array",
             'digital_file' => "nullable|file",
             'status' => "required|string",
             'video_url' => "nullable|string",
             'attributes' => "nullable|array",
-            'product_min_order' => "required|numeric",
-            'product_max_order' => "required|numeric",
-            'extra_fee'  => "nullable|numeric",
+            'product_min_order' => "required|numeric|gte:0",
+            'product_max_order' => "required|numeric|gte:0",
+            'extra_fee'  => "nullable|numeric|gte:0",
             'seo_meta_tag' => "nullable|string",
             'seo_desc' => "nullable|string",
 
-            'product_weight' => "nullable|numeric",
-            'cost' => "nullable|numeric",
-            'product_length' => "nullable|numeric",
-            'product_width' => "nullable|numeric",
-            'product_height'  => "nullable|numeric",
-            'shipping_amount' => "nullable|numeric",
+            'product_weight' => "nullable|numeric|gte:0",
+            'cost' => "nullable|numeric|gte:0",
+            'product_length' => "nullable|numeric|gte:0",
+            'product_width' => "nullable|numeric|gte:0",
+            'product_height'  => "nullable|numeric|gte:0",
+            'shipping_amount' => "nullable|numeric|gte:0",
             'shipping_method' => "nullable|string",
+            'image' => "nullable|image",
+            'installment_companies' => "nullable|array",
+
+
+            'code' => "nullable|string",
+            'can_sold' => "nullable|string",
+            'can_purchased' => "nullable|string",
+            'can_manufactured' => "nullable|string",
+
         ]);
 
 
+
         $product_type = $product->product_type;
+        $slug = createSlug($request->product_slug);
 
 
-        if ($request->sale_price <= $request->discount_price) {
+
+        if ($request->sale_price < $request->discount_price) {
             alertError('discount price must be lower than regular price', 'يجب ان يكون سعر الخصم اقل من السعر العادي');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if ($request->hasFile('digital_file') && $product_type == 'digital') {
-            $extension = $request->digital_file->extension();
             Storage::delete($product->digital_file);
-            $path = $request->file('digital_file')->store('files/products');
-        } else {
-            $path = $product->digital_file;
+            $path = storeFile($request->file('digital_file'), 'products');
         }
 
-
-        if ($product_type == 'simple' || $product_type == 'variable') {
-
-            if (!isset($request['product_weight']) || !isset($request['product_length']) || !isset($request['product_width']) || !isset($request['product_height'])) {
-                alertError('You must enter product information such as weight, length, width and height', 'يجب ادخال معلومات المنتج من وزن وطول وعرض وارتفاع ');
-                return redirect()->back();
-            }
-        }
 
 
         if ($files = $request->file('images')) {
-
-            // foreach ($product->images as $image) {
-            //     deleteImage($image->media->id);
-            //     $image->delete();
-            // }
             foreach ($files as $file) {
                 $media_id = saveMedia('image', $file, 'products');
                 ProductImage::create([
@@ -511,6 +528,7 @@ class ProductsController extends Controller
         }
 
 
+        // send notification to the vendor
         if ($product->vendor_id != null) {
             if ($product->status != $request->status) {
 
@@ -548,14 +566,14 @@ class ProductsController extends Controller
         if ($product_type == 'variable') {
             if (empty($request['attributes'])) {
                 alertError('please select product attribute', 'يرجى تحديد سمات المنتج');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             // else {
             //     foreach ($request['attributes'] as $attr) {
             //         if (empty($request['variations-' . $attr])) {
             //             alertError('please select product variations', 'يرجى تحديد متغيرات المنتج');
-            //             return redirect()->back();
+            //             return redirect()->back()->withInput();
             //         }
             //     }
             // }
@@ -563,13 +581,21 @@ class ProductsController extends Controller
         }
 
 
+        if ($request->hasFile('image')) {
+            deleteImage($product->media_id);
+            $media_id = saveMedia('image', $request['image'], 'products');
+            $product->update([
+                'media_id' => $media_id,
+            ]);
+        }
+
 
         $product->update([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
             'category_id' => $request['category'],
             'sku' => $request['sku'],
-            'product_slug' => createSlug($request['product_slug']),
+            // 'product_slug' => createSlug($request['product_slug']),
             'description_ar' => $request['description_ar'],
             'description_en' => $request['description_en'],
             'sale_price' => $request['sale_price'],
@@ -591,14 +617,25 @@ class ProductsController extends Controller
             'status' => $request['status'],
             'extra_fee' => $request['extra_fee'],
             'updated_by' => Auth::id(),
-            'digital_file' => $product_type == 'digital' ? $path : null,
+            'digital_file' =>  isset($path) ? $path : null,
+
+            'code' => $request['code'],
+            'can_sold' => $request['can_sold'],
+            'can_purchased' => $request['can_purchased'],
+            'can_manufactured' => $request['can_manufactured'],
+
+            'cost' => ($product_type == 'digital' || $product_type == 'service') ? $request['cost'] : 0,
+
+            'unlimited' => $request['limited'] == 'on' ? '1' : '0',
+            'on_sale' => $request['on_sale'] == 'on' ? '1' : '0',
+            'is_featured' => $request['is_featured'] == 'on' ? '1' : '0',
+            'top_collection' => $request['top_collection'] == 'on' ? '1' : '0',
+            'best_selling' => $request['best_selling'] == 'on' ? '1' : '0',
+
+
         ]);
 
-        if ($product_type == 'digital' || $product_type == 'service') {
-            $product->update([
-                'cost' =>  $request['cost'],
-            ]);
-        }
+
 
         if ($product->product_type == 'simple') {
             foreach ($product->combinations as $combination) {
@@ -629,7 +666,7 @@ class ProductsController extends Controller
                             foreach ($combinations as $combination) {
                                 if ($combination->stocks->count() > 0) {
                                     alertError('The attribute cannot be deleted', 'لا يمكن حذف المتغير');
-                                    return redirect()->back();
+                                    return redirect()->back()->withInput();
                                 }
                             }
                         }
@@ -639,6 +676,7 @@ class ProductsController extends Controller
 
 
             $product->attributes()->sync($request['attributes']);
+
             $attributes = $product->attributes->pluck('id')->toArray();
 
             $new_variations = [];
@@ -748,33 +786,10 @@ class ProductsController extends Controller
         }
 
 
-        $product->categories()->detach();
-        $product->brands()->detach();
-        $product->categories()->attach($request['categories']);
-        $product->brands()->attach($request['brands']);
+        $product->categories()->sync($request['categories']);
+        $product->brands()->sync($request['brands']);
+        $product->installment_companies()->sync($request->installment_companies);
 
-
-        // CalculateProductPrice($product);
-
-        $product->update([
-            'unlimited' => $request['limited'] == 'on' ? '1' : '0',
-        ]);
-
-        $product->update([
-            'on_sale' => $request['on_sale'] == 'on' ? '1' : '0',
-        ]);
-
-        $product->update([
-            'is_featured' => $request['is_featured'] == 'on' ? '1' : '0',
-        ]);
-
-        $product->update([
-            'top_collection' => $request['top_collection'] == 'on' ? '1' : '0',
-        ]);
-
-        $product->update([
-            'best_selling' => $request['best_selling'] == 'on' ? '1' : '0',
-        ]);
 
 
         $description_ar = ' تم تعديل منتج ' . '  منتج رقم' . ' #' . $product->id . ' - SKU ' . $product->sku;
@@ -828,7 +843,7 @@ class ProductsController extends Controller
             return redirect()->route('products.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the product cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو المنتج لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 
@@ -836,16 +851,23 @@ class ProductsController extends Controller
     public function trashed()
     {
 
+
+        $categories = Category::whereNull('parent_id')->get();
+        $countries = Country::all();
+
+
         $user = Auth::user();
 
-
-        $categories = Category::all();
-        $countries = Country::all();
         $products = Product::onlyTrashed()
+            ->where('vendor_id', null)
             ->whenSearch(request()->search)
             ->whenCategory(request()->category_id)
             ->whenCountry(request()->country_id)
+            ->whenStatus(request()->status)
+            ->latest()
             ->paginate(100);
+
+
         return view('dashboard.products.index', compact('user', 'products', 'categories', 'countries'));
     }
 
@@ -868,6 +890,12 @@ class ProductsController extends Controller
         return view('dashboard.products.stock', compact('product', 'warehouses'));
     }
 
+    public function variableCreate($product)
+    {
+        $product = Product::findOrFail($product);
+        return view('dashboard.products.variables', compact('product'));
+    }
+
     public function stockProductCreate()
     {
         $user = Auth::user();
@@ -884,13 +912,8 @@ class ProductsController extends Controller
 
         $request->validate([
             'warehouse_id' => "required|string",
-            'sku' => "required|array",
             'qty' => "required|array",
             'purchase_price' => "required|array",
-            'sale_price' => "required|array",
-            'discount_price' => "required|array",
-            'limit' => "required|array",
-            'images' => "nullable|array",
             'stock_status' => "required|array",
         ]);
 
@@ -901,44 +924,29 @@ class ProductsController extends Controller
 
         if (settingAccount('funding_assets_account', $branch_id) == null) {
             alertError('please select the default funding assets account in settings page', 'الرجاء تحديد حساب تمويل الأصول المتداولة الافتراضية في صفحة الإعدادات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if (settingAccount('assets_account', $branch_id) == null) {
             alertError('please select the default assets account for products in settings page', 'الرجاء تحديد حساب الأصول الافتراضية للمنتجات في صفحة الإعدادات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if (settingAccount('cs_account', $branch_id) == null) {
             alertError('please select the default liability account for cost of goods sold in settings page', 'الرجاء تحديد حساب حقوق الملكية الافتراضية لتكلفة البضاعة المباعة في صفحة الإعدادات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
         $funding_assets_account = Account::findOrFail(settingAccount('funding_assets_account', $branch_id));
 
-        foreach ($product->combinations as $index => $combination) {
-            $combination->update([
-                'sku' => $request->sku[$index],
-                'sale_price' => $request->sale_price[$index],
-                'discount_price' => $request->discount_price[$index],
-                'limit' => $request->limit[$index],
-            ]);
-        }
+
 
 
         foreach ($product->combinations as $index => $combination) {
 
             if ($request->qty[$index] > 0) {
 
-                if ($request->sale_price[$index] <= $request->discount_price[$index]) {
-                    alertError('discount price must be lower than regular price', 'يجب ان يكون سعر الخصم اقل من السعر العادي');
-                    if (url()->previous() == route('products.stock.add')) {
-                        return redirect()->route('products.stock.create', ['product' => $product->id]);
-                    } else {
-                        return redirect()->back();
-                    }
-                }
 
                 if ($request->stock_status[$index] == 'OUT') {
                     if ($request->qty[$index] > productQuantity($product->id, $combination->id, $warehouse->id)) {
@@ -946,22 +954,12 @@ class ProductsController extends Controller
                         if (url()->previous() == route('products.stock.add')) {
                             return redirect()->route('products.stock.create', ['product' => $product->id]);
                         } else {
-                            return redirect()->back();
+                            return redirect()->back()->withInput();
                         }
                     }
                 }
 
-                if ($request->has('images')) {
-                    if (array_key_exists($combination->id, $request->images)) {
-                        $media_id = saveMedia('image', $request->images[$combination->id][0], 'combinations');
-                        if ($combination->media_id != null) {
-                            deleteImage($combination->media_id);
-                        }
-                        $combination->update([
-                            'media_id' => $media_id,
-                        ]);
-                    }
-                }
+
 
                 if ($request->stock_status[$index] == 'IN') {
 
@@ -970,10 +968,6 @@ class ProductsController extends Controller
 
                     $combination->update([
                         'warehouse_id' => $warehouse->id,
-                        'sku' => $request->sku[$index],
-                        'sale_price' => $request->sale_price[$index],
-                        'discount_price' => $request->discount_price[$index],
-                        'limit' => $request->limit[$index],
                     ]);
                 }
 
@@ -1030,15 +1024,6 @@ class ProductsController extends Controller
                         'created_by' => Auth::id(),
                     ]);
                 }
-
-
-
-                if ($product->product_type == 'simple' && $request->stock_status[$index] == 'IN') {
-                    $product->update([
-                        'sale_price' => $request->sale_price[$index],
-                        'discount_price' => $request->discount_price[$index],
-                    ]);
-                }
             }
         }
 
@@ -1052,6 +1037,63 @@ class ProductsController extends Controller
         }
     }
 
+    public function variableStore(Request $request, Product $product)
+    {
+
+        $request->validate([
+            'sku' => "required|array",
+            'sale_price' => "required|array",
+            'discount_price' => "required|array",
+            'limit' => "required|array",
+            'images' => "nullable|array",
+        ]);
+
+
+
+        foreach ($product->combinations as $index => $combination) {
+
+            if ($request->sale_price[$index] <= $request->discount_price[$index]) {
+                alertError('discount price must be lower than regular price', 'يجب ان يكون سعر الخصم اقل من السعر العادي');
+                if (url()->previous() == route('products.stock.add')) {
+                    return redirect()->route('products.stock.create', ['product' => $product->id]);
+                } else {
+                    return redirect()->back()->withInput();
+                }
+            }
+
+
+            $combination->update([
+                'sku' => $request->sku[$index],
+                'sale_price' => $request->sale_price[$index],
+                'discount_price' => $request->discount_price[$index],
+                'limit' => $request->limit[$index],
+            ]);
+
+            if ($product->product_type == 'simple') {
+                $product->update([
+                    'sale_price' => $request->sale_price[$index],
+                    'discount_price' => $request->discount_price[$index],
+                ]);
+            }
+
+            if ($request->has('images')) {
+                if (array_key_exists($combination->id, $request->images)) {
+                    $media_id = saveMedia('image', $request->images[$combination->id][0], 'combinations');
+                    if ($combination->media_id != null) {
+                        deleteImage($combination->media_id);
+                    }
+                    $combination->update([
+                        'media_id' => $media_id,
+                    ]);
+                }
+            }
+        }
+
+
+        alertSuccess('Product variables updated successfully', 'تم تحديث متغيرات المنتج بنجاح');
+
+        return redirect()->route('products.index');
+    }
     public function colorCreate($product)
     {
         $colors = Color::all();
@@ -1270,7 +1312,7 @@ class ProductsController extends Controller
             ]);
         }
 
-        return redirect()->back();
+        return redirect()->back()->withInput();
     }
 
     public function myStockProduct($lang, Product $product, Aorder $order)
@@ -1446,7 +1488,7 @@ class ProductsController extends Controller
             }
         }
 
-        return redirect()->back();
+        return redirect()->back()->withInput();
     }
 
     public function updateStatus(Request $request, Product $product)
@@ -1466,7 +1508,7 @@ class ProductsController extends Controller
             alertError('Product status cannot be updated', 'لا يمكن تحديث حالة المنتج');
         }
 
-        return redirect()->back();
+        return redirect()->back()->withInput();
     }
 
     private function changeStatus($product, $status)

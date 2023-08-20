@@ -7,14 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use PhpParser\Node\Stmt\Switch_;
 
 class Product extends Model
 {
     use HasFactory;
     use SoftDeletes;
     protected $fillable = [
-        'seo_meta_tag', 'digital_file', 'product_weight', 'product_type', 'discount_price', 'video_url', 'product_slug', 'product_max_order', 'product_min_order', 'is_featured', 'on_sale', 'brand_id', 'seo_desc', 'name_en', 'name_ar', 'description_ar', 'description_en', 'vendor_price', 'max_price', 'extra_fee', 'sale_price', 'total_profit', 'country_id', 'created_by', 'status', 'updated_by', 'sku', 'unlimited', 'best_selling', 'top_collection', 'product_length', 'product_width', 'product_height', 'shipping_amount', 'shipping_method_id', 'cost', 'vendor_id', 'category_id'
+        'seo_meta_tag', 'code', 'can_sold', 'can_purchased', 'can_manufactured', 'digital_file', 'product_weight', 'product_type', 'discount_price', 'video_url', 'product_slug', 'product_max_order', 'product_min_order', 'is_featured', 'on_sale', 'brand_id', 'seo_desc', 'name_en', 'name_ar', 'description_ar', 'description_en', 'vendor_price', 'max_price', 'extra_fee', 'sale_price', 'total_profit', 'country_id', 'created_by', 'status', 'updated_by', 'sku', 'unlimited', 'best_selling', 'top_collection', 'product_length', 'product_width', 'product_height', 'shipping_amount', 'shipping_method_id', 'cost', 'vendor_id', 'category_id', 'media_id'
     ];
+
 
     // protected $appends = ['profit_percent'];
 
@@ -42,6 +44,11 @@ class Product extends Model
         return parent::delete();
     }
 
+
+    public function installment_companies()
+    {
+        return $this->belongsToMany(InstallmentCompany::class);
+    }
 
     // delete with forign key
     public function favItems()
@@ -109,6 +116,11 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
+    public function media()
+    {
+        return $this->belongsTo(Media::class);
+    }
+
     public function combinations()
     {
         return $this->hasMany(ProductCombination::class);
@@ -167,88 +179,78 @@ class Product extends Model
 
 
 
-    public static function getProducts($status = null, $category_id = null)
+    public static function getProducts($data = null, $is_vendors = null)
     {
-        if (Auth::user()->HasRole('vendor')) {
-
-            if ($category_id == null) {
-                $products = Product::select('products.id', 'sku', 'vendor_id', 'status', 'country_id', 'name_ar', 'name_en', 'description_ar', 'description_en', 'vendor_price', 'extra_fee')->where('vendor_id', Auth::user()->id)->get()->toArray();
-            } else {
-                $products = Product::where('vendor_id', Auth::user()->id)
-                    ->when($category_id, function ($q) use ($category_id) {
-                        return $q->whereHas('categories', function ($query) {
-                            $query->where('category_id', 'like', request()->category_id);
-                        });
-                    })->select('products.id', 'sku', 'vendor_id', 'status', 'country_id', 'name_ar', 'name_en', 'description_ar', 'description_en', 'vendor_price', 'extra_fee')->get()->toArray();
-            }
-        } else {
-
-            if ($category_id == null) {
-                $products = Product::select('products.id', 'sku', 'vendor_id', 'status', 'country_id', 'name_ar', 'name_en', 'description_ar', 'description_en', 'vendor_price', 'extra_fee')->get()->toArray();
-            } else {
-                $products = Product::when($category_id, function ($q) use ($category_id) {
-                    return $q->whereHas('categories', function ($query) {
-                        $query->where('category_id', 'like', request()->category_id);
-                    });
-                })->select('products.id', 'sku', 'vendor_id', 'status', 'country_id', 'name_ar', 'name_en', 'description_ar', 'description_en', 'vendor_price', 'extra_fee')->get()->toArray();
-            }
-
-            // $products = DB::table('products')->where('status', $status == null ? '!=' : '=', $status)
-            //     ->join('category_product', function ($q) {
-            //         $q->on('category_product.product_id', '=', 'products.id');
-            //     })->where('category_product.category_id', $category_id == null ? '!=' : '=', $category_id)
-            //     ->select('products.id', 'sku', 'vendor_id', 'status', 'country_id', 'name_ar', 'name_en', 'description_ar', 'description_en', 'vendor_price', 'extra_fee')->get()->toArray();
-        }
-
-        foreach ($products as $index => $product) {
-
-            $color_str = '';
-            $size_str = '';
-            $stock_str = '';
-            $image_str = '';
 
 
-            $stocks = Stock::where('product_id', $product['id'])->get();
+
+        $data = (object) $data;
 
 
-            $stocks1 = $stocks->unique('color_id');
-            $stocks2 = $stocks->unique('size_id');
 
-            foreach ($stocks1 as $stock) {
-                $color_str .= $stock->color_id . ',';
-            }
+        $products = self::select('id', 'sku', 'status', 'country_id', 'category_id', 'name_ar', 'name_en', 'description_ar', 'description_en', 'product_type', 'extra_fee')
 
-            foreach ($stocks2 as $stock) {
-                $size_str .= $stock->size_id . ',';
-            }
 
-            foreach ($stocks as $stock) {
-                $stock_str .= $stock->quantity . ',';
-            }
+            ->where('vendor_id', $is_vendors == null ? '=' : '!=', null)
+            ->whenSearch($data->search ?? null)
+            ->whenCategory($data->category_id ?? null)
+            ->whenCountry($data->country_id ?? null)
+            ->whenStatus($data->status ?? null)
+            ->get()
+            ->toArray();
 
-            $color_str =   substr($color_str, 0, -1);
-            $size_str =   substr($size_str, 0, -1);
-            $stock_str =  substr($stock_str, 0, -1);
 
-            $products[$index]['colors'] = $color_str;
-            $products[$index]['sizes'] = $size_str;
-            $products[$index]['stock'] = $stock_str;
 
-            $images = ProductImage::where('product_id', $product['id'])->get();
 
-            foreach ($images as $image) {
-                $image_str .= 'https://sonoo.online/storage/images/products/' . $image->url . ',';
-            }
+        // foreach ($products as $index => $product) {
 
-            $image_str =  substr($image_str, 0, -1);
-            $products[$index]['images'] = $image_str;
+        //     $color_str = '';
+        //     $size_str = '';
+        //     $stock_str = '';
+        //     $image_str = '';
 
-            if ($status != null) {
-                if ($products[$index]['status'] != $status) {
-                    unset($products[$index]);
-                }
-            }
-        }
+
+        //     $stocks = Stock::where('product_id', $product['id'])->get();
+
+
+        //     $stocks1 = $stocks->unique('color_id');
+        //     $stocks2 = $stocks->unique('size_id');
+
+        //     foreach ($stocks1 as $stock) {
+        //         $color_str .= $stock->color_id . ',';
+        //     }
+
+        //     foreach ($stocks2 as $stock) {
+        //         $size_str .= $stock->size_id . ',';
+        //     }
+
+        //     foreach ($stocks as $stock) {
+        //         $stock_str .= $stock->quantity . ',';
+        //     }
+
+        //     $color_str =   substr($color_str, 0, -1);
+        //     $size_str =   substr($size_str, 0, -1);
+        //     $stock_str =  substr($stock_str, 0, -1);
+
+        //     $products[$index]['colors'] = $color_str;
+        //     $products[$index]['sizes'] = $size_str;
+        //     $products[$index]['stock'] = $stock_str;
+
+        //     $images = ProductImage::where('product_id', $product['id'])->get();
+
+        //     foreach ($images as $image) {
+        //         $image_str .= 'https://sonoo.online/storage/images/products/' . $image->url . ',';
+        //     }
+
+        //     $image_str =  substr($image_str, 0, -1);
+        //     $products[$index]['images'] = $image_str;
+
+        //     if ($status != null) {
+        //         if ($products[$index]['status'] != $status) {
+        //             unset($products[$index]);
+        //         }
+        //     }
+        // }
 
         $description_ar =  'تم تنزيل شيت المنتجات';
         $description_en  = 'Product file has been downloaded ';
@@ -264,7 +266,9 @@ class Product extends Model
                 ->orWhere('name_en', 'like', "%$search%")
                 ->orWhere('description_ar', 'like', "%$search%")
                 ->orWhere('description_en', 'like', "%$search%")
-                ->orWhere('SKU', 'like', "%$search%");
+                ->orWhere('sku', 'like', "%$search%")
+                ->orWhere('id', 'like', "$search")
+                ->orWhere('code', 'like', "%$search%");
         });
     }
 
@@ -311,6 +315,32 @@ class Product extends Model
             });
         });
     }
+
+
+    public function scopeWhenSorting($query, $sorting)
+    {
+        return $query->when($sorting, function ($q) use ($sorting) {
+            return $q->where('is_featured', in_array('is_featured', $sorting) ? '1' : '2')
+                ->orWhere('on_sale', in_array('on_sale', $sorting) ? '1' : '2')
+                ->orWhere('top_collection', in_array('top_collection', $sorting) ? '1' : '2')
+                ->orWhere('best_selling', in_array('best_selling', $sorting) ? '1' : '2');
+        });
+    }
+
+
+    public function scopeWhenPrice($query, $sorting)
+    {
+        return $query->when($sorting, function ($q) use ($sorting) {
+            if ($sorting == 'highest_price') {
+                return $q->orderBy('sale_price', 'desc');
+            } elseif ($sorting == 'Lowest_price') {
+                return $q->orderBy('sale_price', 'asc');
+            } else {
+                return $q;
+            }
+        });
+    }
+
 
     public function scopeWhenStatus($query, $status)
     {

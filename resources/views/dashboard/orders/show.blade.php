@@ -62,8 +62,14 @@
                         @if ($order->house)
                             {{ __('House:') . $order->house }}<br>
                         @endif
+                        @if ($order->floor_no)
+                            {{ __('Floor Number:') . $order->floor_no }}<br>
+                        @endif
                         @if ($order->special_mark)
                             {{ __('Special Mark:') . $order->special_mark }}<br>
+                        @endif
+                        @if ($order->delivery_time)
+                            {{ __('Delivery Time:') . $order->delivery_time }}<br>
                         @endif
                         @if ($order->phone2)
                             {{ __('Alternate Phone:') . $order->phone2 }}<br>
@@ -71,6 +77,8 @@
                         @if ($order->notes)
                             {{ __('Notes:') . $order->notes }}<br>
                         @endif
+
+                        {{ __('Payment Status') }} {!! getPaymentStatus($order->payment_status) !!}<br>
 
                     </p>
                     <p class="fs--1"><a href="tel:{{ $order->client_phone }}">{{ $order->client_phone }}</a>
@@ -121,8 +129,7 @@
 
                                     <div class="d-flex d-flex align-items-center">
                                         <div class="avatar avatar-xl me-2">
-                                            <img class="rounded-circle"
-                                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                            <img class="rounded-circle" src="{{ getProductImage($product) }}"
                                                 alt="" />
                                         </div>
                                         <div class="flex-1">

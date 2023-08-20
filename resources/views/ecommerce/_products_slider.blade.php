@@ -13,13 +13,14 @@
             @endif
 
             <div class="media">
-                <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                        class="img-fluid blur-up lazyload"
-                        src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}"
+                <a
+                    href="{{ route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]) }}"><img
+                        class="img-fluid blur-up lazyload" src="{{ getProductImage($product) }}"
                         alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
                 <div class="media-body align-self-center">
                     <div class="">{!! getAverageRatingWithStars($product) !!}</div>
-                    <a href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
+                    <a
+                        href="{{ route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]) }}">
                         <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
                         </h6>
                     </a>
@@ -28,8 +29,7 @@
                         <div class="add-btn mt-2">
                             <a href="javascript:void(0)" class="add-to-cart"
                                 data-url="{{ route('ecommerce.cart.store') }}" data-locale="{{ app()->getLocale() }}"
-                                data-product_id="{{ $product->id }}"
-                                data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : getImage($product->images[0])) }}">
+                                data-product_id="{{ $product->id }}" data-image="{{ getProductImage($product) }}">
                                 <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
                                     class="spinner-border spinner-border-sm spinner spin-{{ $product->id }}"
                                     role="status">

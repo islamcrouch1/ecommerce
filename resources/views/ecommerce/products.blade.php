@@ -53,6 +53,78 @@
                                             class="fa fa-angle-{{ app()->getLocale() == 'ar' ? 'right' : 'left' }}"
                                             aria-hidden="true"></i> {{ __('Back') }}</span>
                                 </div>
+
+                                <div class="collection-collapse-block open">
+                                    <h3 class="collapse-block-title">{{ __('sorting') }}</h3>
+                                    <div class="collection-collapse-block-content">
+                                        <div class="collection-brand-filter">
+                                            <div class="row">
+
+
+                                                <div class="col-6">
+                                                    <div class="form-check collection-filter-checkbox">
+                                                        <input name="price" type="radio" value="highest_price"
+                                                            {{ request()->price == 'highest_price' ? 'checked' : '' }}
+                                                            class="form-check-input filter" id="highest_price">
+                                                        <label class="form-check-label"
+                                                            for="">{{ __('highest price') }}</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6">
+                                                    <div class="form-check collection-filter-checkbox">
+                                                        <input name="price" type="radio" value="Lowest_price"
+                                                            {{ request()->price == 'Lowest_price' ? 'checked' : '' }}
+                                                            class="form-check-input filter" id="Lowest_price">
+                                                        <label class="form-check-label"
+                                                            for="">{{ __('Lowest price') }}</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6">
+                                                    <div class="form-check collection-filter-checkbox">
+                                                        <input name="sorting[]" type="checkbox" value="is_featured"
+                                                            {{ in_array('is_featured', request()->sorting) ? 'checked' : '' }}
+                                                            class="form-check-input filter" id="is_featured">
+                                                        <label class="form-check-label"
+                                                            for="">{{ __('featured products') }}</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6">
+                                                    <div class="form-check collection-filter-checkbox">
+                                                        <input name="sorting[]" type="checkbox" value="on_sale"
+                                                            {{ in_array('on_sale', request()->sorting) ? 'checked' : '' }}
+                                                            class="form-check-input filter" id="on_sale">
+                                                        <label class="form-check-label"
+                                                            for="">{{ __('discounts') }}</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6">
+                                                    <div class="form-check collection-filter-checkbox">
+                                                        <input name="sorting[]" type="checkbox" value="top_collection"
+                                                            {{ in_array('top_collection', request()->sorting) ? 'checked' : '' }}
+                                                            class="form-check-input filter" id="top_collection">
+                                                        <label class="form-check-label"
+                                                            for="">{{ __('top collection') }}</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6">
+                                                    <div class="form-check collection-filter-checkbox">
+                                                        <input name="sorting[]" type="checkbox" value="best_selling"
+                                                            {{ in_array('best_selling', request()->sorting) ? 'checked' : '' }}
+                                                            class="form-check-input filter" id="best_selling">
+                                                        <label class="form-check-label"
+                                                            for="">{{ __('best selling') }}</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="collection-collapse-block open">
                                     <h3 class="collapse-block-title">{{ __('brands') }}</h3>
                                     <div class="collection-collapse-block-content">
@@ -136,8 +208,8 @@
                                                                 </li>
                                                             </label>
 
-                                                            <input style="display:none" name="variations[]" type="checkbox"
-                                                                value="{{ $variation->id }}"
+                                                            <input style="display:none" name="variations[]"
+                                                                type="checkbox" value="{{ $variation->id }}"
                                                                 {{ in_array($variation->id, request()->variations) ? 'checked' : '' }}
                                                                 class="form-check-input filter"
                                                                 id="color-{{ $variation->id }}">
@@ -166,8 +238,8 @@
                                                                 </li>
                                                             </label>
 
-                                                            <input style="display:none" name="variations[]" type="checkbox"
-                                                                value="{{ $variation->id }}"
+                                                            <input style="display:none" name="variations[]"
+                                                                type="checkbox" value="{{ $variation->id }}"
                                                                 {{ in_array($variation->id, request()->variations) ? 'checked' : '' }}
                                                                 class="form-check-input filter"
                                                                 id="variation-{{ $variation->id }}">
@@ -356,101 +428,9 @@
 
                                                     @foreach ($products as $product)
                                                         <div class="col-xl-3 col-6 col-grid-box">
-                                                            <div class="product-box">
-                                                                <div class="img-wrapper">
-                                                                    <div class="front">
-                                                                        <a
-                                                                            href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                                                                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
-                                                                                class="img-fluid blur-up lazyload bg-img"
-                                                                                alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
-                                                                    </div>
-                                                                    <div class="back">
-                                                                        <a
-                                                                            href="{{ route('ecommerce.product', ['product' => $product->id]) }}"><img
-                                                                                src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
-                                                                                class="img-fluid blur-up lazyload bg-img"
-                                                                                alt="{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}"></a>
-                                                                    </div>
-                                                                    <div class="cart-info cart-wrap">
-                                                                        <a href="javascript:void(0)" class="add-fav"
-                                                                            title="{{ __('Add to Wishlist') }}"
-                                                                            data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
-                                                                            data-product_id="{{ $product->id }}"><i
-                                                                                style="{{ getFavs()->where('product_id', $product->id)->count() == 0? '': 'color:#f01c1c;' }}"
-                                                                                class="fa fa-heart fav-{{ $product->id }} "
-                                                                                aria-hidden="true"></i></a>
-
-                                                                        <a href="#" data-bs-toggle="modal"
-                                                                            data-bs-target="#quick-view-{{ $product->id }}"
-                                                                            title="{{ __('Quick View') }}"><i
-                                                                                class="ti-search"
-                                                                                aria-hidden="true"></i></a>
-                                                                        {{-- <a href="compare.html"
-                                                                title="Compare"><i class="ti-reload"
-                                                                    aria-hidden="true"></i></a> --}}
-
-                                                                    </div>
-                                                                </div>
-                                                                <div class="product-detail">
-                                                                    <div>
-                                                                        <div class=""> {!! getAverageRatingWithStars($product) !!}
-
-                                                                        </div>
-                                                                        <a
-                                                                            href="{{ route('ecommerce.product', ['product' => $product->id]) }}">
-                                                                            <h6>{{ app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en }}
-                                                                            </h6>
-                                                                        </a>
-                                                                        {{-- <p>
-                                                                @if (app()->getLocale() == 'ar')
-                                                                    {!! $product->description_ar !!}
-                                                                @else
-                                                                    {!! $product->description_en !!}
-                                                                @endif
-                                                            </p> --}}
-                                                                        <h4>{!! getProductPrice($product) !!}</h4>
-
-                                                                        @if ($product->product_type != 'variable')
-                                                                            <div class="add-btn mt-2">
-                                                                                <a href="javascript:void(0)"
-                                                                                    class="add-to-cart"
-                                                                                    data-url="{{ route('ecommerce.cart.store') }}"
-                                                                                    data-locale="{{ app()->getLocale() }}"
-                                                                                    data-product_id="{{ $product->id }}"
-                                                                                    data-image="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}">
-                                                                                    <div style="display: none; color: #999999; margin: 3px; padding: 6px;"
-                                                                                        class="spinner-border spinner-border-sm spinner spin-{{ $product->id }} "
-                                                                                        role="status">
-                                                                                    </div>
-                                                                                    <i class="fa fa-shopping-cart cart-icon-{{ $product->id }}  me-1"
-                                                                                        aria-hidden="true"></i>
-                                                                                    <span
-                                                                                        class="cart-text-{{ $product->id }}">{{ __('add to cart') }}</span>
-                                                                                    <span
-                                                                                        class="cart-added-{{ $product->id }}"
-                                                                                        style="display: none;">{{ __('Added to bag') }}</span>
-                                                                                </a>
-                                                                            </div>
-                                                                        @else
-                                                                            <div class="add-btn">
-                                                                                <a href="3" data-bs-toggle="modal"
-                                                                                    data-bs-target="#quick-view-{{ $product->id }}">
-                                                                                    <i class="fa fa-shopping-cart cart-icon-{{ $product->id }} me-1"
-                                                                                        aria-hidden="true"></i>
-                                                                                    <span>{{ __('add to cart') }}</span>
-                                                                                </a>
-                                                                            </div>
-                                                                        @endif
-
-                                                                        {{-- <ul class="color-variant">
-                                                                        <li class="bg-light0"></li>
-                                                                        <li class="bg-light1"></li>
-                                                                        <li class="bg-light2"></li>
-                                                                    </ul> --}}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                            @include('ecommerce._product_div', [
+                                                                'product' => $product,
+                                                            ])
                                                         </div>
                                                     @endforeach
 

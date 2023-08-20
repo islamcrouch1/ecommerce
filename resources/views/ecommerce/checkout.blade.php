@@ -38,21 +38,26 @@
                                 <div class="checkout-title">
                                     <h3>{{ __('Billing Details') }}</h3>
                                 </div>
+
+                                @php
+                                    $address = getAddress();
+                                @endphp
+
                                 <div class="row check-out">
                                     <div class="form-group col-md-6 col-sm-6 col-xs-12">
-                                        <div class="field-label">{{ __('full name') }}</div>
+                                        <div class="field-label">{{ __('full name') . ' *' }}</div>
                                         <input name="name" class="form-control @error('name') is-invalid @enderror"
-                                            value="{{ Auth::check() ? Auth::user()->name : '' }}" type="text"
-                                            autocomplete="on" id="name" required />
+                                            value="{{ Auth::check() ? Auth::user()->name : ($address ? $address->name : old('name')) }}"
+                                            type="text" autocomplete="on" id="name" required />
                                         @error('name')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
                                     <div class="form-group col-md-6 col-sm-6 col-xs-12">
-                                        <div class="field-label">{{ __('phone') }}</div>
+                                        <div class="field-label">{{ __('phone') . ' *' }}</div>
                                         <input name="phone"
                                             class="form-control phone @error('phone') is-invalid @enderror"
-                                            value="{{ Auth::check() ? getPhoneWithoutCode(Auth::user()->phone, Auth::user()->country_id) : old('phone') }}"
+                                            value="{{ Auth::check() ? getPhoneWithoutCode(Auth::user()->phone, Auth::user()->country_id) : ($address ? $address->phone : old('phone')) }}"
                                             type="tel" maxlength="{{ getCountry()->phone_digits }}" autocomplete="on"
                                             id="phone" data-phone_digits="{{ getCountry()->phone_digits }}" required />
                                         @error('phone')
@@ -60,8 +65,22 @@
                                         @enderror
                                     </div>
 
+                                    <div class="form-group col-md-6 col-sm-6 col-xs-12">
+                                        <div class="field-label">
+                                            {{ __('alternative phone') }}
+                                        </div>
+                                        <input name="phone2"
+                                            class="form-control phone @error('phone2') is-invalid @enderror"
+                                            value="{{ $address ? $address->phone2 : old('phone2') }}" type="tel"
+                                            maxlength="{{ getCountry()->phone_digits }}" autocomplete="on" id="phone2"
+                                            data-phone_digits="{{ getCountry()->phone_digits }}" />
+                                        @error('phone2')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
 
-                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
+
+                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
                                         <div class="field-label">{{ __('country') }}</div>
                                         <select
                                             class="form-control country-select @error('country_id') is-invalid @enderror"
@@ -69,7 +88,7 @@
                                             data-url_shipping="{{ route('ecommerce.shipping') }}" required>
                                             @foreach ($countries as $country)
                                                 <option value="{{ $country->id }}" data-country_id="{{ $country->id }}"
-                                                    {{ $country->id == getDefaultCountry()->id ? 'selected' : '' }}>
+                                                    {{ $country->id == getDefaultCountry()->id ? 'selected' : ($address && $address->country_id == $country->id ? 'selected' : '') }}>
                                                     {{ app()->getLocale() == 'ar' ? $country->name_ar : $country->name_en }}
                                                 </option>
                                             @endforeach
@@ -81,7 +100,7 @@
 
 
 
-                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
                                         <div class="field-label">{{ __('state') }}</div>
                                         <select class="form-control state-select @error('state_id') is-invalid @enderror"
                                             id="state_id" name="state_id" data-url="{{ route('state.cities') }}" required>
@@ -94,7 +113,7 @@
 
 
 
-                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
                                         <div class="field-label">{{ __('city') }}</div>
                                         <select class="form-control city-select @error('city_id') is-invalid @enderror"
                                             id="city_id" name="city_id" required>
@@ -105,21 +124,21 @@
                                         @enderror
                                     </div>
 
-                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                                        <div class="field-label">{{ __('block') . '*' }}</div>
+                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('block') . ' *' }}</div>
                                         <input name="block" class="form-control @error('block') is-invalid @enderror"
-                                            value="{{ old('block') }}" type="text" autocomplete="on" id="block"
-                                            required />
+                                            value="{{ $address ? $address->block : old('block') }}" type="text"
+                                            autocomplete="on" id="block" required />
                                         @error('block')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
 
-                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                                        <div class="field-label">{{ __('street address') . '*' }}</div>
+                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('street address') . ' *' }}</div>
                                         <input name="address" class="form-control @error('address') is-invalid @enderror"
-                                            value="{{ old('address') }}" type="text" autocomplete="on" id="address"
-                                            required />
+                                            value="{{ $address ? $address->address : old('address') }}" type="text"
+                                            autocomplete="on" id="address" required />
                                         @error('address')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
@@ -128,23 +147,54 @@
 
 
                                     @if (getCountry()->name_en == 'Kuwait' || getCountry()->name_en == 'kuwait')
-                                        <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                                        <div class="form-group col-md-6 col-sm-12 col-xs-12">
                                             <div class="field-label">{{ __('avenue') }}</div>
                                             <input name="avenue" class="form-control @error('avenue') is-invalid @enderror"
-                                                value="{{ old('avenue') }}" type="text" autocomplete="on"
-                                                id="avenue" />
+                                                value="{{ $address ? $address->avenue : old('avenue') }}" type="text"
+                                                autocomplete="on" id="avenue" />
                                             @error('avenue')
                                                 <div class="alert alert-danger">{{ $message }}</div>
                                             @enderror
                                         </div>
                                     @endif
 
-                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
-                                        <div class="field-label">{{ __('house') . '*' }}</div>
+                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('house') . ' *' }}</div>
                                         <input name="house" class="form-control @error('house') is-invalid @enderror"
-                                            value="{{ old('house') }}" type="text" autocomplete="on" id="house"
-                                            required />
+                                            value="{{ $address ? $address->house : old('house') }}" type="text"
+                                            autocomplete="on" id="house" required />
                                         @error('house')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('floor number') }}</div>
+                                        <input name="floor_no"
+                                            class="form-control @error('floor_no') is-invalid @enderror"
+                                            value="{{ $address ? $address->floor_no : old('floor_no') }}" type="text"
+                                            autocomplete="on" id="floor_no" />
+                                        @error('floor_no')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('Preferred delivery time') }}</div>
+                                        <select class="form-control @error('delivery_time') is-invalid @enderror"
+                                            id="delivery_time" name="delivery_time">
+
+                                            <option value="">{{ __('select delivery time') }}</option>
+                                            <option value="morning"
+                                                {{ $address && $address->delivery_time == 'morning' ? 'selected' : '' }}>
+                                                {{ __('morning') }}</option>
+                                            <option value="evening"
+                                                {{ $address && $address->delivery_time == 'evening' ? 'selected' : '' }}>
+                                                {{ __('evening') }}</option>
+
+                                        </select>
+                                        @error('delivery_time')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -218,6 +268,24 @@
                                                     <div style="width:300px; display:inline-block">
                                                         {{ getProductName($item->product, getCombination($item->product_combination_id)) }}
                                                         × {{ $item->qty }}
+
+                                                        @php
+                                                            $warehouses = getWebsiteWarehouses();
+                                                            $branch_id = setting('website_branch');
+                                                            if ($item->product->vendor_id == null) {
+                                                                $av_qty = productQuantityWebsite($item->product->id, $item->combination->id, null, $warehouses);
+                                                            } else {
+                                                                $warehouse_vendor = App\Models\Warehouse::where('vendor_id', $item->product->vendor_id)->first();
+                                                                $av_qty = productQuantity($item->product->id, null, $warehouse_vendor->id);
+                                                            }
+                                                        @endphp
+
+                                                        @if ($item->qty > $av_qty)
+                                                            <p style="display: inline-block" class="m-1 primary-color">
+                                                                {{ __('out of stock') }}</p>
+                                                        @endif
+
+
                                                     </div>
                                                     <span>{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . getCurrency() }}</span>
                                                 </li>
@@ -313,6 +381,10 @@
 
                                         </ul>
                                         <ul class="total">
+                                            <li>{{ __('Discount') }} <span
+                                                    class="count checkout-discount">{{ 0 . getCurrency() }}
+                                                </span>
+                                            </li>
                                             <li>{{ __('Total') }} <span
                                                     class="count checkout-total">{{ getCartSubtotal($cart_items) . getCurrency() }}
                                                 </span>
@@ -364,6 +436,18 @@
                                                                     name="payment_method" id="payment-2" required>
                                                                 <label
                                                                     for="payment-2">{{ __('Visa and MasterCard') . ' via upayment' }}</label>
+                                                            </div>
+                                                        </li>
+                                                    @endif
+
+
+                                                    @if (setting('paypal'))
+                                                        <li>
+                                                            <div class="radio-option">
+                                                                <input type="radio" value="paypal"
+                                                                    name="payment_method" id="payment-2" required>
+                                                                <label
+                                                                    for="payment-2">{{ __('Visa and MasterCard') . ' via paypal' }}</label>
                                                             </div>
                                                         </li>
                                                     @endif

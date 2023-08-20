@@ -28,6 +28,8 @@
                                 <span class="badge badge-soft-info ">{{ interval($message->created_at) }}</span>
 
                         </div>
+
+
                     </a>
                 @endforeach
             @else

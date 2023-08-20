@@ -27,43 +27,49 @@
                         </thead>
                         <tbody class="list" id="table-customers-body">
                             @foreach ($messages as $message)
-                                @if ($message->sender->hasRole('affiliate') || $message->sender->hasRole('vendor'))
-                                    <tr class="btn-reveal-trigger">
-                                        <td class="name align-middle white-space-nowrap py-2">
-                                            <div class="d-flex d-flex align-items-center">
-                                                <div class="avatar avatar-xl me-2">
-                                                    <img class="rounded-circle"
-                                                        src="{{ asset('storage/images/users/' . $message->sender->profile) }}"
-                                                        alt="" />
-                                                </div>
-                                                <div class="flex-1">
-                                                    <h5 class="mb-0 fs--1">
-                                                        {{ $message->message }}
-                                                    </h5>
+                                <tr class="btn-reveal-trigger">
+                                    <td class="name align-middle white-space-nowrap py-2">
+                                        <div class="d-flex d-flex align-items-center">
+                                            <div class="avatar avatar-xl me-2">
+                                                <img class="rounded-circle"
+                                                    src="{{ asset('storage/images/users/' . $message->sender->profile) }}"
+                                                    alt="" />
+                                            </div>
+                                            <div class="flex-1">
+                                                <h5 class="mb-0 fs--1">
+                                                    {{ $message->message }}
+                                                </h5>
+                                            </div>
+                                        </div>
+
+                                        @if ($message->sender->hasRole('administrator|superadministrator'))
+                                            <span class="badge badge-soft-primary">{{ __('employee') }}
+                                            </span>
+                                        @else
+                                            <span class="badge badge-soft-success">{{ __('customer') }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="joined align-middle py-2">{{ $message->created_at }} <br>
+                                        {{ interval($message->created_at) }} </td>
+                                    <td class="align-middle white-space-nowrap py-2 text-end">
+                                        <div class="dropdown font-sans-serif position-static">
+                                            <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal"
+                                                type="button" id="customer-dropdown-0" data-bs-toggle="dropdown"
+                                                data-boundary="window" aria-haspopup="true" aria-expanded="false"><span
+                                                    class="fas fa-ellipsis-h fs--1"></span></button>
+                                            <div class="dropdown-menu dropdown-menu-end border py-0"
+                                                aria-labelledby="customer-dropdown-0">
+                                                <div class="bg-white py-2">
+                                                    @if (auth()->user()->hasPermission('messages-create'))
+                                                        <a class="dropdown-item"
+                                                            href="{{ route('users.show', ['user' => $message->sender->id]) }}">{{ __('Reply') }}</a>
+                                                    @endif
                                                 </div>
                                             </div>
-                                        </td>
-                                        <td class="joined align-middle py-2">{{ $message->created_at }} <br>
-                                            {{ interval($message->created_at) }} </td>
-                                        <td class="align-middle white-space-nowrap py-2 text-end">
-                                            <div class="dropdown font-sans-serif position-static">
-                                                <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal"
-                                                    type="button" id="customer-dropdown-0" data-bs-toggle="dropdown"
-                                                    data-boundary="window" aria-haspopup="true" aria-expanded="false"><span
-                                                        class="fas fa-ellipsis-h fs--1"></span></button>
-                                                <div class="dropdown-menu dropdown-menu-end border py-0"
-                                                    aria-labelledby="customer-dropdown-0">
-                                                    <div class="bg-white py-2">
-                                                        @if (auth()->user()->hasPermission('countries-update'))
-                                                            <a class="dropdown-item"
-                                                                href="{{ route('users.show', ['user' => $message->user->id]) }}">{{ __('Reply') }}</a>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endif
+                                        </div>
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
 

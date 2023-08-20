@@ -49,17 +49,23 @@ class TaxesController extends Controller
     {
 
         $request->validate([
-            'name' => "required|string|max:255",
+            'name_ar' => "required|string|max:255",
+            'name_en' => "required|string|max:255",
             'description' => "required|string|max:255",
             'tax_rate' => "required|numeric",
+            'status' => "nullable|string|max:255",
+            'type' => "required|string|max:255",
         ]);
 
 
 
         $tax = tax::create([
-            'name' => $request['name'],
+            'name_ar' => $request['name_ar'],
+            'name_en' => $request['name_en'],
             'description' => $request['description'],
+            'type' => $request['type'],
             'tax_rate' => $request['tax_rate'],
+            'status' => $request['status'] == 'on' ? 'active' : 'inactive',
             'created_by' => Auth::id(),
         ]);
 
@@ -100,15 +106,21 @@ class TaxesController extends Controller
     public function update(Request $request, Tax $tax)
     {
         $request->validate([
-            'name' => "required|string|max:255",
+            'name_ar' => "required|string|max:255",
+            'name_en' => "required|string|max:255",
             'description' => "required|string|max:255",
             'tax_rate' => "required|numeric",
+            'status' => "nullable|string|max:255",
+            'type' => "required|string|max:255",
         ]);
 
         $tax->update([
-            'name' => $request['name'],
+            'name_ar' => $request['name_ar'],
+            'name_en' => $request['name_en'],
             'description' => $request['description'],
             'tax_rate' => $request['tax_rate'],
+            'status' => $request['status'] == 'on' ? 'active' : 'inactive',
+            'type' => $request['type'],
             'updated_by' => Auth::id(),
         ]);
 
@@ -135,7 +147,7 @@ class TaxesController extends Controller
             return redirect()->route('taxes.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the tax cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو الضريبه لا يمكن حذفه حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

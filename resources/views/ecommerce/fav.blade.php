@@ -52,7 +52,7 @@
                                         </a>
                                     </td>
                                     <td><a
-                                            href="{{ route('ecommerce.product', ['product' => $fav->product->id]) }}">{{ app()->getLocale() == 'ar' ? $fav->product->name_ar : $fav->product->name_en }}</a>
+                                            href="{{ route('ecommerce.product', ['product' => $fav->product->id, 'slug' => createSlug(getName($fav->product))]) }}">{{ app()->getLocale() == 'ar' ? $fav->product->name_ar : $fav->product->name_en }}</a>
                                         <div class="mobile-cart-content row">
                                             <div class="col">
                                                 <p></p>

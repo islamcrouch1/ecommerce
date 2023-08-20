@@ -208,8 +208,7 @@
                         @foreach ($order->products as $product)
                             <tr>
                                 <td class="padding">
-                                    <img src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
-                                        alt="" width="70">
+                                    <img src="{{ getProductImage($product) }}" alt="" width="70">
                                 </td>
                                 <td class="padding" valign="top" style="padding-left: 15px;">
                                     <h5 style="margin-top: 15px;">

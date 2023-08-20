@@ -66,6 +66,41 @@ class PurchasesController extends Controller
         return view('dashboard.purchases.index', compact('orders', 'countries', 'branches'));
     }
 
+
+    public function refundsIndex(Request $request)
+    {
+
+        $countries = Country::all();
+        if (!$request->has('from') || !$request->has('to')) {
+            $request->merge(['from' => Carbon::now()->subDay(365)->toDateString()]);
+            $request->merge(['to' => Carbon::now()->toDateString()]);
+        }
+
+        $user = Auth::user();
+
+        if ($user->hasPermission('branches-read')) {
+            $branches = Branch::all();
+        } else {
+            $branches = Branch::where('id', $user->branch_id)->get();
+        }
+
+        $orders = Order::has('refunds')
+            ->whereDate('created_at', '>=', request()->from)
+            ->whereDate('created_at', '<=', request()->to)
+            ->where('order_from', 'addpurchase')
+            ->where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
+            ->whenSearch(request()->search)
+            ->whenCountry(request()->country_id)
+            ->whenBranch(request()->branch_id)
+            ->whenStatus(request()->status)
+            ->whenPaymentStatus(request()->payment_status)
+            ->latest()
+            ->paginate(100);
+
+
+        return view('dashboard.purchases.index', compact('orders', 'countries', 'branches'));
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -81,8 +116,14 @@ class PurchasesController extends Controller
         $suppliers = User::whereHas('roles', function ($query) {
             $query->where('name', '=', 'vendor');
         })->get();
-        return view('dashboard.purchases.create', compact('warehouses', 'suppliers'));
+
+        $taxes = Tax::where('status', 'active')->get();
+
+
+        return view('dashboard.purchases.create', compact('warehouses', 'suppliers', 'taxes'));
     }
+
+
 
     public function craeteReturn()
     {
@@ -93,9 +134,27 @@ class PurchasesController extends Controller
         $suppliers = User::whereHas('roles', function ($query) {
             $query->where('name', '=', 'vendor');
         })->get();
-        return view('dashboard.purchases.create-return', compact('warehouses', 'suppliers'));
+
+        $taxes = Tax::where('status', 'active')->get();
+
+        return view('dashboard.purchases.create-return', compact('warehouses', 'suppliers', 'taxes'));
     }
 
+
+    public function edit($purchase)
+    {
+        $user = Auth::user();
+        $warehouses = Warehouse::where('branch_id', $user->branch_id)
+            ->where('vendor_id', null)
+            ->get();
+        $suppliers = User::whereHas('roles', function ($query) {
+            $query->where('name', '=', 'vendor');
+        })->get();
+
+        $taxes = Tax::where('status', 'active')->get();
+        $order = Order::findOrFail($purchase);
+        return view('dashboard.purchases.edit', compact('warehouses', 'suppliers', 'order', 'taxes'));
+    }
 
 
     public function storeReturn(Request $request)
@@ -182,7 +241,7 @@ class PurchasesController extends Controller
 
         $qty = explode(',', $request->qty);
         $price = explode(',', $request->price);
-        $tax = explode(',', $request->tax);
+        $taxes = explode(',', $request->tax);
         $compinations = explode(',', $request->compinations);
 
         $data = [];
@@ -190,29 +249,60 @@ class PurchasesController extends Controller
         $vat_amount = 0;
         $wht_amount = 0;
         $total = 0;
+        $discount = $request->discount;
+        $shipping = $request->shipping;
+
+        if ($discount < 0) {
+            $discount = 0;
+        }
+
+        if ($shipping < 0) {
+            $shipping = 0;
+        }
 
 
+
+        $taxes_data = [];
 
 
         foreach ($qty as $index => $q) {
             $subtotal = $subtotal + ($q * $price[$index]);
         }
 
-        if (isset($tax) && in_array('vat', $tax)) {
-            $vat_amount = calcTax($subtotal, 'vat');
+        if ($discount > $subtotal) {
+            $discount = $subtotal;
         }
 
-        $total = $subtotal + $vat_amount;
+        $subtotal = $subtotal - $discount;
+        $total = $subtotal;
 
-        if (isset($tax) && in_array('wht', $tax) && $subtotal > setting('wht_invoice_amount')) {
-            $wht_amount = calcTax($total, 'wht_products');
+
+        foreach ($taxes as $index => $tax) {
+            $tax_data = calcTaxByID($subtotal, $tax);
+            $taxes_data[$index] = $tax_data;
+            $total += $tax_data['tax_amount'];
         }
+
+
+
+        // if (isset($taxes) && in_array('vat', $taxes)) {
+        //     $vat_amount = calcTax($subtotal, 'vat');
+        // }
+
+        // $total = $subtotal + $vat_amount;
+
+        // if (isset($taxes) && in_array('wht', $taxes) && $subtotal > setting('wht_invoice_amount')) {
+        //     $wht_amount = calcTax($subtotal, 'wht_products');
+        // }
 
         $data['status'] = 1;
-        $data['total'] = $total;
+        $data['total'] = $total + $shipping;
         $data['subtotal'] = $subtotal;
-        $data['vat_amount'] = $vat_amount;
-        $data['wht_amount'] = $wht_amount;
+        // $data['vat_amount'] = $vat_amount;
+        // $data['wht_amount'] = $wht_amount;
+        $data['discount'] = $discount * -1;
+        $data['shipping'] = $shipping;
+        $data['taxes'] = $taxes_data;
 
         return $data;
     }
@@ -228,46 +318,43 @@ class PurchasesController extends Controller
 
         $request->validate([
             'combinations' => "required|array",
-            'warehouse_id' => "required|numeric",
-            'supplier_id' => "required|numeric",
+            'warehouse_id' => "required|integer",
+            'supplier_id' => "required|integer",
             'notes' => "nullable|string",
             'tax' => "nullable|array",
             'qty' => "nullable|array",
             'price' => "nullable|array",
+            'discount' => "nullable|numeric",
         ]);
 
 
         $branch_id = getUserBranchId(Auth::user());
+        $returned = checkIfReturned();
 
-        if (isset($request->return) && $request->return == true) {
-            $returned = true;
-        } else {
-            $returned = false;
-        }
 
         // accounts check
-        if (!checkAccounts($branch_id, ['suppliers_account', 'vat_purchase_account', 'wct_account', 'revenue_account'])) {
+        if (!checkAccounts($branch_id, ['suppliers_account', 'vat_purchase_account', 'wct_account', 'revenue_account', 'earned_discount_account'])) {
             alertError('Please set the default accounts settings from the settings page', 'يرجى ضبط اعدادات الحسابات الافتراضية من صفحة الاعدادات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         // tax check
         if (isset($request->tax) && (in_array('wht', $request->tax) && !in_array('vat', $request->tax))) {
             alertError('Error happen please review taxes options and try again', 'حدث حطا اثناء معالجة قيمة الضريبة يرجى مراجعة البيانات والمحاولة مرة اخرى');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         foreach ($request->combinations as $index => $combination_id) {
             if ($request->qty[$index] <= 0 || $request->price[$index] <= 0) {
                 alertError('Please add quantity or purchase price to complete the order', 'يرجى ادخال الكميات واسعار الشراء لاستكمال الطلب');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
         }
 
         if ($returned == true) {
             if (!checkProductsForOrder(null, $request->combinations, $request->qty,  $request->warehouse_id)) {
-                alertError('Some products do not have enough quantity in stockt active', 'بعض المنتجات ليس بها كمية كافية في المخزون');
-                return redirect()->back();
+                alertError('Some products do not have enough quantity in stock or the product not active', 'بعض المنتجات ليس بها كمية كافية في المخزون او المنتج غير مفعل');
+                return redirect()->back()->withInput();
             }
         }
 
@@ -287,6 +374,16 @@ class PurchasesController extends Controller
             'is_seen' => '0',
         ]);
 
+        if (!isset($request->discount)) {
+            $discount = 0;
+            $discountForItem = 0;
+        } elseif ($request->discount < 0) {
+            $discount = 0;
+            $discountForItem = 0;
+        } else {
+            $discount = $request->discount;
+            $discountForItem = $discount / count($request->combinations);
+        }
 
         $subtotal = 0;
         $vat_amount = 0;
@@ -301,6 +398,9 @@ class PurchasesController extends Controller
             $sub = $sub + ($q * $request->price[$index]);
         }
 
+        $sub = $sub - $discount;
+
+
 
         foreach ($request->combinations as $index => $combination_id) {
 
@@ -311,17 +411,17 @@ class PurchasesController extends Controller
                 // calculate product cost in purchase
                 updateCost($combination, $request->price[$index], $request->qty[$index], $returned == false ? 'add' : 'sub', $branch_id);
 
-                $product_price = ($q * $request->price[$index]);
-                $vat_amount_product =  calcTax($product_price, 'vat');
+                $product_price = ($request->qty[$index] * $request->price[$index]) - $discountForItem;
+                $vat_amount_product = calcTaxIfExist($product_price, 'vat', $request->tax, $sub);
                 $product_price_with_vat = $product_price + $vat_amount_product;
                 $vat_amount += $vat_amount_product;
                 $subtotal += $product_price;
 
                 if ($product->product_type == 'variable' || $product->product_type == 'simple') {
-                    $wht_amount_product = calcTax(($product_price_with_vat), 'wht_products');
+                    $wht_amount_product = calcTaxIfExist($product_price, 'wht_products', $request->tax, $sub);
                     $wht_products_amount += $wht_amount_product;
                 } else {
-                    $wht_amount_product = calcTax(($product_price_with_vat), 'wht_services');
+                    $wht_amount_product = calcTaxIfExist($product_price, 'wht_services', $request->tax, $sub);
                     $wht_services_amount += $wht_amount_product;
                 }
 
@@ -363,6 +463,15 @@ class PurchasesController extends Controller
         }
 
 
+
+
+        if ($discount > 0) {
+            $order->update([
+                'discount_amount' => $discount,
+            ]);
+        }
+
+
         $wht_amount = $wht_services_amount + $wht_products_amount;
 
         if (isset($request->tax) && in_array('vat', $request->tax)) {
@@ -388,6 +497,12 @@ class PurchasesController extends Controller
                     'total_wht_services' => $wht_services_amount,
                 ]);
             }
+        }
+
+
+        if ($discount > 0) {
+            $earned_discount_account = Account::findOrFail(settingAccount('earned_discount_account', $branch_id));
+            createEntry($earned_discount_account, $returned == true ? 'purchase_return' : 'purchase', $returned == true ? $discount : 0, $returned == true ? 0 : $discount, $branch_id, $order);
         }
 
 
@@ -417,7 +532,7 @@ class PurchasesController extends Controller
             'status' => "required|string",
         ]);
 
-        if (!checkPurchaseOrderStatus($request->status, $order->status)) {
+        if (!checkPurchaseOrderStatus($request->status, $order->status) || $order->order_type == 'RFQ') {
             alertError('The status of the order cannot be changed', 'لا يمكن تغيير حالة الطلب');
             return redirect()->route('purchases.index');
         } else {
@@ -514,17 +629,8 @@ class PurchasesController extends Controller
                 // calculate product cost
                 updateCost($combination, $product->pivot->product_price, $product->pivot->qty,  'sub', $branch_id);
 
-                Stock::create([
-                    'product_combination_id' => $combination->id,
-                    'product_id' => $combination->product_id,
-                    'warehouse_id' => $order->warehouse_id,
-                    'qty' => $product->pivot->qty,
-                    'stock_status' => 'OUT',
-                    'stock_type' => 'Purchase',
-                    'reference_id' => $order->id,
-                    'reference_price' => $product->pivot->product_price,
-                    'created_by' =>  Auth::id(),
-                ]);
+                // add stock and running order
+                stockCreate($combination, $order->warehouse_id, $product->pivot->qty, 'Purchase',  'OUT', $order->id, $order->customer_id, $product->pivot->product_price);
 
                 $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
                 createEntry($product_account, 'purchase_return', 0, ($product->pivot->product_price * $product->pivot->qty), $order->branch_id, $order);
@@ -584,11 +690,7 @@ class PurchasesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($purchase)
-    {
-        $purchase = purchase::findOrFail($purchase);
-        return view('dashboard.purchases.edit ')->with('purchase', $purchase);
-    }
+
 
     /**
      * Update the specified resource in storage.
@@ -635,7 +737,7 @@ class PurchasesController extends Controller
             return redirect()->route('purchases.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the purchase cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو الضريبه لا يمكن حذفه حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

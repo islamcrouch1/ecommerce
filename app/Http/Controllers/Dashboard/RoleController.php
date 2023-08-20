@@ -152,7 +152,7 @@ class RoleController extends Controller
             return redirect()->route('roles.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the role cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو الدور لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

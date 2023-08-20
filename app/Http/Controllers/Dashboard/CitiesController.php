@@ -167,7 +167,7 @@ class CitiesController extends Controller
             return redirect()->route('cities.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the city cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو المدينة لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

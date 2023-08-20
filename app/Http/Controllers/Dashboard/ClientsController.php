@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Balance;
 use App\Models\Cart;
 use App\Models\Client;
+use App\Models\Country;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -43,12 +45,17 @@ class ClientsController extends Controller
             $request->merge(['to' => Carbon::now()->toDateString()]);
         }
 
+
+        $countries = Country::all();
+
+
         $clients = Client::whereDate('created_at', '>=', request()->from)
             ->whereDate('created_at', '<=', request()->to)
             ->whenSearch(request()->search)
+            ->whenCountry(request()->country_id)
             ->latest()
             ->paginate(100);
-        return view('dashboard.clients.index')->with('clients', $clients);
+        return view('dashboard.clients.index', compact('countries', 'clients'));
     }
 
     /**
@@ -58,7 +65,8 @@ class ClientsController extends Controller
      */
     public function create()
     {
-        return view('dashboard.clients.create');
+        $countries = Country::all();
+        return view('dashboard.clients.create', compact('countries'));
     }
 
     /**
@@ -70,18 +78,27 @@ class ClientsController extends Controller
     public function store(Request $request)
     {
 
-        $phone = getPhoneWithCode($request->phone, '1');
+
+        $phone = getPhoneWithCode($request->phone, $request->country_id);
         $request->merge(['phone' => $phone]);
 
         $request->validate([
             'name' => "required|string|max:255",
-            'email' => "max:255|unique:clients",
-            'phone' => "required|string|unique:clients",
-            'whatsapp' => "string|nullable",
-            // 'place_type' => "required|string",
+            'email' => "max:255|unique:clients|unique:users",
+            'phone' => "required|string|unique:clients|unique:users",
+            'whatsapp' => "nullable|string",
+            'place_type' => "nullable|string",
             'gender' => "required",
-            'address' => "string|nullable"
+            'address' => "nullable|string",
+            'email' => "nullable|string",
+            'country_id' => "required|string",
+            'state_id' => "required|string",
+            'city_id' => "required|string",
         ]);
+
+
+
+
 
         $profile = $request->profile;
 
@@ -99,32 +116,22 @@ class ClientsController extends Controller
 
 
 
+
         $user = User::create([
             'name' => $request['name'],
             'email' => $request['email'],
             'password' => Hash::make('123456789'),
-            'country_id' => '1',
+            'country_id' => $request->country_id,
             'phone' => $request->phone,
             'gender' => $request['gender'],
             'profile' => $profile,
         ]);
 
 
-        $user->attachRole('5');
 
-        Cart::create([
-            'user_id' => $user->id,
-        ]);
+        attachRole($user, 'user');
 
-        Balance::create([
-            'user_id' => $user->id,
-            'available_balance' => 0,
-            'outstanding_balance' => 0,
-            'pending_withdrawal_requests' => 0,
-            'completed_withdrawal_requests' => 0,
-            'bonus' => $user->hasRole('affiliate') ?  0 : 0,
-        ]);
-
+        userCreationData($user);
 
 
         $client = Client::create([
@@ -134,8 +141,12 @@ class ClientsController extends Controller
             'phone' => $request->phone,
             'address' => $request->address,
             'gender' => $request->gender,
-            // 'place_type' => $request->place_type,
+            'place_type' => $request->place_type,
             'whatsapp' => $request->whatsapp,
+            'country_id' => $request['country_id'],
+            'state_id' => $request['state_id'],
+            'city_id' => $request['city_id'],
+            'created_by' => Auth::id(),
         ]);
 
 
@@ -144,9 +155,13 @@ class ClientsController extends Controller
         addLog('admin', 'users', $description_ar, $description_en);
 
 
-        $users = User::whereHas('roles', function ($query) {
-            $query->where('name', '!=', 'user');
+
+        $admins = unserialize(setting('clients_notifications'));
+
+        $users = User::whereHas('roles', function ($query) use ($admins) {
+            $query->whereIn('name', $admins ? $admins : []);
         })->get();
+
 
         foreach ($users as $admin) {
 
@@ -186,7 +201,9 @@ class ClientsController extends Controller
     public function edit($client)
     {
         $client = Client::findOrFail($client);
-        return view('dashboard.clients.edit ')->with('client', $client);
+        $countries = Country::all();
+
+        return view('dashboard.clients.edit', compact('countries', 'client'));
     }
 
     /**
@@ -201,7 +218,7 @@ class ClientsController extends Controller
 
 
 
-        $phone = getPhoneWithCode($request->phone, '1');
+        $phone = getPhoneWithCode($request->phone, $request->country_id);
         $request->merge(['phone' => $phone]);
 
 
@@ -211,9 +228,12 @@ class ClientsController extends Controller
             'email' => "max:255|unique:clients,email," . $client->id,
             'phone' => "required|string|unique:clients,phone," . $client->id,
             'whatsapp' => "string|nullable",
-            // 'place_type' => "required|string",
+            'place_type' => "nullable|string",
             'gender' => "required",
-            'address' => "string|nullable"
+            'address' => "string|nullable",
+            'country_id' => "required|string",
+            'state_id' => "required|string",
+            'city_id' => "required|string",
         ]);
 
 
@@ -222,6 +242,8 @@ class ClientsController extends Controller
             'email' => $request['email'],
             'phone' => $request->phone,
             'gender' => $request['gender'],
+            'country_id' => $request->country_id,
+
         ]);
 
 
@@ -231,8 +253,11 @@ class ClientsController extends Controller
             'phone' => $request->phone,
             'address' => $request->address,
             'gender' => $request->gender,
-            // 'place_type' => $request->place_type,
+            'place_type' => $request->place_type,
             'whatsapp' => $request->whatsapp,
+            'country_id' => $request['country_id'],
+            'state_id' => $request['state_id'],
+            'city_id' => $request['city_id'],
         ]);
 
 
@@ -241,9 +266,13 @@ class ClientsController extends Controller
         addLog('admin', 'users', $description_ar, $description_en);
 
 
-        $users = User::whereHas('roles', function ($query) {
-            $query->where('name', '!=', 'user');
+        $admins = unserialize(setting('clients_notifications'));
+
+        $users = User::whereHas('roles', function ($query) use ($admins) {
+            $query->whereIn('name', $admins ? $admins : []);
         })->get();
+
+
 
         foreach ($users as $admin) {
 
@@ -283,7 +312,7 @@ class ClientsController extends Controller
             return redirect()->route('clients.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the client cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو العميل لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 
@@ -291,7 +320,8 @@ class ClientsController extends Controller
     public function trashed()
     {
         $clients = Client::onlyTrashed()->paginate(100);
-        return view('dashboard.clients.index', ['clients' => $clients]);
+        $countries = Country::all();
+        return view('dashboard.clients.index', compact('clients', 'countries'));
     }
 
     public function restore($client)

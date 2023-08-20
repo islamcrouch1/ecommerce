@@ -79,13 +79,16 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label" for="country">{{ __('country') }}</label>
+                                        <label class="form-label" for="country">{{ __('Country') }}</label>
 
                                         <select class="form-select @error('country') is-invalid @enderror" aria-label=""
                                             name="country" id="country" required>
-                                            <option value="1" {{ old('country') == '1' ? 'selected' : '' }}>
-                                                {{ __('Egypt') }}
-                                            </option>
+                                            @foreach ($countries as $country)
+                                                <option value="{{ $country->id }}"
+                                                    {{ old('country') == $country->id ? 'selected' : '' }}>
+                                                    {{ app()->getLocale() == 'ar' ? $country->name_ar : $country->name_en }}
+                                                </option>
+                                            @endforeach
                                         </select>
                                         @error('country')
                                             <div class="alert alert-danger">{{ $message }}</div>

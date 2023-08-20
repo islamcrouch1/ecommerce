@@ -143,7 +143,7 @@ class ShippingRatesController extends Controller
             return redirect()->route('shipping_rates.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the shipping rate cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو سعر الشحن لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

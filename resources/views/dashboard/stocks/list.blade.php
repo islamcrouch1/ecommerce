@@ -96,9 +96,9 @@
                     <table class="table table-sm table-striped fs--1 mb-0 overflow-hidden">
                         <thead class="bg-200 text-900">
                             <tr>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
+                                <th class="sort pe-1 align-middle " data-sort="name">
                                     {{ __('Product Name') }}</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
+                                <th class="sort pe-1 align-middle " data-sort="phone">
                                     {{ __('SKU - ID') }}</th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                     {{ __('Warehouse') }}</th>
@@ -115,10 +115,12 @@
                         </thead>
                         <tbody class="list" id="table-customers-body">
                             @foreach ($stocks as $stock)
-                                @if ($stock->product != null)
+                                @if ($stock->product != null && getCombination($stock->product_combination_id) != null)
                                     <tr class="btn-reveal-trigger">
 
-                                        <td class="name align-middle white-space-nowrap py-2">
+
+
+                                        <td class="name align-middle  py-2">
                                             <div class="d-flex d-flex align-items-center">
                                                 <div class="avatar avatar-xl me-2">
                                                     <img class="rounded-circle"
@@ -132,7 +134,7 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="phone align-middle white-space-nowrap py-2">
+                                        <td class="phone align-middle  py-2">
                                             {{ getCombination($stock->product_combination_id)->sku . ' - ' . $stock->product->id }}
                                         </td>
 

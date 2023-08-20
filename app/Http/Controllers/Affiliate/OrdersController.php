@@ -204,9 +204,10 @@ class OrdersController extends Controller
             $user->cart->products()->detach();
         }
 
-        $users = User::whereHas('roles', function ($query) {
-            $query->where('name', 'superadministrator')
-                ->orwhere('name', 'administrator');
+        $admins = unserialize(setting('orders_notifications'));
+
+        $users = User::whereHas('roles', function ($query) use ($admins) {
+            $query->whereIn('name', $admins ? $admins : []);
         })->get();
 
         foreach ($users as $admin) {
@@ -322,9 +323,10 @@ class OrdersController extends Controller
         ]);
 
 
-        $users = User::whereHas('roles', function ($query) {
-            $query->where('name', 'superadministrator')
-                ->orwhere('name', 'administrator');
+        $admins = unserialize(setting('orders_notifications'));
+
+        $users = User::whereHas('roles', function ($query) use ($admins) {
+            $query->whereIn('name', $admins ? $admins : []);
         })->get();
 
         foreach ($users as $admin) {

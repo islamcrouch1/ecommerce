@@ -178,7 +178,7 @@ class TestimonialsControllers extends Controller
             return redirect()->route('testimonials.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the testimonial cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو راي العميل لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

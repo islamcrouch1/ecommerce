@@ -10,14 +10,11 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 class WithdrawalsExport implements FromCollection, WithHeadings
 {
 
-    protected $status, $from, $to;
+    protected $request;
 
-    public function __construct($status, $from, $to)
+    public function __construct($request)
     {
-
-        $this->status     = $status;
-        $this->from     = $from;
-        $this->to     = $to;
+        $this->request     = $request;
     }
 
     public function headings(): array
@@ -41,6 +38,6 @@ class WithdrawalsExport implements FromCollection, WithHeadings
      */
     public function collection()
     {
-        return collect(Withdrawal::getWithdrawal($this->status, $this->from, $this->to));
+        return collect(Withdrawal::getWithdrawal($this->request));
     }
 }

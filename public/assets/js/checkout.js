@@ -276,14 +276,16 @@ function calculateShipping(){
 
                 if(value == '1'){
                     $('.shipping-amount').text(data.shipping_amount + data.currency);
-                    $('.checkout-total').text((data.shipping_amount+data.total) + data.currency);
+                    $('.checkout-total').text((parseFloat(data.shipping_amount+data.total).toFixed(2) ) + data.currency);
+                    $('.checkout-discount').text((data.discount) + data.currency);
                 }else if(value == '2'){
 
                     $('.checkout-total').text((data.total) + data.currency);
+                    $('.checkout-discount').text((data.discount) + data.currency);
                 }else{
                     $('.shipping-amount').text(data.shipping_amount + data.currency);
                     $('.checkout-total').text((data.total) + data.currency);
-
+                    $('.checkout-discount').text((data.discount) + data.currency);
                 }
 
             }else if(data.status == 2){

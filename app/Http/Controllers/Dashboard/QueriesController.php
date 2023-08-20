@@ -64,7 +64,7 @@ class QueriesController extends Controller
 
     public function edit(Query $query)
     {
-        return view('Dashboard.users.query ')->with('query', $query);
+        return view('dashboard.users.query ')->with('query', $query);
     }
 
     public function update(Request $request, query $query)

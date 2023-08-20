@@ -276,6 +276,8 @@
                                                                     <select
                                                                         class="form-control @error('status') is-invalid @enderror"
                                                                         name="status" required>
+                                                                        <option value="">
+                                                                            {{ __('select order status') }}</option>
                                                                         <option value="delivered"
                                                                             {{ $order->status == 'delivered' ? 'selected' : '' }}>
                                                                             {{ __('delivered') }}</option>

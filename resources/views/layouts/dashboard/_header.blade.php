@@ -1,12 +1,12 @@
 @if (!Route::is('purchases.show') && !Route::is('orders.show') && !Route::is('sales.show'))
 
-    <nav class="navbar navbar-light navbar-glass navbar-top navbar-expand">
+    <nav class="navbar navbar-light navbar-glass navbar-top navbar-expand no-print">
 
         <button class="btn navbar-toggler-humburger-icon navbar-toggler me-1 me-sm-3" type="button"
             data-bs-toggle="collapse" data-bs-target="#navbarVerticalCollapse" aria-controls="navbarVerticalCollapse"
             aria-expanded="false" aria-label="Toggle Navigation"><span class="navbar-toggle-icon"><span
                     class="toggle-line"></span></span></button>
-        <a class="navbar-brand me-1 me-sm-3" href="{{ route('home') }}">
+        <a class="navbar-brand me-1 me-sm-3" href="{{ route('admin.home') }}">
             <div class="d-flex align-items-center"><img class="me-2 admin-logo"
                     src="{{ asset(websiteSettingMedia('header_logo')) }}" alt="" width="150" />
             </div>
@@ -94,12 +94,12 @@
                                     @foreach (Auth::user()->notifications()->where('status', 0)->orderBy('id', 'desc')->limit(50)->get() as $notification)
                                         <div class="list-group-item">
                                             <a class="notification notification-flush notification-unread noty"
-                                                href="{{ $notification->url }}"
+                                                href="{{ str_replace('http://', 'https://', $notification->url) }}"
                                                 data-url="{{ route('notifications.change', ['notification' => $notification->id]) }}">
                                                 <div class="notification-avatar">
                                                     <div class="avatar avatar-2xl me-3">
                                                         <img class="rounded-circle"
-                                                            src="{{ Auth::user()->hasRole('administrator|superadministrator') ? $notification->sender_image : asset(websiteSettingMedia('header_icon')) }}"
+                                                            src="{{ Auth::user()->hasRole('administrator|superadministrator') ? str_replace('http://', 'https://', $notification->sender_image) : asset(websiteSettingMedia('header_icon')) }}"
                                                             alt="" />
 
                                                     </div>
@@ -128,12 +128,12 @@
                                 @foreach (Auth::user()->notifications()->where('status', 1)->orderBy('id', 'desc')->limit(50)->get() as $notification)
                                     <div class="list-group-item">
                                         <a class="notification notification-flush noty"
-                                            href="{{ $notification->url }}"
+                                            href="{{ str_replace('http://', 'https://', $notification->url) }}"
                                             data-url="{{ route('notifications.change', ['notification' => $notification->id]) }}">
                                             <div class="notification-avatar">
                                                 <div class="avatar avatar-2xl me-3">
                                                     <img class="rounded-circle"
-                                                        src="{{ Auth::user()->hasRole('administrator|superadministrator') ? $notification->sender_image : asset(websiteSettingMedia('header_icon')) }}"
+                                                        src="{{ Auth::user()->hasRole('administrator|superadministrator') ? str_replace('http://', 'https://', $notification->sender_image) : asset(websiteSettingMedia('header_icon')) }}"
                                                         alt="" />
 
                                                 </div>

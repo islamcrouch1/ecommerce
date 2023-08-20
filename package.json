@@ -21,7 +21,10 @@
         "tailwindcss": "^3.0.18"
     },
     "dependencies": {
+        "@nesk/puphpeteer": "^2.0.0",
         "animate.css": "^4.1.1",
+        "chrome-aws-lambda": "^10.1.0",
+        "puppeteer": "^19.11.1",
         "rater-js": "^1.0.1"
     }
 }

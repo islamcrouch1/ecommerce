@@ -28,8 +28,7 @@ class PaymentsController extends Controller
     public function create(Order $order)
     {
         $branch_id = $order->branch_id;
-        $assets_accounts = Account::where('account_type', 'assets')->where('parent_id', null)->where('branch_id', $branch_id)->get();
-        return view('dashboard.payments.create', compact('order', 'assets_accounts'));
+        return view('dashboard.payments.create', compact('order'));
     }
 
     public function store(Request $request, Order $order)
@@ -38,17 +37,17 @@ class PaymentsController extends Controller
 
         $request->validate([
             'amount' => "required|numeric",
-            'accounts' => "required|array",
+            'account_id' => "nullable|numeric",
         ]);
 
 
 
         $branch_id = $order->branch_id;
-        $cach_account = Account::findOrFail($request['accounts'][0]);
+        $cach_account = Account::findOrFail($request->account_id);
 
         if ($cach_account->branch_id != $branch_id) {
             alertError('error happen in branches', 'حدث خطا في معالجة الفروع');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         $order_from = $order->order_from;
@@ -63,23 +62,23 @@ class PaymentsController extends Controller
 
         if ($amount == 0) {
             alertError('please enter the amount to complete the request', 'يرجى اضافة المبلغ لاكمال العملية');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if ($cach_account->id == settingAccount('fixed_assets_account', $branch_id) || $cach_account->id == settingAccount('dep_expenses_account', $branch_id)) {
             alertError('please go to non current assets section to handle this request', 'الرجاء الذهاب الى قسم ادارة الاصول الثابتة لمعالجة هذه العملية');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if (($amount >  $total_amount) || ($amount > ($total_amount - $payments_amount))) {
             alertError('the amount is greater than the total amount due', 'المبلغ المدخل اكثر من المبلغ المطلوب للعملية يرجى مراجعة الادخالات');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         if ($amount < 0) {
             if (abs($amount) >  $payments_amount) {
                 alertError('The refund amount is greater than the previously paid amount', 'المبلغ المسترجع اكبر من المبلغ المدفوع سابقا');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
         }
 

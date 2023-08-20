@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Country;
+use App\Models\ShippingCompany;
 use App\Models\State;
 use Illuminate\Http\Request;
 
@@ -46,7 +47,8 @@ class StatesController extends Controller
     public function create()
     {
         $countries = Country::all();
-        return view('dashboard.states.create', compact('countries'));
+        $shipping_companies = ShippingCompany::all();
+        return view('dashboard.states.create', compact('countries', 'shipping_companies'));
     }
 
     /**
@@ -63,6 +65,8 @@ class StatesController extends Controller
             'country_id' => "required|string",
             'status' => "required|string",
             'shipping_amount' => "required|string",
+            'shipping_company_id' => "nullable|string",
+
         ]);
 
 
@@ -72,6 +76,8 @@ class StatesController extends Controller
             'country_id' => $request['country_id'],
             'shipping_amount' => $request['shipping_amount'],
             'status' => $request['status'],
+            'shipping_company_id' => $request['shipping_company_id'],
+
         ]);
 
         alertSuccess('state created successfully', 'تم اضافة المحافظة بنجاح');
@@ -99,7 +105,9 @@ class StatesController extends Controller
     {
         $countries = Country::all();
         $state = State::findOrFail($state);
-        return view('dashboard.states.edit ', compact('countries', 'state'));
+        $shipping_companies = ShippingCompany::all();
+
+        return view('dashboard.states.edit ', compact('countries', 'state', 'shipping_companies'));
     }
 
     /**
@@ -118,6 +126,8 @@ class StatesController extends Controller
             'country_id' => "required|string",
             'status' => "required|string",
             'shipping_amount' => "required|string",
+            'shipping_company_id' => "nullable|string",
+
         ]);
 
 
@@ -127,6 +137,8 @@ class StatesController extends Controller
             'country_id' => $request['country_id'],
             'shipping_amount' => $request['shipping_amount'],
             'status' => $request['status'],
+            'shipping_company_id' => $request['shipping_company_id'],
+
         ]);
 
 
@@ -159,7 +171,7 @@ class StatesController extends Controller
             return redirect()->route('states.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the state cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو المحافظة لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

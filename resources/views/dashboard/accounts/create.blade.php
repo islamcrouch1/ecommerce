@@ -83,6 +83,9 @@
                                         <option value="liability"
                                             {{ getAccount(request()->parent_id)->account_type == 'liability' ? 'selected' : '' }}>
                                             {{ __('liability') }}</option>
+                                        <option value="owners_equity"
+                                            {{ getAccount(request()->parent_id)->account_type == 'owners_equity' ? 'selected' : '' }}>
+                                            {{ __('owners equity') }}</option>
                                         <option value="revenue"
                                             {{ getAccount(request()->parent_id)->account_type == 'revenue' ? 'selected' : '' }}>
                                             {{ __('revenue') }}</option>
@@ -93,6 +96,8 @@
                                             {{ __('expenses') }}</option>
                                         <option value="liability">
                                             {{ __('liability') }}</option>
+                                        <option value="owners_equity">
+                                            {{ __('owners equity') }}</option>
                                         <option value="revenue">
                                             {{ __('revenue') }}</option>
                                     @endif
@@ -106,7 +111,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="parent_id">{{ __('parent account') }}</label>
 
-                                <select class="form-select @error('parent_id') is-invalid @enderror" aria-label=""
+                                {{-- <select class="form-select @error('parent_id') is-invalid @enderror" aria-label=""
                                     name="parent_id" id="parent_id">
                                     <option value="">
                                         {{ __('Main account') }}</option>
@@ -124,7 +129,19 @@
                                             @endforeach
                                         @endif
                                     @endforeach
+                                </select> --}}
+
+
+
+                                <select class="form-select model-search" data-url="{{ route('model.search') }}"
+                                    data-locale="{{ app()->getLocale() }}" data-parent="" data-type="accounts"
+                                    name="parent_id">
+                                    <option value="">
+                                        {{ __('select parent account') }}</option>
+
                                 </select>
+
+
                                 @error('parent_id')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror

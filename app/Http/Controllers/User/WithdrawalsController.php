@@ -7,17 +7,26 @@ use App\Models\Balance;
 use App\Models\Request as ModelsRequest;
 use App\Models\User;
 use App\Models\Withdrawal;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class WithdrawalsController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
+        if (!$request->has('from') || !$request->has('to')) {
+            $request->merge(['from' => Carbon::now()->subDay(365)->toDateString()]);
+            $request->merge(['to' => Carbon::now()->toDateString()]);
+        }
         $user = Auth::user();
-        $withdrawals = Withdrawal::where('user_id', $user->id)->latest()->paginate(50);
-        $requests = ModelsRequest::where('user_id', $user->id)->latest()->paginate(50);
+        $withdrawals = Withdrawal::whereDate('created_at', '>=', request()->from)
+            ->whereDate('created_at', '<=', request()->to)
+            ->where('user_id', $user->id)->latest()->paginate(50);
+        $requests = ModelsRequest::whereDate('created_at', '>=', request()->from)
+            ->whereDate('created_at', '<=', request()->to)
+            ->where('user_id', $user->id)->latest()->paginate(50);
         return view('dashboard.withdrawals.user', compact('user', 'withdrawals', 'requests'));
     }
 
@@ -75,9 +84,10 @@ class WithdrawalsController extends Controller
 
 
 
-                $users = User::whereHas('roles', function ($query) {
-                    $query->where('name', 'superadministrator')
-                        ->orwhere('name', 'administrator');
+                $admins = unserialize(setting('withdrawals_notifications'));
+
+                $users = User::whereHas('roles', function ($query) use ($admins) {
+                    $query->whereIn('name', $admins ? $admins : []);
                 })->get();
 
                 foreach ($users as $admin) {

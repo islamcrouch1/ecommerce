@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Refund;
 use App\Models\RunningOrder;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
@@ -78,57 +79,68 @@ class RunningOrdersController extends Controller
 
         if (($returned_qty < 0) ||  ($approved_qty < 0)) {
             alertError('The quantities do not match', 'الكميات غير متطابقة');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
         if (($returned_qty + $approved_qty) >  $remaining_qty) {
 
             alertError('The quantities do not match', 'الكميات غير متطابقة');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
         if ($remaining_qty == 0) {
             alertError('All quantities have been validated', 'تم التحقق من جميع الكميات مسبقا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
         if ($returned_qty > 0 && ($running_order->stock_type == 'Sale' || $running_order->stock_type == 'Purchase')) {
 
-            $combinations = [$running_order->product_combination_id];
-            $prods = [$running_order->product_id];
-            $qty = [$returned_qty];
-            $notes = $request->notes;
-            $warehouse_id = $running_order->warehouse->id;
-            $supplier_id = $running_order->user_id;
-            $user_id = $running_order->user_id;
-            $order_id = $running_order->reference_id;
-            $order = Order::findOrFail($running_order->reference_id);
-            $price = [$order->products()->where('product_id', $running_order->product_id)->where('product_combination_id', $running_order->product_combination_id)->first()->pivot->product_price];
-            $tax = $order->taxes->pluck('id')->toArray();
+            // $combinations = [$running_order->product_combination_id];
+            // $prods = [$running_order->product_id];
+            // $qty = [$returned_qty];
+            // $notes = $request->notes;
+            // $warehouse_id = $running_order->warehouse->id;
+            // $supplier_id = $running_order->user_id;
+            // $user_id = $running_order->user_id;
+            // $order_id = $running_order->reference_id;
+            // $order = Order::findOrFail($running_order->reference_id);
+            // $price = [$order->products()->where('product_id', $running_order->product_id)->where('product_combination_id', $running_order->product_combination_id)->first()->pivot->product_price];
+            // $tax = $order->taxes->pluck('id')->toArray();
 
-            $request->merge([
-                'combinations' => $combinations,
-                'prods' => $prods,
-                'qty' => $qty,
-                'tax' => $tax,
-                'price' => $price,
-                'warehouse_id' => $warehouse_id,
-                'supplier_id' => $supplier_id,
-                'user_id' => $user_id,
-                'order_id' => $order_id,
-                'running_order' => true,
+            // $request->merge([
+            //     'combinations' => $combinations,
+            //     'prods' => $prods,
+            //     'qty' => $qty,
+            //     'tax' => $tax,
+            //     'price' => $price,
+            //     'warehouse_id' => $warehouse_id,
+            //     'supplier_id' => $supplier_id,
+            //     'user_id' => $user_id,
+            //     'order_id' => $order_id,
+            //     'running_order' => true,
+            // ]);
+
+            $refund = Refund::create([
+                'user_id' => Auth::id(),
+                'order_id' => $running_order->reference_id,
+                'reason' => $request->notes,
+                'status' => 'pending',
+                'type' => 'warehouse',
+                'product_id' => $running_order->product_id,
+                'combination_id' => $running_order->product_combination_id,
+                'qty' => $returned_qty
             ]);
 
-            if ($running_order->stock_type == 'Purchase') {
-                $purchase = new PurchasesController();
-                $purchase->storeReturn($request);
-            } elseif ($running_order->stock_type == 'Sale') {
-                $sale = new SalesController();
-                $sale->storeReturn($request);
-            }
+            // if ($running_order->stock_type == 'Purchase') {
+            //     $purchase = new PurchasesController();
+            //     $purchase->storeReturn($request);
+            // } elseif ($running_order->stock_type == 'Sale') {
+            //     $sale = new SalesController();
+            //     $sale->storeReturn($request);
+            // }
         }
 
         $running_order->update([

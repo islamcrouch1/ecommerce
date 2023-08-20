@@ -26,7 +26,8 @@ class RegisteredUserController extends Controller
      */
     public function create()
     {
-        return view('dashboard.auth.register');
+        $countries = Country::all();
+        return view('dashboard.auth.register', compact('countries'));
     }
 
     /**
@@ -58,11 +59,17 @@ class RegisteredUserController extends Controller
         ]);
 
 
+        if (!isset($request->email)) {
+            $email = $request->phone . '@example.com';
+        } else {
+            $email = $request->email;
+        }
+
         // check if role exist
 
 
         if ($request->role != '3' && $request->role != '4') {
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
 
@@ -98,7 +105,7 @@ class RegisteredUserController extends Controller
 
         $user = User::create([
             'name' => $request->name,
-            'email' => $request->email,
+            'email' => $email,
             'password' => Hash::make($request->password),
             'country_id' => $request->country,
             'phone' => $request->phone,

@@ -3,13 +3,18 @@
 use App\Events\NewNotification;
 use App\Mail\NewOrder;
 use App\Models\Account;
+use App\Models\Address;
+use App\Models\Attendance;
 use App\Models\Balance;
 use App\Models\Branch;
 use App\Models\Brand;
+use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Category;
 use App\Models\Cost;
 use App\Models\Country;
+use App\Models\EmployeeInfo;
+use App\Models\EmployeePermission;
 use App\Models\Entry;
 use App\Models\FavItem;
 use App\Models\Log;
@@ -24,9 +29,15 @@ use App\Models\Media;
 use App\Models\Offer;
 use App\Models\Product;
 use App\Models\ProductCombination;
+use App\Models\Reward;
+use App\Models\Role;
 use App\Models\RunningOrder;
+use App\Models\SalaryCard;
+use App\Models\SettlementSheet;
 use App\Models\Stock;
 use App\Models\Tax;
+use App\Models\UserInfo;
+use App\Models\View;
 use App\Models\Warehouse;
 use App\Models\WebsiteSetting;
 use Illuminate\Http\Request as HttpRequest;
@@ -53,6 +64,9 @@ use FacebookAds\Object\ServerSide\UserData;
 
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise;
+
+use Stevebauman\Location\Facades\Location;
+
 
 if (!function_exists('saveMedia')) {
     function saveMedia($type, $media, $folder)
@@ -91,7 +105,7 @@ if (!function_exists('deleteImage')) {
         $media = Media::find($media_id);
 
         if ($media != null) {
-            if ($media->productImages->count() == 0 && $media->brands->count() == 0 && $media->categories->count() == 0 && $media->countries->count() == 0 && $media->productCombinations->count() == 0 && $media->slides->count() == 0 && $media->websiteOptions->count() == 0 && $media->websiteSettings->count() == 0) {
+            if ($media->productImages->count() == 0 && $media->brands->count() == 0 && $media->categories->count() == 0 && $media->countries->count() == 0 && $media->productCombinations->count() == 0 && $media->slides->count() == 0 && $media->websiteOptions->count() == 0 && $media->websiteSettings->count() == 0  && $media->installment_companies->count() == 0) {
                 try {
                     Storage::disk('public')->delete(substr($media->path, '7'));
                     $media->forceDelete();
@@ -141,71 +155,69 @@ if (!function_exists('getProductPrice')) {
     {
 
 
-        if ($product->vendor_id == null) {
-            if ($product->product_type == 'variable' && $combination == null) {
+        if ($product->product_type == 'variable' && $combination == null) {
 
-                // return '<h4>' . __("Variable product") . '</h4>';
-
-                $combinations = $product->combinations;
-
-                $min_price = 0;
-                $max_price = 0;
-
-                foreach ($combinations as $index => $combination) {
-                    $price = productPrice($product, $combination->id, 'vat');
-                    if ($index == 0) {
+            $combinations = $product->combinations;
+            $min_price = 0;
+            foreach ($combinations as $index => $combination) {
+                $price = productPrice($product, $combination->id, 'vat');
+                if ($index == 0) {
+                    $min_price = $price;
+                    $combination_s = $combination;
+                } else {
+                    if ($price < $min_price) {
                         $min_price = $price;
-                        $max_price = $price;
-                    } else {
-                        if ($price > $max_price) {
-                            $min_price = $price;
-                        }
-
-                        if ($price < $min_price) {
-                            $min_price = $price;
-                        }
+                        $combination_s = $combination;
                     }
                 }
+            }
 
-                if ($min_price == $max_price) {
-                    return '<h4>' . $min_price . $product->country->currency . '</h4>';
-                } else {
-                    return '<h4>' . $min_price . $product->country->currency . ' - ' . $max_price . $product->country->currency . '</h4>';
-                }
-            } elseif ($product->product_type == 'variable' && $combination != null) {
-                if ($combination->discount_price == 0) {
-                    return    '<h4>' . calcWebsiteTax($combination->sale_price)  . $product->country->currency . '</h4>';
-                } else {
-                    return '<h4>' . calcWebsiteTax($combination->discount_price)  . $product->country->currency . ' ' . '<del>' . calcWebsiteTax($product->sale_price)  . $product->country->currency . '</del>
-                    </h4>';
-                }
-            } else {
-                if ($product->discount_price == 0) {
-                    return    '<h4>' . calcWebsiteTax($product->sale_price)  . $product->country->currency . '</h4>';
-                } else {
-                    return '<h4>' . calcWebsiteTax($product->discount_price)  . $product->country->currency . ' ' . '<del>' . calcWebsiteTax($product->sale_price)  . $product->country->currency . '</del>
-                    </h4>';
-                }
-            }
+            return $h4 = getProductPriceForView($combination_s->sale_price, $combination_s->discount_price);
+        } elseif ($product->product_type == 'variable' && $combination != null) {
+            return $h4 = getProductPriceForView($combination->sale_price, $combination->discount_price);
         } else {
-            if ($product->product_type == 'variable' && $combination == null) {
-                return '<h4>' . __("Variable product") . '</h4>';
-            } elseif ($product->product_type == 'variable' && $combination != null) {
-                if ($combination->discount_price == 0) {
-                    return    '<h4>' . ($combination->sale_price)  . $product->country->currency . '</h4>';
-                } else {
-                    return '<h4>' . ($combination->discount_price)  . $product->country->currency . ' ' . '<del>' . ($product->sale_price)  . $product->country->currency . '</del>
-                    </h4>';
-                }
-            } else {
-                if ($product->discount_price == 0) {
-                    return    '<h4>' . ($product->sale_price)  . $product->country->currency . '</h4>';
-                } else {
-                    return '<h4>' . ($product->discount_price)  . $product->country->currency . ' ' . '<del>' . ($product->sale_price)  . $product->country->currency . '</del>
-                    </h4>';
-                }
-            }
+            return $h4 = getProductPriceForView($product->sale_price, $product->discount_price);
         }
+    }
+}
+
+
+if (!function_exists('getProductPriceForView')) {
+    function getProductPriceForView($price, $discount)
+    {
+        $h4 = '';
+        if ($discount == 0) {
+            return    '<h4>' . calcWebsiteTax($price)  . getCurrency() . '</h4>';
+        } else {
+            return '<h4>' . calcWebsiteTax($discount)  . getCurrency() . ' ' . '<del>' . calcWebsiteTax($price)  . getCurrency() . '</del>
+            </h4>' . getProductDiscountForView($price, $discount);
+        }
+        return $h4;
+    }
+}
+
+if (!function_exists('getProductPriceForInstallment')) {
+    function getProductPriceForInstallment($price, $discount)
+    {
+        $h4 = '';
+        if ($discount == 0) {
+            return    calcWebsiteTax($price);
+        } else {
+            return calcWebsiteTax($discount);
+        }
+        return $h4;
+    }
+}
+
+if (!function_exists('getProductDiscountForView')) {
+    function getProductDiscountForView($price, $discount)
+    {
+        $span = '';
+        if ($discount != 0) {
+            $discount = (($price - $discount) / $price) * 100;
+            $span = ' ' .  '<span>' . '( ' .  __('discount') . ' '  . round($discount) . ' %' . ' )' . '</span>';
+        }
+        return $span;
     }
 }
 
@@ -222,14 +234,38 @@ if (!function_exists('calcWebsiteTax')) {
 }
 
 
+
 if (!function_exists('productPrice')) {
     function productPrice($product, $combination = null, $vat = null)
     {
+
+
         if ($vat && $product->vendor_id == null) {
             if ($product->product_type == 'variable') {
-                $com = ProductCombination::findOrFail($combination);
-                return  $com->discount_price == 0 ? calcWebsiteTax($com->sale_price)  : calcWebsiteTax($com->discount_price);
+
+                if ($combination == null) {
+                    $combinations = $product->combinations;
+                    $min_price = 0;
+                    foreach ($combinations as $index => $combination) {
+                        $price = productPrice($product, $combination->id, 'vat');
+                        if ($index == 0) {
+                            $min_price = $price;
+                            $combination_s = $combination;
+                        } else {
+                            if ($price < $min_price) {
+                                $min_price = $price;
+                                $combination_s = $combination;
+                            }
+                        }
+                    }
+
+                    return getProductPriceForInstallment($combination_s->sale_price, $combination_s->discount_price);
+                } else {
+                    $com = ProductCombination::findOrFail($combination);
+                    return  $com->discount_price == 0 ? calcWebsiteTax($com->sale_price)  : calcWebsiteTax($com->discount_price);
+                }
             } else {
+
                 return $product->discount_price == 0 ? calcWebsiteTax($product->sale_price)  : calcWebsiteTax($product->discount_price);
             }
         } else {
@@ -290,9 +326,130 @@ if (!function_exists('createSlug')) {
     function createSlug($slug)
     {
         $slug = strtolower($slug);
+
+        // $slug = str_replace("-", " ", $slug);
+        // $slug = str_replace("-", "/", $slug);
+
         $slug = preg_replace('/\s+/', '-', $slug);
+        $slug = str_replace("/", "-", $slug);
+
+        // remove duplicate divider
+        $slug = preg_replace('~-+~', '-', $slug);
+
+
+        // $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $slug)));
 
         return $slug;
+    }
+}
+
+
+if (!function_exists('createSlug')) {
+    function storeFile($file, $location)
+    {
+        $path = '';
+        $path = $file->store('files/' + $location);
+        return $path;
+    }
+}
+
+
+if (!function_exists('getProductImage')) {
+    function getProductImage($product)
+    {
+        if ($product->media_id != null && $product->media != null) {
+            return asset($product->media->path);
+        } elseif ($product->images->count() > 0) {
+            return asset($product->images[0]->media->path);
+        } else {
+            return asset('storage/images/products/place-holder.jpg');
+        }
+    }
+}
+
+if (!function_exists('getProductImage2')) {
+    function getProductImage2($product)
+    {
+        if ($product->media_id != null && $product->media != null) {
+            if ($product->images->count() > 0) {
+                return asset($product->images[0]->media->path);
+            } else {
+                return asset($product->media->path);
+            }
+        } else {
+            if ($product->images->count() > 0) {
+                return asset($product->images[0]->media->path);
+            } else {
+                return asset('public/images/products/place-holder.jpg');
+            }
+        }
+    }
+}
+
+
+if (!function_exists('getUserInfo')) {
+    function getUserInfo($user)
+    {
+        $info = UserInfo::where('user_id', $user->id)->first();
+        return $info;
+    }
+}
+
+if (!function_exists('getEmployeeInfo')) {
+    function getEmployeeInfo($user)
+    {
+        $info = EmployeeInfo::where('user_id', $user->id)->first();
+        return $info;
+    }
+}
+
+
+if (!function_exists('getbranches')) {
+    function getbranches()
+    {
+        $user = Auth::user();
+
+        if ($user->hasPermission('branches-read')) {
+            $branches = Branch::all();
+        } else {
+            $branches = Branch::where('id', $user->branch_id)->get();
+        }
+        return $branches;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+if (!function_exists('checkUserInfo')) {
+    function checkUserInfo($user)
+    {
+        $info = UserInfo::where('user_id', $user->id)->first();
+        if ($info == null) {
+            return false;
+        }
+
+        if ($info != null && $info->store_status == 1) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+
+if (!function_exists('getMediaPath')) {
+    function getMediaPath($media_id)
+    {
+        $media = Media::find($media_id);
+        return $media ? asset($media->path) : null;
     }
 }
 
@@ -376,7 +533,7 @@ if (!function_exists('getCategories')) {
     function getCategories()
     {
         $country = getCountry();
-        $categories = Category::whereNull('parent_id')->where('country_id', $country->id)->orderBy('sort_order', 'asc')->get();
+        $categories = Category::whereNull('parent_id')->where('country_id', $country->id)->where('status', 'active')->orderBy('sort_order', 'asc')->get();
         return $categories;
     }
 }
@@ -391,6 +548,20 @@ if (!function_exists('getName')) {
                 return $item->name_en;
             }
         }
+    }
+}
+
+
+if (!function_exists('getAddress')) {
+    function getAddress()
+    {
+        if (Auth::check()) {
+            $address = Address::where('user_id', Auth::id())->first();
+        } else {
+            $address = Address::where('session_id', request()->session()->token())->first();
+        }
+
+        return $address;
     }
 }
 
@@ -482,16 +653,30 @@ if (!function_exists('getTrialBalance')) {
 
         $balance = 0;
 
+
+
         if (!$from || !$to) {
-            $from = Carbon::now()->subDay(365)->toDateString();
+            $from = Carbon::now()->subDay(1000000)->toDateString();
             $to = Carbon::now()->toDateString();
         }
 
-        foreach (Entry::whereIn('account_id', $accounts)->whereDate('created_at', '>=', $from)
-            ->whereDate('created_at', '<=', $to)->get() as $entry) {
-            $cr_amount += $entry->cr_amount;
-            $dr_amount += $entry->dr_amount;
+        if ($account->type == 'accumulated_depreciation') {
+            foreach (Entry::whereIn('account_id', $accounts)
+                ->whereDate('created_at', '<=', Carbon::now()->toDateString())->get() as $entry) {
+                $cr_amount += $entry->cr_amount;
+                $dr_amount += $entry->dr_amount;
+            }
+        } else {
+            foreach (Entry::whereIn('account_id', $accounts)->whereDate('created_at', '>=', $from)
+                ->whereDate('created_at', '<=', $to)->get() as $entry) {
+                $cr_amount += $entry->cr_amount;
+                $dr_amount += $entry->dr_amount;
+            }
         }
+
+
+
+
 
 
         $type = getAccountType($account);
@@ -1066,6 +1251,21 @@ if (!function_exists('checkattributeForTrash')) {
     }
 }
 
+
+
+if (!function_exists('checkShippingCompanyForTrash')) {
+    function checkShippingCompanyForTrash($shipping_company)
+    {
+        if ($shipping_company->states()->count() > '0') {
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+
+
 // check brand for trash
 
 
@@ -1354,11 +1554,153 @@ if (!function_exists('addNoty')) {
     }
 }
 
+if (!function_exists('getTaxRate')) {
+    function getTaxRate($type)
+    {
+
+        switch ($type) {
+            case 'wht_invoice_amount':
+                $tax_rate = 300;
+                break;
+            case 'vendors_tax':
+                $tax_rate = 5;
+                break;
+            case 'income_tax':
+                $tax_rate = 22.5;
+                break;
+            case 'wht_services':
+                $tax_rate = 3;
+                break;
+            case 'wht_products':
+                $tax_rate = 1;
+                break;
+            case 'vat':
+                $tax_rate = 14;
+                break;
+            default:
+                $tax_rate = 0;
+                break;
+        }
+
+        return $tax_rate;
+    }
+}
+
+
+if (!function_exists('getTaxType')) {
+    function getTaxType($type)
+    {
+
+        switch ($type) {
+            case 'vendors_tax':
+                $type = 'plus';
+                break;
+            case 'income_tax':
+                $type = 'plus';
+                break;
+            case 'wht_services':
+                $type = 'minus';
+                break;
+            case 'wht_products':
+                $type = 'minus';
+                break;
+            case 'vat':
+                $type = 'plus';
+                break;
+            default:
+                $type = 'plus';
+                break;
+        }
+
+        return $type;
+    }
+}
+
+
+
+if (!function_exists('getTaxName')) {
+    function getTaxName($type)
+    {
+
+        $name = [];
+
+        switch ($type) {
+            case 'vendors_tax':
+                $name['ar'] = 'ضريبة عمولة لبيع منتجات الموردين';
+                $name['en'] = 'vendors_tax';
+                break;
+            case 'income_tax':
+                $name['ar'] = 'ضريبة الدخل';
+                $name['en'] = 'income_tax';
+                break;
+            case 'wht_services':
+                $name['ar'] = 'ضريبة الخصم والتحصيل للخدمات';
+                $name['en'] = 'wht_services';
+                break;
+            case 'wht_products':
+                $name['ar'] = 'ضريبة الخصم والتحصيل للتوريدات';
+                $name['en'] = 'wht_products';
+                break;
+            case 'vat':
+                $name['ar'] = 'ضريبة القيمة المضافة';
+                $name['en'] = 'vat';
+                break;
+            default:
+                $name['ar'] = '';
+                $name['en'] = '';
+                break;
+        }
+
+        return $name;
+    }
+}
+
+
+
 
 if (!function_exists('setting')) {
     function setting($type)
     {
         $setting = Setting::where('type', $type)->first();
+
+        $taxes = array(
+            'wht_invoice_amount',
+            'vendors_tax',
+            'income_tax',
+            'wht_services',
+            'wht_products',
+            'vat'
+        );
+
+        if ($setting == null && in_array($type, $taxes)) {
+
+            if ($type != 'wht_invoice_amount') {
+
+                $tax_name = getTaxName($type);
+                $tax_type = getTaxType($type);
+
+                $tax = tax::create([
+                    'name_ar' => $tax_name['ar'],
+                    'name_en' => $tax_name['en'],
+                    'type' => $tax_type,
+                    'description' => $type,
+                    'tax_rate' => getTaxRate($type),
+                    'created_by' => Auth::id(),
+                ]);
+
+                $setting = Setting::create([
+                    'type' => $type,
+                    'value' => $tax->id,
+                ]);
+            } else {
+                $setting = Setting::create([
+                    'type' => $type,
+                    'value' => getTaxRate($type),
+                ]);
+            }
+        }
+
+
         return $setting ? $setting->value : null;
     }
 }
@@ -1433,7 +1775,7 @@ if (!function_exists('websiteSettingMedia')) {
             }
         }
 
-        return null;
+        return 'storage/images/users/placeholder-icon.png';
     }
 }
 
@@ -1489,13 +1831,10 @@ if (!function_exists('checkVendor')) {
 }
 
 
-if (!function_exists('settingAccount')) {
-    function settingAccount($type, $branch_id)
-    {
-        $setting = Setting::where('type', $type)->where('reference_type', 'accounts')->where('reference_id', $branch_id)->first();
-        return $setting ? $setting->value : null;
-    }
-}
+
+
+
+
 
 
 if (!function_exists('settingAccounts')) {
@@ -1536,17 +1875,75 @@ if (!function_exists('getUserBranchId')) {
     }
 }
 
+if (!function_exists('getUserBranches')) {
+    function getUserBranches($user)
+    {
+
+        if ($user->hasPermission('branches-read')) {
+            $branches = Branch::all();
+        } else {
+            $branches = Branch::where('id', $user->branch_id)->get();
+        }
+
+        return $branches;
+    }
+}
+
+if (!function_exists('attachRole')) {
+    function attachRole($user, $role_name)
+    {
+
+        $role = Role::where('name', $role_name)->first();
+
+        if (!$role) {
+            $role = Role::create([
+                'name' => $role_name,
+                'display_name' => $role_name,
+                'description' => $role_name,
+            ]);
+        }
+
+        $user->attachRole($role);
+    }
+}
+
+
+if (!function_exists('userCreationData')) {
+    function userCreationData($user, $role_name = null, $bonus = 0)
+    {
+
+        Cart::create([
+            'user_id' => $user->id,
+        ]);
+
+        Balance::create([
+            'user_id' => $user->id,
+            'available_balance' => 0,
+            'outstanding_balance' => 0,
+            'pending_withdrawal_requests' => 0,
+            'completed_withdrawal_requests' => 0,
+            'bonus' => $user->hasRole($role_name) ?  $bonus : 0,
+        ]);
+    }
+}
+
 
 if (!function_exists('getDivForAccountsSetting')) {
-    function getDivForAccountsSetting($type, $label, $accounts, $branch_id)
+    function getDivForAccountsSetting($type, $label, $accounts, $branch_id, $more_accounts = null, $reference_account = null)
     {
 
         $output = '';
         $name = [];
 
+        if ($reference_account) {
+            $text = ' - ' . getName($reference_account);
+        } else {
+            $text = '';
+        }
+
         $output .= '<div class="mb-3">
                         <label class="form-label" for="' . $type . '">';
-        $output .= __($label) . '</label><select class="form-select" ';
+        $output .= __($label) . $text . '</label><select class="form-select js-choice" ';
 
         $output .= 'aria-label="" name="' . $type . '[' . $branch_id . ']'   . '" id="' . $type . '"><option value="">';
 
@@ -1559,6 +1956,17 @@ if (!function_exists('getDivForAccountsSetting')) {
             $output .= '>';
             $output .= getName($account) . ' - ' . getBranchName($branch_id) . '</option>';
         }
+
+        if ($more_accounts) {
+            foreach ($more_accounts->where('branch_id', $branch_id) as $account) {
+                $output .= '<option value="' .  $account->id . '"';
+                $output .= settingAccount($type, $branch_id) == $account->id ? 'selected' : '';
+                $output .= '>';
+                $output .= getName($account) . ' - ' . getBranchName($branch_id) . '</option>';
+            }
+        }
+
+
 
         $output .= '</select>';
 
@@ -1640,16 +2048,17 @@ if (!function_exists('updateSetting')) {
     {
 
         $setting = Setting::where('type', $type)->first();
+
         if ($setting == null) {
 
             Setting::create([
                 'type' => $type,
-                'value' => $request[$type],
+                'value' => is_array($request[$type]) ? serialize($request[$type]) : $request[$type],
             ]);
         } elseif ($setting->value != $request[$type]) {
 
             $setting->update([
-                'value' => $request[$type],
+                'value' => is_array($request[$type]) ? serialize($request[$type]) : $request[$type],
             ]);
 
             if ($type == 'country_id') {
@@ -2403,6 +2812,21 @@ if (!function_exists('getAccountName')) {
                 $name['en'] = $item->name . ' - ' . 'supplier account';
                 break;
 
+            case 'employee_loan_account':
+                $name['ar'] = 'حساب قروض' . ' - ' . $item->name;
+                $name['en'] = $item->name . ' - ' . 'loan account';
+                break;
+
+            case 'petty_cash_account':
+                $name['ar'] = 'حساب العهد النقدية' . ' - ' . $item->name;
+                $name['en'] = $item->name . ' - ' . 'loan account';
+                break;
+
+            case 'staff_receivables_account':
+                $name['ar'] = 'حساب ذمم' . ' - ' . $item->name;
+                $name['en'] = $item->name . ' - ' . 'staff receivables account';
+                break;
+
             case 'customers_account':
                 if ($item) {
                     $name['ar'] = 'حساب عميل' . ' - ' . $item->name;
@@ -2462,12 +2886,15 @@ if (!function_exists('getItemAccount')) {
             $main_account = Account::findOrFail(settingAccount($type, $branch_id));
         }
 
-        if ($type == 'suppliers_account' || $type ==  'customers_account') {
+
+        // create accounts for user with different roles
+        if ($type == 'suppliers_account' || $type ==  'customers_account' || $type ==  'employee_loan_account' || $type ==  'staff_receivables_account' || $type ==  'petty_cash_account') {
 
             if ($item != null) {
                 $user = User::findOrFail($item);
                 $account = Account::where('reference_id', $user->id)->where('type', $type)->where('branch_id', $branch_id)->first();
 
+                // if there is no account for the user
                 if ($account == null) {
 
                     $code = getAccountCode($main_account);
@@ -2487,7 +2914,7 @@ if (!function_exists('getItemAccount')) {
                 }
             } else {
 
-                // create customer account == null when make fast order
+                // create customer account == null when make fast order (for not registered users)
                 $account = Account::where('reference_id', null)->where('type', $type)->where('branch_id', $branch_id)->first();
 
                 if ($account == null) {
@@ -2600,71 +3027,9 @@ if (!function_exists('checkPer')) {
 }
 
 
-if (!function_exists('calcTax')) {
-    function calcTax($price, $type)
-    {
-        $tax_amount = 0;
-        $rate = 0;
-        if (setting($type)) {
-            $tax = Tax::findOrFail(setting($type));
-            $rate = $tax->tax_rate;
-        }
-
-        if ($type == 'vat-from') {
-            $total = $price;
-            $price = (100 / ($rate + 100)) * $total;
-            $tax_amount = $total - $price;
-        } else {
-            $tax_amount = ($price * $rate) / 100;
-        }
-
-        return $tax_amount;
-    }
-}
 
 
-if (!function_exists('updateCost')) {
-    function updateCost($combination, $new_cost, $qty, $type, $branch_id)
-    {
 
-        $cost = $combination->costs->where('branch_id', $branch_id)->first();
-        $branch = Branch::findOrFail($branch_id);
-        $warehouses = $branch->warehouses;
-
-        if ($cost == null) {
-            $cost = Cost::create([
-                'product_id' => $combination->product_id,
-                'product_combination_id' => $combination->id,
-                'branch_id' => $branch_id,
-            ]);
-        }
-
-        $old_qty = productQuantity($combination->product_id, $combination->id, null, $warehouses);
-
-        if ($type == 'add') {
-            $all_qty = $old_qty + $qty;
-            $old_cost = $cost->cost * $old_qty;
-            $all_cost = $old_cost + ($new_cost * $qty);
-        } else {
-
-            $all_qty = $old_qty - $qty;
-            $old_cost = $cost->cost * $old_qty;
-            $all_cost = $old_cost - ($new_cost * $qty);
-        }
-
-        if ($all_qty == 0) {
-            $new_cost = 0;
-        } else {
-            $new_cost = $all_cost / $all_qty;
-        }
-
-        $cost->update([
-            'cost' => $new_cost,
-        ]);
-
-        return $cost->cost;
-    }
-}
 
 
 if (!function_exists('getOrderDue')) {
@@ -2740,7 +3105,7 @@ if (!function_exists('getTotalPayments')) {
 
 
 if (!function_exists('createEntry')) {
-    function createEntry($account, $type, $dr_amount, $cr_amount, $branch_id, $reference)
+    function createEntry($account, $type, $dr_amount, $cr_amount, $branch_id, $reference, $due_date = null)
     {
         Entry::create([
             'account_id' => $account->id,
@@ -2751,6 +3116,7 @@ if (!function_exists('createEntry')) {
             'branch_id' => $branch_id,
             'reference_id' => $reference->id,
             'created_by' => Auth::id(),
+            'due_date' => $due_date
         ]);
     }
 }
@@ -2856,60 +3222,8 @@ if (!function_exists('getWarehousForOrder')) {
 
 
 
-// check accounts
-if (!function_exists('checkAccounts')) {
-    function checkAccounts($branch_id, $types)
-    {
-
-        $check = true;
-        foreach ($types as $type) {
-            if (!settingAccount($type, $branch_id)) {
-                $check = false;
-            }
-        }
-        return $check;
-    }
-}
 
 
-// check quantities and status
-if (!function_exists('checkProductsForOrder')) {
-    function checkProductsForOrder($products, $combinations, $qty, $warehouse_id)
-    {
-
-        $check = true;
-        $count = 0;
-
-        foreach ($combinations as $index => $combination_id) {
-
-            if ($products == null) {
-                $combination = ProductCombination::findOrFail($combination_id);
-                $product = $combination->product;
-            } else {
-                $product = Product::findOrFail($products[$index]);
-            }
-
-            if ($product->product_type == 'simple' || $product->product_type == 'variable') {
-
-                $av_qty = productQuantity($product->id, $combinations[$index], $warehouse_id);
-
-                if ($qty[$index] > $av_qty || $qty[$index] <= 0) {
-                    $count += 1;
-                }
-            }
-
-            if ($product->status != 'active' && $products != null) {
-                $count += 1;
-            }
-        }
-
-        if ($count > 0) {
-            $check = false;
-        }
-
-        return $check;
-    }
-}
 
 
 
@@ -2943,39 +3257,7 @@ if (!function_exists('getProductCost')) {
 
 
 
-// stock create
-if (!function_exists('stockCreate')) {
-    function stockCreate($combination, $warehouse_id, $qty,  $type, $stock_type, $order_id = null, $user_id = null, $price = 0)
-    {
 
-        $stock = Stock::create([
-            'product_combination_id' => $combination->id,
-            'product_id' => $combination->product_id,
-            'warehouse_id' => $warehouse_id,
-            'qty' => $qty,
-            'stock_status' => $stock_type,
-            'stock_type' => $type,
-            'reference_id' => $order_id,
-            'reference_price' => $price,
-            'created_by' =>  Auth::id(),
-        ]);
-
-        if (!isset(request()->running_order) && request()->running_order != true && $combination->product->vendor_id == null) {
-            RunningOrder::create([
-                'product_combination_id' => $combination->id,
-                'product_id' => $combination->product_id,
-                'warehouse_id' => $warehouse_id,
-                'requested_qty' => $qty,
-                'stock_status' => $stock_type,
-                'stock_type' => $type,
-                'reference_id' => $order_id,
-                'user_id' => $user_id,
-                'stock_id' => $stock->id,
-                'created_by' => Auth::id(),
-            ]);
-        }
-    }
-}
 
 
 // stock create
@@ -3023,84 +3305,7 @@ if (!function_exists('getCountries')) {
 }
 
 
-// calculate coupon discount
-if (!function_exists('calcDiscount')) {
-    function calcDiscount($coupon, $price, $cart_items)
-    {
 
-        $discount = 0;
-
-        if ($coupon) {
-
-            $products = unserialize($coupon->products);
-            $categories = unserialize($coupon->categories);
-
-
-
-            if (is_array($products) || is_array($categories)) {
-
-                foreach ($cart_items as $item) {
-
-                    $product_discount = 0;
-                    $product_price = productPrice($item->product, $item->product_combination_id, null) * $item->qty;
-
-                    if ($products == null) {
-                        $products = [];
-                    }
-
-                    if ($categories == null) {
-                        $categories = [];
-                    }
-
-                    if (in_array($item->product->id, $products) || in_array($item->product->category_id, $categories)) {
-
-                        if ($coupon->type == 'percentage') {
-
-                            $product_discount = ($product_price * $coupon->amount) / 100;
-                            $discount += $product_discount;
-                        }
-                        if ($coupon->type == 'amount') {
-                            $product_discount = ($coupon->amount);
-                        }
-                    }
-                }
-
-                if ($coupon->type == 'percentage' && $price >= $coupon->min_value) {
-                    if ($discount > $coupon->max_value) {
-                        $discount =  $coupon->max_value;
-                    }
-                }
-
-                if ($coupon->type == 'amount' && $price >= $coupon->min_value) {
-                    if ($discount > (($price * $coupon->max_value) / 100)) {
-                        $discount =  (($price * $coupon->max_value) / 100);
-                    }
-                }
-
-                if ($price < $coupon->min_value) {
-                    $discount = 0;
-                }
-            } else {
-
-                if ($coupon->type == 'percentage' && $price >= $coupon->min_value) {
-                    $discount = ($price * $coupon->amount) / 100;
-                    if ($discount > $coupon->max_value) {
-                        $discount =  $coupon->max_value;
-                    }
-                }
-
-                if ($coupon->type == 'amount' && $price >= $coupon->min_value) {
-                    $discount = ($coupon->amount);
-                    if ($discount > (($price * $coupon->max_value) / 100)) {
-                        $discount =  (($price * $coupon->max_value) / 100);
-                    }
-                }
-            }
-        }
-
-        return $discount;
-    }
-}
 
 
 
@@ -3175,7 +3380,7 @@ if (!function_exists('getTopCollections')) {
                     ->orWhereNotNull('vendor_id');
             })
             ->inRandomOrder()
-            ->limit(30)
+            ->limit(15)
             ->get();
 
 
@@ -3203,7 +3408,7 @@ if (!function_exists('getBestSelling')) {
                     ->orWhereNotNull('vendor_id');
             })
             ->inRandomOrder()
-            ->limit(30)
+            ->limit(15)
             ->get();
 
 
@@ -3230,7 +3435,7 @@ if (!function_exists('getIsFeatured')) {
                     ->orWhereNotNull('vendor_id');
             })
             ->inRandomOrder()
-            ->limit(30)
+            ->limit(15)
             ->get();
 
         return $products;
@@ -3256,7 +3461,7 @@ if (!function_exists('getOnSale')) {
                     ->orWhereNotNull('vendor_id');
             })
             ->inRandomOrder()
-            ->limit(30)
+            ->limit(15)
             ->get();
 
         return $products;
@@ -3296,7 +3501,6 @@ if (!function_exists('addToCart')) {
         }
 
 
-
         CartItem::create([
             'user_id' => $user_id,
             'product_id' => $product_id,
@@ -3312,62 +3516,7 @@ if (!function_exists('addToCart')) {
 
 
 
-// get item
-if (!function_exists('getOffers')) {
-    function getOffers()
-    {
 
-        $country = getCountry();
-        $offers = Offer::where('country_id', $country->id)->get();
-
-        return $offers;
-    }
-}
-
-
-// get item
-if (!function_exists('getOfferProducts')) {
-    function getOfferProducts($offer)
-    {
-
-        $country = getCountry();
-        $warehouses = getWebsiteWarehouses();
-
-
-        $products = unserialize($offer->products);
-
-        if (!is_array($products)) {
-            $products = [];
-        }
-
-
-        $categories = unserialize($offer->categories);
-
-        if (!is_array($categories)) {
-            $categories = [];
-        }
-
-
-
-        $products = Product::where(function ($query) use ($products, $categories) {
-            $query->whereIn('id', $products)
-                ->orWhereIn('category_id', $categories);
-        })
-            ->where('status', "active")
-            ->where('country_id', $country->id)
-            ->where(function ($query) use ($warehouses) {
-                $query->whereHas('stocks', function ($query) use ($warehouses) {
-                    $query->whereIn('warehouse_id', $warehouses);
-                })->orWhereIn('product_type', ['digital', 'service'])
-                    ->orWhereNotNull('vendor_id');
-            })
-            ->inRandomOrder()
-            ->limit(30)
-            ->get();
-
-        return $products;
-    }
-}
 
 // get testimonial stars
 if (!function_exists('getTistimonialStars')) {
@@ -3456,7 +3605,7 @@ if (!function_exists('snapchatEvent')) {
 
 // create snap chat event
 if (!function_exists('facebookEvent')) {
-    function facebookEvent($type)
+    function facebookEvent($type, $value = 0, $currency = '')
     {
 
         $pixel_id = setting('facebook_id');
@@ -3484,12 +3633,21 @@ if (!function_exists('facebookEvent')) {
             ->setClientUserAgent($device)
             ->setPhone($phone);
 
+        if ($value > 0) {
+            $custom_data = (new CustomData())
+                // ->setContents(array($content))
+                ->setCurrency($currency)
+                ->setValue($value);
+        }
+
+
 
         $event = (new Event())
             ->setEventName($type)
             ->setEventTime($date)
             ->setEventSourceUrl($url)
             ->setUserData($user_data)
+            ->setCustomData(isset($custom_data) ? $custom_data : null)
             // ->setCustomData($custom_data)
             ->setActionSource('website ');
 
@@ -3517,5 +3675,342 @@ if (!function_exists('facebookEvent')) {
 
         // Async request:
         $promise = $fRequest;
+
+        // dd($promise);
+    }
+}
+
+
+// add view record
+if (!function_exists('addViewRecord')) {
+    function addViewRecord()
+    {
+        if (Auth::check()) {
+            $user_id = Auth::id();
+            $session_id = null;
+        } else {
+            $user_id = null;
+            $session_id = request()->session()->token();
+        }
+
+        $ip =  request()->ip();
+        $position = Location::get($ip);
+
+        if ($position) {
+            $countryName = $position->countryName;
+            $regionName = $position->regionName;
+            $cityName = $position->cityName;
+        } else {
+            $countryName = null;
+            $regionName = null;
+            $cityName = null;
+        }
+
+        $device = strval(request()->userAgent());
+
+
+        $view = View::create([
+            'user_id' => $user_id,
+            'session_id' => $session_id,
+            'ip' => $ip,
+            'url' => request()->url(),
+            'full_url' => request()->fullUrl(),
+            'country_name' => $countryName,
+            'state_name' => $regionName,
+            'city_name' => $cityName,
+            'device' => $device,
+
+        ]);
+    }
+}
+
+
+
+// get user cash accounts
+
+if (!function_exists('getCashAccounts')) {
+    function getCashAccounts()
+    {
+        $user = Auth::user();
+        $branch_id = getUserBranchId($user);
+        $cash_accounts = $user->accounts->where('type', 'cash_accounts')->where('parent_id', settingAccount('cash_accounts', $branch_id));
+        if ($cash_accounts == null) {
+            $cash_accounts = [];
+        }
+        return $cash_accounts;
+    }
+}
+
+
+
+if (!function_exists('getUserAttendance')) {
+    function getUserAttendance()
+    {
+        $user = Auth::user();
+        $date = Carbon::now();
+
+        $attendance = Attendance::where('user_id', $user->id)
+            ->whereDate('attendance_date', '=', $date)
+            ->whereNotNull('attendance_date')
+            ->first();
+
+        return $attendance;
+    }
+}
+
+
+if (!function_exists('getUserLeave')) {
+    function getUserLeave()
+    {
+        $user = Auth::user();
+        $date = Carbon::now();
+
+        $attendance = Attendance::where('user_id', $user->id)
+            ->whereDate('leave_date', '=', $date)
+            ->whereNotNull('leave_date')
+            ->first();
+
+        return $attendance;
+    }
+}
+
+
+
+if (!function_exists('getUserSalary')) {
+    function getUserSalary($user)
+    {
+        $employee_info = getEmployeeInfo($user);
+
+        if ($employee_info) {
+            $salary = ($employee_info->basic_salary + $employee_info->variable_salary);
+        } else {
+            $salary = 0;
+        }
+
+        return $salary;
+    }
+}
+
+if (!function_exists('getUserDaySalary')) {
+    function getUserDaySalary($user)
+    {
+        $employee_info = getEmployeeInfo($user);
+
+        if ($employee_info) {
+            $day_salary = ((($employee_info->basic_salary + $employee_info->variable_salary) * 12) / 365);
+            $day_salary = round($day_salary, 2);
+        } else {
+            $day_salary = 0;
+        }
+
+        return $day_salary;
+    }
+}
+
+
+if (!function_exists('getUserAbsenceDays')) {
+    function getUserAbsenceDays($user, $date)
+    {
+        $employee_info = getEmployeeInfo($user);
+
+        $start = Carbon::parse($date)->startOfMonth();
+        $end = Carbon::parse($date)->endOfMonth();
+        $dates = [];
+        while ($start->lte($end)) {
+            $dates[$start->toDateString()] = $start->format('D');
+            $start->addDay();
+        }
+
+        $weekend_days = ($employee_info->Weekend_days &&
+            is_array(unserialize($employee_info->Weekend_days))) ? unserialize($employee_info->Weekend_days) : [];
+
+        $absence_days = 0;
+        foreach ($dates as $key => $date) {
+
+            $attendance = Attendance::where('user_id', $user->id)
+                ->whereDate('attendance_date', '=', $key)
+                ->whereNotNull('attendance_date')
+                ->first();
+
+            $leave = Attendance::where('user_id', $user->id)
+                ->whereDate('leave_date', '=', $key)
+                ->whereNotNull('leave_date')
+                ->first();
+
+            $permission = EmployeePermission::where('user_id', $user->id)
+                ->where('status', 'confirmed')
+                ->where('type', 'vacation')
+                ->whereDate('date', '=', $key)
+                ->first();
+
+            if (!in_array($date, $weekend_days) && ($attendance == null || $leave == null)) {
+                if ($permission == null) {
+                    $absence_days++;
+                }
+            }
+        }
+
+        return $absence_days;
+    }
+}
+
+
+
+if (!function_exists('getUserPenalties')) {
+    function getUserPenalties($user, $date)
+    {
+
+        $month = Carbon::parse($date)->format('m');
+        $year = Carbon::parse($date)->format('Y');
+
+        $penalties = Reward::where('user_id', $user->id)
+            ->where('type', 'penalty')
+            ->whereMonth('created_at', '=', $month)
+            ->whereYear('created_at', '=', $year)
+            ->get();
+
+        $penalties_amount = 0;
+        foreach ($penalties as $penalty) {
+            $penalties_amount += $penalty->amount;
+        }
+
+        return $penalties_amount;
+    }
+}
+
+
+if (!function_exists('getUserRewards')) {
+    function getUserRewards($user, $date)
+    {
+
+        $month = Carbon::parse($date)->format('m');
+        $year = Carbon::parse($date)->format('Y');
+
+        $rewards = Reward::where('user_id', $user->id)
+            ->where('type', 'reward')
+            ->whereMonth('created_at', '=', $month)
+            ->whereYear('created_at', '=', $year)
+            ->get();
+
+        $rewards_amount = 0;
+        foreach ($rewards as $reward) {
+            $rewards_amount += $reward->amount;
+        }
+
+        return $rewards_amount;
+    }
+}
+
+
+if (!function_exists('getUserLoans')) {
+    function getUserLoans($user)
+    {
+        $branch_id = getUserBranchId($user);
+        $loans_account = getItemAccount($user->id, null, 'employee_loan_account', $branch_id);
+        $loans =  getTrialBalance($loans_account->id, null, null);
+
+        return $loans;
+    }
+}
+
+
+if (!function_exists('getSalaryCard')) {
+    function getSalaryCard($user, $date)
+    {
+        $salary_card = SalaryCard::where('user_id', $user->id)
+            ->where('date', $date)
+            ->first();
+        return $salary_card;
+    }
+}
+
+
+
+if (!function_exists('getSettlementAmount')) {
+    function getSettlementAmount($user)
+    {
+        $sheets = SettlementSheet::where('user_id', $user->id)->where('status', 'pending')->get();
+        $amount = 0;
+
+        foreach ($sheets as $sheet) {
+            $amount += $sheet->amount;
+        }
+
+        return $amount;
+    }
+}
+
+
+if (!function_exists('getSettlementAmountForSheet')) {
+    function getSettlementAmountForSheet($sheet)
+    {
+        $records = $sheet->records;
+        $amount = 0;
+
+        foreach ($records as $record) {
+            $amount += $record->amount;
+        }
+
+        return $amount;
+    }
+}
+
+
+if (!function_exists('isMobileDevice')) {
+    function isMobileDevice()
+    {
+        return preg_match('/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i', $_SERVER['HTTP_USER_AGENT']);
+    }
+}
+
+
+
+if (!function_exists('getLateTime')) {
+    function getLateTime($attendance)
+    {
+
+        $late_time = 0;
+        $employee_info = getEmployeeInfo($attendance->user);
+
+        if ($attendance->start_time != null) {
+            $start_time = $attendance->start_time;
+        } else {
+            $start_time = $employee_info->start_time;
+            $attendance->update([
+                'start_time' => $start_time,
+            ]);
+        }
+
+        if ($employee_info) {
+            if ($attendance->attendance_date != null) {
+                $attendance_time = Carbon::parse($attendance->attendance_date);
+                $start_time = Carbon::parse($start_time);
+
+                if ($attendance_time->gt($start_time)) {
+                    $late_time = $attendance_time->diffInMinutes($start_time);
+
+                    $allow_time = setting('allow_employees') ? setting('allow_employees') : 0;
+                    if ($late_time <= $allow_time) {
+                        $late_time = 0;
+                    }
+                }
+
+                // dd($attendance_time->diffInRealMinutes($start_time), $attendance_time->toTimeString(), $start_time->toTimeString(), $late_time);
+            } else {
+                $leave_time =  Carbon::parse($attendance->leave_date);
+                $working_hours =  $employee_info->work_hours;
+                $official_leave_time = Carbon::parse($start_time)->addHours($working_hours);
+
+
+                if ($official_leave_time->gt($leave_time)) {
+                    $late_time = $official_leave_time->diffInMinutes($leave_time);
+                }
+
+                // dd($official_leave_time->toDateTimeString(), $leave_time->toDateTimeString(), $late_time);
+            }
+        }
+
+
+        return $late_time;
     }
 }

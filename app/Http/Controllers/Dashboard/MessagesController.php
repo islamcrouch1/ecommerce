@@ -23,11 +23,14 @@ class MessagesController extends Controller
 
     public function index()
     {
-        $messages = Message::whenSearch(request()->search)
+        $messages = Message::where('user_id', '=', Auth::user()->id)
+            ->orWhere('user_id', 0)
+            ->whenSearch(request()->search)
             ->latest()
             ->paginate(100);
         return view('dashboard.messages.admin')->with('messages', $messages);
     }
+
 
 
     public function store(Request $request, User $user)
@@ -45,17 +48,29 @@ class MessagesController extends Controller
             'sender_id' => $admin->id,
         ]);
 
-        $title_ar = 'رسالة من الدعم الفني';
-        $body_ar = $message->message;
-        $title_en = 'Message from technical support';
-        $body_en  = $message->message;
-        $url = route('messages.index');
 
-        addNoty($user, $user, $url, $title_en, $title_ar, $body_en, $body_ar);
+        if ($user->hasRole('administrator')) {
+            $title_ar = 'رسالة من - ' . Auth::user()->name;
+            $body_ar = $message->message;
+            $title_en = 'Message from - ' . Auth::user()->name;
+            $body_en  = $message->message;
+            $url = route('users.show', ['user' => $admin->id]);
+        } else {
+            $title_ar = 'رسالة من الدعم الفني';
+            $body_ar = $message->message;
+            $title_en = 'Message from technical support';
+            $body_en  = $message->message;
+            $url = route('messages.index');
+        }
+
+        addNoty($user, $admin, $url, $title_en, $title_ar, $body_en, $body_ar);
+
 
         alertSuccess('message sent successfully', 'تم الإرسال بنجاح');
         return redirect()->route('users.show', ['user' => $user->id]);
     }
+
+
 
     public function destroy(Message $message)
     {

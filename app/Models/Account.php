@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class Account extends Model
 {
@@ -16,6 +17,13 @@ class Account extends Model
         'name_ar', 'name_en', 'code', 'account_type', 'status', 'parent_id', 'reference_id', 'type', 'created_by', 'updated_by', 'dep_rate', 'branch_id'
     ];
 
+
+    public function delete()
+    {
+        $this->users()->detach();
+        return parent::delete();
+    }
+
     public function childrenRecursive()
     {
         return $this->accounts()->with('childrenRecursive');
@@ -24,6 +32,11 @@ class Account extends Model
     public function accounts()
     {
         return $this->hasMany(Account::class, 'parent_id');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     public function entries()
@@ -46,13 +59,20 @@ class Account extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
 
-    public function scopeWhenParent($query, $parent)
+
+    public function scopeWhenParent($query, $parent, $account_id = null)
     {
         if ($parent == null) {
-            return $query->when(function ($q) {
-                return $q->whereNull('parent_id');
-            });
+            if ($account_id == null) {
+                return $query->when(function ($q) {
+                    return $q->whereNull('parent_id');
+                });
+            }
         } else {
             return $query->when($parent, function ($q) use ($parent) {
                 return $q->where('parent_id', 'like', "$parent");
@@ -65,6 +85,14 @@ class Account extends Model
     {
         return $query->when($branch_id, function ($q) use ($branch_id) {
             return $q->where('branch_id', 'like', "%$branch_id%");
+        });
+    }
+
+
+    public function scopeWhenAccount($query, $account_id)
+    {
+        return $query->when($account_id, function ($q) use ($account_id) {
+            return $q->where('id', 'like', "$account_id");
         });
     }
 
@@ -84,5 +112,33 @@ class Account extends Model
         return $query->when($search, function ($q) use ($search) {
             return $q->where('id', 'like', "$search");
         });
+    }
+
+
+    public static function geAccounts($data = null)
+    {
+
+
+        $data = (object) $data;
+
+        $user = Auth::user();
+        $branches = getUserBranches($user);
+
+        $accounts = self::select('id', 'name_ar', 'name_en', 'code', 'account_type', 'branch_id', 'created_at')
+            // ->whereDate('created_at', '>=', $data->from ?? null)
+            // ->whereDate('created_at', '<=', $data->to ?? null)
+            ->whereIn('branch_id', $branches->pluck('id')->toArray())->whenSearch($data->search ?? null)
+            ->whenBranch($data->branch_id ?? null)
+            ->whenParent($data->parent_id ?? null, $data->account_id ?? null)
+            ->whenAccount($data->account_id ?? null)
+            ->get()
+            ->toArray();
+
+
+        $description_ar =  'تم تنزيل شيت شجرة الحسابات';
+        $description_en  = 'Accounts file has been downloaded ';
+        addLog('admin', 'exports', $description_ar, $description_en);
+
+        return $accounts;
     }
 }

@@ -101,10 +101,7 @@
             @endif
 
 
-
-
-
-            @if (auth()->user()->hasPermission('crm-read'))
+            @if (auth()->user()->hasPermission('queries-read') && $user->hasRole('user'))
                 <div class="card mb-3 overflow-hidden">
                     <div class="card-header">
                         <h5 class="mb-0">{{ __('User Queries') }}</h5>
@@ -166,7 +163,7 @@
                             {{ $queries->appends(request()->query())->links() }}
                         </div>
 
-                        @if (auth()->user()->hasPermission('crm-create'))
+                        @if (auth()->user()->hasPermission('queries-create'))
                             <div class="row pt-1 g-0 h-100">
                                 <div class="col-md-12 d-flex flex-center">
                                     <div class="flex-grow-1">
@@ -291,7 +288,7 @@
                 </div>
             @endif
 
-            @if (auth()->user()->hasPermission('notes-read'))
+            @if (auth()->user()->hasPermission('notes-read') && $user->hasRole('user'))
                 <div class="card mb-3 overflow-hidden">
                     <div class="card-header">
                         <h5 class="mb-0">{{ __('User Notes') }}</h5>
@@ -428,7 +425,7 @@
                                                 {{ $message->created_at }}
                                                 <span
                                                     class="badge badge-soft-info ">{{ interval($message->created_at) }}</span>
-                                                @if (auth()->user()->hasPermission('messages-trash|messages-delete'))
+                                                @if (auth()->user()->hasPermission('messages-trash|messages-delete') && auth()->user()->id == $message->sender_id)
                                                     <a
                                                         href="{{ route('messages.admin.destroy', ['message' => $message->id]) }}">Delete</a>
                                                 @endif
@@ -476,4 +473,508 @@
 
         </div>
     </div>
+
+
+    @if ($user->hasRole('affiliate') || $user->hasRole('vendor'))
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="alert alert-info" role="alert">
+                    {{ __('user store information') }}</div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <form method="POST" action="{{ route('user.store.update', ['user' => $user->id]) }}"
+                enctype="multipart/form-data">
+                @csrf
+                <div class="card-header position-relative min-vh-25 mb-7">
+
+                    <div class="cover-image">
+                        <div class="bg-holder rounded-3 rounded-bottom-0 img-prev-cover"
+                            style="background-image:url({{ getUserInfo($user) != null && getUserInfo($user)->store_cover != null ? getMediaPath(getUserInfo($user)->store_cover) : asset('assets/img/store_cover.jpg') }});">
+                        </div>
+                        <!--/.bg-holder-->
+
+                        <input name="store_cover" class="d-none cover" id="upload-cover-image" type="file" />
+                        <label class="cover-image-file-input" for="upload-cover-image"><span
+                                class="fas fa-camera me-2"></span><span>{{ __('Change cover photo') }}</span></label>
+                    </div>
+                    <div class="avatar avatar-5xl avatar-profile shadow-sm img-thumbnail rounded-circle">
+                        <div class="h-100 w-100 rounded-circle overflow-hidden position-relative"> <img
+                                src="{{ getUserInfo($user) != null && getUserInfo($user)->store_profile != null ? getMediaPath(getUserInfo($user)->store_profile) : asset('storage/images/users/' . $user->profile) }}"
+                                width="200" alt="" data-dz-thumbnail="data-dz-thumbnail" class="img-prev" />
+                            <input name="store_profile" class="d-none img" id="profile-image" type="file" />
+                            <label class="mb-0 overlay-icon d-flex flex-center" for="profile-image"><span
+                                    class="bg-holder overlay overlay-0"></span><span
+                                    class="z-index-1 text-white dark__text-white text-center fs--1"><span
+                                        class="fas fa-camera"></span><span class="d-block">Update</span></span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-12">
+
+                            <div class="mb-3">
+                                <label class="form-label" for="store_name">{{ __('Your store name') }}</label>
+                                <input name="store_name" class="form-control @error('store_name') is-invalid @enderror"
+                                    value="{{ getUserInfo($user) != null ? getUserInfo($user)->store_name : '' }}"
+                                    type="text" autocomplete="on" id="store_name" />
+                                @error('store_name')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label class="form-label"
+                                    for="store_description">{{ __('Your store description') }}</label>
+                                <textarea name="store_description" class="form-control @error('store_description') is-invalid @enderror"
+                                    type="text" id="store_description">{{ getUserInfo($user) != null ? getUserInfo($user)->store_description : '' }}</textarea>
+                                @error('store_description')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+
+                            <div class="mb-3">
+                                <label class="form-label"
+                                    for="commercial_record">{{ __('commercial record photo') }}</label>
+                                <input name="commercial_record"
+                                    class="img form-control @error('commercial_record') is-invalid @enderror"
+                                    type="file" id="commercial_record" />
+                                @error('commercial_record')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            @if (getUserInfo($user) != null && getUserInfo($user)->commercial_record != null)
+                                <div class="mb-3">
+                                    <div class="col-md-10">
+                                        <a href="{{ getMediaPath(getUserInfo($user)->commercial_record) }}"
+                                            target="_blank">
+                                            <img src="{{ getMediaPath(getUserInfo($user)->commercial_record) }}"
+                                                style="width:150px; border: 1px solid #999" class="img-thumbnail">
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
+
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="tax_card">{{ __('tax card photo') }}</label>
+                                <input name="tax_card" class="img form-control @error('tax_card') is-invalid @enderror"
+                                    type="file" id="tax_card" />
+                                @error('tax_card')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            @if (getUserInfo($user) != null && getUserInfo($user)->tax_card != null)
+                                <div class="mb-3">
+                                    <div class="col-md-10">
+                                        <a href="{{ getMediaPath(getUserInfo($user)->tax_card) }}" target="_blank">
+                                            <img src="{{ getMediaPath(getUserInfo($user)->tax_card) }}"
+                                                style="width:150px; border: 1px solid #999" class="img-thumbnail">
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="mb-3">
+                                <label class="form-label" for="id_card_front">{{ __('ID card front') }}</label>
+                                <input name="id_card_front"
+                                    class="img form-control @error('id_card_front') is-invalid @enderror" type="file"
+                                    id="id_card_front" />
+                                @error('id_card_front')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            @if (getUserInfo($user) != null && getUserInfo($user)->id_card_front != null)
+                                <div class="mb-3">
+                                    <div class="col-md-10">
+                                        <a href="{{ getMediaPath(getUserInfo($user)->id_card_front) }}" target="_blank">
+                                            <img src="{{ getMediaPath(getUserInfo($user)->id_card_front) }}"
+                                                style="width:150px; border: 1px solid #999" class="img-thumbnail">
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="mb-3">
+                                <label class="form-label" for="id_card_back">{{ __('ID card back') }}</label>
+                                <input name="id_card_back"
+                                    class="img form-control @error('id_card_back') is-invalid @enderror" type="file"
+                                    id="id_card_back" />
+                                @error('id_card_back')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            @if (getUserInfo($user) != null && getUserInfo($user)->id_card_back != null)
+                                <div class="mb-3">
+                                    <div class="col-md-10">
+                                        <a href="{{ getMediaPath(getUserInfo($user)->id_card_back) }}" target="_blank">
+                                            <img src="{{ getMediaPath(getUserInfo($user)->id_card_back) }}"
+                                                style="width:150px; border: 1px solid #999" class="img-thumbnail">
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="mb-3">
+                                <label class="form-label" for="bank_account">{{ __('bank account number') }}</label>
+                                <input name="bank_account"
+                                    class="form-control @error('bank_account') is-invalid @enderror"
+                                    value="{{ getUserInfo($user) != null ? getUserInfo($user)->bank_account : '' }}"
+                                    type="text" autocomplete="on" id="bank_account" />
+                                @error('bank_account')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="company_address">{{ __('company address') }}</label>
+                                <input name="company_address"
+                                    class="form-control @error('company_address') is-invalid @enderror"
+                                    value="{{ getUserInfo($user) != null ? getUserInfo($user)->company_address : '' }}"
+                                    type="text" autocomplete="on" id="company_address" />
+                                @error('company_address')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="website">{{ __('website') }}</label>
+                                <input name="website" class="form-control @error('website') is-invalid @enderror"
+                                    value="{{ getUserInfo($user) != null ? getUserInfo($user)->website : '' }}"
+                                    type="text" autocomplete="on" id="website" />
+                                @error('website')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="facebook_page">{{ __('facebook page') }}</label>
+                                <input name="facebook_page"
+                                    class="form-control @error('facebook_page') is-invalid @enderror"
+                                    value="{{ getUserInfo($user) != null ? getUserInfo($user)->facebook_page : '' }}"
+                                    type="text" autocomplete="on" id="facebook_page" />
+                                @error('facebook_page')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="store_status">{{ __('store status') }}</label>
+                                <select class="form-select @error('store_status') is-invalid @enderror" aria-label=""
+                                    name="store_status" id="store_status">
+                                    <option value="1"
+                                        {{ getUserInfo($user) != null && getUserInfo($user)->store_status == 1 ? 'selected' : '' }}>
+                                        {{ __('inactive') }}
+                                    </option>
+                                    <option value="2"
+                                        {{ getUserInfo($user) != null && getUserInfo($user)->store_status == 2 ? 'selected' : '' }}>
+                                        {{ __('active') }}
+                                    </option>
+                                </select>
+                                @error('store_status')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+
+
+                            <div class="mb-3">
+                                <button class="btn btn-primary d-block w-100 mt-3" type="submit"
+                                    name="submit">{{ __('Save') }}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    @endif
+
+
+    @if (
+        $user->hasRole('administrator') &&
+            auth()->user()->hasPermission('employees-read'))
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="alert alert-info" role="alert">
+                    {{ __('employee data') }}</div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <form method="POST" action="{{ route('user.employee.store', ['user' => $user->id]) }}"
+                enctype="multipart/form-data">
+                @csrf
+
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-12">
+
+                            <div class="mb-3">
+                                <label class="form-label" for="address">{{ __('address') }}</label>
+                                <input name="address" class="form-control @error('address') is-invalid @enderror"
+                                    value="{{ getEmployeeInfo($user) != null ? getEmployeeInfo($user)->address : '' }}"
+                                    type="text" autocomplete="on" id="address" />
+                                @error('address')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="job_title">{{ __('job title') }}</label>
+                                <input name="job_title" class="form-control @error('job_title') is-invalid @enderror"
+                                    value="{{ getEmployeeInfo($user) != null ? getEmployeeInfo($user)->job_title : '' }}"
+                                    type="text" autocomplete="on" id="job_title" />
+                                @error('job_title')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="branch_id">{{ __('branch') }}</label>
+
+                                <select class="form-select @error('branch_id') is-invalid @enderror" name="branch_id"
+                                    id="branch_id">
+
+                                    <option value="">{{ __('select branch') }}</option>
+
+                                    @foreach (getbranches() as $branch)
+                                        <option value="{{ $branch->id }}"
+                                            {{ getEmployeeInfo($user) != null && getEmployeeInfo($user)->branch_id == $branch->id ? 'selected' : '' }}>
+                                            {{ getName($branch) }}
+                                        </option>
+                                    @endforeach
+
+                                </select>
+                                @error('branch_id')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="national_id">{{ __('national ID') }}</label>
+                                <input name="national_id" class="form-control @error('national_id') is-invalid @enderror"
+                                    value="{{ getEmployeeInfo($user) != null ? getEmployeeInfo($user)->national_id : '' }}"
+                                    type="text" autocomplete="on" id="national_id" />
+                                @error('national_id')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="basic_salary">{{ __('basic salary') }}</label>
+                                <input name="basic_salary"
+                                    class="form-control @error('basic_salary') is-invalid @enderror"
+                                    value="{{ getEmployeeInfo($user) != null ? getEmployeeInfo($user)->basic_salary : '0' }}"
+                                    type="number" min="0" step="0.01" autocomplete="on" id="basic_salary" />
+
+                                @error('basic_salary')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="variable_salary">{{ __('variable salary') }}</label>
+                                <input name="variable_salary" class="form-control @error('salary') is-invalid @enderror"
+                                    value="{{ getEmployeeInfo($user) != null ? getEmployeeInfo($user)->variable_salary : '0' }}"
+                                    type="number" min="0" step="0.01" autocomplete="on"
+                                    id="variable_salary" />
+
+                                @error('variable_salary')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="work_hours">{{ __('working hours') }}</label>
+                                <input name="work_hours" class="form-control @error('work_hours') is-invalid @enderror"
+                                    value="{{ getEmployeeInfo($user) != null ? getEmployeeInfo($user)->work_hours : '0' }}"
+                                    type="number" min="0" step="0.01" autocomplete="on" id="work_hours" />
+
+                                @error('work_hours')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="Weekend_days">{{ __('Weekend days') }}</label>
+                                <select class="form-select js-choice @error('Weekend_days') is-invalid @enderror"
+                                    aria-label="" name="Weekend_days[]" multiple="multiple"
+                                    data-options='{"removeItemButton":true,"placeholder":true}' id="Weekend_days">
+
+
+
+                                    @if (getEmployeeInfo($user) != null &&
+                                            getEmployeeInfo($user)->Weekend_days &&
+                                            is_array(unserialize(getEmployeeInfo($user)->Weekend_days)))
+                                        <option value="Mon"
+                                            {{ in_array('Mon', unserialize(getEmployeeInfo($user)->Weekend_days)) ? 'selected' : '' }}>
+                                            {{ __('Mon') }}</option>
+                                        <option value="Tue"
+                                            {{ in_array('Tue', unserialize(getEmployeeInfo($user)->Weekend_days)) ? 'selected' : '' }}>
+                                            {{ __('Tue') }}</option>
+                                        <option value="Wed"
+                                            {{ in_array('Wed', unserialize(getEmployeeInfo($user)->Weekend_days)) ? 'selected' : '' }}>
+                                            {{ __('Wed') }}</option>
+                                        <option value="Thu"
+                                            {{ in_array('Thu', unserialize(getEmployeeInfo($user)->Weekend_days)) ? 'selected' : '' }}>
+                                            {{ __('Thu') }}</option>
+                                        <option value="Fri"
+                                            {{ in_array('Fri', unserialize(getEmployeeInfo($user)->Weekend_days)) ? 'selected' : '' }}>
+                                            {{ __('Fri') }}</option>
+                                        <option value="Sat"
+                                            {{ in_array('Sat', unserialize(getEmployeeInfo($user)->Weekend_days)) ? 'selected' : '' }}>
+                                            {{ __('Sat') }}</option>
+                                        <option value="Sun"
+                                            {{ in_array('Sun', unserialize(getEmployeeInfo($user)->Weekend_days)) ? 'selected' : '' }}>
+                                            {{ __('Sun') }}</option>
+                                    @else
+                                        <option value="Mon">{{ __('Mon') }}</option>
+                                        <option value="Tue">{{ __('Tue') }}</option>
+                                        <option value="Wed">{{ __('Wed') }}</option>
+                                        <option value="Thu">{{ __('Thu') }}</option>
+                                        <option value="Fri">{{ __('Fri') }}</option>
+                                        <option value="Sat">{{ __('Sat') }}</option>
+                                        <option value="Sun">{{ __('Sun') }}</option>
+                                    @endif
+
+                                </select>
+                                @error('Weekend_days')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="image">{{ __('employee docs') }}</label>
+                                <input name="images[]" class="imgs form-control @error('image') is-invalid @enderror"
+                                    type="file" accept="image/*" id="image" multiple />
+                                @error('image')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+                                <div class="col-md-12" id="gallery">
+
+
+                                </div>
+
+                                <div class="product-images row">
+
+                                    @if (getEmployeeInfo($user))
+                                        @foreach (getEmployeeInfo($user)->images as $image)
+                                            <div style="width:150px; height:150px; border: 1px solid #999"
+                                                class="hoverbox rounded-3 text-center m-1 product-image-{{ $image->media->id }}">
+                                                <img class="img-fluid" src="{{ asset($image->media->path) }}"
+                                                    alt="" />
+                                                <div class="light hoverbox-content bg-dark p-5 flex-center">
+                                                    <div>
+                                                        <a class="btn btn-light btn-sm mt-1"href="{{ asset($image->media->path) }}"
+                                                            target="_blank"
+                                                            data-url="{{ route('employee.delete.media', ['image_id' => $image->id]) }}"
+                                                            data-media_id="{{ $image->media->id }}">{{ __('show') }}</a>
+
+                                                        @if (auth()->user()->hasPermission('employees-update'))
+                                                            <a class="btn btn-light btn-sm mt-1 " href=""
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#delete-modal-{{ $image->id }}">{{ __('Delete') }}</a>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="modal fade" id="delete-modal-{{ $image->id }}"
+                                                tabindex="-1" role="dialog" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered" role="document"
+                                                    style="max-width: 500px">
+                                                    <div class="modal-content position-relative">
+                                                        <div class="position-absolute top-0 end-0 mt-2 me-2 z-index-1">
+                                                            <button
+                                                                class="btn-close btn btn-sm btn-circle d-flex flex-center transition-base"
+                                                                data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+
+                                                        <div class="modal-body p-0">
+
+                                                            <div class="p-4 pb-0">
+
+                                                                <div style=" border: 1px solid #999"
+                                                                    class="hoverbox rounded-3 text-center m-1">
+                                                                    <img class="img-fluid"
+                                                                        src="{{ asset($image->media->path) }}"
+                                                                        alt="" />
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button class="btn btn-secondary" type="button"
+                                                                data-bs-dismiss="modal">{{ __('Close') }}</button>
+                                                            <a class="btn btn-primary delete-media"
+                                                                data-url="{{ route('employee.delete.media', ['image_id' => $image->id]) }}"
+                                                                data-media_id="{{ $image->media->id }}"
+                                                                data-bs-dismiss="modal">{{ __('Delete') }}</a>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @endif
+
+
+
+                                </div>
+                            </div>
+
+
+
+
+
+
+
+
+
+
+
+                            @if (auth()->user()->hasPermission('employees-update'))
+                                <div class="mb-3">
+                                    <button class="btn btn-primary d-block w-100 mt-3" type="submit"
+                                        name="submit">{{ __('Save') }}</button>
+                                </div>
+                            @endif
+
+
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    @endif
+
 @endsection

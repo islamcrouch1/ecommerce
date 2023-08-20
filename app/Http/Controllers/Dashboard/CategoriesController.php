@@ -72,6 +72,8 @@ class CategoriesController extends Controller
             'subtitle_en' => "nullable|string",
             'subtitle_ar' => "nullable|string",
             'vendor_profit' => "required|numeric",
+            'status' => "required|string",
+
         ]);
 
         $media_id = saveMedia('image', $request['image'], 'categories');
@@ -93,6 +95,8 @@ class CategoriesController extends Controller
             'created_by' => Auth::id(),
             'subtitle_ar' => $request['subtitle_ar'],
             'subtitle_en' => $request['subtitle_en'],
+            'status' => $request['status'],
+
 
         ]);
 
@@ -148,6 +152,8 @@ class CategoriesController extends Controller
             'sort_order' => "nullable|numeric",
             'subtitle_en' => "nullable|string",
             'subtitle_ar' => "nullable|string",
+            'status' => "required|string",
+
         ]);
 
         if ($request->hasFile('image')) {
@@ -172,6 +178,8 @@ class CategoriesController extends Controller
             'updated_by' => Auth::id(),
             'subtitle_ar' => $request['subtitle_ar'],
             'subtitle_en' => $request['subtitle_en'],
+            'status' => $request['status'],
+
         ]);
 
         // foreach ($category->products as $product) {
@@ -202,7 +210,7 @@ class CategoriesController extends Controller
             return redirect()->route('categories.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the category cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو القسم لا يمكن حذفه حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

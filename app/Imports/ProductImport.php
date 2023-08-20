@@ -120,17 +120,17 @@ class ProductImport implements
 
             if ($row['images'] == '') {
                 alertError('The image link field is required, it cannot be left blank', 'الحقل الخاص برابط الصور مطلوب , لايمكن تركه فارغا');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             if (Category::find($row['category']) == null) {
                 alertError('The category id used is incorrect, please check the data', 'رقم القسم المستخدم غير صحيح يرجى مراجعة البيانات');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             if ($row['sale_price'] <= $row['discount_price']) {
                 alertError('discount price must be lower than regular price', 'يجب ان يكون سعر الخصم اقل من السعر العادي');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             $product_type = $row['product_type'];
@@ -143,7 +143,7 @@ class ProductImport implements
 
                 if ($row['attributes'] == '') {
                     alertError('please add product attributes', 'يرجى اضافة سمات المنتجات');
-                    return redirect()->back();
+                    return redirect()->back()->withInput();
                 }
 
 
@@ -152,7 +152,7 @@ class ProductImport implements
 
                 if (empty($attributes)) {
                     alertError('please select product attribute', 'يرجى تحديد سمات المنتج');
-                    return redirect()->back();
+                    return redirect()->back()->withInput();
                 } else {
 
 
@@ -160,7 +160,7 @@ class ProductImport implements
 
                         if (!isset($row['variations_' . $attr])) {
                             alertError('please select product variations', 'يرجى تحديد متغيرات المنتج');
-                            return redirect()->back();
+                            return redirect()->back()->withInput();
                         }
                     }
                 }
@@ -270,7 +270,7 @@ class ProductImport implements
                             ]);
                         } else {
                             alertError('some of entered attributes for feature number - ' . $attr . ' - not fount on the system please review your data', 'بعض المتغيرات المدخلة للسمة رقم - ' . $attr . ' - غير معرفة على النظام يرجى مراجعة المدخلات');
-                            return redirect()->back();
+                            return redirect()->back()->withInput();
                         }
                     }
 
@@ -344,17 +344,17 @@ class ProductImport implements
 
             if ($row['variations_sku'] == '') {
                 alertError('please add sku for variations', 'يرجى اضافة sku المتغيرات');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             if ($row['variations_cost'] == '') {
                 alertError('please add variations cost', 'يرجى اضافة اسعار تكلفة المتغيرات');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             if ($row['variations_qty'] == '') {
                 alertError('please add variatoions quantities', 'يرجى اضافة كميات المتغيرات');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             $variations_sku = explode(',', $row['variations_sku']);
@@ -364,7 +364,7 @@ class ProductImport implements
 
             if (count($variations_sku) != $product->combinations->count() ||  count($variations_cost) != $product->combinations->count() ||  count($variations_qty) != $product->combinations->count()) {
                 alertError('variations data is missing', 'بيانات بعض المتغيرات غير كاملة - اسعار تكلفة - كميات - sku');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
 
@@ -373,17 +373,17 @@ class ProductImport implements
 
             if (settingAccount('funding_assets_account', $branch_id) == null) {
                 alertError('please select the default funding assets account in settings page', 'الرجاء تحديد حساب تمويل الأصول المتداولة الافتراضية في صفحة الإعدادات');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             if (settingAccount('assets_account', $branch_id) == null) {
                 alertError('please select the default assets account for products in settings page', 'الرجاء تحديد حساب الأصول الافتراضية للمنتجات في صفحة الإعدادات');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             if (settingAccount('cs_account', $branch_id) == null) {
                 alertError('please select the default liability account for cost of goods sold in settings page', 'الرجاء تحديد حساب حقوق الملكية الافتراضية لتكلفة البضاعة المباعة في صفحة الإعدادات');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             $funding_assets_account = Account::findOrFail(settingAccount('funding_assets_account', $branch_id));
@@ -417,7 +417,7 @@ class ProductImport implements
                     //     if (url()->previous() == route('products.stock.add')) {
                     //         return redirect()->route('products.stock.create', ['product' => $product->id]);
                     //     } else {
-                    //         return redirect()->back();
+                    //         return redirect()->back()->withInput();
                     //     }
                     // }
 
@@ -427,7 +427,7 @@ class ProductImport implements
                     //         if (url()->previous() == route('products.stock.add')) {
                     //             return redirect()->route('products.stock.create', ['product' => $product->id]);
                     //         } else {
-                    //             return redirect()->back();
+                    //             return redirect()->back()->withInput();
                     //         }
                     //     }
                     // }

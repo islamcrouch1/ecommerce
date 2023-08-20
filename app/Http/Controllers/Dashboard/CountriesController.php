@@ -218,7 +218,7 @@ class CountriesController extends Controller
             return redirect()->route('countries.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the country cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو الدولة لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

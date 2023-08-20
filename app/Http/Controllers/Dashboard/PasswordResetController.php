@@ -66,7 +66,7 @@ class PasswordResetController extends Controller
     {
         $user = User::findOrFail($request->user);
         callToVerify($user);
-        return redirect()->back();
+        return redirect()->back()->withInput();
     }
 
 

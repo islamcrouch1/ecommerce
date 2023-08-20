@@ -13,24 +13,22 @@ class UsersExport implements FromCollection, WithHeadings
 
     use Exportable;
 
-    protected $role_id, $from, $to;
+    protected $request;
 
-    public function __construct($role_id, $from, $to)
+    public function __construct($request)
     {
-        $this->role_id     = $role_id;
-        $this->from     = $from;
-        $this->to     = $to;
+        $this->request     = $request;
     }
 
     public function headings(): array
     {
         return [
             'id',
-            'created_at',
             'name',
             'phone',
             'email',
             'gender',
+            'created_at',
             'type'
         ];
     }
@@ -38,6 +36,6 @@ class UsersExport implements FromCollection, WithHeadings
 
     public function collection()
     {
-        return collect(User::getUsers($this->role_id, $this->from, $this->to));
+        return collect(User::getUsers($this->request));
     }
 }

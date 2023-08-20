@@ -24,6 +24,9 @@ $('.filter').change(function(){
     $('.product-form').submit();
 });
 
+
+
+
 // $(".price-filter").click(function() {
 //     $('.product-form').submit();
 // });
@@ -88,6 +91,9 @@ $('.attribute-select').on('click' , function(e){
 
 
     getPrice(product_id , url ,locale, currency);
+
+
+    getInstallmentPrice();
 
 
 
@@ -209,11 +215,45 @@ $('.review-btn').on('click' , function(e){
 });
 
 
+$('.review-order-btn').on('click' , function(e){
+
+    e.preventDefault
+
+    const elements = document.querySelectorAll('.rate');
+
+    var check = 0;
+
+    elements.forEach((element) => {
+
+        var rating = $(element).attr('data-rating');
+        var field = '.rating-' + $(element).data('order') + '-' + $(element).data('product');
+        $(field).val(rating)
+
+        console.log(rating , field);
+
+
+        $(element).closest('form').find('input').each(function() {
+            if ($(this).prop('required') && $(this).val() == '' ) {
+                check++;
+            }
+        });
+
+    });
+
+
+    if(check == 0){
+        $(element).closest('form').submit(function () {
+            $('.btn').attr("disabled", true);
+        });
+    }
+});
+
+
 
 
 $('.quantity-right-plus').on('click', function () {
 
-    var $qty = $(".qty-input");
+    var $qty = $(this).parent('span').parent('div').find('.qty-input');
     var max = $qty.data('max');
     var currentVal = parseInt($qty.val());
     if (!isNaN(currentVal) && currentVal < max) {
@@ -221,7 +261,7 @@ $('.quantity-right-plus').on('click', function () {
     }
 });
 $('.quantity-left-minus').on('click', function () {
-    var $qty = $(".qty-input");
+    var $qty = $(this).parent('span').parent('div').find('.qty-input');
     var min = $qty.data('min')
 
     var _val = $($qty).val();
@@ -258,8 +298,8 @@ $('.add-to-cart').on('click', function (e) {
 
     var variations = [];
 
-    var alarm = '.alarm' ;
-    var alarm_text = '.alarm-text';
+    var alarm = '.alarm-' + product_id ;
+    var alarm_text = '.alarm-text-' + product_id;
 
 
 
@@ -478,16 +518,17 @@ $('.add-fav').on('click' , function(e){
 
 
 
-$('.cart-quantity').on('click' , function(e){
+$('.quantity-left-minus').on('click' , function(e){
 
     e.preventDefault();
 
-
-    var url = $(this).data('url');
-    var quantity = parseInt($(this).val());
-    var span = '.total-' + $(this).data('id');
-    var currency = $(this).data('currency');
+    var element = $(this).parent('span').parent('div').find('.qty-input');
+    var url = element.data('url');
+    var quantity = parseInt(element.val());
+    var span = '.total-' + element.data('id');
+    var currency = element.data('currency');
     var total = '.cart-total';
+    var discount = '.cart-discount';
 
 
     var formData = new FormData();
@@ -495,7 +536,7 @@ $('.cart-quantity').on('click' , function(e){
 
     // console.log(quantity);
 
-    var qty = $(this);
+    var qty = element;
 
     $.ajax({
         url: url,
@@ -508,8 +549,53 @@ $('.cart-quantity').on('click' , function(e){
 
             // console.log(parseInt(data.qty));
             qty.val(parseInt(data.qty));
-            $(span).html(parseInt(data.qty) * parseFloat(data.product_price) + currency);
-            $(total).html(parseFloat(data.total) + currency);
+            $(span).html(parseInt(data.qty) * (parseFloat(data.product_price).toFixed(2)) + currency);
+            $(total).html(parseFloat(data.total).toFixed(2) + currency);
+            $(discount).html(parseFloat(data.discount).toFixed(2) + currency);
+
+        }
+
+    });
+
+
+
+});
+
+$('.quantity-right-plus').on('click' , function(e){
+
+    e.preventDefault();
+
+    var element = $(this).parent('span').parent('div').find('.qty-input');
+    var url = element.data('url');
+    var quantity = parseInt(element.val());
+    var span = '.total-' + element.data('id');
+    var currency = element.data('currency');
+    var total = '.cart-total';
+    var discount = '.cart-discount';
+
+
+
+    var formData = new FormData();
+    formData.append('quantity' , quantity);
+
+    // console.log(quantity);
+
+    var qty = element;
+
+    $.ajax({
+        url: url,
+        data: formData,
+        method: 'POST',
+        processData: false,
+        contentType: false,
+        cache: false,
+        success: function(data) {
+
+            // console.log(parseInt(data.qty));
+            qty.val(parseInt(data.qty));
+            $(span).html(parseInt(data.qty) * (parseFloat(data.product_price).toFixed(3)) + currency);
+            $(total).html(parseFloat(data.total).toFixed(2) + currency);
+            $(discount).html(parseFloat(data.discount).toFixed(2) + currency);
 
         }
 
@@ -650,7 +736,7 @@ $('.phone').on("input" , function(e){
 
 
 
-        $('.phone').css('border', '1px solid green');
+        $(this).css('border', '1px solid green');
     }
     else {
 
@@ -658,8 +744,181 @@ $('.phone').on("input" , function(e){
         this.value = this.value.replace(/\D/g, '');
 
 
-        $('.phone').css('border', '1px solid red');
+        $(this).css('border', '1px solid red');
     }
 });
 
 
+$('input[name="company"]').on('change' , function(e){
+    e.preventDefault();
+    var company_id = $('input[name="company"]:checked').val();
+    getMonths(company_id);
+    getInstallmentPrice();
+
+});
+
+
+$('.months-select').on('change' , function(e){
+    e.preventDefault();
+    getInstallmentPrice();
+});
+
+
+$('.advanced-amount').on('input' , function(e){
+    e.preventDefault();
+    getInstallmentPrice();
+});
+
+function getInstallmentPrice() {
+
+    var product_id = $('.data').data('product_id');
+    var url = $('.data').data('price_url');
+
+
+
+
+
+
+    var variations = [];
+    $(".product-attributes-"+ product_id+ " .active").each(function() {
+        variations.push($(this).data('variation-id'));
+    });
+
+
+
+
+    var formData = new FormData();
+    formData.append('product_id' , product_id );
+
+    for (var i = 0; i < variations.length; i++) {
+        formData.append('variations[]', variations[i]);
+      }
+
+
+    $.ajax({
+        url: url,
+        data: formData,
+        method: 'POST',
+        processData: false,
+        contentType: false,
+        cache: false,
+        success: function(data) {
+
+            console.log(data.combination);
+
+            if(data.combination){
+                $('.combination_id').val(data.combination);
+            }
+
+            getInstallmentData(data.price);
+        }
+    });
+
+
+
+
+
+}
+
+
+
+function getInstallmentData(price) {
+
+
+    var company_id = company_id;
+    var price = price;
+
+    var locale = $('.data').data('locale');
+    var currency = $('.data').data('currency');
+
+    var url = $('input[name="company"]:checked').data('installment_url');
+
+    var type = $('input[name="company"]:checked').data('type');
+    var admin_expenses = $('input[name="company"]:checked').data('admin_expenses');
+    var amount = $('input[name="company"]:checked').data('amount');
+
+    var advanced_amount = $('.advanced-amount').val();
+    var months = $('.months-select').find(":selected").val();
+
+
+    var company_id = $('input[name="company"]:checked').val();
+
+
+    var formData = new FormData();
+    formData.append('company_id' , company_id );
+    formData.append('type' , type );
+    formData.append('admin_expenses' , admin_expenses );
+    formData.append('amount' , amount );
+    formData.append('advanced_amount' , advanced_amount );
+    formData.append('type' , type );
+    formData.append('months' , months );
+    formData.append('price' , price );
+
+
+    $.ajax({
+        url: url,
+        data: formData,
+        method: 'POST',
+        processData: false,
+        contentType: false,
+        cache: false,
+        success: function(data) {
+
+            if(data.status == 1){
+                $('.admin_expenses').html(data.admin_expenses + ' ' + currency);
+                $('.monthly_installment').html(data.installment_month + ' ' + currency);
+            }else{
+                $('.admin_expenses').html(0 + ' ' + currency);
+                $('.monthly_installment').html(0 + ' ' + currency);
+            }
+
+        }
+    });
+
+
+}
+
+
+function getMonths(company_id) {
+
+
+    var company_id = company_id;
+    var url = $('.data').data('months_url');
+
+    var formData = new FormData();
+    formData.append('company_id' , company_id );
+
+    $.ajax({
+        url: url,
+        data: formData,
+        method: 'POST',
+        processData: false,
+        contentType: false,
+        cache: false,
+        success: function(data) {
+
+            if(data.status == 1){
+
+
+                $('.months-select').children().remove().end()
+
+
+                $('.months-select').append(
+                    `<option value="">`+(data.locale == 'ar' ? 'حدد مدة التقسيط' : 'select installment period') +`</option>`
+                )
+                var array = data.months;
+                array.forEach(element => {
+                    $('.months-select').append(
+                        `<option value="`+ element +`">`+ element + ' ' +  (data.locale == 'ar' ? 'شهور' : 'months') +`</option>`
+                    )
+                });
+
+            }else{
+                $('.months-select').children().remove().end()
+            }
+
+        }
+    });
+
+
+}

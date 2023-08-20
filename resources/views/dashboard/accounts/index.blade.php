@@ -3,7 +3,7 @@
 @section('adminContent')
     <div class="card mb-3" id="customersTable"
         data-list='{"valueNames":["name","email","phone","address","joined"],"page":10,"pagination":true}'>
-        <div class="card-header">
+        <div class="card-header no-print">
             <div class="row flex-between-center">
                 <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
                     <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
@@ -20,10 +20,10 @@
                     <div class="d-none" id="table-customers-actions">
                         <div class="d-flex">
                             <select class="form-select form-select-sm" aria-label="Bulk actions">
-                                <option selected="">{{ __('Bulk actions') }}</option>
+                                {{-- <option selected="">{{ __('Bulk actions') }}</option>
                                 <option value="Refund">{{ __('Refund') }}</option>
                                 <option value="Delete">{{ __('Delete') }}</option>
-                                <option value="Archive">{{ __('Archive') }}</option>
+                                <option value="Archive">{{ __('Archive') }}</option> --}}
                             </select>
                             <button class="btn btn-falcon-default btn-sm ms-2" type="button">{{ __('Apply') }}</button>
                         </div>
@@ -77,10 +77,14 @@
                         <a href="{{ route('accounts.trashed', ['parent_id' => request()->parent_id]) }}"
                             class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-trash"
                                 data-fa-transform="shrink-3 down-2"></span><span
-                                class="d-none d-sm-inline-block ms-1">{{ __('Trash') }}</span></a>
-                        <button class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-external-link-alt"
+                                class="d-none d-sm-inline-block ms-1">{{ __('Trash ') }}</span></a>
+                        <a href="{{ route('accounts.export', ['data' => request()->all()]) }}"
+                            class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-external-link-alt"
                                 data-fa-transform="shrink-3 down-2"></span><span
-                                class="d-none d-sm-inline-block ms-1">{{ __('Export') }}</span></button>
+                                class="d-none d-sm-inline-block ms-1">{{ __('Export') }}</span></a>
+
+                        <button onclick="printInvoice();" class="btn btn-falcon-default btn-sm me-1 mb-2 mb-sm-0"
+                            type="button"><span class="fas fa-print me-1"> </span>{{ __('Print') }}</button>
                     </div>
                 </div>
             </div>
@@ -91,7 +95,7 @@
                     <table class="table table-sm table-striped fs--1 mb-0 overflow-hidden">
                         <thead class="bg-200 text-900">
                             <tr>
-                                <th>
+                                <th class="no-print">
                                     <div class="form-check fs-0 mb-0 d-flex align-items-center">
                                         <input class="form-check-input" id="checkbox-bulk-customers-select" type="checkbox"
                                             data-bulk-select='{"body":"table-customers-body","actions":"table-customers-actions","replacedElement":"table-customers-replace-element"}' />
@@ -109,7 +113,7 @@
 
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                     {{ __('account type') }}</th>
-                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
+                                <th class="sort pe-1 align-middle white-space-nowrap no-print" data-sort="email">
                                     {{ __('sub accounts') }}</th>
                                 <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
                                     data-sort="joined">{{ __('Created at') }}</th>
@@ -117,13 +121,13 @@
                                     <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
                                         data-sort="joined">{{ __('Deleted at') }}</th>
                                 @endif
-                                <th class="align-middle no-sort"></th>
+                                <th class="align-middle no-sort no-print"></th>
                             </tr>
                         </thead>
                         <tbody class="list" id="table-customers-body">
                             @foreach ($accounts as $account)
                                 <tr class="btn-reveal-trigger">
-                                    <td class="align-middle py-2" style="width: 28px;">
+                                    <td class="align-middle py-2 no-print" style="width: 28px;">
                                         <div class="form-check fs-0 mb-0 d-flex align-items-center">
                                             <input class="form-check-input" type="checkbox" id="customer-0"
                                                 data-bulk-select-row="data-bulk-select-row" />
@@ -151,7 +155,7 @@
                                     </td>
                                     <td class="phone align-middle white-space-nowrap py-2">
                                         {{ __($account->account_type) }} </td>
-                                    <td class="phone align-middle white-space-nowrap py-2"><a
+                                    <td class="phone align-middle white-space-nowrap py-2 no-print"><a
                                             href="{{ route('accounts.index', ['parent_id' => $account->id, 'branch_id' => request()->branch_id]) }}"
                                             class="btn btn-falcon-primary btn-sm me-1 mb-1">{{ __('sub accounts') }}
                                         </a></td>
@@ -161,7 +165,7 @@
                                         <td class="joined align-middle py-2">{{ $account->deleted_at }} <br>
                                             {{ interval($account->deleted_at) }} </td>
                                     @endif
-                                    <td class="align-middle white-space-nowrap py-2 text-end">
+                                    <td class="align-middle white-space-nowrap py-2 text-end no-print">
                                         <div class="dropdown font-sans-serif position-static">
                                             <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal"
                                                 type="button" id="customer-dropdown-0" data-bs-toggle="dropdown"
@@ -191,7 +195,7 @@
                                                             @csrf
                                                             @method('DELETE')
                                                             <button class="dropdown-item text-danger"
-                                                                type="submit">{{ $account->trashed() ? __('Delete') : __('Trash') }}</button>
+                                                                type="submit">{{ $account->trashed() ? __('Delete') : __('Trash ') }}</button>
                                                         </form>
                                                     @endif
                                                 </div>

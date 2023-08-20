@@ -99,17 +99,46 @@
         </div>
         <div class="card-body p-0">
 
+
+
             <div class="row g-0 h-100">
+
                 <div class="col-md-12 d-flex flex-center">
                     <div class="p-4 p-md-5 flex-grow-1">
-                        @if (auth()->user()->hasPermission('reviews-delete') ||
-                                auth()->user()->hasPermission('reviews-trash'))
-                            <a href="{{ route('reviews.delete') }}"
-                                class="btn btn-danger">{{ __('delete all admin reviews') }}</a>
-                        @endif
+                        <form method="POST" action="{{ route('reviews.delete') }}" enctype="multipart/form-data">
+                            @csrf
+
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="review">{{ __('Enter the review to be deleted') }}</label>
+                                <input name="review" class="form-control @error('review') is-invalid @enderror"
+                                    value="{{ old('review') }}" type="text" autocomplete="on" id="review" autofocus
+                                    required />
+                                @error('review')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+
+
+                            <div class="mb-3">
+                                @if (auth()->user()->hasPermission('reviews-delete') ||
+                                        auth()->user()->hasPermission('reviews-trash'))
+                                    <button class="btn btn-danger d-block w-100 mt-3" type="submit"
+                                        name="submit">{{ __('delete all admin reviews') }}</button>
+                                @endif
+
+                            </div>
+                        </form>
 
                     </div>
                 </div>
+
+
+
+
             </div>
 
         </div>

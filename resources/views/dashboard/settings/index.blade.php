@@ -52,6 +52,12 @@
                                 <li class="nav-item"><a class="nav-link " id="terms-tab" data-bs-toggle="tab"
                                         href="#tab-terms" role="tab" aria-controls="tab-terms"
                                         aria-selected="true">{{ __('terms') }}</a></li>
+                                <li class="nav-item"><a class="nav-link " id="purchases-tab" data-bs-toggle="tab"
+                                        href="#tab-purchases" role="tab" aria-controls="tab-purchases"
+                                        aria-selected="true">{{ __('purchases') }}</a></li>
+                                <li class="nav-item"><a class="nav-link " id="sales-tab" data-bs-toggle="tab"
+                                        href="#tab-sales" role="tab" aria-controls="tab-sales"
+                                        aria-selected="true">{{ __('sales') }}</a></li>
                                 <li class="nav-item"><a class="nav-link " id="general-tab" data-bs-toggle="tab"
                                         href="#tab-general" role="tab" aria-controls="tab-general"
                                         aria-selected="true">{{ __('general settings') }}</a></li>
@@ -65,12 +71,19 @@
                                         href="#tab-social" role="tab" aria-controls="tab-social"
                                         aria-selected="true">{{ __('social media api') }}</a></li>
 
+                                <li class="nav-item"><a class="nav-link " id="notifications-tab" data-bs-toggle="tab"
+                                        href="#tab-notifications" role="tab" aria-controls="tab-notifications"
+                                        aria-selected="true">{{ __('notifications') }}</a></li>
+
                             </ul>
 
                             <div class="tab-content border-x border-bottom p-3" id="myTabContent">
 
+
+
                                 <div class="tab-pane fade show active" id="tab-taxes" role="tabpanel"
                                     aria-labelledby="taxes-tab">
+
 
 
                                     <div class="mb-3">
@@ -235,6 +248,7 @@
                                             'default funding assets account',
                                             $assets_accounts,
                                             $branch->id,
+                                            $liability_accounts,
                                         ) !!}
 
 
@@ -273,6 +287,18 @@
                                             $assets_accounts,
                                             $branch->id,
                                         ) !!}
+
+
+                                        @foreach ($shipping_companies as $company)
+                                            {!! getDivForAccountsSetting(
+                                                'shipping_company_' . $company->id,
+                                                'default assets account for shipping company',
+                                                $assets_accounts,
+                                                $branch->id,
+                                                null,
+                                                $company,
+                                            ) !!}
+                                        @endforeach
 
 
                                         {!! getDivForAccountsSetting(
@@ -347,6 +373,9 @@
 
 
                                         {!! getDivForAccountsSetting('cash_accounts', 'default cash treasury account', $assets_accounts, $branch->id) !!}
+                                        {!! getDivForAccountsSetting('bank_accounts', 'default banks account', $assets_accounts, $branch->id) !!}
+                                        {!! getDivForAccountsSetting('receipt_notes', 'default receipt notes account', $assets_accounts, $branch->id) !!}
+                                        {!! getDivForAccountsSetting('payment_notes', 'default payment notes account', $liability_accounts, $branch->id) !!}
 
 
                                         {!! getDivForAccountsSetting('expenses_account', 'default expenses account', $expenses_accounts, $branch->id) !!}
@@ -362,7 +391,76 @@
                                         {!! getDivForAccountsSetting(
                                             'earned_discount_account',
                                             'default earned discount account',
+                                            $revenue_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'employee_loan_account',
+                                            'default employee loan account',
                                             $assets_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'salaries_accounts',
+                                            'default salaries and wages account',
+                                            $expenses_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'staff_receivables_account',
+                                            'default staff receivables account',
+                                            $liability_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'social_insurance_account',
+                                            'default social insurance account',
+                                            $liability_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'other_revenue_account',
+                                            'default other revenue account',
+                                            $revenue_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting('petty_cash_account', 'default petty cash account', $assets_accounts, $branch->id) !!}
+
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'administrative_expense_account',
+                                            'default administrative expense account',
+                                            $expenses_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'expenses_account_shipping',
+                                            'default expense account for shipping',
+                                            $expenses_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'revenue_account_shipping',
+                                            'default revenue account for shipping',
+                                            $expenses_accounts,
                                             $branch->id,
                                         ) !!}
 
@@ -442,6 +540,92 @@
 
                                 </div>
 
+                                <div class="tab-pane fade show " id="tab-purchases" role="tabpanel"
+                                    aria-labelledby="purchases-tab">
+
+
+
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="serial_prefix_PO">{{ __('serial prefix for PO') }}</label>
+                                        <input name="serial_prefix_PO"
+                                            class="form-control @error('serial_prefix_PO') is-invalid @enderror"
+                                            value="{{ setting('serial_prefix_PO') }}" type="text" autocomplete="on"
+                                            id="serial_prefix_PO" autofocus />
+                                        @error('serial_prefix_PO')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="purchases_terms_ar">{{ __('Terms and conditions - arabic') }}</label>
+                                        <textarea name="purchases_terms_ar" class="form-control tinymce @error('purchases_terms_ar') is-invalid @enderror"
+                                            autocomplete="on" id="purchases_terms_ar">{!! setting('purchases_terms_ar') !!}</textarea>
+                                        @error('purchases_terms_ar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="purchases_terms_en">{{ __('Terms and conditions - english') }}</label>
+                                        <textarea name="purchases_terms_en" class="form-control tinymce @error('purchases_terms_en') is-invalid @enderror"
+                                            autocomplete="on" id="purchases_terms_en">{!! setting('purchases_terms_en') !!}</textarea>
+                                        @error('purchases_terms_en')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                </div>
+
+                                <div class="tab-pane fade show " id="tab-sales" role="tabpanel"
+                                    aria-labelledby="sales-tab">
+
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="serial_prefix_SO">{{ __('serial prefix for SO') }}</label>
+                                        <input name="serial_prefix_SO"
+                                            class="form-control @error('serial_prefix_SO') is-invalid @enderror"
+                                            value="{{ setting('serial_prefix_SO') }}" type="text" autocomplete="on"
+                                            id="serial_prefix_SO" autofocus />
+                                        @error('serial_prefix_SO')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="sales_terms_ar">{{ __('Terms and conditions - arabic') }}</label>
+                                        <textarea name="sales_terms_ar" class="form-control tinymce @error('sales_terms_ar') is-invalid @enderror"
+                                            autocomplete="on" id="sales_terms_ar">{!! setting('sales_terms_ar') !!}</textarea>
+                                        @error('sales_terms_ar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="sales_terms_en">{{ __('Terms and conditions - english') }}</label>
+                                        <textarea name="sales_terms_en" class="form-control tinymce @error('sales_terms_en') is-invalid @enderror"
+                                            autocomplete="on" id="sales_terms_en">{!! setting('sales_terms_en') !!}</textarea>
+                                        @error('sales_terms_en')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                </div>
+
                                 <div class="tab-pane fade show " id="tab-general" role="tabpanel"
                                     aria-labelledby="general-tab">
 
@@ -511,6 +695,54 @@
                                             value="{{ setting('orders_email') }}" type="text" autocomplete="on"
                                             id="orders_email" />
                                         @error('orders_email')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="product_review">{{ __('enable review in product page') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="product_review"
+                                                    class="form-control @error('product_review') is-invalid @enderror"
+                                                    name="product_review" type="checkbox"
+                                                    {{ setting('product_review') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('product_review')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="order_review">{{ __('enable review after success order') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="order_review"
+                                                    class="form-control @error('order_review') is-invalid @enderror"
+                                                    name="order_review" type="checkbox"
+                                                    {{ setting('order_review') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('order_review')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="allow_employees">{{ __('Time to allow employees to attend') . ' ' . __('in minutes') }}</label>
+                                        <input name="allow_employees"
+                                            class="form-control @error('allow_employees') is-invalid @enderror"
+                                            value="{{ setting('allow_employees') }}" type="number" autocomplete="on"
+                                            id="allow_employees" />
+                                        @error('allow_employees')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -667,6 +899,23 @@
                                     </div>
 
 
+                                    <div class="mb-3">
+                                        <label class="form-label" for="paypal">{{ __('paypal') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="paypal"
+                                                    class="form-control @error('paypal') is-invalid @enderror"
+                                                    name="paypal" type="checkbox"
+                                                    {{ setting('paypal') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('paypal')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+
                                     {{-- <div class="mb-3">
                                         <label class="form-label"
                                             for="compression_ratio">{{ __('Image Compression Ratio') }}</label>
@@ -768,9 +1017,139 @@
                                         @enderror
                                     </div>
 
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="tagmanager_id">{{ __('google tag manager id') }}</label>
+                                        <input name="tagmanager_id"
+                                            class="form-control @error('tagmanager_id') is-invalid @enderror"
+                                            type="text" id="tagmanager_id" value="{{ setting('tagmanager_id') }}">
+                                        @error('tagmanager_id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
                                 </div>
 
+                                <div class="tab-pane fade show" id="tab-notifications" role="tabpanel"
+                                    aria-labelledby="notifications-tab">
 
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="clients_notifications">{{ __('clients notifications') }}</label>
+
+                                        <select
+                                            class="form-select js-choice @error('clients_notifications') is-invalid @enderror"
+                                            aria-label="" name="clients_notifications[]" multiple id="income_tax">
+                                            <option value="">{{ __('select roles') }}</option>
+
+                                            @foreach ($roles as $role)
+                                                <option value="{{ $role->name }}"
+                                                    {{ is_array(unserialize(setting('clients_notifications'))) && in_array($role->name, unserialize(setting('clients_notifications'))) ? 'selected' : '' }}>
+                                                    {{ __($role->name) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('clients_notifications')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="stock_notifications">{{ __('stock notifications') }}</label>
+
+                                        <select
+                                            class="form-select js-choice @error('stock_notifications') is-invalid @enderror"
+                                            aria-label="" name="stock_notifications[]" multiple id="income_tax">
+                                            <option value="">{{ __('select roles') }}</option>
+
+                                            @foreach ($roles as $role)
+                                                <option value="{{ $role->name }}"
+                                                    {{ is_array(unserialize(setting('stock_notifications'))) && in_array($role->name, unserialize(setting('stock_notifications'))) ? 'selected' : '' }}>
+                                                    {{ __($role->name) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('stock_notifications')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="orders_notifications">{{ __('orders notifications') }}</label>
+
+                                        <select
+                                            class="form-select js-choice @error('orders_notifications') is-invalid @enderror"
+                                            aria-label="" name="orders_notifications[]" multiple id="income_tax">
+                                            <option value="">{{ __('select roles') }}</option>
+
+                                            @foreach ($roles as $role)
+                                                <option value="{{ $role->name }}"
+                                                    {{ is_array(unserialize(setting('orders_notifications'))) && in_array($role->name, unserialize(setting('orders_notifications'))) ? 'selected' : '' }}>
+                                                    {{ __($role->name) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('orders_notifications')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="messages_notifications">{{ __('messages notifications') }}</label>
+
+                                        <select
+                                            class="form-select js-choice @error('messages_notifications') is-invalid @enderror"
+                                            aria-label="" name="messages_notifications[]" multiple id="income_tax">
+                                            <option value="">{{ __('select roles') }}</option>
+
+                                            @foreach ($roles as $role)
+                                                <option value="{{ $role->name }}"
+                                                    {{ is_array(unserialize(setting('messages_notifications'))) && in_array($role->name, unserialize(setting('messages_notifications'))) ? 'selected' : '' }}>
+                                                    {{ __($role->name) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('messages_notifications')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="withdrawals_notifications">{{ __('withdrawals notifications') }}</label>
+
+                                        <select
+                                            class="form-select js-choice @error('withdrawals_notifications') is-invalid @enderror"
+                                            aria-label="" name="withdrawals_notifications[]" multiple id="income_tax">
+                                            <option value="">{{ __('select roles') }}</option>
+
+                                            @foreach ($roles as $role)
+                                                <option value="{{ $role->name }}"
+                                                    {{ is_array(unserialize(setting('withdrawals_notifications'))) && in_array($role->name, unserialize(setting('withdrawals_notifications'))) ? 'selected' : '' }}>
+                                                    {{ __($role->name) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('withdrawals_notifications')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+
+
+
+                                </div>
 
                             </div>
 

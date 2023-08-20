@@ -30,9 +30,9 @@ class ExportController extends Controller
 
         if (!session('error')) {
             alertSuccess('The file has been uploaded successfully.', 'تم رفع الملف بنجاح.');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         } else {
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 }

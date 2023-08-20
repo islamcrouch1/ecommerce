@@ -14,7 +14,7 @@ class State extends Model
 
 
     protected $fillable = [
-        'name_en', 'name_ar',  'shipping_amount', 'country_id', 'status'
+        'name_en', 'name_ar',  'shipping_amount', 'country_id', 'status', 'shipping_company_id'
     ];
 
 
@@ -28,6 +28,7 @@ class State extends Model
     {
         return $this->hasMany(City::class);
     }
+
 
 
 

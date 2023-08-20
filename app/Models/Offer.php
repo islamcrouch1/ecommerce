@@ -16,7 +16,7 @@ class Offer extends Model
 
 
     protected $fillable = [
-        'name_ar', 'name_en',  'ended_at', 'country_id',  'products', 'categories'
+        'name_ar', 'name_en',  'ended_at', 'country_id',  'products', 'categories', 'type', 'amount', 'qty'
     ];
 
 

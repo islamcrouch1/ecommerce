@@ -56,7 +56,7 @@
                                         <th scope="col">{{ __('product') }}</th>
                                         <th scope="col">{{ __('price') }}</th>
                                         <th scope="col">{{ __('Qty') }}</th>
-                                        <th scope="col">{{ __('total') }}</th>
+                                        <th scope="col">{{ __('total') }}</th> 
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -94,6 +94,17 @@
                                         <td class="font-bold text-theme">
                                             {{ $order->discount_amount . $order->country->currency }}</td>
                                     </tr>
+
+
+                                    <tr>
+                                        <td colspan="2"></td>
+                                        <td class="font-bold text-dark" colspan="2">{{ __('tax value') }}</td>
+                                        <td class="font-bold text-theme">
+                                            {{ round($order->total_tax, 2) . $order->country->currency }}</td>
+                                    </tr>
+
+
+
                                     <tr>
                                         <td colspan="2"></td>
                                         <td class="font-bold text-dark" colspan="2">{{ __('total') }}</td>

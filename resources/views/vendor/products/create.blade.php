@@ -104,8 +104,9 @@
                             <div class="mb-3">
                                 <label class="form-label" for="category">{{ __('Select Category') }}</label>
 
-                                <select class="form-select @error('category') is-invalid @enderror" name="category"
-                                    id="category" data-options='{"removeItemButton":true,"placeholder":true}' required>
+                                <select class="form-select js-choice @error('category') is-invalid @enderror"
+                                    name="category" id="category"
+                                    data-options='{"removeItemButton":true,"placeholder":true}' required>
                                     <option value="">
                                         {{ __('Select Category') }}</option>
                                     @foreach ($categories as $category)
@@ -183,7 +184,7 @@
                                         <label class="form-label" for="product_weight">{{ __('product weight') }}</label>
                                         <input name="product_weight"
                                             class="form-control @error('product_weight') is-invalid @enderror"
-                                            value="{{ old('product_weight') }}" type="number" min="0"
+                                            value="0" type="number" min="0" step="0.01"
                                             autocomplete="on" id="product_weight" />
                                         @error('product_weight')
                                             <div class="alert alert-danger">{{ $message }}</div>
@@ -196,7 +197,7 @@
                                         <label class="form-label" for="product_length">{{ __('product length') }}</label>
                                         <input name="product_length"
                                             class="form-control @error('product_length') is-invalid @enderror"
-                                            value="{{ old('product_length') }}" type="number" min="0"
+                                            value="0" type="number" min="0" step="0.01"
                                             autocomplete="on" id="product_length" />
                                         @error('product_length')
                                             <div class="alert alert-danger">{{ $message }}</div>
@@ -209,7 +210,7 @@
                                         <label class="form-label" for="product_width">{{ __('product width') }}</label>
                                         <input name="product_width"
                                             class="form-control @error('product_width') is-invalid @enderror"
-                                            value="{{ old('product_width') }}" type="number" min="0"
+                                            value="0" type="number" min="0" step="0.01"
                                             autocomplete="on" id="product_width" />
                                         @error('product_width')
                                             <div class="alert alert-danger">{{ $message }}</div>
@@ -223,13 +224,14 @@
                                         <label class="form-label" for="product_height">{{ __('product height') }}</label>
                                         <input name="product_height"
                                             class="form-control @error('product_height') is-invalid @enderror"
-                                            value="{{ old('product_height') }}" type="number" min="0"
+                                            value="0" type="number" min="0" step="0.01"
                                             autocomplete="on" id="product_height" />
                                         @error('product_height')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
                                 </div>
+
 
 
                                 {{-- <div class="col-md-3">
@@ -432,6 +434,25 @@
                                 @error('video_url')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="image">{{ __('main image') }}</label>
+                                <input name="image" class="img form-control @error('image') is-invalid @enderror"
+                                    type="file" id="image" />
+                                @error('image')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
+
+                                <div class="col-md-10">
+                                    <img src="" style="width:100px; border: 1px solid #999"
+                                        class="img-thumbnail img-prev">
+                                </div>
+
                             </div>
 
                             <div class="mb-3">

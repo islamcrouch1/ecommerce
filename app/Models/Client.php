@@ -14,13 +14,33 @@ class Client extends Model
 
 
     protected $fillable = [
-        'user_id', 'name', 'phone', 'email', 'address', 'gender', 'place_type', 'whatsapp'
+        'user_id', 'name', 'phone', 'email', 'address', 'gender', 'place_type', 'whatsapp', 'country_id', 'state_id', 'city_id', 'created_by'
     ];
 
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function admin()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function city()
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function state()
+    {
+        return $this->belongsTo(State::class);
     }
 
 

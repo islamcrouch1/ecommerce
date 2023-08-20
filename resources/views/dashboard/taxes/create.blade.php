@@ -18,11 +18,21 @@
                         <form method="POST" action="{{ route('taxes.store') }}" enctype="multipart/form-data">
                             @csrf
                             <div class="mb-3">
-                                <label class="form-label" for="name">{{ __('tax name') }}</label>
-                                <input name="name" class="form-control @error('name') is-invalid @enderror"
-                                    value="{{ old('name') }}" type="text" autocomplete="on" id="name" autofocus
+                                <label class="form-label" for="name_ar">{{ __('tax name') . ' ' . __('arabic') }}</label>
+                                <input name="name_ar" class="form-control @error('name_ar') is-invalid @enderror"
+                                    value="{{ old('name_ar') }}" type="text" autocomplete="on" id="name_ar" autofocus
                                     required />
-                                @error('name')
+                                @error('name_ar')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="name_en">{{ __('tax name') . ' ' . __('english') }}</label>
+                                <input name="name_en" class="form-control @error('name_en') is-invalid @enderror"
+                                    value="{{ old('name_en') }}" type="text" autocomplete="on" id="name_en" autofocus
+                                    required />
+                                @error('name_en')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -49,6 +59,41 @@
                                 @enderror
                             </div>
 
+
+                            <div class="mb-3">
+                                <label class="form-label" for="type">{{ __('tax type') }}</label>
+
+                                <select class="form-select @error('type') is-invalid @enderror" aria-label=""
+                                    name="type" id="type" required>
+
+                                    <option value="plus">
+                                        {{ __('plus') }}
+                                    </option>
+
+                                    <option value="minus">
+                                        {{ __('minus') }}
+                                    </option>
+                                </select>
+                                @error('type')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+
+                            <div class="mb-3">
+                                <label class="form-label" for="status">{{ __('status') }}</label>
+                                <div>
+                                    <label class="switch">
+                                        <input id="status" class="form-control @error('status') is-invalid @enderror"
+                                            name="status" type="checkbox">
+                                        <span class="slider round"></span>
+                                    </label>
+                                    @error('status')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
 
 
 

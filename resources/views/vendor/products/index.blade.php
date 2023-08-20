@@ -124,8 +124,7 @@
                                     <td class="name align-middle white-space-nowrap py-2">
                                         <div class="d-flex d-flex align-items-center">
                                             <div class="avatar avatar-xl me-2">
-                                                <img class="rounded-circle"
-                                                    src="{{ asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path) }}"
+                                                <img class="rounded-circle" src="{{ getProductImage($product) }}"
                                                     alt="" />
                                             </div>
                                             <div class="flex-1">
@@ -195,7 +194,7 @@
                                                             @csrf
                                                             @method('DELETE')
                                                             <button class="dropdown-item text-danger"
-                                                                type="submit">{{ $product->trashed() ? __('Delete') : __('Trash') }}</button>
+                                                                type="submit">{{ $product->trashed() ? __('Delete') : __('Trash ') }}</button>
                                                         </form>
                                                     @endif
                                                     <a class="dropdown-item"

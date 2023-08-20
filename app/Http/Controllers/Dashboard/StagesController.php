@@ -220,7 +220,7 @@ class StagesController extends Controller
             return redirect()->route('stages.index');
         } else {
             alertError('Sorry, you do not have permission to perform this action, or the stage cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو المرحلة لا يمكن حذفها حاليا');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
     }
 

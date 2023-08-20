@@ -20,14 +20,14 @@
 
 
                             <ul class="nav nav-tabs" id="myTab" role="tablist">
-                                <li class="nav-item"><a class="nav-link active" id="home-tab" data-bs-toggle="tab"
-                                        href="#tab-home" role="tab" aria-controls="tab-home"
+                                <li class="nav-item"><a class="nav-link active" id="menue-tab" data-bs-toggle="tab"
+                                        href="#tab-menue" role="tab" aria-controls="tab-menue"
                                         aria-selected="true">{{ __('header setting') }}</a></li>
                                 <li class="nav-item"><a class="nav-link" id="profile-tab" data-bs-toggle="tab"
                                         href="#tab-profile" role="tab" aria-controls="tab-profile"
                                         aria-selected="false">{{ __('website colors') }}</a></li>
-                                <li class="nav-item"><a class="nav-link" id="contact-tab" data-bs-toggle="tab"
-                                        href="#tab-contact" role="tab" aria-controls="tab-contact"
+                                <li class="nav-item"><a class="nav-link" id="home-tab" data-bs-toggle="tab"
+                                        href="#tab-home" role="tab" aria-controls="tab-home"
                                         aria-selected="false">{{ __('homepage') }}</a></li>
                                 <li class="nav-item"><a class="nav-link" id="footer-tab" data-bs-toggle="tab"
                                         href="#tab-footer" role="tab" aria-controls="tab-footer"
@@ -39,12 +39,18 @@
                                         href="#tab-about" role="tab" aria-controls="tab-about"
                                         aria-selected="false">{{ __('about us') }}</a></li>
 
+                                <li class="nav-item"><a class="nav-link" id="contact-tab" data-bs-toggle="tab"
+                                        href="#tab-contact" role="tab" aria-controls="tab-contact"
+                                        aria-selected="false">{{ __('contact us') }}</a></li>
+
                                 <li class="nav-item"><a class="nav-link" id="popup-tab" data-bs-toggle="tab"
                                         href="#tab-popup" role="tab" aria-controls="tab-popup"
                                         aria-selected="false">{{ __('popup window') }}</a></li>
                             </ul>
                             <div class="tab-content border-x border-bottom p-3" id="myTabContent">
-                                <div class="tab-pane fade show active" id="tab-home" role="tabpanel"
+
+
+                                <div class="tab-pane fade show active" id="tab-menue" role="tabpanel"
                                     aria-labelledby="home-tab">
 
                                     <div class="mb-3">
@@ -139,6 +145,34 @@
                                     </div>
 
 
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="seller_section_des_ar">{{ __('become a seller text') . ' ' . __('arabic') }}</label>
+                                        <input name="seller_section_des_ar"
+                                            class="form-control @error('seller_section_des_ar') is-invalid @enderror"
+                                            value="{{ websiteSettingDAr('seller_section_des') }}" type="text"
+                                            autocomplete="on" id="seller_section_des_ar" autofocus />
+                                        @error('seller_section_des_ar')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="seller_section_des_en">{{ __('become a seller text') . ' ' . __('english') }}</label>
+                                        <input name="seller_section_des_en"
+                                            class="form-control @error('seller_section_des_en') is-invalid @enderror"
+                                            value="{{ websiteSettingDEn('seller_section_des') }}" type="text"
+                                            autocomplete="on" id="seller_section_des_en" />
+                                        @error('seller_section_des_en')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+
                                 </div>
 
                                 <div class="tab-pane fade" id="tab-profile" role="tabpanel"
@@ -231,8 +265,7 @@
 
                                 </div>
 
-                                <div class="tab-pane fade" id="tab-contact" role="tabpanel"
-                                    aria-labelledby="contact-tab">
+                                <div class="tab-pane fade" id="tab-home" role="tabpanel" aria-labelledby="home-tab">
 
                                     <div
                                         class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-3 mb-3 border-bottom">
@@ -972,9 +1005,81 @@
 
 
 
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="show_categories">{{ __('show categories in footer') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="show_categories"
+                                                    class="form-control @error('show_categories') is-invalid @enderror"
+                                                    name="show_categories" type="checkbox"
+                                                    {{ websiteSettingAr('show_categories') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('show_categories')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="show_brands">{{ __('show brands in footer') }}</label>
+                                        <div>
+                                            <label class="switch">
+                                                <input id="show_brands"
+                                                    class="form-control @error('show_brands') is-invalid @enderror"
+                                                    name="show_brands" type="checkbox"
+                                                    {{ websiteSettingAr('show_brands') == 'on' ? 'checked' : '' }}>
+                                                <span class="slider round"></span>
+                                            </label>
+                                            @error('show_brands')
+                                                <div class="alert alert-danger">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+
+                                    <div
+                                        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-1 border-bottom">
+                                    </div>
+
+                                    <div class="mb-3 mt-5">
+                                        <label class="form-label"
+                                            for="flash_news_ar">{{ __('quick links') }}</label><br>
+                                        <button href="javascript:void(0);"
+                                            class="btn btn-outline-primary btn-sm add_button_link me-1 mb-1 mt-1"
+                                            type="button">{{ __('add new') }}
+                                        </button>
+                                        <div class="field_wrapper_link">
+                                            @if (websiteSettingMultiple('quick_links'))
+                                                @foreach (websiteSettingMultiple('quick_links') as $item)
+                                                    <div class="input-group mt-3">
+                                                        <input style="width:25%" class="form-control" type="text"
+                                                            name="quick_links_ar[]" value="{{ $item->value_ar }}"
+                                                            placeholder="arabic" />
+                                                        <input style="width:25%" class="form-control" type="text"
+                                                            name="quick_links_en[]" value="{{ $item->value_en }}"
+                                                            placeholder="english" />
+                                                        <input style="width:30%" class="form-control" type="text"
+                                                            name="quick_links_url[]" value="{{ $item->description_ar }}"
+                                                            placeholder="link" />
+                                                        <a href="javascript:void(0);" class="remove_button"><span
+                                                                class="input-group-text" id="basic-addon1"><span
+                                                                    class="far fa-trash-alt text-danger fs-2"></span></span></a>
+                                                    </div>
+                                                @endforeach
+                                            @endif
+                                        </div>
+
+                                    </div>
+
+
+
                                 </div>
 
-                                <div class="tab-pane fade" id="tab-order" role="tabpanel" aria-labelledby="footer-tab">
+                                <div class="tab-pane fade" id="tab-order" role="tabpanel" aria-labelledby="order-tab">
 
                                     <div class="mb-3">
                                         <label class="form-label"
@@ -1001,7 +1106,7 @@
                                     </div>
                                 </div>
 
-                                <div class="tab-pane fade" id="tab-about" role="tabpanel" aria-labelledby="footer-tab">
+                                <div class="tab-pane fade" id="tab-about" role="tabpanel" aria-labelledby="about-tab">
 
 
 
@@ -1079,6 +1184,14 @@
 
                                 </div>
 
+
+                                <div class="tab-pane fade" id="tab-contact" role="tabpanel"
+                                    aria-labelledby="contact-tab">
+
+
+
+
+                                </div>
 
 
                                 <div class="tab-pane fade" id="tab-popup" role="tabpanel" aria-labelledby="footer-tab">

@@ -7,7 +7,7 @@
 
         <div class="card mb-3" id="customersTable"
             data-list='{"valueNames":["name","email","phone","address","joined"],"page":10,"pagination":true}'>
-            <div class="card-header">
+            <div class="card-header no-print">
                 <div class="row flex-between-center">
                     <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
                         <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
@@ -26,8 +26,8 @@
                                         {{ __('confirmed') }}</option>
                                     <option value="on the way">
                                         {{ __('on the way') }}</option>
-                                    <option value="in the mandatory period">
-                                        {{ __('in the mandatory period') }}</option>
+                                    {{-- <option value="in the mandatory period">
+                                        {{ __('in the mandatory period') }}</option> --}}
                                     <option value="delivered">
                                         {{ __('delivered') }}</option>
                                     <option value="canceled">
@@ -85,9 +85,9 @@
                                         <option value="on the way"
                                             {{ request()->status == 'on the way' ? 'selected' : '' }}>
                                             {{ __('on the way') }}</option>
-                                        <option value="in the mandatory period"
+                                        {{-- <option value="in the mandatory period"
                                             {{ request()->status == 'in the mandatory period' ? 'selected' : '' }}>
-                                            {{ __('in the mandatory period') }}</option>
+                                            {{ __('in the mandatory period') }}</option> --}}
                                         <option value="delivered" {{ request()->status == 'delivered' ? 'selected' : '' }}>
                                             {{ __('delivered') }}</option>
                                         <option value="canceled" {{ request()->status == 'canceled' ? 'selected' : '' }}>
@@ -122,10 +122,12 @@
                                 type="button"><span class="fas fa-backward"
                                     data-fa-transform="shrink-3 down-2"></span><span
                                     class="d-none d-sm-inline-block ms-1">{{ __('Refunds Requsets') }}</span></a> --}}
-                            <a href="{{ route('orders.export', ['status' => request()->status, 'from' => request()->from, 'to' => request()->to]) }}"
+                            <a href="{{ route('orders.export', ['data' => request()->all()]) }}"
                                 class="btn btn-falcon-default btn-sm" type="button"><span class="fas fa-external-link-alt"
                                     data-fa-transform="shrink-3 down-2"></span><span
                                     class="d-none d-sm-inline-block ms-1">{{ __('Export') }}</span></a>
+                            <button onclick="printInvoice();" class="btn btn-falcon-default btn-sm me-1 mb-2 mb-sm-0"
+                                type="button"><span class="fas fa-print me-1"> </span>{{ __('Print') }}</button>
                         </div>
                     </div>
                 </div>
@@ -136,7 +138,7 @@
                         <table class="table table-sm table-striped fs--1 mb-0 overflow-hidden">
                             <thead class="bg-200 text-900">
                                 <tr>
-                                    <th>
+                                    <th class="no-print">
                                         <div class="form-check fs-0 mb-0 d-flex align-items-center">
                                             <input class="form-check-input" id="checkbox-bulk-customers-select"
                                                 type="checkbox"
@@ -171,13 +173,13 @@
 
                                     <th class="sort pe-1 align-middle white-space-nowrap" style="min-width: 100px;"
                                         data-sort="joined">{{ __('Created At') }}</th>
-                                    <th class="align-middle no-sort"></th>
+                                    <th class="align-middle no-sort no-print"></th>
                                 </tr>
                             </thead>
                             <tbody class="list" id="table-customers-body">
                                 @foreach ($orders as $order)
                                     <tr class="btn-reveal-trigger">
-                                        <td class="align-middle py-2" style="width: 28px;">
+                                        <td class="align-middle py-2 no-print" style="width: 28px;">
                                             <div class="form-check fs-0 mb-0 d-flex align-items-center">
                                                 <input name="selected_items[]" value="{{ $order->id }}"
                                                     class="form-check-input" type="checkbox" id="customer-0"
@@ -270,7 +272,7 @@
                                         </td>
                                         <td class="joined align-middle py-2">{{ $order->created_at }} <br>
                                             {{ interval($order->created_at) }} </td>
-                                        <td class="align-middle white-space-nowrap py-2 text-end">
+                                        <td class="align-middle white-space-nowrap py-2 text-end no-print">
                                             <div class="dropdown font-sans-serif position-static">
                                                 <button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal"
                                                     type="button" id="customer-dropdown-0" data-bs-toggle="dropdown"
@@ -342,8 +344,7 @@
                                                             <div class="p-4 pb-0">
                                                                 <div class="mb-3">
                                                                     <label class="form-label"
-                                                                        for="bonus">{{ __('Change order
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                status') }}</label>
+                                                                        for="bonus">{{ __('Change order status') }}</label>
                                                                     <select
                                                                         class="form-control @error('status') is-invalid @enderror"
                                                                         name="status" required>
@@ -356,9 +357,9 @@
                                                                         <option value="on the way"
                                                                             {{ $order->status == 'on the way' ? 'selected' : '' }}>
                                                                             {{ __('on the way') }}</option>
-                                                                        <option value="in the mandatory period"
+                                                                        {{-- <option value="in the mandatory period"
                                                                             {{ $order->status == 'in the mandatory period' ? 'selected' : '' }}>
-                                                                            {{ __('in the mandatory period') }}</option>
+                                                                            {{ __('in the mandatory period') }}</option> --}}
                                                                         <option value="delivered"
                                                                             {{ $order->status == 'delivered' ? 'selected' : '' }}>
                                                                             {{ __('delivered') }}</option>

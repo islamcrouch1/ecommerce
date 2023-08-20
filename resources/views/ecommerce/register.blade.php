@@ -36,7 +36,7 @@
                             @csrf
                             <div class="form-row row">
                                 <div class="col-md-6">
-                                    <label class="form-label" for="name">{{ __('Name') }}</label>
+                                    <label class="form-label" for="name">{{ __('Name') . ' *' }}</label>
                                     <input name="name" class="form-control @error('name') is-invalid @enderror"
                                         value="{{ old('name') }}" type="text" autocomplete="on" id="name"
                                         autofocus required />
@@ -45,7 +45,7 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label" for="phone">{{ __('Phone') }}</label>
+                                    <label class="form-label" for="phone">{{ __('Phone') . ' *' }}</label>
                                     <input class="form-control @error('phone') is-invalid @enderror" type="number"
                                         autocomplete="on" id="phone" name="phone" autocomplete="on"
                                         value="{{ old('phone') }}" required />
@@ -59,14 +59,14 @@
                                     <label class="form-label" for="email">{{ __('Email address') }}</label>
                                     <input class="form-control @error('email') is-invalid @enderror" type="email"
                                         autocomplete="on" id="email" name="email" autocomplete="on"
-                                        value="{{ old('email') }}" required />
+                                        value="{{ old('email') }}" />
                                     @error('email')
                                         <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror
 
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label" for="country">{{ __('Country') }}</label>
+                                    <label class="form-label" for="country">{{ __('Country') . ' *' }}</label>
 
                                     <select class="form-select @error('country') is-invalid @enderror" aria-label=""
                                         name="country" id="country" required>
@@ -85,7 +85,7 @@
                             </div>
                             <div class="form-row row">
                                 <div class="col-md-6">
-                                    <label class="form-label" for="password">{{ __('Password') }}</label>
+                                    <label class="form-label" for="password">{{ __('Password') . ' *' }}</label>
                                     <input class="form-control @error('password') is-invalid @enderror" type="password"
                                         autocomplete="on" id="password" name="password" required />
                                     @error('password')
@@ -95,7 +95,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label"
-                                        for="password_confirmation">{{ __('Confirm Password') }}</label>
+                                        for="password_confirmation">{{ __('Confirm Password') . ' *' }}</label>
                                     <input class="form-control @error('password_confirmation') is-invalid @enderror"
                                         type="password" autocomplete="on" id="password_confirmation"
                                         name="password_confirmation" required />

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Exports\AccountsExport;
 use App\Exports\OrdersExport;
 use App\Exports\ProductsExport;
 use App\Exports\UsersExport;
@@ -28,21 +29,33 @@ class ExportController extends Controller
 
     public function usersExport(Request $request)
     {
-        $response =  Excel::download(new UsersExport($request->role_id, $request->from, $request->to), 'users.xlsx');
+        $response =  Excel::download(new UsersExport($request->data), 'users.xlsx');
         ob_end_clean();
         return $response;
     }
 
+
+    public function accountsExport(Request $request)
+    {
+        $response =  Excel::download(new AccountsExport($request->data), 'accounts.xlsx');
+        ob_end_clean();
+        return $response;
+    }
+
+
+
+
+
     public function ordersExport(Request $request)
     {
-        $response =  Excel::download(new OrdersExport($request->status, $request->from, $request->to), 'orders.xlsx');
+        $response =  Excel::download(new OrdersExport($request->data), 'orders.xlsx');
         ob_end_clean();
         return $response;
     }
 
     public function withdrawalsExport(Request $request)
     {
-        $response = Excel::download(new WithdrawalsExport($request->status, $request->from, $request->to), 'withdrawals.xlsx');
+        $response = Excel::download(new WithdrawalsExport($request->data), 'withdrawals.xlsx');
         ob_end_clean();
         return $response;
     }
@@ -51,27 +64,8 @@ class ExportController extends Controller
 
     public function productsExport(Request $request)
     {
-        $response = Excel::download(new ProductsExport($request->status, $request->category_id), 'products.xlsx');
+        $response = Excel::download(new ProductsExport($request->data, $request->is_vendors), 'products.xlsx');
         ob_end_clean();
         return $response;
-    }
-
-    public function import(Request $request)
-    {
-        $file = $request->file('file')->store('import');
-
-        $import = new ProductImport;
-        $import->import($file);
-
-        if ($import->failures()->isNotEmpty()) {
-            return back()->withFailures($import->failures());
-        }
-
-        if (!session('error')) {
-            alertSuccess('The file has been uploaded successfully.', 'تم رفع الملف بنجاح.');
-            return redirect()->back();
-        } else {
-            return redirect()->back();
-        }
     }
 }

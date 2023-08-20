@@ -11,6 +11,7 @@ use App\Models\City;
 use App\Models\Country;
 use App\Models\Coupon;
 use App\Models\FavItem;
+use App\Models\InstallmentCompany;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductCombination;
@@ -29,7 +30,7 @@ use Carbon\Carbon;
 
 class ProductController extends Controller
 {
-    public function product(Request $request, Product $product)
+    public function product(Product $product, $slug)
     {
 
         $cat = $product->category->id;
@@ -68,8 +69,13 @@ class ProductController extends Controller
         //     ->where('country_id', setting('country_id'))
         //     ->inRandomOrder()->limit(6)->get();
 
+        addViewRecord();
+
+        $countries = Country::all();
+
+
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
-        return view('ecommerce.product', compact('product', 'categories', 'products'));
+        return view('ecommerce.product', compact('product', 'categories', 'products', 'countries'));
     }
 
 
@@ -85,13 +91,15 @@ class ProductController extends Controller
 
 
         foreach ($products as $product) {
-            $product->url = route('ecommerce.product', ['product' => $product->id]);
-            $product->image = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
+            $product->url = route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]);
+            $product->image = getProductImage($product);
         }
 
         $data = [];
         $data['status'] = 1;
         $data['elements'] = $products;
+
+        addViewRecord();
 
 
         return $data;
@@ -134,6 +142,14 @@ class ProductController extends Controller
         }
 
 
+        if (!$request->has('sorting')) {
+            $request->merge(['sorting' => []]);
+        }
+
+        if (!$request->has('price')) {
+            $request->merge(['price' => '']);
+        }
+
 
         if (!$request->has('range')) {
             $min_price = 0;
@@ -172,6 +188,8 @@ class ProductController extends Controller
             ->WhenVariations(request()->variations)
             ->WhenBrand(request()->brands)
             ->whenSearch(request()->search)
+            ->whenSorting(request()->sorting)
+            ->whenPrice(request()->price)
             ->latest()
             ->paginate(request()->pagination);
 
@@ -181,6 +199,9 @@ class ProductController extends Controller
         $color_attribute = Attribute::whereIn('name_en', $color_text)->first();
 
         $attributes = Attribute::where('activate_filter', '1')->get();
+
+        addViewRecord();
+
 
         return view('ecommerce.products', compact('color_attribute', 'products', 'attributes'));
     }
@@ -193,6 +214,9 @@ class ProductController extends Controller
             'product_id' => "required|string",
             'qty' => "required|string",
         ]);
+
+
+        addViewRecord();
 
 
         $warehouses = getWebsiteWarehouses();
@@ -269,8 +293,8 @@ class ProductController extends Controller
                 ]);
 
                 $data['status'] = 1;
-                $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
-                $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
+                $data['product_url'] = route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]);
+                $data['product_image'] = getProductImage($product);
                 $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
                 $data['product_price'] = productPrice($product, $com->id, 'vat');
                 $data['qty'] = $request->qty;
@@ -285,8 +309,8 @@ class ProductController extends Controller
 
 
             $data['status'] = 1;
-            $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
-            $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
+            $data['product_url'] = route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]);
+            $data['product_image'] = getProductImage($product);
             $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
             $data['product_price'] = productPrice($product, $com->id, 'vat');
             $data['qty'] = $request->qty;
@@ -323,8 +347,8 @@ class ProductController extends Controller
                 ]);
 
                 $data['status'] = 1;
-                $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
-                $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
+                $data['product_url'] = route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]);
+                $data['product_image'] = getProductImage($product);
                 $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
                 $data['product_price'] = productPrice($product, null, 'vat');
                 $data['qty'] = $request->qty;
@@ -340,8 +364,8 @@ class ProductController extends Controller
 
 
             $data['status'] = 1;
-            $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
-            $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
+            $data['product_url'] = route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]);
+            $data['product_image'] = getProductImage($product);
             $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
             $data['product_price'] = productPrice($product, null, 'vat');
             $data['qty'] = $request->qty;
@@ -363,8 +387,8 @@ class ProductController extends Controller
                 ]);
 
                 $data['status'] = 1;
-                $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
-                $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
+                $data['product_url'] = route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]);
+                $data['product_image'] = getProductImage($product);
                 $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
                 $data['product_price'] = productPrice($product, null, 'vat');
                 $data['qty'] = $request->qty;
@@ -375,8 +399,8 @@ class ProductController extends Controller
             addToCart($request->product_id, $request->qty, $user_id, null, $session_id);
 
             $data['status'] = 1;
-            $data['product_url'] = route('ecommerce.product', ['product' => $product->id]);
-            $data['product_image'] = asset($product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $product->images[0]->media->path);
+            $data['product_url'] = route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]);
+            $data['product_image'] = getProductImage($product);
             $data['product_name'] = app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en;
             $data['product_price'] = productPrice($product, null, 'vat');
             $data['qty'] = $request->qty;
@@ -411,12 +435,14 @@ class ProductController extends Controller
 
 
         $item->delete();
-        return redirect()->back();
+        return redirect()->back()->withInput();
     }
 
 
     public function cart(Request $request)
     {
+
+
 
         if (Auth::check()) {
             $cart_items = CartItem::where('user_id', Auth::id())->get();
@@ -424,12 +450,17 @@ class ProductController extends Controller
             $cart_items = CartItem::where('session_id', $request->session()->token())->get();
         }
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
+
+        addViewRecord();
+
+
         return view('ecommerce.cart', compact('cart_items', 'categories'));
     }
 
 
     public function wishlist(Request $request)
     {
+        addViewRecord();
 
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
         return view('ecommerce.fav', compact('categories'));
@@ -474,7 +505,7 @@ class ProductController extends Controller
             }
 
             if (url()->previous() == route('ecommerce.wishlist') || url()->previous() == route('ecommerce.account')) {
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             return 1;
@@ -486,7 +517,7 @@ class ProductController extends Controller
             $fav->delete();
 
             if (url()->previous() == route('ecommerce.wishlist') || url()->previous() == route('ecommerce.account')) {
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
 
             return 2;
@@ -529,7 +560,7 @@ class ProductController extends Controller
         }
 
 
-        $data['product_price'] = productPrice($product, $request->combination, 'vat');
+        $data['product_price'] = round(productPrice($product, $request->combination, 'vat'), 2);
         $data['qty'] = $qty;
 
 
@@ -540,6 +571,10 @@ class ProductController extends Controller
 
         $cart_items = getCartItems();
         $data['total'] = getCartSubtotal($cart_items);
+
+        $discount = calcDiscount($cart_items);
+        $data['total'] = round($data['total'] - $discount, 3);
+        $data['discount'] = round($discount, 3);
 
 
         return $data;
@@ -566,6 +601,8 @@ class ProductController extends Controller
         $countries = Country::all();
 
         $categories = Category::whereNull('parent_id')->orderBy('sort_order', 'asc')->get();
+        addViewRecord();
+
         return view('ecommerce.checkout', compact('cart_items', 'categories', 'countries'));
     }
 
@@ -580,6 +617,7 @@ class ProductController extends Controller
         ]);
 
         $data = [];
+        $data['discount'] = 0;
 
         $data['country_id'] = $request->country_id;
         $data['state_id'] = $request->state_id;
@@ -662,12 +700,14 @@ class ProductController extends Controller
 
 
         $data['status'] = 1;
-        $data['shipping_amount'] = $shipping_amount;
+        $data['shipping_amount'] = round($shipping_amount, 2);
 
 
         $data['currency'] = getCurrency();
         $data['total'] = round(getCartSubtotal($cart_items), 2);
         $data['locale'] = app()->getLocale();
+
+
 
 
         if (isset($request->coupon)) {
@@ -714,9 +754,14 @@ class ProductController extends Controller
                 return $data;
             }
 
-            $discount = calcDiscount($coupon, $data['total'], $cart_items);
+            $discount = calcDiscount($cart_items, $coupon, $data['total']);
             $data['coupon_status'] = 1;
             $data['total'] = round($data['total'] - $discount, 2);
+            $data['discount'] = round($discount, 2);
+        } else {
+            $discount = round(calcDiscount($cart_items), 2);
+            $data['total'] = round($data['total'], 2) - $discount;
+            $data['discount'] = $discount;
         }
 
 
@@ -761,12 +806,55 @@ class ProductController extends Controller
             alertError('Sorry, you already reviewd this product', 'ناسف , لقد قمت بتقييم هذا المنتج سابقا');
         }
 
-        return redirect()->route('ecommerce.product', ['product' => $product->id]);
+        return redirect()->route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]);
     }
 
 
+    public function storeOrderReview(Request $request, $order)
+    {
+
+
+
+        $request->validate([
+            'rating' => "required|array",
+            'review' => "required|string|max:255",
+        ]);
+
+
+        if (Auth::check()) {
+            $user = Auth::user();
+            $session = null;
+        } else {
+            $user = null;
+            $session = $request->session()->token();
+        }
+
+
+        foreach ($request->rating as $index => $rating) {
+
+            $product = Product::findOrFail($index);
+
+            if (Review::where('product_id', $product->id)->where('user_id', $user->id)->where('session_id', $session)->get()->count() == 0) {
+                $review = Review::create([
+                    'user_id' => $user->id,
+                    'product_id' => $product->id,
+                    'rating' => $rating,
+                    'review' => $request->review,
+                    'phone' => $user->phone,
+                    'session_id' => $session,
+                ]);
+                alertSuccess('Your review added successfully', 'تم اضافة تقييمك بنجاح');
+            } else {
+                alertError('Sorry, you already reviewd this product', 'ناسف , لقد قمت بتقييم هذا المنتج سابقا');
+            }
+        }
+
+        return redirect()->route('ecommerce.account');
+    }
+
     public function download($order = null)
     {
+        addViewRecord();
         if (Auth::check()) {
             if (Auth::user()->hasRole('administrator') || Auth::user()->hasRole('superadministrator')) {
                 return Storage::download(request()->product_file);
@@ -782,5 +870,142 @@ class ProductController extends Controller
             alertError('Requested file does not exist on our server!', 'الملف المطلوب غير موجود على السيرفر');
             return redirect()->route('ecommerce.home');
         }
+    }
+
+    public function companyMonths(Request $request)
+    {
+
+        $request->validate([
+            'company_id' => "required|string",
+        ]);
+
+
+        $data = [];
+
+        $company = InstallmentCompany::findOrFail($request->company_id);
+
+        if (is_array(unserialize($company->months))) {
+            $months  = unserialize($company->months);
+        } else {
+            $months  = [];
+        }
+
+        $data['status'] = 1;
+
+        $data['locale'] = app()->getLocale();
+
+        $data['months'] = $months;
+
+        return $data;
+    }
+
+
+
+    public function getProductPrice(Request $request)
+    {
+
+
+
+
+        $request->validate([
+            'product_id' => "required|string",
+            'variations' => "nullable|array",
+        ]);
+
+
+
+
+
+        $product = Product::findOrFail($request->product_id);
+        $attributes_count = $product->attributes->count();
+
+
+
+        if (isset($request->variations)) {
+            $variations = $request->variations;
+            $selected_attributes_count = count($variations);
+        } else {
+            $variations = [];
+            $selected_attributes_count = count($variations);
+        }
+
+        $data = [];
+
+
+
+        if ($product->product_type == 'variable') {
+            if ($selected_attributes_count < $attributes_count) {
+
+                $data['price'] = productPrice($product, null, 'vat');
+            } elseif ($selected_attributes_count = $attributes_count) {
+                $combinations = ProductCombination::where('product_id', $product->id)->get();
+
+
+                foreach ($combinations as $combination) {
+                    $count = $combination->variations->whereIn('variation_id', $variations);
+                    $count =  count($count);
+                    if ($count == $selected_attributes_count) {
+
+                        $product = $combination->product;
+                        $data['combination'] =  $combination->id;
+                        $data['price'] = productPrice($product, $combination->id, 'vat');
+                    }
+                }
+            } else {
+                $data['price'] = productPrice($product, null, 'vat');
+            }
+        } else {
+            $data['price'] = productPrice($product, null, 'vat');
+        }
+
+
+        return $data;
+    }
+
+
+
+
+    public function getInstallmentData(Request $request)
+    {
+
+
+        $request->validate([
+            'company_id' => "required|string",
+            'price' => "required|numeric",
+        ]);
+
+
+        $data = [];
+
+        $company = InstallmentCompany::findOrFail($request->company_id);
+
+
+        $data['status'] = 1;
+
+
+        if ($company->type == 'amount') {
+            $data['admin_expenses'] = $company->admin_expenses;
+        } else {
+            $data['admin_expenses'] = ($request->price * $company->admin_expenses) / 100;
+        }
+
+
+        if (isset($request->months)) {
+            $price = $request->price - $request->advanced_amount;
+
+            $percentage = $request->amount * $request->months;
+            $installment = ($percentage * $price) / 100;
+
+            $total = $installment + $price;
+            $month = $total / $request->months;
+
+            $data['installment_month'] = round($month, 2);
+        } else {
+            $data['installment_month'] = 0;
+        }
+
+
+
+        return $data;
     }
 }

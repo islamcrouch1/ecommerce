@@ -2,10 +2,8 @@ $(document).ready(function(){
 
 
 
-    var $container = $('.navbar-vertical-content');
-    var $scrollTo = $('.active');
 
-    $container.animate({scrollTop: $scrollTo.offset().top - $container.offset().top + $container.scrollTop(), scrollLeft: 0},300);
+
 
     $('.colorpicker').colorpicker();
 
@@ -47,14 +45,21 @@ $(document).ready(function(){
 
 
 
+
+
+
     function getStates(){
 
         var country_id = $('.country-select').find(":selected").data('country_id');
         var url = $('.country-select').data('url');
 
+        var selected_state = $('.state-select').find(":selected").data('selected_state');
+
+
         var formData = new FormData();
 
         formData.append('country_id' , country_id );
+        formData.append('selected_state' , selected_state );
 
         $.ajax({
             url: url,
@@ -65,14 +70,19 @@ $(document).ready(function(){
             cache: false,
             success: function(data) {
 
+
                 if(data.status == 1){
 
                     $('.state-select').children().remove().end()
 
                     var array = data.states;
                     array.forEach(element => {
+
+
+                        selected = element.id == selected_state ? 'selected' : '';
+
                         $('.state-select').append(
-                            `<option data-state_id="`+ element.id +`" value="`+ element.id +`">`+ (data.locale == 'ar' ? element.name_ar : element.name_en) +`</option>`
+                            `<option data-state_id="`+ element.id +`" value="`+ element.id +`" `+ selected +`>`+ (data.locale == 'ar' ? element.name_ar : element.name_en) +`</option>`
                         )
                     });
 
@@ -94,9 +104,13 @@ $(document).ready(function(){
         var state_id = $('.state-select').find(":selected").data('state_id');
         var url = $('.state-select').data('url');
 
+        var selected = $('.city-select').find(":selected").data('selected_city');
+
         var formData = new FormData();
 
         formData.append('state_id' , state_id );
+        formData.append('selected' , selected );
+
 
         $.ajax({
             url: url,
@@ -107,14 +121,22 @@ $(document).ready(function(){
             cache: false,
             success: function(data) {
 
+
+                console.log(data , state_id , selected);
+
+
                 if(data.status == 1){
 
                     $('.city-select').children().remove().end()
 
                     var array = data.cities;
                     array.forEach(element => {
+
+                        selected_city = element.id == selected ? 'selected' : '';
+
+
                         $('.city-select').append(
-                            `<option data-city_id="`+ element.id +`" value="`+ element.id +`">`+ (data.locale == 'ar' ? element.name_ar : element.name_en) +`</option>`
+                            `<option data-city_id="`+ element.id +`" value="`+ element.id +`" `+ selected_city +` >`+ (data.locale == 'ar' ? element.name_ar : element.name_en) +`</option>`
                         )
                     });
 
@@ -127,10 +149,6 @@ $(document).ready(function(){
             }
         });
     }
-
-
-
-
 
 
     $('.sonoo-form').change(function(){
@@ -209,6 +227,41 @@ $(document).ready(function(){
     });
 
 
+    // display digital file input when select cproduct type digital
+    $('.offer-type').on('change', function() {
+
+        var type = $(this).find(":selected").val();
+        console.log(type);
+        if(type == "product_quantity_discount") {
+            $('.amount').show();
+            $('.qty').show();
+            $('.amount-field').attr('required' , true);
+            $('.qty-field').attr('required' , true);
+
+        }else{
+            $('.amount').hide();
+            $('.qty').hide();
+            $('.amount-field').attr('required' , false);
+            $('.qty-field').attr('required' , false);
+        }
+
+        if(type == "bundles_offer") {
+            $('.amount').show();
+            $('.amount-field').attr('required' , true);
+
+        }else{
+            $('.amount').hide();
+            $('.amount-field').attr('required' , false);
+        }
+
+
+    });
+
+
+
+
+
+
         // display home page slider inputs when select homepage slider
         $('.select-slider').on('change', function() {
             var type = $(this).find(":selected").val();
@@ -270,6 +323,29 @@ $(document).ready(function(){
 
 
 
+    // add flash news arabic
+    var maxFieldLink = 20; //Input fields increment limitation
+    var addButtonLink = $('.add_button_link'); //Add button selector
+    var wrapperLink = $('.field_wrapper_link'); //Input field wrapper
+    var fieldHTMLLink = '<div class="input-group mt-3"><input style="width:25%" class="form-control" type="text" name="quick_links_ar[]" value="" placeholder="arabic"/><input style="width:25%" class="form-control" type="text" name="quick_links_en[]" value="" placeholder="english" /><input style="width:30%" class="form-control" type="text" name="quick_links_url[]" value="" placeholder="link" /><a href="javascript:void(0);" class="remove_button"><span class="input-group-text" id="basic-addon1"><span class="far fa-trash-alt text-danger fs-2"></span></span></a></div>'; //New input field html
+    var x = 1; //Initial field counter is 1
+
+    //Once add button is clicked
+    $(addButtonLink).click(function(){
+        //Check maximum number of input fields
+        if(x < maxFieldLink){
+            x++; //Increment field counter
+            $(wrapperLink).append(fieldHTMLLink); //Add field html
+        }
+    });
+
+    //Once remove button is clicked
+    $(wrapperLink).on('click', '.remove_button', function(e){
+        e.preventDefault();
+        $(this).parent('div').remove(); //Remove field html
+        x--; //Decrement field counter
+    });
+
 
     // add accounts
     var maxField = 50; //Input fields increment limitation
@@ -308,9 +384,9 @@ $(document).ready(function(){
                     <option value="">`+ text1  +`</option>`+ text2 +`
                 </select>
                 <input name="dr_amount[]" class="form-control"  type="number"
-                placeholder="`+ (locale == 'ar' ? 'مدين' : 'debit') +`" min="0" required />
+                placeholder="`+ (locale == 'ar' ? 'مدين' : 'debit') +`" min="0" step="0.01" required />
                 <input name="cr_amount[]" class="form-control"  type="number"
-                placeholder="`+ (locale == 'ar' ? 'دائن' : 'credit') +`" min="0" required />
+                placeholder="`+ (locale == 'ar' ? 'دائن' : 'credit') +`" min="0" step="0.01" required />
                 <a href="javascript:void(0);" class="remove_button">
                     <span class="input-group-text" id="basic-addon1">
                         <span class="far fa-trash-alt text-danger fs-2"></span>
@@ -646,6 +722,16 @@ $(document).ready(function(){
             var reader = new FileReader();
             reader.onload = function(e) {
                 $('.img-prev').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(this.files[0]); // convert to base64 string
+        }
+    });
+
+    $(".cover").change(function() {
+        if (this.files && this.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('.img-prev-cover').css("background-image", "url(" + e.target.result + ")");
             }
             reader.readAsDataURL(this.files[0]); // convert to base64 string
         }
@@ -1058,13 +1144,25 @@ elements.forEach((element) => {
         var url = $(this).data('url');
         var locale = $(this).data('locale');
         var type = $(this).data('type');
+        var field_type = $(this).data('field_type');
         var parent = $(this).data('parent');
+        var account_type = $(this).data('account_type');
+        var account_id = $(this).data('account_id');
+
+        // var account_type = $('.acc-type').find(":selected").val();
+
+        if(search == ''){
+            choices.clearChoices();
+        }
 
         var formData = new FormData();
 
         formData.append('search' , search );
         formData.append('type' , type );
+        formData.append('field_type' , field_type );
         formData.append('parent' , parent );
+        formData.append('account_type' , account_type );
+        formData.append('account_id' , account_id );
 
         $.ajax({
             url: url,
@@ -1082,18 +1180,17 @@ elements.forEach((element) => {
                     choices.clearChoices();
 
                     var array = data.elements;
-                    array.forEach(element => {
 
+                    array.forEach(element => {
                         choices.setChoices(
                             [
-                              { value: element.id , label: (locale == 'ar' ? element.name_ar : element.name_en) }
+                              { value: field_type == 'search' ? search : element.id , label: data.type  == 'untranslated' ? element.name : (locale == 'ar' ? element.name_ar : element.name_en) }
 
                             ],
                             'value',
                             'label',
                             false,
                           );
-
                     });
 
                 }else{
@@ -1110,3 +1207,73 @@ elements.forEach((element) => {
 });
 
 
+
+
+$('.insurance').on('input' , function(e){
+    e.preventDefault();
+    getSalary();
+});
+
+$('.penalties_amount').on('input' , function(e){
+    e.preventDefault();
+    getSalary();
+});
+
+$('.rewards_amount').on('input' , function(e){
+    e.preventDefault();
+    getSalary();
+});
+
+
+
+
+$('.loans').on('input' , function(e){
+    e.preventDefault();
+    getSalary();
+});
+
+
+
+function getSalary(){
+
+    var salary = $('.salary_filed').val();
+    var insurance = $('.insurance').val();
+    var rewards_amount = $('.rewards_amount').val();
+    var loans = $('.loans').val();
+    var penalties_amount = $('.penalties_amount').val();
+    var total_absence = $('.total_absence').val();
+
+
+
+    $('.net_salary').val( ((parseFloat(salary) +  parseFloat(rewards_amount)) - (parseFloat(insurance) + parseFloat(loans) + parseFloat(penalties_amount) + parseFloat(total_absence))).toFixed(2))
+    $('.total_deduction').val(((parseFloat(insurance) + parseFloat(loans) + parseFloat(penalties_amount) + parseFloat(total_absence))).toFixed(2))
+
+}
+
+navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
+
+function successCallback(position) {
+
+  var latitude = position.coords.latitude;
+  var longitude = position.coords.longitude;
+
+  $(".latitude-input").val(latitude);
+  $(".longitude-input").val(longitude);
+}
+
+function errorCallback(error) {
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+          alert("User denied the request for Geolocation.");
+          break;
+        case error.POSITION_UNAVAILABLE:
+            alert("Location information is unavailable.");
+          break;
+        case error.TIMEOUT:
+            alert("The request to get user location timed out.");
+          break;
+        case error.UNKNOWN_ERROR:
+            alert("An unknown error occurred.");
+          break;
+      }
+}

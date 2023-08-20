@@ -42,6 +42,6 @@ class UserNotificationsController extends Controller
                 ]);
             }
         }
-        return redirect()->back();
+        return redirect()->back()->withInput();
     }
 }

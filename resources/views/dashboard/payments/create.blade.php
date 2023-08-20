@@ -45,7 +45,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-6 d-flex flex-center">
+                {{-- <div class="col-md-6 d-flex flex-center">
 
                     <div class="p-4 p-md-5 flex-grow-1">
                         <form method="POST" action="{{ route('payments.store', ['order' => $order->id]) }}"
@@ -71,21 +71,21 @@
 
 
                             <div class="mb-3">
-                                <label class="form-label" for="account">{{ __('select cash or bank account') }}</label>
-                                <div class="field_wrapper">
+                                <label class="form-label" for="account_id">{{ __('select cash account') }}</label>
 
-                                    <select class="form-select from-account-select" aria-label="" name="accounts[]"
-                                        required>
-                                        <option value="">
-                                            {{ __('select account') }}</option>
-                                        @foreach ($assets_accounts as $acc)
-                                            <option value="{{ $acc->id }}">
-                                                {{ getName($acc) }}</option>
-                                        @endforeach
-                                    </select>
+                                <select class="form-select @error('account_id') is-invalid @enderror" aria-label=""
+                                    name="account_id" id="account_id">
 
-                                </div>
-                                @error('bonus')
+                                    <option value="">{{ __('select cash account') }}
+                                    </option>
+
+                                    @foreach (getCashAccounts() as $account)
+                                        <option value="{{ $account->id }}">
+                                            {{ getName($account) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('account_id')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -99,7 +99,7 @@
                         </form>
 
                     </div>
-                </div>
+                </div> --}}
             </div>
 
         </div>

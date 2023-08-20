@@ -15,11 +15,15 @@ return new class extends Migration
     {
         Schema::create('refunds', function (Blueprint $table) {
             $table->id();
-            $table->integer('order_id');
-            $table->integer('user_id');
-            $table->string('reason');
+            $table->integer('order_id')->nullable();
+            $table->integer('user_id')->nullable();
+            $table->string('reason')->nullable();
             $table->string('refuse_reason')->nullable();
-            $table->integer('status')->default(0);
+            $table->string('status')->default('pending');
+            $table->string('type')->nullable();
+            $table->integer('product_id')->nullable();
+            $table->integer('combination_id')->nullable();
+            $table->integer('qty')->nullable();
             $table->timestamps();
         });
     }

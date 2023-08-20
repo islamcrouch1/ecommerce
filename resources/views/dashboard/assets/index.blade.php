@@ -18,10 +18,10 @@
                     <div class="d-none" id="table-customers-actions">
                         <div class="d-flex">
                             <select class="form-select form-select-sm" aria-label="Bulk actions">
-                                <option selected="">{{ __('Bulk actions') }}</option>
+                                {{-- <option selected="">{{ __('Bulk actions') }}</option>
                                 <option value="Refund">{{ __('Refund') }}</option>
                                 <option value="Delete">{{ __('Delete') }}</option>
-                                <option value="Archive">{{ __('Archive') }}</option>
+                                <option value="Archive">{{ __('Archive') }}</option> --}}
                             </select>
                             <button class="btn btn-falcon-default btn-sm ms-2" type="button">{{ __('Apply') }}</button>
                         </div>
@@ -153,7 +153,8 @@
 
                                         @php
                                             $acc_account = getAccu($account);
-                                            $acc_balance = getTrialBalance($acc_account->id, request()->from, request()->to);
+                                            $acc_balance = getTrialBalance($acc_account->id, null, null);
+                                            // $acc_balance = getTrialBalance($acc_account->id, request()->from, request()->to);
                                         @endphp
 
                                         {{ $acc_balance }}
@@ -200,10 +201,10 @@
                                                         <a class="dropdown-item"
                                                             href="{{ route('entries.index', ['account_id' => $account->id]) }}">{{ __('Account statement') }}</a>
 
-                                                        <a class="dropdown-item"
+                                                        {{-- <a class="dropdown-item"
                                                             href="{{ route('assets.purchase.create', ['account' => $account->id]) }}">{{ __('Purchase Asset') }}</a>
                                                         <a class="dropdown-item"
-                                                            href="{{ route('assets.sell.create', ['account' => $account->id]) }}">{{ __('Sell Asset') }}</a>
+                                                            href="{{ route('assets.sell.create', ['account' => $account->id]) }}">{{ __('Sell Asset') }}</a> --}}
                                                     @endif
                                                 </div>
                                             </div>

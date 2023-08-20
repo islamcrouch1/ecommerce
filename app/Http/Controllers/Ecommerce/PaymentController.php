@@ -15,6 +15,7 @@ use App\Models\Stock;
 use App\Models\Tax;
 use App\Models\Warehouse;
 use Illuminate\Support\Facades\Auth;
+use Srmklive\PayPal\Services\PayPal as PayPalClient;
 
 class PaymentController extends Controller
 {
@@ -29,9 +30,9 @@ class PaymentController extends Controller
     }
 
 
+
     public function paymentSuccess(Request $request)
     {
-
 
 
         if (isset($request->order) && $request->order != null) {
@@ -40,6 +41,17 @@ class PaymentController extends Controller
 
         if (isset($request->OrderID) && $request->OrderID != null) {
             $order = Order::find($request->OrderID);
+        }
+
+        if (isset($request->token) && isset($request->PayerID)) {
+
+            $provider = new PayPalClient;
+            $provider->setApiCredentials(config('paypal'));
+            $provider->getAccessToken();
+            $response = $provider->capturePaymentOrder($request['token']);
+
+
+            $order = Order::where('orderId', $response['id'])->first();
         }
 
         if ($order == null) {
@@ -110,6 +122,17 @@ class PaymentController extends Controller
         if ($order->payment_method == 'upayment') {
 
             if ($request->Result == 'CAPTURED') {
+                $this->succeeded($order);
+                return redirect()->route('ecommerce.order.success', ['order' => $order->id]);
+            } else {
+                $this->failed($order);
+                alertError('error in payment processing pleasetry again later', 'حدث خطا اثناء عملية الدفع يرجى المحاولة لاحقا');
+                return redirect()->route('ecommerce.home');
+            }
+        }
+
+        if ($order->payment_method == 'paypal') {
+            if (isset($response['status']) && $response['status'] == 'COMPLETED') {
                 $this->succeeded($order);
                 return redirect()->route('ecommerce.order.success', ['order' => $order->id]);
             } else {
@@ -224,7 +247,74 @@ class PaymentController extends Controller
                 return redirect()->route('ecommerce.order.failed', ['orderID' => $order->id]);
             }
         }
+
+        if ($order->payment_method == 'paypal') {
+
+            $locale = app()->getlocale() == 'ar' ? 'ar-eg' : 'en_US';
+            $currency = getCountry()->currency;
+            $config = [
+                'mode'    => 'sandbox',
+                'sandbox' => [
+                    'client_id'         => 'AeZbn4ahI7n7gRW4sFw0cV3Ex4oiKgLq5Syz0NzB1vZ0adFGFOSf0pVdddWiN7ASunqIZbLiiqkOxsK5',
+                    'client_secret'     => 'EAbMVfc35_79N_kZlAUNmlPoE99Txgu5NfzQNvuShyxYgyxGNEonrcV22_GsUoGl227KElu-GR6zQl43',
+                    'app_id'            => 'APP-80W284485P519543T',
+                ],
+
+                'payment_action' => 'Order',
+                'currency'       => 'USD',
+                'notify_url'     => '',
+                'locale'         => $locale,
+                'validate_ssl'   => true,
+            ];
+
+            $provider = new PayPalClient;
+            $provider->setApiCredentials($config);
+            $paypalToken = $provider->getAccessToken();
+            $response = $provider->createOrder([
+                "intent" => "CAPTURE",
+                "order_id" => $order->id,
+                "application_context" => [
+                    "return_url" => route('ecommerce.payment.success'),
+                    "cancel_url" => route('ecommerce.order.failed', ['orderID' => $order->id]),
+                ],
+                "purchase_units" => [
+                    0 => [
+                        "amount" => [
+                            "currency_code" => 'USD',
+                            "value" => $order->total_price
+                        ]
+                    ]
+                ]
+            ]);
+
+            $order->update([
+                'orderId' => $response['id'],
+            ]);
+
+            if (isset($response['id']) && $response['id'] != null) {
+                // redirect to approve href
+                foreach ($response['links'] as $links) {
+                    if ($links['rel'] == 'approve') {
+                        return redirect()->away($links['href']);
+                    }
+                }
+                $this->failed($order);
+                alertError('error in payment processing please try again later', 'حدث خطا اثناء عملية الدفع يرجى المحاولة لاحقا');
+                return redirect()->route('ecommerce.home');
+            } else {
+                $this->failed($order);
+                alertError('error in payment processing please try again later', 'حدث خطا اثناء عملية الدفع يرجى المحاولة لاحقا');
+                return redirect()->route('ecommerce.home');
+            }
+        }
     }
+
+
+    public function createTransaction()
+    {
+        return view('ecommerce.paypal-transaction');
+    }
+
 
     protected function payAPI($order, $payment, $key)
     {
@@ -282,12 +372,7 @@ class PaymentController extends Controller
 
         createEntry($customer_account, 'sales', 0, $order->total_price, $branch_id, $order);
 
-        if ($order->payment_method == 'cash_on_delivery') {
-            $cash_account = Account::findOrFail(settingAccount('cash_account', $branch_id));
-        } elseif ($order->payment_method == 'paymob' || $order->payment_method == 'upayment') {
-            $cash_account = Account::findOrFail(settingAccount('card_account', $branch_id));
-        }
-
+        $cash_account = getIntermediaryAssetAccount($order, $branch_id);
         createEntry($cash_account, 'sales', $order->total_price, 0, $branch_id, $order);
 
         $order->update([
@@ -475,6 +560,8 @@ class PaymentController extends Controller
 
     public function invoice(Order $order)
     {
+
+        addViewRecord();
 
         if (Auth::check() && $order->customer_id != Auth::id()) {
             return redirect()->route('ecommerce.home');

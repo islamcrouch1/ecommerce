@@ -48,6 +48,16 @@ class User extends Authenticatable
         'phone_verified_at' => 'datetime',
     ];
 
+    public function delete()
+    {
+        $this->accounts()->detach();
+        return parent::delete();
+    }
+
+    public function accounts()
+    {
+        return $this->belongsToMany(Account::class);
+    }
 
     public function store_products()
     {
@@ -65,6 +75,8 @@ class User extends Authenticatable
     }
 
 
+
+
     public function warehouses()
     {
         return $this->hasMany(Warehouse::class, 'vendor_id');
@@ -73,6 +85,18 @@ class User extends Authenticatable
     public function cart_items()
     {
         return $this->hasMany(CartItem::class);
+    }
+
+
+    public function salary_card()
+    {
+        return $this->hasMany(SalaryCard::class);
+    }
+
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
     }
 
 
@@ -143,9 +167,19 @@ class User extends Authenticatable
         return $this->hasMany(Order::class, 'customer_id');
     }
 
+    public function info()
+    {
+        return $this->hasMany(UserInfo::class);
+    }
+
     public function notes()
     {
         return $this->hasMany(Note::class);
+    }
+
+    public function sheets()
+    {
+        return $this->hasMany(SettlementSheet::class);
     }
 
     public function messages()
@@ -215,25 +249,35 @@ class User extends Authenticatable
     }
 
 
-    public static function getUsers($role_id = null, $from = null, $to = null)
+    public static function getUsers($data = null)
     {
 
 
+        $data = (object) $data;
 
-        $users = self::select('id', 'created_at', 'name', 'phone', 'email', 'gender')
-            ->whereDate('created_at', '>=', $from)
-            ->whereDate('created_at', '<=', $to)
-            ->whenRole($role_id)
+
+        $users = self::select('id', 'name', 'phone', 'email', 'gender', 'created_at')
+            ->whereDate('created_at', '>=', $data->from ?? null)
+            ->whereDate('created_at', '<=', $data->to ?? null)
+            ->whenSearch($data->search ?? null)
+            ->whenRole($data->role_id ?? null)
+            ->whenCountry($data->country_id ?? null)
+            ->whenBranch($data->branch_id ?? null)
+            ->whenStatus($data->status ?? null)
             ->whereRoleNot('superadministrator')
             ->get()
             ->toArray();
 
 
+
+
         foreach ($users as $index => $user) {
             $user = User::find($user['id']);
             $roles = $user->getRoles();
-            $users[$index]['type'] = $roles;
+            $users[$index]['type'] = implode(",", $roles);;
         }
+
+
 
         $description_ar =  'تم تنزيل شيت المستخدمين';
         $description_en  = 'Users file has been downloaded ';

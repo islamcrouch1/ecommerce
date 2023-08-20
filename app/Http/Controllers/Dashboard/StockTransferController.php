@@ -82,13 +82,13 @@ class StockTransferController extends Controller
 
         if ($request->warehouse_from == $request->warehouse_to) {
             alertError('The transfer must be between different warehouses', 'يجب ان يكون التحويل بين مخازن مختلفه');
-            return redirect()->back();
+            return redirect()->back()->withInput();
         }
 
         foreach ($request->qty as $index => $qty) {
             if ($qty <= 0) {
                 alertError('The transfer quantity must be greater than zero', 'يجب ان تكون كمية المخزون اكبر من الصفر');
-                return redirect()->back();
+                return redirect()->back()->withInput();
             }
         }
 
@@ -97,7 +97,7 @@ class StockTransferController extends Controller
             foreach ($product->combinations as $combination) {
                 if ($request->qty[0] > productQuantity($product->id, $combination->id, $request->warehouse_from)) {
                     alertError('There are not enough quantities in the specified warehouse for stock exchange', 'لا توجد كميات كافية في المخزن المحدد لصرف المخزون');
-                    return redirect()->back();
+                    return redirect()->back()->withInput();
                 }
             }
 
@@ -136,7 +136,7 @@ class StockTransferController extends Controller
             foreach ($request->combinations as $combination) {
                 if ($request->qty[0] > productQuantity($product->id, $combination, $request->warehouse_from)) {
                     alertError('There are not enough quantities in the specified warehouse for stock exchange', 'لا توجد كميات كافية في المخزن المحدد لصرف المخزون');
-                    return redirect()->back();
+                    return redirect()->back()->withInput();
                 }
             }
 
