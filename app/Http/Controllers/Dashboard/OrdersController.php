@@ -152,7 +152,7 @@ class OrdersController extends Controller
                     }
 
                     // add stock and running order
-                    stockCreate($combination, $warehouse_id, $product->pivot->qty, 'Sale', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
+                    RunningOrderCreate($combination, $warehouse_id, $product->pivot->qty, 'sales', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
                 }
 
 
@@ -265,7 +265,7 @@ class OrdersController extends Controller
                     }
 
                     // add stock and running order
-                    stockCreate($combination, $warehouse_id, $product->pivot->qty, 'Sale', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
+                    RunningOrderCreate($combination, $warehouse_id, $product->pivot->qty, 'sales', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
                 }
 
 
@@ -575,15 +575,21 @@ class OrdersController extends Controller
             'notes' => "nullable|string",
             'taxes' => "nullable|array",
             'qty' => "nullable|array",
+            'units' => "nullable|array",
             'price' => "nullable|array",
             'discount' => "nullable|numeric|gte:0",
             'returned' => "nullable|boolean",
             'order_id' => "nullable|integer",
             'order_type' => "required|string",
-            'expected_delivery' => "required|string",
+            'expected_delivery' => "nullable|string",
             'shipping' => "nullable|numeric|gte:0",
 
         ]);
+
+
+
+        dd($request->all());
+
 
 
 
@@ -613,23 +619,20 @@ class OrdersController extends Controller
             }
         }
 
-        if (isset($request->tax) && (in_array('wht', $request->tax) && !in_array('vat', $request->tax))) {
-            alertError('Error happen please review taxes options and try again', 'حدث حطا اثناء معالجة قيمة الضريبة يرجى مراجعة البيانات والمحاولة مرة اخرى');
-            return redirect()->back()->withInput();
-        }
 
-        if (($order_from == 'addpurchase' && $returned == true) || ($order_from == 'addsale' && $returned == false)) {
-            if (!checkProductsForOrder(null, $request->selected_combinations, $request->qty,  $request->warehouse_id)) {
-                alertError('Some products do not have enough quantity in stock or the product not active', 'بعض المنتجات ليس بها كمية كافية في المخزون او المنتج غير مفعل');
-                return redirect()->back()->withInput();
-            }
-        }
+
+        // if (($order_from == 'purchases' && $returned == true) || ($order_from == 'sales' && $returned == false)) {
+        //     if (!checkProductsForOrder(null, $request->selected_combinations, $request->qty,  $request->warehouse_id)) {
+        //         alertError('Some products do not have enough quantity in stock or the product not active', 'بعض المنتجات ليس بها كمية كافية في المخزون او المنتج غير مفعل');
+        //         return redirect()->back()->withInput();
+        //     }
+        // }
 
         if (isset($request->order_id)) {
 
             $ref_order = Order::findOrFail($request->order_id);
 
-            if ($ref_order->order_from != 'addsale' && $ref_order->order_from != 'web') {
+            if ($ref_order->order_from != 'sales' && $ref_order->order_from != 'web') {
                 alertError('reference order number is not correct', 'رقم الطلب المرجعي غير صحيح');
                 return redirect()->back()->withInput();
             }
@@ -656,8 +659,8 @@ class OrdersController extends Controller
 
 
         if ($selected_order) {
-            $order = Order::findOrFail($selected_order);
-            $order->update([
+            $selected_order = Order::findOrFail($selected_order);
+            $selected_order->update([
                 'customer_id' => $user->id,
                 'warehouse_id' => $request->warehouse_id,
                 'order_from' => $order_from,
@@ -666,28 +669,26 @@ class OrdersController extends Controller
                 'country_id' => $user->country_id,
                 'notes' => $request->notes,
                 'branch_id' => $branch_id,
-                'order_type' => $request->order_type,
-                'status' => $returned == true ? 'returned' : 'pending',
-                'serial' => getLastOrderSerial($request->order_type),
+                'status' => 'completed',
                 'expected_delivery' => $request->expected_delivery,
-            ]);
-        } else {
-            $order = Order::create([
-                'customer_id' => $user->id,
-                'warehouse_id' => $request->warehouse_id,
-                'order_from' => $order_from,
-                'full_name' => $user->name,
-                'phone' => $user->phone,
-                'country_id' => $user->country_id,
-                'notes' => $request->notes,
-                'branch_id' => $branch_id,
-                'order_type' => $request->order_type,
-                'status' => $returned == true ? 'returned' : 'pending',
-                'serial' => getLastOrderSerial($request->order_type),
-                'expected_delivery' => $request->expected_delivery,
-
             ]);
         }
+
+        $order = Order::create([
+            'customer_id' => $user->id,
+            'warehouse_id' => $request->warehouse_id,
+            'order_from' => $order_from,
+            'full_name' => $user->name,
+            'phone' => $user->phone,
+            'country_id' => $user->country_id,
+            'notes' => $request->notes,
+            'branch_id' => $branch_id,
+            'order_type' => $request->order_type,
+            'status' => $returned == true ? 'returned' : 'pending',
+            'serial' => getLastOrderSerial($request->order_type),
+            'expected_delivery' => $request->expected_delivery,
+        ]);
+
 
 
 
@@ -723,8 +724,10 @@ class OrdersController extends Controller
 
 
         if ($selected_order) {
+            $selected_order->products()->detach();
             $order->products()->detach();
         }
+
 
         foreach ($request->selected_combinations as $index => $combination_id) {
 
@@ -734,23 +737,17 @@ class OrdersController extends Controller
                 $combination = ProductCombination::find($request->selected_combinations[$index]);
                 $product = $combination->product;
 
-
-
                 if ($request->order_type == 'SO' || $request->order_type == 'PO') {
-                    if ($order_from == 'addpurchase') {
+                    if ($order_from == 'purchases') {
                         // calculate product cost in purchase
                         $cost = updateCost($combination, $request->price[$index], $request->qty[$index], $returned == false ? 'add' : 'sub', $branch_id);
-                    } elseif ($order_from == 'addsale') {
+                    } elseif ($order_from == 'sales') {
                         // get cost of goods sold and update it in simple and variable products
                         $cost = getProductCost($product, $combination, $branch_id, $ref_order, $request->qty[$index], $returned);
                     }
                 } else {
                     $cost = 0;
                 }
-
-
-
-
 
                 $product_price = ($request->qty[$index] * $request->price[$index]) - $discountForItem;
 
@@ -779,6 +776,24 @@ class OrdersController extends Controller
                 // }
 
 
+                if ($selected_order) {
+                    $selected_order->products()->attach(
+                        $product->id,
+                        [
+                            'warehouse_id' => ($product->product_type == 'simple' || $product->product_type == 'variable') ? $request->warehouse_id : null,
+                            'product_combination_id' => ($product->product_type == 'simple' || $product->product_type == 'variable') ? $request->selected_combinations[$index] : null,
+                            'product_price' => $request->price[$index],
+                            // 'product_tax' => (isset($request->tax) && in_array('vat', $request->tax)) ? $vat_amount_product : 0,
+                            // 'product_wht' => (isset($request->tax) && in_array('wht', $request->tax) && $sub > setting('wht_invoice_amount')) ? $wht_amount_product : 0,
+                            'qty' => $request->qty[$index],
+                            'unit_id' => $request->units[$index],
+                            'total' => $request->price[$index] * $request->qty[$index],
+                            'product_type' => $product->product_type,
+                            'cost' => $cost,
+                        ]
+                    );
+                }
+
 
 
                 $order->products()->attach(
@@ -790,6 +805,7 @@ class OrdersController extends Controller
                         // 'product_tax' => (isset($request->tax) && in_array('vat', $request->tax)) ? $vat_amount_product : 0,
                         // 'product_wht' => (isset($request->tax) && in_array('wht', $request->tax) && $sub > setting('wht_invoice_amount')) ? $wht_amount_product : 0,
                         'qty' => $request->qty[$index],
+                        'unit_id' => $request->units[$index],
                         'total' => $request->price[$index] * $request->qty[$index],
                         'product_type' => $product->product_type,
                         'cost' => $cost,
@@ -797,6 +813,13 @@ class OrdersController extends Controller
                 );
 
 
+                if ($selected_order) {
+
+                    $selected_order->update([
+                        'total_price' => $subtotal,
+                        'subtotal_price' => $subtotal,
+                    ]);
+                }
 
 
                 $order->update([
@@ -813,44 +836,46 @@ class OrdersController extends Controller
                     // add stock update and antries
                     if ($product->product_type == 'variable' || $product->product_type == 'simple') {
 
-                        if ($order_from == 'addpurchase') {
+                        if ($order_from == 'purchases') {
                             // add stock and running order
-                            stockCreate($combination, $request->warehouse_id, $request->qty[$index], 'Purchase', $returned == true ? 'OUT' : 'IN', $order->id, $user->id, $request->price[$index]);
-                        } elseif ($order_from == 'addsale') {
+                            RunningOrderCreate($combination, $request->warehouse_id, $request->qty[$index], $request->units[$index], 'purchases', $returned == true ? 'OUT' : 'IN', $order, $user->id, $request->price[$index]);
+                        } elseif ($order_from == 'sales') {
                             // add stock and running order
-                            stockCreate($combination, $request->warehouse_id, $request->qty[$index], 'Sale', $returned == true ? 'IN' : 'OUT', $order->id, $user->id, $request->price[$index]);
+                            RunningOrderCreate($combination, $request->warehouse_id, $request->qty[$index], $request->units[$index], 'sales', $returned == true ? 'IN' : 'OUT', $order, $user->id, $request->price[$index]);
                         }
 
 
-                        if ($order_from == 'addsale') {
+
+
+                        if ($order_from == 'sales') {
                             // add noty for stock limit
                             if (productQuantity($product->id, $request->selected_combinations[$index], $request->warehouse_id) <= $combination->limit) {
                                 array_push($stocks_limit_products, $product);
                             }
                         }
 
-                        $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
+                        // $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
 
-                        if ($order_from == 'addpurchase') {
-                            createEntry($product_account, $returned == true ? 'purchase_return' : 'purchase', $returned == true ? 0 : ($request->price[$index] * $request->qty[$index]), $returned == true ? ($request->price[$index] * $request->qty[$index]) : 0, $branch_id, $order);
-                        } elseif ($order_from == 'addsale') {
-                            createEntry($product_account, $returned == true ? 'sales_return' : 'sales', $returned == true ? ($cost * $request->qty[$index]) :  0, $returned == true ? 0 : ($cost * $request->qty[$index]), $branch_id, $order);
-                        }
+                        // if ($order_from == 'purchases') {
+                        //     createEntry($product_account, $returned == true ? 'purchase_return' : 'purchase', $returned == true ? 0 : ($request->price[$index] * $request->qty[$index]), $returned == true ? ($request->price[$index] * $request->qty[$index]) : 0, $branch_id, $order);
+                        // } elseif ($order_from == 'sales') {
+                        //     createEntry($product_account, $returned == true ? 'sales_return' : 'sales', $returned == true ? ($cost * $request->qty[$index]) :  0, $returned == true ? 0 : ($cost * $request->qty[$index]), $branch_id, $order);
+                        // }
 
 
-                        if ($order_from == 'addsale') {
-                            $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
-                            createEntry($cs_product_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($cost * $request->qty[$index]), $returned == true ? ($cost * $request->qty[$index]) : 0, $branch_id, $order);
+                        if ($order_from == 'sales') {
+                            // $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
+                            // createEntry($cs_product_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($cost * $request->qty[$index]), $returned == true ? ($cost * $request->qty[$index]) : 0, $branch_id, $order);
                             $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
                         }
                     } else {
 
-                        if ($order_from == 'addsale') {
+                        if ($order_from == 'sales') {
                             $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
                         }
                     }
 
-                    if ($order_from == 'addsale') {
+                    if ($order_from == 'sales') {
                         createEntry($revenue_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? ($request->price[$index] * $request->qty[$index]) : 0, $returned == true ? 0 : ($request->price[$index] * $request->qty[$index]), $branch_id, $order);
                     }
                 }
@@ -860,6 +885,14 @@ class OrdersController extends Controller
 
 
         if ($discount > 0) {
+
+            if ($selected_order) {
+
+                $selected_order->update([
+                    'discount_amount' => $discount,
+                ]);
+            }
+
             $order->update([
                 'discount_amount' => $discount,
             ]);
@@ -871,33 +904,47 @@ class OrdersController extends Controller
 
 
         if ($selected_order) {
+            $selected_order->taxes()->detach();
             $order->taxes()->detach();
         }
 
-        foreach ($request->taxes as $index => $tax) {
+
+        if ($request->taxes) {
+            foreach ($request->taxes as $index => $tax) {
 
 
 
 
-            $tax_data = calcTaxByID($order->total_price, $tax);
-            $taxes_data[$index] = $tax_data;
-            $total += $tax_data['tax_amount'];
+                $tax_data = calcTaxByID($order->total_price, $tax);
+                $taxes_data[$index] = $tax_data;
+                $total += $tax_data['tax_amount'];
 
-            if ($tax_data['tax_amount'] > 0) {
-                $vat_amount += $tax_data['tax_amount'];
-            } else {
-                $wht_amount += abs($tax_data['tax_amount']);
+                if ($tax_data['tax_amount'] > 0) {
+                    $vat_amount += $tax_data['tax_amount'];
+                } else {
+                    $wht_amount += abs($tax_data['tax_amount']);
+                }
+
+
+                if ($selected_order) {
+                    $selected_order->taxes()->attach($tax, ['amount' => $tax_data['tax_amount']]);
+                }
+
+                $order->taxes()->attach($tax, ['amount' => $tax_data['tax_amount']]);
+
+
+                // $order->update([
+                //     'total_tax' => $vat_amount,
+                // ]);
+
             }
+        }
 
-
-
-            $order->taxes()->attach($tax, ['amount' => $tax_data['tax_amount']]);
-
-
-            // $order->update([
-            //     'total_tax' => $vat_amount,
-            // ]);
-
+        if ($selected_order) {
+            $selected_order->update([
+                'total_price' => $total,
+                'shipping_amount' => isset($request->shipping) ? $request->shipping : 0,
+            ]);
         }
 
 
@@ -962,7 +1009,7 @@ class OrdersController extends Controller
             createEntry($user_account, getTypeForOrder($order_from, $returned), getAmountForOrder($returned, ($order->total_price + $order->shipping_amount), $order_from, 'user', 'dr'), getAmountForOrder($returned, ($order->total_price + $order->shipping_amount), $order_from, 'user', 'cr'), $branch_id, $order);
 
 
-            if ($returned == false && $order_from == 'addsale') {
+            if ($returned == false && $order_from == 'sales') {
 
 
 
@@ -990,10 +1037,14 @@ class OrdersController extends Controller
 
         alertSuccess('order created successfully', 'تم إضافة الطلب بنجاح');
 
-        if ($order_from == 'addpurchase') {
+        if ($order->order_type == 'PO') {
             return redirect()->route('purchases.index');
-        } elseif ($order_from == 'addsale') {
+        } elseif ($order->order_type == 'SO') {
             return redirect()->route('sales.index');
+        } elseif ($order->order_type == 'Q') {
+            return redirect()->route('sales.quotations');
+        } elseif ($order->order_type == 'RFQ') {
+            return redirect()->route('purchases.quotations');
         }
     }
 }

@@ -2,6 +2,8 @@
 
 @section('adminContent')
 
+
+
     <form id="bulk-form" method="POST" action="{{ route('sales.status.bulk') }}">
         @csrf
 
@@ -11,7 +13,14 @@
                 <div class="row flex-between-center">
                     <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
                         <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
-                            {{ __('sales') }}
+
+                            @if (Route::is('sales.index'))
+                                {{ __('sales') }}
+                            @else
+                                {{ __('quotaions') }}
+                            @endif
+
+
                         </h5>
                     </div>
                     <div class="col-8 col-sm-auto text-end ps-2">
@@ -70,26 +79,27 @@
                                         <option value="completed" {{ request()->status == 'completed' ? 'selected' : '' }}>
                                             {{ __('completed') }}</option>
 
-                                        <option value="returned" {{ request()->status == 'returned' ? 'selected' : '' }}>
-                                            {{ __('returned') }}</option>
+                                        <option value="canceled" {{ request()->status == 'canceled' ? 'selected' : '' }}>
+                                            {{ __('canceled') }}</option>
 
                                     </select>
                                 </div>
 
                                 <div class="d-inline-block">
-                                    <select name="payment_status" class="form-select form-select-sm sonoo-search"
+                                    <select name="invoice_status" class="form-select form-select-sm sonoo-search"
                                         id="autoSizingSelect">
-                                        <option value="" selected>{{ __('All Payment Status') }}</option>
-                                        <option value="pending"
-                                            {{ request()->payment_status == 'pending' ? 'selected' : '' }}>
-                                            {{ __('pending') }}</option>
+                                        <option value="" selected>{{ __('All invoice status') }}</option>
+                                        <option value="invoiced"
+                                            {{ request()->invoice_status == 'invoiced' ? 'selected' : '' }}>
+                                            {{ __('fully invoiced') }}</option>
 
-                                        <option value="paid" {{ request()->payment_status == 'paid' ? 'selected' : '' }}>
-                                            {{ __('paid') }}</option>
+                                        <option value="uninvoiced"
+                                            {{ request()->invoice_status == 'uninvoiced' ? 'selected' : '' }}>
+                                            {{ __('uninvoiced') }}</option>
 
                                         <option value="partial"
-                                            {{ request()->payment_status == 'partial' ? 'selected' : '' }}>
-                                            {{ __('partial') }}</option>
+                                            {{ request()->invoice_status == 'partial' ? 'selected' : '' }}>
+                                            {{ __('partially invoiced') }}</option>
 
                                     </select>
                                 </div>
@@ -116,16 +126,16 @@
                                     type="button"><span class="fas fa-plus"
                                         data-fa-transform="shrink-3 down-2"></span><span
                                         class="d-none d-sm-inline-block ms-1">{{ __('New') }}</span></a>
-                                <a href="{{ route('sales.create.return') }}" class="btn btn-falcon-default btn-sm"
+                                {{-- <a href="{{ route('sales.create.return') }}" class="btn btn-falcon-default btn-sm"
                                     type="button"><span class="fas fa-plus"
                                         data-fa-transform="shrink-3 down-2"></span><span
-                                        class="d-none d-sm-inline-block ms-1">{{ __('Add return') }}</span></a>
+                                        class="d-none d-sm-inline-block ms-1">{{ __('Add return') }}</span></a> --}}
 
 
-                                <a href="{{ route('sales.refunds') }}" class="btn btn-falcon-default btn-sm"
+                                {{-- <a href="{{ route('sales.refunds') }}" class="btn btn-falcon-default btn-sm"
                                     type="button"><span class="fas fa-backward"
                                         data-fa-transform="shrink-3 down-2"></span><span
-                                        class="d-none d-sm-inline-block ms-1">{{ __('Refunds Requsets') }}</span></a>
+                                        class="d-none d-sm-inline-block ms-1">{{ __('Refunds Requsets') }}</span></a> --}}
                             @endif
 
                             {{-- <a href="{{ route('orders.export', ['status' => request()->status, 'from' => request()->from, 'to' => request()->to]) }}"
@@ -153,11 +163,11 @@
                                         {{ __('Order ID') }}
                                     </th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
-                                        {{ __('Supplier Name') }}</th>
+                                        {{ __('Customer Name') }}</th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="status">
                                         {{ __('Status') }}</th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
-                                        {{ __('Payment Status') }}
+                                        {{ __('Invoice Status') }}
                                     </th>
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="status">
                                         {{ __('warehouse') }}</th>
@@ -204,7 +214,7 @@
                                             <div class="d-flex d-flex align-items-center">
                                                 <div class="flex-1">
                                                     <h5 class="mb-0 fs--1">
-                                                        {{ __('Serial') . ': ' . getOrderSerial($order) }} <br>
+                                                        {{ __('Serial') . ': ' . $order->serial }} <br>
                                                         {{ __('ID') . ': ' . $order->id }}
                                                     </h5>
                                                 </div>
@@ -239,7 +249,7 @@
 
                                         </td>
                                         <td class="address align-middle white-space-nowrap py-2">
-                                            {!! getPaymentStatus($order->payment_status) !!}
+                                            {!! getOrderInvoiceStatus($order) !!}
                                         </td>
                                         <td class="phone align-middle white-space-nowrap py-2">
 
@@ -251,27 +261,27 @@
 
 
                                         <td class="address align-middle white-space-nowrap py-2">
-                                            {{ $order->subtotal_price . ' ' . $order->country->currency }}
+                                            {{ $order->subtotal_price . ' ' . $order->currency->symbol }}
                                         </td>
 
                                         <td class="address align-middle white-space-nowrap py-2">
-                                            {{ $order->discount_amount . ' ' . $order->country->currency }}
+                                            {{ $order->discount_amount . ' ' . $order->currency->symbol }}
                                         </td>
 
                                         <td class="address align-middle white-space-nowrap py-2">
                                             @foreach ($order->taxes as $tax)
-                                                {{ getName($tax) . ': ' . $tax->pivot->amount . ' ' . $order->country->currency }}
+                                                {{ getName($tax) . ': ' . $tax->pivot->amount . ' ' . $order->currency->symbol }}
                                                 <br>
                                             @endforeach
                                         </td>
 
                                         <td class="address align-middle white-space-nowrap py-2">
-                                            {{ $order->shipping_amount . ' ' . $order->country->currency }}
+                                            {{ $order->shipping_amount . ' ' . $order->currency->symbol }}
                                         </td>
 
 
                                         <td class="address align-middle white-space-nowrap py-2">
-                                            {{ $order->total_price + $order->shipping_amount . ' ' . $order->country->currency }}
+                                            {{ $order->total_price + $order->shipping_amount . ' ' . $order->currency->symbol }}
                                         </td>
 
 
@@ -301,6 +311,12 @@
                                                                 href="{{ route('sales.show', ['sale' => $order->id]) }}">{{ __('Display order') }}</a>
 
 
+                                                            @if ($order->order_type == 'SO' && $order->status != 'returned')
+                                                                <a class="dropdown-item"
+                                                                    href="{{ route('sales.create.return', ['order' => $order->id]) }}">{{ __('Add return') }}</a>
+                                                            @endif
+
+
 
                                                             @if ($order->order_type == 'SO')
                                                                 <a href="" class="dropdown-item"
@@ -323,11 +339,15 @@
                                                                 data-bs-target="#track-modal-{{ $order->id }}">{{ __('Track order') }}</a>
                                                         @endif
 
-                                                        @if (auth()->user()->hasPermission('payments-create') && $order->status == 'completed')
+                                                        @if (auth()->user()->hasPermission('invoices-read') &&
+                                                                $order->status == 'completed' &&
+                                                                $order->order_type == 'SO')
                                                             <a class="dropdown-item"
-                                                                href="{{ route('payments.create', ['order' => $order->id]) }}"
-                                                                target="_blank">{{ __('Make payment') }}</a>
+                                                                href="{{ route('invoices.index', ['order_id' => $order->id]) }}"
+                                                                target="_blank">{{ __('invoices') }}</a>
                                                         @endif
+
+
 
                                                         @if (auth()->user()->hasPermission('orders_notes-read'))
                                                             <a href="" class="dropdown-item"
@@ -369,10 +389,12 @@
                                                                     <select
                                                                         class="form-control @error('status') is-invalid @enderror"
                                                                         name="status" required>
+                                                                        <option value="">
+                                                                            {{ __('select status') }}</option>
 
-                                                                        <option value="returned"
-                                                                            {{ $order->status == 'returned' ? 'selected' : '' }}>
-                                                                            {{ __('returned') }}</option>
+                                                                        <option value="canceled"
+                                                                            {{ $order->status == 'canceled' ? 'selected' : '' }}>
+                                                                            {{ __('canceled') }}</option>
                                                                         <option value="completed"
                                                                             {{ $order->status == 'completed' ? 'selected' : '' }}>
                                                                             {{ __('completed') }}</option>

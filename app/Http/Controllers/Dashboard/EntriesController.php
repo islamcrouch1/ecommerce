@@ -7,6 +7,7 @@ use App\Models\Account;
 use App\Models\AccountingOperation;
 use App\Models\Branch;
 use App\Models\Entry;
+use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\ProductCombination;
@@ -137,7 +138,7 @@ class EntriesController extends Controller
         $orders = Order::whereDate('created_at', '>=', request()->from)
             ->whereDate('created_at', '<=', request()->to)
             ->whereNot(function ($query) {
-                $query->where('order_from',  'addpurchase');
+                $query->where('order_from',  'purchases');
             })
             ->whenCountry(getDefaultCountry()->id)
             ->whenBranch($branch_id)
@@ -293,14 +294,15 @@ class EntriesController extends Controller
         $branch_id = getUserBranchId(Auth::user());
         $operations = AccountingOperation::where('branch_id', $branch_id)->where('status', 1)->get();
 
-        $expenses_account = settingAccount('administrative_expense_account', $branch_id);
+        // $expenses_account = settingAccount('administrative_expense_account', $branch_id);
 
+        $expenses_accounts = Account::whereNull('parent_id')->where('branch_id', $branch_id)->where('account_type', 'expenses')->get();
 
-        if ($expenses_account) {
-            $expenses_accounts = Account::where('parent_id', $expenses_account)->where('branch_id', $branch_id)->get();
-        } else {
-            $expenses_accounts = [];
-        }
+        // if ($expenses_account) {
+        //     $expenses_accounts = Account::where('parent_id', $expenses_account)->where('branch_id', $branch_id)->get();
+        // } else {
+        //     $expenses_accounts = [];
+        // }
 
 
         return view('dashboard.entries.quick_create', compact('operations', 'expenses_accounts'));
@@ -456,6 +458,7 @@ class EntriesController extends Controller
 
 
 
+
         $branch_id = getUserBranchId(Auth::user());
         $amount = $request->amount;
 
@@ -503,7 +506,7 @@ class EntriesController extends Controller
 
 
         if ($request->operation == 'payment_receipts_purchases' || $request->operation == 'receipts_sales') {
-            $order = Order::findOrFail($request->order);
+            $invoice = Invoice::findOrFail($request->order);
         }
 
 
@@ -541,9 +544,22 @@ class EntriesController extends Controller
             return redirect()->back()->withInput();
         }
 
-        if (($request->operation == 'petty_cash_settlement') && ($request->expenses_account == null)) {
-            alertError('please select expenses account to settle the petty cash', 'يرجة تحديد حساب المصاريف لتسوية العهدة');
+
+        if (($request->operation == 'petty_cash_settlement') && (($request->expenses_accounts == null) || ($request->expenses_amounts == null) || (!is_array($request->expenses_accounts)) || (!is_array($request->expenses_amounts)))) {
+            alertError('please select expenses account to settle the petty cash', 'يرجة تحديد حسابات المصاريف لتسوية العهدة');
             return redirect()->back()->withInput();
+        }
+
+
+        if (($request->operation == 'petty_cash_settlement')) {
+            if (is_array($request->expenses_amounts)) {
+                foreach ($request->expenses_amounts as $expenses_amount) {
+                    if ($expenses_amount == null || $expenses_amount <= 0) {
+                        alertError('Please enter the expense amount for each expense account', 'يرجى ادخال مبلغ المصروف لكل حساب مصاريف');
+                        return redirect()->back()->withInput();
+                    }
+                }
+            }
         }
 
 
@@ -1003,31 +1019,30 @@ class EntriesController extends Controller
 
 
 
-                $branch_id = $order->branch_id;
+
+                $branch_id = $invoice->branch_id;
                 $cach_account = $account;
 
-                if ($request->operation == 'payment_receipts_purchases' && $request->operation_type == 'in') {
+                if ($request->operation_type == 'out') {
                     $amount = $amount * (-1);
                 }
 
-
-
-                if ($request->operation == 'receipts_sales' && $request->operation_type == 'out') {
-                    $amount = $amount * (-1);
-                }
 
                 if ($cach_account->branch_id != $branch_id) {
                     alertError('error happen in branches', 'حدث خطا في معالجة الفروع');
                     return redirect()->back()->withInput();
                 }
 
-                $order_from = $order->order_from;
-                $user = User::findOrFail($order->customer_id);
+
+                $order_from = $invoice->order->order_from;
+                $user = User::findOrFail($invoice->customer_id);
+
+                $total_amount =  getInvoiceTotalAmount($invoice);
+                $return_amount = getInvoiceTotalReturns($invoice);
+                $payments_amount = getInvoiceTotalPayments($invoice);
+                $remain_amount = $total_amount - ($payments_amount - $return_amount);
 
 
-                $total_amount = getOrderDue($order);
-                $payments_amount = getTotalPayments($order);
-                $remain_amount = ($total_amount - $payments_amount) - $amount;
 
 
                 if ($amount == 0) {
@@ -1040,142 +1055,112 @@ class EntriesController extends Controller
                     return redirect()->back()->withInput();
                 }
 
-                if (($amount >  $total_amount) || ($amount > ($total_amount - $payments_amount))) {
-                    alertError('the amount is greater than the total amount due', 'المبلغ المدخل اكثر من المبلغ المطلوب للعملية يرجى مراجعة الادخالات');
-                    return redirect()->back()->withInput();
+                if ((($invoice->status == 'invoice' || $invoice->status == 'debit_note')  && $amount > 0) || (($invoice->status == 'bill' || $invoice->status == 'credit_note') && $amount < 0)) {
+                    if ((abs($amount) >  $total_amount) || (abs($amount) > $remain_amount)) {
+                        alertError('the amount is greater than the total amount due', 'المبلغ المدخل اكثر من المبلغ المطلوب للعملية يرجى مراجعة الادخالات');
+                        return redirect()->back()->withInput();
+                    }
                 }
 
-                if ($amount < 0) {
+
+                if ((($invoice->status == 'invoice' || $invoice->status == 'debit_note')  && $amount < 0) || (($invoice->status == 'bill' || $invoice->status == 'credit_note') && $amount > 0)) {
                     if (abs($amount) >  $payments_amount) {
                         alertError('The refund amount is greater than the previously paid amount', 'المبلغ المسترجع اكبر من المبلغ المدفوع سابقا');
                         return redirect()->back()->withInput();
                     }
                 }
 
-                if ($order_from == 'addpurchase') {
-                    $account = getItemAccount($order->customer_id, null, 'suppliers_account', $branch_id);
 
-                    if ($amount > 0) {
+
+
+                if ($order_from == 'purchases') {
+                    $account = getItemAccount($invoice->customer_id, null, 'suppliers_account', $branch_id);
+
+                    if ($amount < 0) {
 
                         $payment = Payment::create([
-                            'order_id' => $order->id,
+                            'order_id' => $invoice->order_id,
+                            'invoice_id' => $invoice->id,
                             'user_id' => $user->id,
                             'branch_id' => $branch_id,
                             'from_account' => $cach_account->id,
                             'to_account' => $account->id,
                             'type' => 'purchases',
                             'amount' => $amount,
+                            'currency_id' => $invoice->currency_id,
                             'created_by' => Auth::id(),
                         ]);
 
 
-                        createEntry($account, 'pay_purchase', $amount, 0, $branch_id, $order);
-                        createEntry($cach_account, 'pay_purchase', 0, $amount, $branch_id, $order, ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null);
+                        createEntry($account, 'pay_purchase', abs($amount), 0, $branch_id, $invoice, null, $invoice->currency->id);
+                        createEntry($cach_account, 'pay_purchase', 0, abs($amount), $branch_id, $invoice, ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null, null, $invoice->currency->id);
                     }
 
-                    if ($amount < 0) {
+                    if ($amount > 0) {
 
                         $payment = Payment::create([
-                            'order_id' => $order->id,
+                            'order_id' => $invoice->order_id,
+                            'invoice_id' => $invoice->id,
                             'user_id' => $user->id,
                             'branch_id' => $branch_id,
                             'from_account' => $account->id,
                             'to_account' => $cach_account->id,
                             'type' => 'purchases',
                             'amount' => $amount,
+                            'currency_id' => $invoice->currency_id,
                             'created_by' => Auth::id(),
                         ]);
 
-                        createEntry($account, 'pay_purchase', 0, abs($amount), $branch_id, $order);
-                        createEntry($cach_account, 'pay_purchase', abs($amount), 0, $branch_id, $order, ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null);
-                    }
-
-
-
-
-                    if ($remain_amount > 0 && $remain_amount < $total_amount) {
-
-
-                        $order->update([
-                            'payment_status' => 'partial',
-                        ]);
-                    }
-                    if ($remain_amount == 0) {
-
-                        $order->update([
-                            'payment_status' => 'paid',
-                        ]);
-                    }
-                    if ($remain_amount == $total_amount) {
-
-                        $order->update([
-                            'payment_status' => 'pending',
-                        ]);
+                        createEntry($account, 'pay_purchase', 0, abs($amount), $branch_id, $invoice, null, $invoice->currency->id);
+                        createEntry($cach_account, 'pay_purchase', abs($amount), 0, $branch_id, $invoice, ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null, null, $invoice->currency->id);
                     }
                 }
 
-                if ($order_from == 'addsale') {
+                if ($order_from == 'sales') {
 
 
-                    $account = getItemAccount($order->customer_id, null, 'customers_account', $branch_id);
+                    $account = getItemAccount($invoice->customer_id, null, 'customers_account', $branch_id);
 
                     if ($amount > 0) {
 
                         $payment = Payment::create([
-                            'order_id' => $order->id,
+                            'order_id' => $invoice->order_id,
+                            'invoice_id' => $invoice->id,
                             'user_id' => $user->id,
                             'branch_id' => $branch_id,
                             'from_account' => $account->id,
                             'to_account' => $cach_account->id,
                             'type' => 'sales',
                             'amount' => $amount,
+                            'currency_id' => $invoice->currency_id,
                             'created_by' => Auth::id(),
                         ]);
 
-                        createEntry($account, 'pay_sales', 0, $amount, $branch_id, $order);
-                        createEntry($cach_account, 'pay_sales', $amount, 0, $branch_id, $order, ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null);
+                        createEntry($account, 'pay_sales', 0, abs($amount), $branch_id, $invoice, null, $invoice->currency->id);
+                        createEntry($cach_account, 'pay_sales', abs($amount), 0, $branch_id, $invoice, ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null, null, $invoice->currency->id);
                     }
 
                     if ($amount < 0) {
 
                         $payment = Payment::create([
-                            'order_id' => $order->id,
+                            'order_id' => $invoice->order_id,
+                            'invoice_id' => $invoice->id,
                             'user_id' => $user->id,
                             'branch_id' => $branch_id,
                             'from_account' => $cach_account->id,
                             'to_account' => $account->id,
-                            'type' => 'purchases',
+                            'type' => 'sales',
                             'amount' => $amount,
+                            'currency_id' => $invoice->currency_id,
                             'created_by' => Auth::id(),
                         ]);
 
-                        createEntry($account, 'pay_sales', abs($amount), 0, $branch_id, $order);
-                        createEntry($cach_account, 'pay_sales', 0, abs($amount), $branch_id, $order, ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null);
-                    }
-
-
-
-
-                    if ($remain_amount > 0 && $remain_amount < $total_amount) {
-
-
-                        $order->update([
-                            'payment_status' => 'partial',
-                        ]);
-                    }
-                    if ($remain_amount == 0) {
-
-                        $order->update([
-                            'payment_status' => 'paid',
-                        ]);
-                    }
-                    if ($remain_amount == $total_amount) {
-
-                        $order->update([
-                            'payment_status' => 'pending',
-                        ]);
+                        createEntry($account, 'pay_sales', abs($amount), 0, $branch_id, $invoice, null, $invoice->currency->id);
+                        createEntry($cach_account, 'pay_sales', 0, abs($amount), $branch_id, $invoice, ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null, null, $invoice->currency->id);
                     }
                 }
+
+                getInvoicePaymentStatus($invoice);
             } elseif ($request->operation == 'pay_withdrawal_request' && $request->withdrawal_id != null) {
 
                 $withdrawal = Withdrawal::findOrFail($request->withdrawal_id);
@@ -1453,6 +1438,7 @@ class EntriesController extends Controller
 
                 $remaining = 0;
                 $records = 0;
+                $total_expenses_amount_per_account = 0;
 
                 foreach ($sheets as $sheet) {
                     $records_amount = getSettlementAmountForSheet($sheet);
@@ -1466,6 +1452,18 @@ class EntriesController extends Controller
                 $total_sheets_amount = getSettlementAmount($user);
 
                 $total_remaining_amount = ($total_petty_amount - $total_sheets_amount) + $remaining;
+
+                $expenses_amount = $total_petty_amount - $total_remaining_amount;
+
+
+                foreach ($request->expenses_amounts as $expenses_amount_per_account) {
+                    $total_expenses_amount_per_account += $expenses_amount_per_account;
+                }
+
+                if ($expenses_amount != $total_expenses_amount_per_account) {
+                    alertError('The expense amount entered does not match the amount expensed in the settlement statements', 'مبلغ المصروفات المدخل غير متطابق مع المبلغ المصروف في كشوفات التسوية');
+                    return redirect()->back()->withInput();
+                }
 
                 if ($total_remaining_amount > 0) {
 
@@ -1483,22 +1481,22 @@ class EntriesController extends Controller
                     ]);
                 }
 
-                $expenses_amount = $total_petty_amount - $total_remaining_amount;
 
                 if ($expenses_amount > 0) {
-
-                    Entry::create([
-                        'account_id' => $request->expenses_account,
-                        'type' => $request->operation,
-                        'dr_amount' => $expenses_amount,
-                        'cr_amount' =>  0,
-                        'description' => $description,
-                        'branch_id' => $branch_id,
-                        'media_id' => $media_id,
-                        'doc_num' => $request->doc_num,
-                        'created_by' => Auth::id(),
-                        'due_date' => ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null,
-                    ]);
+                    foreach ($request->expenses_accounts as $index => $expenses_account) {
+                        Entry::create([
+                            'account_id' => $expenses_account,
+                            'type' => $request->operation,
+                            'dr_amount' => $request->expenses_amounts[$index],
+                            'cr_amount' =>  0,
+                            'description' => $description,
+                            'branch_id' => $branch_id,
+                            'media_id' => $media_id,
+                            'doc_num' => $request->doc_num,
+                            'created_by' => Auth::id(),
+                            'due_date' => ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null,
+                        ]);
+                    }
                 }
 
                 if ($total_petty_amount > 0) {

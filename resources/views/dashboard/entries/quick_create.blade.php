@@ -56,7 +56,7 @@
                                         </option>
 
                                         <option value="pay_withdrawal_request"
-                                            {{ old('operation') == 'receipts_sales' ? 'selected' : '' }}>
+                                            {{ old('operation') == 'pay_withdrawal_request' ? 'selected' : '' }}>
                                             {{ __('pay of withdrawal requests for vendors') }}
                                         </option>
 
@@ -159,8 +159,17 @@
                                 </div>
 
 
+                                <div style="display:none" class="col-md-6 salary_cards mb-3">
+                                    <label class="form-label" for="salary_cards">{{ __('select salary card') }}</label>
+                                    <select class="form-select salary_cards-field" name="salary_cards">
+                                        <option value="">
+                                            {{ __('select salary card') }}</option>
 
-
+                                    </select>
+                                    @error('salary_cards')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
 
                                 <div style="display:none" class="col-md-6 salary mb-3">
                                     <label class="form-label" for="salary">{{ __('select salary') }}</label>
@@ -173,7 +182,6 @@
                                         <div class="alert alert-danger">{{ $message }}</div>
                                     @enderror
                                 </div>
-
 
 
                                 <div style="display:none" class="col-md-6 employee mb-3">
@@ -208,23 +216,20 @@
 
 
                                 <div style="display:none" class="col-md-6 expenses_account mb-3">
-                                    <label class="form-label" for="expenses_account">{{ __('petty cash') }}</label>
 
-                                    <select
-                                        class="form-select expenses_account-field @error('expenses_account') is-invalid @enderror"
-                                        name="expenses_account">
-                                        <option value="">
-                                            {{ __('select expenses account') }}</option>
 
-                                        @foreach ($expenses_accounts as $account)
-                                            <option value="{{ $account->id }}">
-                                                {{ getName($account) }}</option>
-                                        @endforeach
-                                    </select>
+                                    <label class="form-label"
+                                        for="flash_news_ar">{{ __('please add expenses accounts') }}</label><br>
+                                    <button href="javascript:void(0);" data-accounts="{{ $expenses_accounts }}"
+                                        data-url="{{ route('entries.accounts') }}"
+                                        data-locale="{{ app()->getLocale() }}"
+                                        class="btn btn-outline-primary btn-sm add_expenses_account me-1 mb-1 mt-1"
+                                        type="button">{{ __('add expenses account') }}
+                                    </button>
+                                    <div class="field_wrapper">
 
-                                    @error('expenses_account')
-                                        <div class="alert alert-danger">{{ $message }}</div>
-                                    @enderror
+                                    </div>
+
                                 </div>
 
 
@@ -233,7 +238,7 @@
                                     <select
                                         class="form-select suppliers-field model-search @error('supplier') is-invalid @enderror"
                                         data-url="{{ route('model.search') }}" data-locale="{{ app()->getLocale() }}"
-                                        data-user_type="addpurchase" data-type="supplier" name="supplier">
+                                        data-user_type="purchases" data-type="supplier" name="supplier">
                                         <option value="">
                                             {{ __('select supplier') }}</option>
 
@@ -245,12 +250,12 @@
 
 
                                 <div style="display:none" class="col-md-6 purchasesorders mb-3">
-                                    <label class="form-label" for="order">{{ __('select order') }}</label>
+                                    <label class="form-label" for="order">{{ __('select document') }}</label>
                                     <select class="form-select purchasesorders-field"
                                         data-url="{{ route('model.search.orders') }}"
                                         data-locale="{{ app()->getLocale() }}" name="order">
                                         <option value="">
-                                            {{ __('select order') }}</option>
+                                            {{ __('select document') }}</option>
 
                                     </select>
                                     @error('order')
@@ -264,7 +269,7 @@
                                     <select
                                         class="form-select customers-field model-search @error('customer') is-invalid @enderror"
                                         data-url="{{ route('model.search') }}" data-locale="{{ app()->getLocale() }}"
-                                        data-user_type="addsale" data-type="customer" name="customer">
+                                        data-user_type="sales" data-type="customer" name="customer">
                                         <option value="">
                                             {{ __('select customer') }}</option>
 
@@ -276,12 +281,12 @@
 
 
                                 <div style="display:none" class="col-md-6 salesorders mb-3">
-                                    <label class="form-label" for="order">{{ __('select order') }}</label>
+                                    <label class="form-label" for="order">{{ __('select document') }}</label>
                                     <select class="form-select salesorders-field"
                                         data-url="{{ route('model.search.orders') }}"
                                         data-locale="{{ app()->getLocale() }}" name="order">
                                         <option value="">
-                                            {{ __('select order') }}</option>
+                                            {{ __('select document') }}</option>
 
                                     </select>
                                     @error('order')
@@ -364,7 +369,12 @@
 
 
                                 <div class="col-md-12 mb-3 account">
-                                    <label class="form-label" for="account">{{ __('select account') }}</label>
+                                    <label class="form-label" for="account">{{ __('select account') }}
+
+                                        <span style="display:none"
+                                            class="petty_cash_title">{{ ' - ' . __('To settle the remainder of the petty cash') }}</span>
+
+                                    </label>
                                     <select class="form-select account-field acc-model-search"
                                         data-url="{{ route('model.search.accounts') }}"
                                         data-locale="{{ app()->getLocale() }}" data-parent=""

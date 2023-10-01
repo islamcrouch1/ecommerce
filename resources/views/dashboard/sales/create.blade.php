@@ -16,15 +16,12 @@
                 <div class="col-md-12 d-flex flex-center">
                     <div class="p-4 p-md-5 flex-grow-1">
                         <form method="POST"
-                            action="{{ route('orders.store.new', ['order_from' => 'addsale', 'returned' => 'false']) }}"
+                            action="{{ route('sales.store', ['order_from' => 'sales', 'returned' => 'false']) }}"
                             enctype="multipart/form-data">
                             @csrf
 
 
-
-
                             <div class="row">
-
 
                                 <div class="col-md-6">
                                     <div class="mb-3">
@@ -103,22 +100,45 @@
                                     </div>
                                 </div>
 
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="currency_id">{{ __('select currency') }}</label>
+                                        <select class="form-select currency @error('currency_id') is-invalid @enderror"
+                                            aria-label="" name="currency_id" id="currency_id" required>
+                                            @foreach ($currencies as $currency)
+                                                <option value="{{ $currency->id }}"
+                                                    {{ isset(getDefaultCurrency()->id) && getDefaultCurrency()->id == $currency->id ? 'selected' : '' }}>
+                                                    {{ getName($currency) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('currency_id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+
+
                             </div>
 
+
+                            <div style="display:none" class="data"
+                                data-products_search_url="{{ route('products.search') }}"
+                                data-locale="{{ app()->getLocale() }}"
+                                data-get_combinations_url="{{ route('combinations.get') }}"
+                                data-get_units="{{ route('units.get') }}"
+                                data-calculate_total="{{ route('total.calculate') }}"></div>
 
 
 
                             <div class="mb-3">
                                 <label class="form-label" for="products">{{ __('Select product') }}</label>
 
-                                <select data-url_com="{{ route('sales.combinations') }}"
-                                    data-url_cal="{{ route('sales.combinations.cal') }}"
-                                    data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                <select multiple="multiple"
                                     class="form-select product-select @error('products') is-invalid @enderror"
                                     aria-label="" name="products[]" id="products" required>
-
-
 
                                 </select>
                                 @error('products')
@@ -129,8 +149,7 @@
                             <div style="display: none" class="mb-3 combinations-select">
                                 <label class="form-label" for="combinations">{{ __('Select combination') }}</label>
 
-                                <select data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                <select multiple="multiple"
                                     class="form-select com-select @error('combinations') is-invalid @enderror"
                                     aria-label="" name="combinations[]" id="combinations">
 
@@ -155,8 +174,8 @@
                                         <label class="form-label" for="discount">{{ __('discount') }}</label>
                                         <input name="discount"
                                             class="form-control discount @error('discount') is-invalid @enderror"
-                                            value="0" type="number" min="0" step="0.01" autocomplete="on"
-                                            id="discount" />
+                                            value="{{ old('discount') ? old('discount') : 0 }}" type="number"
+                                            min="0" step="0.01" autocomplete="on" id="discount" />
 
                                         @error('discount')
                                             <div class="alert alert-danger">{{ $message }}</div>
@@ -170,8 +189,8 @@
                                         <label class="form-label" for="shipping">{{ __('shipping fees') }}</label>
                                         <input name="shipping"
                                             class="form-control shipping @error('shipping') is-invalid @enderror"
-                                            value="0" type="number" min="0" step="0.01"
-                                            autocomplete="on" id="shipping" />
+                                            value="{{ old('shipping') ? old('shipping') : 0 }}" type="number"
+                                            min="0" step="0.01" autocomplete="on" id="shipping" />
 
                                         @error('shipping')
                                             <div class="alert alert-danger">{{ $message }}</div>
@@ -184,11 +203,13 @@
                                     <div class="mb-3">
                                         <label class="form-label" for="taxes">{{ __('taxes') }}</label>
 
-                                        <select class="form-select sale-tax js-choice @error('taxes') is-invalid @enderror"
+                                        <select
+                                            class="form-select tax-select js-choice @error('taxes') is-invalid @enderror"
                                             aria-label="" name="taxes[]" id="taxes" multiple>
 
                                             @foreach ($taxes as $tax)
-                                                <option value="{{ $tax->id }}">
+                                                <option value="{{ $tax->id }}"
+                                                    {{ is_array(old('taxes')) && in_array($tax->id, old('taxes')) ? 'selected' : '' }}>
                                                     {{ getName($tax) . ' ' . ($tax->type == 'plus' ? '+' : '-') . $tax->tax_rate . '%' }}
                                                 </option>
                                             @endforeach
@@ -237,7 +258,7 @@
                             <div class="mb-3 mt-3">
                                 <label class="form-label mb-2" for="notes">{{ __('notes and conditions') }}</label>
 
-                                <textarea id="notes" class="form-control tinymce d-none @error('notes') is-invalid @enderror" name="notes">{!! app()->getLocale() == 'ar' ? setting('sales_terms_ar') : setting('sales_terms_en') !!}</textarea>
+                                <textarea id="notes" class="form-control tinymce d-none @error('notes') is-invalid @enderror" name="notes">{!! old('notes') ? old('notes') : setting('sales_terms_' . app()->getLocale()) !!}</textarea>
 
 
                                 @error('notes')

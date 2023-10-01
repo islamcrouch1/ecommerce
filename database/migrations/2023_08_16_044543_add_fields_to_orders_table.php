@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('expected_delivery')->nullable();
             $table->enum('order_type', ['RFQ', 'PO', 'Q', 'SO']);
             $table->enum('is_sent', ['yes', 'no'])->default('no');
-            $table->bigInteger('serial')->nullable();
+            $table->string('serial')->nullable();
         });
     }
 

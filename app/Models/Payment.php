@@ -11,7 +11,7 @@ class Payment extends Model
 
 
     protected $fillable = [
-        'order_id', 'user_id', 'branch_id', 'from_account', 'to_account', 'type', 'amount', 'created_by', 'updated_by',
+        'order_id', 'user_id', 'branch_id', 'from_account', 'to_account', 'type', 'amount', 'created_by', 'updated_by', 'invoice_id', 'currency_id'
     ];
 
 
@@ -28,6 +28,11 @@ class Payment extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
     }
 
     public function admin()

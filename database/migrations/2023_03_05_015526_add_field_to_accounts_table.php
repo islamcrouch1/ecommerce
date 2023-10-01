@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('accounts', function (Blueprint $table) {
-            $table->double('dep_rate', 8, 2)->default(0);
+            $table->double('dep_rate', 12, 2)->default(0);
         });
     }
 

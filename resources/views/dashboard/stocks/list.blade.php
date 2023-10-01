@@ -52,7 +52,7 @@
 
                                 <div class="col-md-6">
                                     <div class="">
-                                        <select data-url="{{ route('stock.management.search') }}"
+                                        <select data-url="{{ route('products.search') }}"
                                             data-locale="{{ app()->getLocale() }}"
                                             class="form-select product-search @error('product') is-invalid @enderror"
                                             aria-label="" name="product" id="product"
@@ -147,7 +147,7 @@
                                         </td>
 
                                         <td class="phone align-middle white-space-nowrap py-2">
-                                            {{ $stock->qty }}
+                                            {{ $stock->qty . ' ' . getName(getUnitByID($stock->unit_id)) }}
                                         </td>
                                         <td class="phone align-middle white-space-nowrap py-2">
                                             {{ __($stock->stock_type) }}

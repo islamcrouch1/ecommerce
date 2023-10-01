@@ -16,7 +16,7 @@
                 <div class="col-md-12 d-flex flex-center">
                     <div class="p-4 p-md-5 flex-grow-1">
                         <form method="POST"
-                            action="{{ route('orders.store.new', ['order_from' => 'addpurchase', 'returned' => 'false']) }}"
+                            action="{{ route('purchases.store', ['order_from' => 'purchases', 'returned' => 'false']) }}"
                             enctype="multipart/form-data">
                             @csrf
 
@@ -101,20 +101,41 @@
                                     </div>
                                 </div>
 
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="currency_id">{{ __('select currency') }}</label>
+                                        <select class="form-select currency @error('currency_id') is-invalid @enderror"
+                                            aria-label="" name="currency_id" id="currency_id" required>
+                                            @foreach ($currencies as $currency)
+                                                <option value="{{ $currency->id }}"
+                                                    {{ isset(getDefaultCurrency()->id) && getDefaultCurrency()->id == $currency->id ? 'selected' : '' }}>
+                                                    {{ getName($currency) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('currency_id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
                             </div>
+
+
+                            <div style="display:none" class="data"
+                                data-products_search_url="{{ route('products.search') }}"
+                                data-locale="{{ app()->getLocale() }}"
+                                data-get_combinations_url="{{ route('combinations.get') }}"
+                                data-get_units="{{ route('units.get') }}"
+                                data-calculate_total="{{ route('total.calculate') }}"></div>
 
 
                             <div class="mb-3">
                                 <label class="form-label" for="products">{{ __('Select product') }}</label>
 
-                                <select data-url_com="{{ route('purchases.combinations') }}"
-                                    data-url_cal="{{ route('purchases.combinations.cal') }}"
-                                    data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                <select multiple="multiple"
                                     class="form-select product-select @error('products') is-invalid @enderror"
                                     aria-label="" name="products[]" id="products" required>
-
-
 
                                 </select>
                                 @error('products')
@@ -125,8 +146,7 @@
                             <div style="display: none" class="mb-3 combinations-select">
                                 <label class="form-label" for="combinations">{{ __('Select combination') }}</label>
 
-                                <select data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                <select multiple="multiple"
                                     class="form-select com-select @error('combinations') is-invalid @enderror"
                                     aria-label="" name="combinations[]" id="combinations">
 
@@ -150,8 +170,8 @@
                                         <label class="form-label" for="discount">{{ __('discount') }}</label>
                                         <input name="discount"
                                             class="form-control discount @error('discount') is-invalid @enderror"
-                                            value="0" type="number" min="0" step="0.01" autocomplete="on"
-                                            id="discount" />
+                                            value="0" type="number" min="0" step="0.01"
+                                            autocomplete="on" id="discount" />
 
                                         @error('discount')
                                             <div class="alert alert-danger">{{ $message }}</div>
@@ -180,7 +200,7 @@
                                         <label class="form-label" for="taxes">{{ __('taxes') }}</label>
 
                                         <select
-                                            class="form-select purchase-tax js-choice @error('taxes') is-invalid @enderror"
+                                            class="form-select tax-select js-choice @error('taxes') is-invalid @enderror"
                                             aria-label="" name="taxes[]" id="taxes" multiple>
 
                                             @foreach ($taxes as $tax)
@@ -204,14 +224,14 @@
                                 <div class="mb-3">
                                     <div class="form-check">
                                         <input name="tax[]"
-                                            class="form-check-input purchase-tax @error('tax') is-invalid @enderror"
+                                            class="form-check-input tax-select @error('tax') is-invalid @enderror"
                                             id="flexCheckDefault" type="checkbox" value="vat" />
                                         <label class="form-check-label"
                                             for="flexCheckDefault">{{ __('added value tax') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input name="tax[]"
-                                            class="form-check-input purchase-tax @error('tax') is-invalid @enderror"
+                                            class="form-check-input tax-select @error('tax') is-invalid @enderror"
                                             id="flexCheckChecked" type="checkbox" value="wht" />
                                         <label class="form-check-label"
                                             for="flexCheckChecked">{{ __('withholding and collect tax') }}</label>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Category;
+use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -198,21 +199,30 @@ class SearchController extends Controller
         $user = Auth::user();
         $user_id = $user->id;
 
-
         $branch_id = getUserBranchId($user);
-        $orders = Order::where('branch_id', $branch_id)->where('customer_id', $request->supplier_id)->where('order_from', $request->type)->get();
 
-
-        foreach ($orders as $order) {
-            $order->due_amount = (getOrderDue($order) - getTotalPayments($order));
-            $order->total_amount = getOrderDue($order);
+        if ($request->type == 'sales') {
+            $invoices = Invoice::where('branch_id', $branch_id)->where('customer_id', $request->supplier_id)->whereIn('status', ['invoice', 'credit_note'])->get();
+        } else {
+            $invoices = Invoice::where('branch_id', $branch_id)->where('customer_id', $request->supplier_id)->whereIn('status', ['bill', 'debit_note'])->get();
         }
 
-        $data['elements'] = $orders;
 
+        foreach ($invoices as $invoice) {
+            $invoice->total_amount = getInvoiceTotalAmount($invoice);
+            $invoice->paid_amount = getInvoiceTotalPayments($invoice);
+            $invoice->return_amount = getInvoiceTotalReturns($invoice);
+            $invoice->due_amount = $invoice->total_amount - ($invoice->paid_amount - $invoice->return_amount);
+            $invoice->type = __($invoice->status);
+            $invoice->symbol = $invoice->currency->symbol;
+            if ($invoice->order_id != null) {
+                $invoice->order_serial =  $invoice->order->serial;
+            }
+        }
+
+        $data['elements'] = $invoices;
 
         $data['withdrawals'] = Withdrawal::where('user_id', $request->supplier_id)->whereIn('status', ['pending', 'recieved'])->get();
-
 
         if (isset($data['elements']) || isset($data['withdrawals'])) {
             $data['status'] = 1;

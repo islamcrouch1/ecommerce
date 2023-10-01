@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Branch;
 use App\Models\Country;
+use App\Models\Currency;
 use App\Models\Entry;
 use App\Models\Order;
 use App\Models\Product;
@@ -15,6 +16,7 @@ use App\Models\ProductCombination;
 use App\Models\RunningOrder;
 use App\Models\Stock;
 use App\Models\Tax;
+use App\Models\Unit;
 use App\Models\User;
 use App\Models\Warehouse;
 use Carbon\Carbon;
@@ -56,18 +58,60 @@ class SalesController extends Controller
         $orders = Order::whereDate('created_at', '>=', request()->from)
             ->whereDate('created_at', '<=', request()->to)
             ->where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
-            ->where('order_from', 'addsale')
+            ->where('order_from', 'sales')
+            ->where('order_type', 'SO')
             ->whenSearch(request()->search)
             ->whenCountry(request()->country_id)
             ->whenBranch(request()->branch_id)
             ->whenStatus(request()->status)
             ->whenPaymentStatus(request()->payment_status)
+            ->whenInvoiceStatus(request()->invoice_status)
             ->latest()
             ->paginate(100);
 
 
         return view('dashboard.sales.index', compact('orders', 'countries', 'branches'));
     }
+
+
+    public function quitationsIndex(Request $request)
+    {
+
+
+        $countries = Country::all();
+        if (!$request->has('from') || !$request->has('to')) {
+            $request->merge(['from' => Carbon::now()->subDay(365)->toDateString()]);
+            $request->merge(['to' => Carbon::now()->toDateString()]);
+        }
+
+        $user = Auth::user();
+
+        if ($user->hasPermission('branches-read')) {
+            $branches = Branch::all();
+        } else {
+            $branches = Branch::where('id', $user->branch_id)->get();
+        }
+
+        $orders = Order::whereDate('created_at', '>=', request()->from)
+            ->whereDate('created_at', '<=', request()->to)
+            ->where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
+            ->where('order_from', 'sales')
+            ->where('order_type', 'Q')
+            ->whenSearch(request()->search)
+            ->whenCountry(request()->country_id)
+            ->whenBranch(request()->branch_id)
+            ->whenStatus(request()->status)
+            ->whenPaymentStatus(request()->payment_status)
+            ->whenInvoiceStatus(request()->invoice_status)
+            ->latest()
+            ->paginate(100);
+
+
+        return view('dashboard.sales.index', compact('orders', 'countries', 'branches'));
+    }
+
+
+
 
     public function refundsIndex(Request $request)
     {
@@ -91,12 +135,13 @@ class SalesController extends Controller
             ->whereDate('created_at', '>=', request()->from)
             ->whereDate('created_at', '<=', request()->to)
             ->where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
-            ->where('order_from', 'addsale')
+            ->where('order_from', 'sales')
             ->whenSearch(request()->search)
             ->whenCountry(request()->country_id)
             ->whenBranch(request()->branch_id)
             ->whenStatus(request()->status)
             ->whenPaymentStatus(request()->payment_status)
+            ->whenInvoiceStatus(request()->invoice_status)
             ->latest()
             ->paginate(100);
 
@@ -104,11 +149,7 @@ class SalesController extends Controller
         return view('dashboard.sales.index', compact('orders', 'countries', 'branches'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+
     public function create()
     {
         $user = Auth::user();
@@ -121,9 +162,12 @@ class SalesController extends Controller
 
         $taxes = Tax::where('status', 'active')->get();
 
+        $currencies = Currency::where('status', 'on')->get();
 
-        return view('dashboard.sales.create', compact('warehouses', 'users', 'taxes'));
+        return view('dashboard.sales.create', compact('warehouses', 'users', 'taxes', 'currencies'));
     }
+
+
 
     public function edit($sale)
     {
@@ -137,10 +181,14 @@ class SalesController extends Controller
 
         $taxes = Tax::where('status', 'active')->get();
         $order = Order::findOrFail($sale);
-        return view('dashboard.sales.edit', compact('warehouses', 'users', 'order', 'taxes'));
+        $returned = 'false';
+        $currencies = Currency::where('status', 'on')->get();
+
+
+        return view('dashboard.sales.edit', compact('warehouses', 'users', 'order', 'taxes', 'returned', 'currencies'));
     }
 
-    public function craeteReturn()
+    public function craeteReturn($order)
     {
         $user = Auth::user();
         $warehouses = Warehouse::where('branch_id', $user->branch_id)
@@ -151,553 +199,433 @@ class SalesController extends Controller
         })->get();
 
         $taxes = Tax::where('status', 'active')->get();
+        $order = Order::findOrFail($order);
 
-        return view('dashboard.sales.create-return', compact('warehouses', 'users', 'taxes'));
+        $returned = 'true';
+        $currencies = Currency::where('status', 'on')->get();
+
+        return view('dashboard.sales.edit', compact('warehouses', 'users', 'taxes', 'order', 'returned', 'currencies'));
     }
 
-    public function storeReturn(Request $request)
-    {
-
-        $request->validate([
-            'combinations' => "required|array",
-            'warehouse_id' => "required|numeric",
-            'user_id' => "required|numeric",
-            'order_id' => "required|numeric",
-            'notes' => "nullable|string",
-            'tax' => "nullable|array",
-            'qty' => "nullable|array",
-            'price' => "nullable|array",
-            'prods' => "required|array",
-        ]);
-
-
-        $order = Order::findOrFail($request->order_id);
-
-
-        if ($order->order_from != 'addsale' && $order->order_from != 'web') {
-            alertError('reference order number is not correct', 'رقم الطلب المرجعي غير صحيح');
-            return redirect()->back()->withInput();
-        }
-
-
-        // if ($order->warehouse_id != $request->warehouse_id) {
-        //     alertError('The specified warehouse does not match', 'المخزن المحدد غير متطابق');
-        //     return redirect()->back()->withInput();
-        // }
-
-        if ($order->customer_id != $request->user_id) {
-            alertError('The specified customer does not match', 'العميل المحدد غير متطابق');
-            return redirect()->back()->withInput();
-        }
-
-        if ($order->status == 'returned' || $order->status == 'RTO' || $order->status == 'canceled') {
-            alertError('The status of the specified order is not suitable', 'حالة الطلب المحدد غير مناسبة');
-            return redirect()->back()->withInput();
-        }
-
-        // if ($order->payment_status != 'pending') {
-        //     alertError('The payment status of the specified order is not suitable', 'حالة الدفع للطلب المحدد غير مناسبة');
-        //     return redirect()->back()->withInput();
-        // }
-
-
-        // check quantity available
-        $count = 0;
-        foreach ($request->prods as $index => $product_id) {
-
-            $product = Product::findOrFail($product_id);
-
-            if ($product->product_type == 'simple' || $product->product_type == 'variable') {
-                $products = $order->products()->wherePivot('product_id', $product->id)->wherePivot('product_combination_id', $request->combinations[$index]);
-                if ($products->count() == 0) {
-                    $count = $count + 1;
-                }
-            } else {
-                $products = $order->products()->wherePivot('product_id', $product->id);
-                if ($products->count() == 0) {
-                    $count = $count + 1;
-                }
-            }
-        }
-
-        foreach ($order->products as $index => $product) {
-
-            if ($product->product_type == 'simple' || $product->product_type == 'variable') {
-
-                if (in_array($product->pivot->product_combination_id, $request->combinations)) {
-                    foreach ($request->combinations as $index => $com) {
-                        if ($com = $product->pivot->product_combination_id && $request->qty[$index] > $product->pivot->qty) {
-                            $count = $count + 1;
-                            break;
-                        }
-                    }
-                }
-            } else {
-                if (in_array($product->id, $request->prods)) {
-                    foreach ($request->prods as $index => $prod) {
-                        if ($prod = $product->id && $request->qty[$index] > $product->pivot->qty) {
-                            $count = $count + 1;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        if ($count > 0) {
-            alertError('Some products not in reference order or quantity requested not available for return', 'بعض المنتجات غير موجودة في الطلب المرجعي او الكميات المطلوبة غير مناسبة للمرتجع');
-            return redirect()->route('sales.create.return');
-        }
-
-
-        $request->merge(['return' => true]);
-        $request->merge(['ref_order' => $order]);
-        $this->store($request);
-
-        alertSuccess('sale return created successfully', 'تم إضافة مرتجع المبيعات بنجاح');
-        return redirect()->route('sales.index');
-    }
-
-    public function searchsales(Request $request)
-    {
-
-        $product_id = $request->product_id;
-
-        $product = Product::findOrFail($product_id);
-        $combinations = ProductCombination::where('product_id', $product_id)
-            ->get();
-
-        $data = [];
-
-        if ($product->product_type == 'variable' || $product->product_type == 'simple') {
-            $data['status'] = 1;
-
-            foreach ($combinations as $combination) {
-                $combination->name = getProductName($product, $combination);
-                $combination->price = productPrice($product, $combination->id);
-            }
-
-            $data['elements'] = $combinations;
-        } else {
-            $data['status'] = 1;
-            $products = [];
-            array_push($products, $product);
-            foreach ($products as $product_item) {
-                $product_item->name = getProductName($product_item);
-                $product_item->price = productPrice($product);
-                $product_item->product_id = $product->id;
-            }
-            $data['elements'] = $products;
-        }
-
-        return $data;
-    }
-
-    public function calTotal(Request $request)
-    {
-
-
-        // $qty = $request->qty;
-        // $price = $request->price;
-        // $tax = $request->tax;
-        // $compinations = $request->compinations;
-
-
-        $qty = explode(',', $request->qty);
-        $price = explode(',', $request->price);
-        $taxes = explode(',', $request->tax);
-        $compinations = explode(',', $request->compinations);
-        $products = explode(',', $request->products);
-
-        $data = [];
-        $subtotal = 0;
-        $vat_amount = 0;
-        $wht_amount = 0;
-        $total = 0;
-        $vat_rate = 0;
-        $wht_rate = 0;
-
-        $discount = $request->discount;
-        $shipping = $request->shipping;
 
 
 
 
-        // if (!isset($request->discount)) {
-        //     $discount = 0;
-        //     $discountForItem = 0;
-        // } elseif ($request->discount < 0) {
-        //     $discount = 0;
-        //     $discountForItem = 0;
-        // } else {
-        //     $discount = $request->discount;
-        //     $discountForItem = $discount / count($qty);
-        // }
 
 
-        // $wht_products_amount = 0;
-        // $wht_services_amount = 0;
 
-        $taxes_data = [];
-
-
-        foreach ($qty as $index => $q) {
-            $subtotal = $subtotal + ($q * $price[$index]);
-        }
-
-        if ($discount > $subtotal) {
-            $discount = $subtotal;
-        }
-
-        $subtotal = $subtotal - $discount;
-
-
-        $total = $subtotal;
-
-
-        foreach ($taxes as $index => $tax) {
-            $tax_data = calcTaxByID($subtotal, $tax);
-            $taxes_data[$index] = $tax_data;
-            $total += $tax_data['tax_amount'];
-        }
-
-        // if (isset($tax) && in_array('vat', $tax)) {
-        //     $vat_amount = calcTax($subtotal, 'vat');
-        // }
-
-        // $total = $subtotal + $vat_amount;
-
-        // if (isset($tax) && in_array('wht', $tax) && $subtotal > setting('wht_invoice_amount')) {
-        //     foreach ($qty as $index => $q) {
-
-        //         $product_price = ($q * $price[$index]) - $discountForItem;
-        //         $product = Product::findOrFail($products[$index]);
-        //         // $product_price = $product_price + calcTax($product_price, 'vat');
-
-        //         if ($product->product_type == 'variable' || $product->product_type == 'simple') {
-        //             $wht_amount = calcTax(($product_price), 'wht_products');
-        //             $wht_products_amount += $wht_amount;
-        //         } else {
-        //             $wht_amount = calcTax(($product_price), 'wht_services');
-        //             $wht_services_amount += $wht_amount;
-        //         }
-        //     }
-
-        //     $wht_amount = $wht_services_amount + $wht_products_amount;
-        // }
-
-
-        $data['status'] = 1;
-        $data['total'] = round($total + $shipping, 2);
-        $data['subtotal'] = round($subtotal, 2);
-        // $data['vat_amount'] = round($vat_amount, 2);
-        // $data['wht_amount'] = round($wht_amount, 2);
-        $data['discount'] = round($discount * -1, 2);
-        $data['shipping'] = $shipping;
-        $data['taxes'] = $taxes_data;
-
-        return $data;
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
 
 
-
         $request->validate([
-            'combinations' => "required|array",
-            'warehouse_id' => "required|numeric",
-            'user_id' => "required|numeric",
+            'selected_combinations' => "required|array",
+            'warehouse_id' => "required|integer",
+            'user_id' => "required|integer",
             'notes' => "nullable|string",
-            'tax' => "nullable|array",
+            'taxes' => "nullable|array",
             'qty' => "nullable|array",
+            'units' => "nullable|array",
             'price' => "nullable|array",
-            'discount' => "nullable|numeric",
+            'discount' => "nullable|numeric|gte:0",
+            'returned' => "nullable|boolean",
+            'order_id' => "nullable|integer",
+            'order_type' => "required|string",
+            'expected_delivery' => "nullable|string",
+            'shipping' => "nullable|numeric|gte:0",
+            'order_from' => "required|string",
+            'returned' => "required|string",
+            'currency_id' => "required|integer",
         ]);
 
 
+        $returned = isset($request->returned) ? $request->returned : null;
+        $returned = $returned == 'false' ? false : true;
+
+        $order_from = isset($request->order_from) ? $request->order_from : null;
+        $selected_order = isset($request->selected_order) ? $request->selected_order : null;
+
 
         $branch_id = getUserBranchId(Auth::user());
-        if (isset($request->return) && $request->return == true) {
-            $returned = true;
-        } else {
-            $returned = false;
-        }
-
-        // tax check
-        if (isset($request->tax) && (in_array('wht', $request->tax) && !in_array('vat', $request->tax))) {
-            alertError('Error happen please review taxes options and try again', 'حدث حطا اثناء معالجة قيمة الضريبة يرجى مراجعة البيانات والمحاولة مرة اخرى');
-            return redirect()->back()->withInput();
-        }
-
-        // accounts check
-        if (!checkAccounts($branch_id, ['vat_sales_account', 'wst_account', 'customers_account', 'revenue_account', 'allowed_discount_account'])) {
-            alertError('Please set the default accounts settings from the settings page', 'يرجى ضبط اعدادات الحسابات الافتراضية من صفحة الاعدادات');
-            return redirect()->back()->withInput();
-        }
-
-        // prices and quantities check
-        foreach ($request->combinations as $index => $combination_id) {
-            if ($request->qty[$index] <= 0 || $request->price[$index] <= 0) {
-                alertError('Please add quantity or sale price to complete the order', 'يرجى ادخال الكميات واسعار البيع لاستكمال الطلب');
-                return redirect()->back()->withInput();
-            }
-        }
-
-        // check quantity available && products status
-        if ($returned == false) {
-            if (!checkProductsForOrder($request->prods, $request->combinations, $request->qty,  $request->warehouse_id)) {
-                alertError('Some products do not have enough quantity in stock or the product not active', 'بعض المنتجات ليس بها كمية كافية في المخزون او بعض المنتجات غير نشظة ');
-                return redirect()->back()->withInput();
-            }
-        }
-
-        // check if cart empty
-        if (count($request->prods) <= 0) {
-            alertError('Your cart is empty. You cannot complete your order at this time', 'سلة مشترياتك فارغة لا يمكنك من اتمام الطلب في الوقت الحالي');
-            return redirect()->back()->withInput();
-        }
-
-        $order = $this->attach_order($request, 'cash_on_delivery', $branch_id);
-        alertSuccess('sale created successfully', 'تم إضافة طلب المبيعات بنجاح');
-        return redirect()->route('sales.index');
-    }
-
-
-    private function attach_order($request, $payment_method, $branch_id)
-    {
-
-        if (isset($request->return) && $request->return == true) {
-            $returned = true;
-            $ref_order = $request->ref_order;
-        } else {
-            $returned = false;
-            $ref_order = null;
-        }
-
-
         $user = User::findOrFail($request->user_id);
 
+
+        $errors = [];
+        array_push($errors, checkWarehouse($request->warehouse_id));
+        array_push($errors, checkAccountsErrors($order_from, $branch_id));
+        array_push($errors, checkProductsQtyAndPrice($request->selected_combinations, $request->qty, $request->price));
+        $errors = array_filter($errors);
+
+
+        if (count($errors) > 0) {
+            alertError(null, null, $errors);
+            return redirect()->back()->withInput();
+        }
+
+
+        if ($selected_order) {
+
+            $selected_order = Order::findOrFail($selected_order);
+
+            if ($request->order_type == 'Q' || $request->order_type == 'SO') {
+                $order = createQuotation($request, $selected_order);
+            }
+
+            if ($request->order_type == 'SO') {
+                $order = createOrder($request);
+            }
+        } else {
+
+            if ($request->order_type == 'Q') {
+                $order = createQuotation($request);
+            }
+
+            if ($request->order_type == 'SO') {
+                $order = createOrder($request);
+            }
+        }
+
+
+        if ($order->order_type == 'PO') {
+            return redirect()->route('purchases.index');
+        } elseif ($order->order_type == 'SO') {
+            return redirect()->route('sales.index');
+        } elseif ($order->order_type == 'Q') {
+            return redirect()->route('sales.quotations');
+        } elseif ($order->order_type == 'RFQ') {
+            return redirect()->route('purchases.quotations');
+        }
+
+
+
+
+
+
+
+
+
+        if ($selected_order != null && $returned == true) {
+
+            $selected_order = Order::findOrFail($selected_order);
+
+            if ($selected_order->order_from != $order_from) {
+                alertError('reference order number is not correct', 'رقم الطلب المرجعي غير صحيح');
+                return redirect()->back()->withInput();
+            }
+
+            if ($selected_order->customer_id != $request->user_id) {
+                alertError('The specified customer does not match', 'العميل المحدد غير متطابق');
+                return redirect()->back()->withInput();
+            }
+
+            if ($selected_order->status == 'returned' || $selected_order->status == 'RTO' || $selected_order->status == 'canceled') {
+                alertError('The status of the specified order is not suitable', 'حالة الطلب المحدد غير مناسبة');
+                return redirect()->back()->withInput();
+            }
+
+            if (!checkOrdersForReturn($selected_order, $request->selected_combinations, $request->qty,  $request->warehouse_id)) {
+                alertError('The returned quantities do not match the quantities previously ordered in the sales order', 'كميات المرتجع غير متطابقه مع الكميات المطلوبة مسبقا في امر البيع');
+                return redirect()->back()->withInput();
+            }
+        }
+
+
+        if ($selected_order && $returned == false) {
+            $selected_order = Order::findOrFail($selected_order);
+            $selected_order->update([
+                'customer_id' => $user->id,
+                'warehouse_id' => $request->warehouse_id,
+                'order_from' => $order_from,
+                'full_name' => $user->name,
+                'phone' => $user->phone,
+                'country_id' => $user->country_id,
+                'notes' => $request->notes,
+                'branch_id' => $branch_id,
+                'status' => 'completed',
+                'expected_delivery' => $request->expected_delivery,
+                'currency_id' => $request->currency_id,
+            ]);
+        }
+
         $order = Order::create([
-            'customer_id' => $request->user_id,
+            'customer_id' => $user->id,
             'warehouse_id' => $request->warehouse_id,
-            'order_from' => 'addsale',
+            'order_from' => $order_from,
             'full_name' => $user->name,
             'phone' => $user->phone,
             'country_id' => $user->country_id,
             'notes' => $request->notes,
             'branch_id' => $branch_id,
-            // 'total_price' => $total,
-            // 'subtotal_price' => $subtotal,
-            'status' => $returned == true ? 'returned' : 'completed',
-            'payment_method' => $payment_method,
-            // 'total_tax' => $vat_amount,
+            'order_type' => $request->order_type,
+            'status' => $returned == true ? 'returned' : (($selected_order || $request->order_type == 'SO') ? 'completed' : 'pending'),
+            'order_id' => $returned == true ? $selected_order->id : null,
+            'serial' => $returned == true ? ('R' . $selected_order->serial) : getLastOrderSerial($request->order_type),
+            'expected_delivery' => $request->expected_delivery,
+            'currency_id' => $request->currency_id,
         ]);
 
 
-        if (!isset($request->discount)) {
-            $discount = 0;
-            $discountForItem = 0;
-        } elseif ($request->discount < 0) {
-            $discount = 0;
-            $discountForItem = 0;
-        } else {
-            $discount = $request->discount;
-            $discountForItem = $discount / count($request->qty);
-        }
 
-        $stocks_limit_products = [];
 
         $subtotal = 0;
         $vat_amount = 0;
         $wht_amount = 0;
         $sub = 0;
-
-        $wht_services_amount = 0;
-        $wht_products_amount = 0;
+        $stocks_limit_products = [];
+        $taxes_data = [];
 
         foreach ($request->qty as $index => $q) {
             $sub = $sub + ($q * $request->price[$index]);
         }
 
-        $sub = $sub - $discount;
+        $sub = $sub - $request->discount;
 
+        if ($selected_order && $returned == false) {
+            $selected_order->products()->detach();
+            $order->products()->detach();
+        }
 
-        foreach ($request->qty as $index => $q) {
+        foreach ($request->selected_combinations as $index => $combination_id) {
 
             try {
 
-                $product = Product::findOrFail($request->prods[$index]);
                 //we will not use combination if product type is service or digital
-                $combination = ProductCombination::find($request->combinations[$index]);
+                $combination = ProductCombination::find($request->selected_combinations[$index]);
+                $product = $combination->product;
 
-                $product_price = ($q * $request->price[$index]) - $discountForItem;
-                $vat_amount_product =  calcTax($product_price, 'vat');
-                $product_price_with_vat = $product_price + $vat_amount_product;
-                $vat_amount += $vat_amount_product;
+                // if ($request->order_type == 'SO' && $order_from == 'sales') {
+                //     $cost = getCost($product, $branch_id, $combination);
+                // }
+
+                $product_price = ($request->qty[$index] * $request->price[$index]);
                 $subtotal += $product_price;
 
-                if ($product->product_type == 'variable' || $product->product_type == 'simple') {
-                    $wht_amount_product = calcTax(($product_price), 'wht_products');
-                    $wht_products_amount += $wht_amount_product;
-                } else {
-                    $wht_amount_product = calcTax(($product_price), 'wht_services');
-                    $wht_services_amount += $wht_amount_product;
-                }
 
-                // get cost of goods sold and update it in simple and variable products
-                $cost = getProductCost($product, $combination, $branch_id, $ref_order, $request->qty[$index], $returned);
+                if ($selected_order && $returned == false) {
+                    $selected_order->products()->attach(
+                        $product->id,
+                        [
+                            'warehouse_id' => ($product->product_type == 'simple' || $product->product_type == 'variable') ? $request->warehouse_id : null,
+                            'product_combination_id' => ($product->product_type == 'simple' || $product->product_type == 'variable') ? $request->selected_combinations[$index] : null,
+                            'product_price' => $request->price[$index],
+                            // 'product_tax' => (isset($request->tax) && in_array('vat', $request->tax)) ? $vat_amount_product : 0,
+                            // 'product_wht' => (isset($request->tax) && in_array('wht', $request->tax) && $sub > setting('wht_invoice_amount')) ? $wht_amount_product : 0,
+                            'qty' => $request->qty[$index],
+                            'unit_id' => $request->units[$index],
+                            'total' => $request->price[$index] * $request->qty[$index],
+                            'product_type' => $product->product_type,
+                            // 'cost' => $cost,
+                        ]
+                    );
+                }
 
                 $order->products()->attach(
                     $product->id,
                     [
                         'warehouse_id' => ($product->product_type == 'simple' || $product->product_type == 'variable') ? $request->warehouse_id : null,
-                        'product_combination_id' => ($product->product_type == 'simple' || $product->product_type == 'variable') ? $request->combinations[$index] : null,
+                        'product_combination_id' => ($product->product_type == 'simple' || $product->product_type == 'variable') ? $request->selected_combinations[$index] : null,
                         'product_price' => $request->price[$index],
-                        'product_tax' => (isset($request->tax) && in_array('vat', $request->tax)) ? $vat_amount_product : 0,
-                        'product_wht' => (isset($request->tax) && in_array('wht', $request->tax) && $sub > setting('wht_invoice_amount')) ? $wht_amount_product : 0,
+                        // 'product_tax' => (isset($request->tax) && in_array('vat', $request->tax)) ? $vat_amount_product : 0,
+                        // 'product_wht' => (isset($request->tax) && in_array('wht', $request->tax) && $sub > setting('wht_invoice_amount')) ? $wht_amount_product : 0,
                         'qty' => $request->qty[$index],
+                        'unit_id' => $request->units[$index],
                         'total' => $request->price[$index] * $request->qty[$index],
                         'product_type' => $product->product_type,
-                        'cost' => $cost,
+                        // 'cost' => $cost,
                     ]
                 );
 
+
+                if ($selected_order && $returned == false) {
+                    $selected_order->update([
+                        'total_price' => $subtotal,
+                        'subtotal_price' => $subtotal,
+                    ]);
+                }
+
                 $order->update([
-                    'total_price' => $subtotal + $vat_amount,
+                    'total_price' => $subtotal,
                     'subtotal_price' => $subtotal,
-                    'total_tax' => $vat_amount,
-                    'total_wht_products' => $wht_products_amount,
-                    'total_wht_services' => $wht_services_amount,
+                    // 'total_tax' => $vat_amount,
+                    // 'total_wht_products' => $wht_products_amount,
+                    // 'total_wht_services' => $wht_services_amount,
                 ]);
 
 
-                // add stock update and antries
-                if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+                if ($request->order_type == 'SO') {
+
+                    // add stock update and antries
+                    if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+
+                        if ($order_from == 'sales') {
+                            // add stock and running order
+                            RunningOrderCreate($combination, $request->warehouse_id, $request->qty[$index], $request->units[$index], 'sales', $returned == true ? 'IN' : 'OUT', $order, $user->id, $request->price[$index]);
+                        }
+
+                        if ($order_from == 'sales') {
+                            // add noty for stock limit
+                            if (productQuantity($product->id, $request->selected_combinations[$index], $request->warehouse_id) <= $combination->limit) {
+                                array_push($stocks_limit_products, $product);
+                            }
+                        }
+
+                        // $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
+
+                        // if ($order_from == 'purchases') {
+                        //     createEntry($product_account, $returned == true ? 'purchase_return' : 'purchase', $returned == true ? 0 : ($request->price[$index] * $request->qty[$index]), $returned == true ? ($request->price[$index] * $request->qty[$index]) : 0, $branch_id, $order);
+                        // } elseif ($order_from == 'sales') {
+                        //     createEntry($product_account, $returned == true ? 'sales_return' : 'sales', $returned == true ? ($cost * $request->qty[$index]) :  0, $returned == true ? 0 : ($cost * $request->qty[$index]), $branch_id, $order);
+                        // }
 
 
-                    // add stock and running order
-                    stockCreate($combination, $request->warehouse_id, $request->qty[$index], 'Sale', $returned == true ? 'IN' : 'OUT', $order->id, $user->id, $request->price[$index]);
+                        if ($order_from == 'sales') {
+                            // $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
+                            // createEntry($cs_product_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($cost * $request->qty[$index]), $returned == true ? ($cost * $request->qty[$index]) : 0, $branch_id, $order);
+                            $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
+                        }
+                    } else {
 
-
-                    // add noty for stock limit
-                    if (productQuantity($product->id, $request->combinations[$index], $request->warehouse_id) <= $combination->limit) {
-                        array_push($stocks_limit_products, $product);
+                        if ($order_from == 'sales') {
+                            $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
+                        }
                     }
 
-                    $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
-                    $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
-
-                    createEntry($product_account, $returned == true ? 'sales_return' : 'sales', $returned == true ? ($cost * $request->qty[$index]) :  0, $returned == true ? 0 : ($cost * $request->qty[$index]), $branch_id, $order);
-                    createEntry($cs_product_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($cost * $request->qty[$index]), $returned == true ? ($cost * $request->qty[$index]) : 0, $branch_id, $order);
-
-                    $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $branch_id);
-                } else {
-                    $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
+                    if ($order_from == 'sales') {
+                        createEntry($revenue_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? ($request->price[$index] * $request->qty[$index]) : 0, $returned == true ? 0 : ($request->price[$index] * $request->qty[$index]), $branch_id, $order);
+                    }
                 }
-
-                createEntry($revenue_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? ($request->price[$index] * $request->qty[$index]) : 0, $returned == true ? 0 : ($request->price[$index] * $request->qty[$index]), $branch_id, $order);
             } catch (Exception $e) {
             }
         }
 
 
+        if ($request->discount > 0) {
 
+            if ($selected_order && $returned == false) {
+                $selected_order->update([
+                    'discount_amount' => $discount,
+                ]);
+            }
 
-
-        if ($discount > 0) {
             $order->update([
                 'discount_amount' => $discount,
             ]);
         }
 
-        $wht_amount = $wht_services_amount + $wht_products_amount;
+        $total = $order->total_price;
+
+        if ($selected_order && $returned == false) {
+            $selected_order->taxes()->detach();
+            $order->taxes()->detach();
+        }
 
 
-        if (isset($request->tax) && in_array('vat', $request->tax)) {
-            $vat = Tax::findOrFail(setting('vat'));
-            $order->taxes()->attach($vat->id, ['amount' => $vat_amount]);
-            $order->update([
-                'total_tax' => $vat_amount,
+        if ($request->taxes) {
+            foreach ($request->taxes as $index => $tax) {
+
+                $tax_data = calcTaxByID($order->total_price, $tax);
+                $taxes_data[$index] = $tax_data;
+                $total += $tax_data['tax_amount'];
+
+                if ($tax_data['tax_amount'] > 0) {
+                    $vat_amount += $tax_data['tax_amount'];
+                } else {
+                    $wht_amount += abs($tax_data['tax_amount']);
+                }
+
+
+                if ($selected_order && $returned == false) {
+                    $selected_order->taxes()->attach($tax, ['amount' => $tax_data['tax_amount']]);
+                }
+
+                $order->taxes()->attach($tax, ['amount' => $tax_data['tax_amount']]);
+            }
+        }
+
+        if ($selected_order && $returned == false) {
+            $selected_order->update([
+                'total_price' => $total,
+                'shipping_amount' => isset($request->shipping) ? $request->shipping : 0,
             ]);
         }
 
-        if (isset($request->tax) && in_array('wht', $request->tax) && $subtotal > setting('wht_invoice_amount')) {
-            if ($wht_products_amount > 0) {
-                $wht = Tax::findOrFail(setting('wht_products'));
-                $order->taxes()->attach($wht->id, ['amount' => $wht_products_amount]);
-                $order->update([
-                    'total_wht_products' => $wht_products_amount,
-                ]);
+
+        $order->update([
+            'total_price' => $total,
+            'shipping_amount' => isset($request->shipping) ? $request->shipping : 0,
+        ]);
+
+
+        if ($request->order_type == 'SO' || $request->order_type == 'PO') {
+
+
+            if (isset($request->shipping) && $request->shipping > 0) {
+                $shipping_account = Account::findOrFail(settingAccount(getAccountNameForOrder($order_from, 'shipping'), $branch_id));
+                createEntry($shipping_account, getTypeForOrder($order_from, $returned), getAmountForOrder($returned, $request->shipping, $order_from, 'shipping', 'dr'), getAmountForOrder($returned, $request->shipping, $order_from, 'shipping', 'cr'), $branch_id, $order);
             }
-            if ($wht_services_amount > 0) {
-                $wht = Tax::findOrFail(setting('wht_services'));
-                $order->taxes()->attach($wht->id, ['amount' => $wht_services_amount]);
-                $order->update([
-                    'total_wht_services' => $wht_services_amount,
-                ]);
+
+            if ($discount > 0) {
+                $discount_account = Account::findOrFail(settingAccount(getAccountNameForOrder($order_from, 'discount'), $branch_id));
+                createEntry($discount_account, getTypeForOrder($order_from, $returned), getAmountForOrder($returned, $discount, $order_from, 'discount', 'dr'), getAmountForOrder($returned, $discount, $order_from, 'discount', 'cr'), $branch_id, $order);
             }
-        }
+
+            if ($vat_amount > 0) {
+                $vat_account = Account::findOrFail(settingAccount(getAccountNameForOrder($order_from, 'vat'), $branch_id));
+                createEntry($vat_account, getTypeForOrder($order_from, $returned), getAmountForOrder($returned, $vat_amount, $order_from, 'vat', 'dr'), getAmountForOrder($returned, $vat_amount, $order_from, 'vat', 'cr'), $branch_id, $order);
+            }
+
+
+            if ($wht_amount > 0) {
+                $wht_account = Account::findOrFail(settingAccount(getAccountNameForOrder($order_from, 'wht'), $branch_id));
+                createEntry($wht_account, getTypeForOrder($order_from, $returned), getAmountForOrder($returned, $wht_amount, $order_from, 'wht', 'dr'), getAmountForOrder($returned, $wht_amount, $order_from, 'wht', 'cr'), $branch_id, $order);
+            }
+
+
+            $user_account = getItemAccount($user->id, null, getAccountNameForOrder($order_from, 'user'), $branch_id);
+            createEntry($user_account, getTypeForOrder($order_from, $returned), getAmountForOrder($returned, ($order->total_price + $order->shipping_amount), $order_from, 'user', 'dr'), getAmountForOrder($returned, ($order->total_price + $order->shipping_amount), $order_from, 'user', 'cr'), $branch_id, $order);
+
+
+            if ($returned == false && $order_from == 'sales') {
 
 
 
-        if ($discount > 0) {
-            $allowed_discount_account = Account::findOrFail(settingAccount('allowed_discount_account', $branch_id));
-            createEntry($allowed_discount_account, $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : $discount, $returned == true ? $discount : 0, $branch_id, $order);
-        }
 
-        if ($wht_amount > 0) {
-            $wst_account = Account::findOrFail(settingAccount('wst_account', $branch_id));
-            createEntry($wst_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : $wht_amount, $returned == true ? $wht_amount : 0, $branch_id, $order);
-        }
+                $admins = unserialize(setting('stock_notifications'));
 
-        if ($vat_amount > 0) {
-            $vat_account = Account::findOrFail(settingAccount('vat_sales_account', $branch_id));
-            createEntry($vat_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? $vat_amount : 0, $returned == true ? 0 : $vat_amount, $branch_id, $order);
-        }
+                $users = User::whereHas('roles', function ($query) use ($admins) {
+                    $query->whereIn('name', $admins ? $admins : []);
+                })->get();
 
-
-        $customer_account = getItemAccount($request->user_id, null, 'customers_account', $branch_id);
-        createEntry($customer_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($order->total_price - $wht_amount), $returned == true ? ($order->total_price - $wht_amount) : 0, $branch_id, $order);
-
-
-
-        if ($returned == false) {
-            $admins = unserialize(setting('orders_notifications'));
-
-            $users = User::whereHas('roles', function ($query) use ($admins) {
-                $query->whereIn('name', $admins ? $admins : []);
-            })->get();
-
-            // send noti to admins about new order and stock limit
-            foreach ($users as $admin) {
-                $title_ar = 'يوجد طلب جديد';
-                $body_ar = 'تم اضافة طلب جديد';
-                $title_en = 'There is a new order';
-                $body_en  = 'A new order has been added';
-                $url = route('orders.index');
-
-                // update user noty for not registered users
-                addNoty($admin, $user, $url, $title_en, $title_ar, $body_en, $body_ar);
-                foreach ($stocks_limit_products as $product) {
-                    $title_ar = 'تنبيه بنقص المخزون';
-                    $body_ar = 'تجاوز هذا المنتج الحد المسموح في المخزون :#' . $product->name_ar;
-                    $title_en = 'stock limit alert';
-                    $body_en  = 'this product over the stock limit :#' . $product->name_en;
-                    $url = route('stock.management.index', ['search' => $product->id]);
-                    addNoty($admin, $user, $url, $title_en, $title_ar, $body_en, $body_ar);
+                // send noti to admins about new order and stock limit
+                foreach ($users as $admin) {
+                    foreach ($stocks_limit_products as $product) {
+                        $title_ar = 'تنبيه بنقص المخزون';
+                        $body_ar = 'تجاوز هذا المنتج الحد المسموح في المخزون :#' . $product->name_ar;
+                        $title_en = 'stock limit alert';
+                        $body_en  = 'this product over the stock limit :#' . $product->name_en;
+                        $url = route('stock.management.index', ['search' => $product->id]);
+                        addNoty($admin, $user, $url, $title_en, $title_ar, $body_en, $body_ar);
+                    }
                 }
             }
         }
 
-        return $order;
+
+        alertSuccess('order created successfully', 'تم إضافة الطلب بنجاح');
+
+        if ($order->order_type == 'PO') {
+            return redirect()->route('purchases.index');
+        } elseif ($order->order_type == 'SO') {
+            return redirect()->route('sales.index');
+        } elseif ($order->order_type == 'Q') {
+            return redirect()->route('sales.quotations');
+        } elseif ($order->order_type == 'RFQ') {
+            return redirect()->route('purchases.quotations');
+        }
     }
+
+
+
 
 
     public function updateStatus(Request $request, Order $order)
@@ -706,22 +634,11 @@ class SalesController extends Controller
             'status' => "required|string",
         ]);
 
-        if (!checkPurchaseOrderStatus($request->status, $order->status)  || $order->order_type == 'Q') {
-            alertError('The status of the order cannot be changed', 'لا يمكن تغيير حالة الطلب');
-            return redirect()->route('sales.index');
-        } elseif ($request->status == 'returned' && $order->paynemt_status != 'pending') {
+
+        if ($order->order_type == 'Q' || ($order->status == $request->status) || $order->status == 'canceled' || $order->payment_status != 'pending') {
             alertError('The status of the order cannot be changed', 'لا يمكن تغيير حالة الطلب');
             return redirect()->route('sales.index');
         } else {
-
-
-            if ($request->status == 'returned') {
-                if ($order->payment_status != 'pending') {
-                    alertError('The status of the order cannot be changed', 'لا يمكن تغيير حالة الطلب');
-                    return redirect()->route('sales.index');
-                }
-            }
-
             $this->changeStatus($order, $request->status);
         }
 
@@ -738,18 +655,11 @@ class SalesController extends Controller
 
         foreach ($request->selected_items as $order) {
             $order = Order::findOrFail($order);
-            if (!checkPurchaseOrderStatus($request->selected_status, $order->status)) {
-                alertError('The status of some orders cannot be changed', 'لا يمكن تغيير حالة بعض الطلبات');
+            if ($order->order_type == 'Q' || ($order->status == $request->selected_status) || $order->status == 'canceled' || $order->payment_status != 'pending') {
+                alertError('The status of the order cannot be changed', 'لا يمكن تغيير حالة الطلب');
+                return redirect()->route('sales.index');
             } else {
-
-                if ($request->status == 'returned') {
-                    if ($order->payment_status != 'pending') {
-                        alertError('The status of some orders cannot be changed', 'لا يمكن تغيير حالة بعض الطلبات');
-                    } else {
-                        $this->changeStatus($order, $request->selected_status);
-                        alertSuccess('Order status updated successfully', 'تم تحديث حالة طلب المشتريات بنجاح');
-                    }
-                }
+                $this->changeStatus($order, $request->selected_status);
             }
         }
         return redirect()->route('sales.index');
@@ -757,6 +667,7 @@ class SalesController extends Controller
 
     private function changeStatus($order, $status)
     {
+
 
         $order->update([
             'status' => $status,
@@ -769,83 +680,17 @@ class SalesController extends Controller
 
         addLog('admin', 'orders', $description_ar, $description_en);
 
-        if ($status == 'returned') {
+        if ($status == 'canceled') {
 
-            foreach ($order->products as $product) {
+            $returned = true;
 
-                if ($product->product_type == 'variable' || $product->product_type == 'simple') {
+            foreach ($order->products as $index => $product) {
 
-
-                    $combination = ProductCombination::findOrFail($product->pivot->product_combination_id);
-
-                    // calculate product cost in sales return
-                    updateCost($combination, $product->pivot->cost, $product->pivot->qty, 'add', $order->branch_id);
-
-                    Stock::create([
-                        'product_combination_id' => $product->pivot->product_combination_id,
-                        'product_id' => $product->id,
-                        'warehouse_id' => $order->warehouse_id,
-                        'qty' => $product->pivot->qty,
-                        'stock_status' => 'IN',
-                        'stock_type' => 'Order',
-                        'reference_id' => $order->id,
-                        'reference_price' => productPrice($product, $product->pivot->product_combination_id),
-                        'created_by' => Auth::check() ? Auth::id() : null,
-                    ]);
-
-
-                    $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $order->branch_id);
-                    $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $order->branch_id);
-
-                    createEntry($product_account, 'sales_return', ($product->pivot->cost * $product->pivot->qty),  0, $order->branch_id, $order);
-                    createEntry($cs_product_account, 'sales_return', 0, ($product->pivot->cost * $product->pivot->qty), $order->branch_id, $order);
-                }
+                $combination = ProductCombination::find($product->pivot->product_combination_id);
 
                 if ($product->product_type == 'variable' || $product->product_type == 'simple') {
-                    $revenue_account = getItemAccount($combination, $combination->product->category, 'revenue_account_products', $order->branch_id);
-                } else {
-                    $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $order->branch_id);
+                    RunningOrderCreate($combination, $order->warehouse_id, $product->pivot->qty, $product->pivot->unit_id, 'sales', $returned == true ? 'IN' : 'OUT', $order, $order->customer_id, $product->pivot->product_price);
                 }
-
-                createEntry($revenue_account, 'sales_return', $product->pivot->total, 0, $order->branch_id, $order);
-            }
-
-
-            $vat_amount = 0;
-            $wht_amount = 0;
-            $wht_services_amount = 0;
-            $wht_products_amount = 0;
-
-            foreach ($order->taxes as $tax) {
-                if ($tax->id == setting('vat')) {
-                    $vat_amount = $tax->pivot->amount;
-                }
-                if ($tax->id == setting('wht_products')) {
-                    $wht_products_amount = $tax->pivot->amount;
-                }
-
-                if ($tax->id == setting('wht_services')) {
-                    $wht_services_amount = $tax->pivot->amount;
-                }
-            }
-
-            $wht_amount = $wht_products_amount + $wht_services_amount;
-
-
-
-            $customer_account = getItemAccount($order->customer_id, null, 'customers_account', $order->branch_id);
-
-            createEntry($customer_account, 'sales_return', 0, $order->total_price - $wht_amount, $order->branch_id, $order);
-
-            if ($wht_amount > 0) {
-                $wst_account = Account::findOrFail(settingAccount('wst_account', $order->branch_id));
-                createEntry($wst_account, 'sales_return', 0, $wht_amount, $order->branch_id, $order);
-            }
-
-
-            if ($vat_amount > 0) {
-                $vat_account = Account::findOrFail(settingAccount('vat_sales_account', $order->branch_id));
-                createEntry($vat_account, 'sales_return', $vat_amount, 0, $order->branch_id, $order);
             }
         }
     }
@@ -861,80 +706,5 @@ class SalesController extends Controller
     {
         $order = Order::findOrFail($order);
         return view('dashboard.sales.show')->with('order', $order);
-    }
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-
-
-
-
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, sale $sale)
-    {
-        $request->validate([
-            'name' => "required|string|max:255",
-            'description' => "required|string|max:255",
-            'sale_rate' => "required|numeric",
-        ]);
-
-        $sale->update([
-            'name' => $request['name'],
-            'description' => $request['description'],
-            'sale_rate' => $request['sale_rate'],
-            'updated_by' => Auth::id(),
-        ]);
-
-        alertSuccess('sale updated successfully', 'تم تعديل الضريبه بنجاح');
-        return redirect()->route('sales.index');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($sale)
-    {
-        $sale = sale::withTrashed()->where('id', $sale)->first();
-        if ($sale->trashed() && auth()->user()->hasPermission('sales-delete')) {
-            $sale->forceDelete();
-            alertSuccess('sale deleted successfully', 'تم حذف الضريبه بنجاح');
-            return redirect()->route('sales.trashed');
-        } elseif (!$sale->trashed() && auth()->user()->hasPermission('sales-trash') && checksaleForTrash($sale)) {
-            $sale->delete();
-            alertSuccess('sale trashed successfully', 'تم حذف الضريبه مؤقتا');
-            return redirect()->route('sales.index');
-        } else {
-            alertError('Sorry, you do not have permission to perform this action, or the sale cannot be deleted at the moment', 'نأسف ليس لديك صلاحية للقيام بهذا الإجراء ، أو الضريبه لا يمكن حذفه حاليا');
-            return redirect()->back()->withInput();
-        }
-    }
-
-    public function trashed()
-    {
-        $sales = sale::onlyTrashed()
-            ->whenSearch(request()->search)
-            ->latest()
-            ->paginate(100);
-        return view('dashboard.sales.index', ['sales' => $sales]);
-    }
-
-    public function restore($sale, Request $request)
-    {
-        $sale = sale::withTrashed()->where('id', $sale)->first()->restore();
-        alertSuccess('sale restored successfully', 'تم استعادة الضريبه بنجاح');
-        return redirect()->route('sales.index');
     }
 }

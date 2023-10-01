@@ -468,7 +468,7 @@ class PaymentController extends Controller
 
 
                 // add stock and running order
-                stockCreate($combination, $warehouse_id, $product->pivot->qty, 'Sale', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
+                RunningOrderCreate($combination, $warehouse_id, $product->pivot->qty, 'sales', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
             }
 
 

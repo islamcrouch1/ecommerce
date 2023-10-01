@@ -88,8 +88,7 @@
                                 <label class="form-label" for="product">{{ __('Select product') }}</label>
 
                                 <select data-url_com="{{ route('stock.management.com') }}"
-                                    data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}"
+                                    data-url="{{ route('products.search') }}" data-locale="{{ app()->getLocale() }}"
                                     class="form-select product-select @error('product') is-invalid @enderror" aria-label=""
                                     name="product" id="product" required>
 
@@ -102,8 +101,8 @@
                             <div style="display: none" class="mb-3 combinations-select">
                                 <label class="form-label" for="combinations">{{ __('Select combination') }}</label>
 
-                                <select data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                <select data-url="{{ route('products.search') }}" data-locale="{{ app()->getLocale() }}"
+                                    multiple="multiple"
                                     class="form-select com-select @error('combinations') is-invalid @enderror"
                                     aria-label="" name="combinations[]" id="combinations">
 

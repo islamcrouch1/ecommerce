@@ -286,7 +286,6 @@ class ProfileController extends Controller
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
                 'start_time' => $employee_info->start_time,
-
             ]);
 
             alertSuccess('attendance record saved successfully', 'تم تسجيل حضورك بنجاح');
@@ -305,7 +304,6 @@ class ProfileController extends Controller
                     'latitude' => $request->latitude,
                     'longitude' => $request->longitude,
                     'start_time' => $employee_info->start_time,
-
 
                 ]);
 

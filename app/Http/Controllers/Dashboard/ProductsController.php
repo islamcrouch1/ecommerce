@@ -20,6 +20,7 @@ use App\Models\ProductVariation;
 use App\Models\ShippingMethod;
 use App\Models\Size;
 use App\Models\Stock;
+use App\Models\Unit;
 use App\Models\User;
 use App\Models\Variation;
 use App\Models\Warehouse;
@@ -72,6 +73,11 @@ class ProductsController extends Controller
             ->whenStatus(request()->status)
             ->latest()
             ->paginate(100);
+
+
+        foreach ($products as $product) {
+            checkProductUnit($product);
+        }
 
         return view('dashboard.products.index', compact('products', 'categories', 'countries', 'user'));
     }
@@ -139,7 +145,8 @@ class ProductsController extends Controller
         $attributes = Attribute::all();
         $shipping_methods = ShippingMethod::whereIn('id', [1, 2, 3])->get();
         $installment_companies = InstallmentCompany::all();
-        return view('dashboard.products.create', compact('attributes', 'categories', 'countries', 'brands', 'shipping_methods', 'installment_companies'));
+        $units = Unit::all();
+        return view('dashboard.products.create', compact('attributes', 'units', 'categories', 'countries', 'brands', 'shipping_methods', 'installment_companies'));
     }
 
 
@@ -191,11 +198,14 @@ class ProductsController extends Controller
             'can_sold' => "nullable|string",
             'can_purchased' => "nullable|string",
             'can_manufactured' => "nullable|string",
+
+            'unit_id' => "required|integer",
+
         ]);
 
 
         $product_type = $request['product_type'];
-        $slug = createSlug($request->product_slug);
+        $slug = createSlug($request->product_slug ? $request->product_slug : ($request->name_ar . '-' . $request->name_en));
 
         // for digital product
         if ($product_type == 'digital' && !$request->hasFile('digital_file')) {
@@ -274,6 +284,7 @@ class ProductsController extends Controller
             'can_purchased' => $request['can_purchased'],
             'can_manufactured' => $request['can_manufactured'],
 
+            'unit_id' => $request['unit_id'],
 
             'cost' => ($product_type == 'digital' || $product_type == 'service') ? $request['cost'] : 0,
         ]);
@@ -433,7 +444,8 @@ class ProductsController extends Controller
         $attributes = Attribute::all();
         $shipping_methods = ShippingMethod::whereIn('id', [1, 2, 3])->get();
         $installment_companies = InstallmentCompany::all();
-        return view('dashboard.products.edit', compact('categories', 'countries', 'product', 'brands', 'shipping_methods', 'attributes', 'installment_companies'));
+        $units = Unit::all();
+        return view('dashboard.products.edit', compact('categories', 'units', 'countries', 'product', 'brands', 'shipping_methods', 'attributes', 'installment_companies'));
     }
 
 
@@ -501,7 +513,7 @@ class ProductsController extends Controller
 
 
         $product_type = $product->product_type;
-        $slug = createSlug($request->product_slug);
+        $slug = createSlug($request->product_slug ? $request->product_slug : ($request->name_ar . '-' . $request->name_en));
 
 
 
@@ -582,11 +594,47 @@ class ProductsController extends Controller
 
 
         if ($request->hasFile('image')) {
-            deleteImage($product->media_id);
+            if ($product->media_id != null) {
+                deleteImage($product->media_id);
+            }
             $media_id = saveMedia('image', $request['image'], 'products');
             $product->update([
                 'media_id' => $media_id,
             ]);
+        }
+
+
+        if ($product->category_id != $request['category']) {
+
+            $branch_id = getUserBranchId(Auth::user());
+
+            $new_category = Category::findOrFail($request['category']);
+
+            foreach ($product->combinations as $combination) {
+
+                $product_account = getItemAccount($combination, $new_category, 'assets_account', $branch_id);
+                $cs_product_account = getItemAccount($combination, $new_category, 'cs_account', $branch_id);
+
+                $product_account_old = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
+                $cs_product_account_old = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
+
+
+                $entries = $product_account_old->entries;
+
+                foreach ($entries as $entry) {
+                    $entry->update([
+                        'account_id' => $product_account->id
+                    ]);
+                }
+
+                $entries = $cs_product_account_old->entries;
+
+                foreach ($entries as $entry) {
+                    $entry->update([
+                        'account_id' => $cs_product_account->id
+                    ]);
+                }
+            }
         }
 
 
@@ -600,6 +648,8 @@ class ProductsController extends Controller
             'description_en' => $request['description_en'],
             'sale_price' => $request['sale_price'],
             'discount_price' => $request['discount_price'],
+
+            'product_slug' => $slug,
 
             'product_weight' =>  $request['product_weight'],
             'product_length' =>  $request['product_length'],

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->double('outstanding_balance', 8, 2);
             $table->double('pending_withdrawal_requests', 8, 2);
             $table->double('completed_withdrawal_requests', 8, 2);
-            $table->double('bonus', 8, 2)->default(0);
+            $table->double('bonus', 12, 2)->default(0);
             $table->timestamps();
         });
     }

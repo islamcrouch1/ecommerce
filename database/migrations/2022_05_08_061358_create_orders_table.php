@@ -21,7 +21,7 @@ return new class extends Migration
             $table->integer('customer_id')->nullable();
             $table->integer('branch_id')->nullable();
             $table->integer('warehouse_id')->nullable();
-            $table->enum('order_from', ['androidapp', 'iosapp', 'web', 'pos', 'addsale', 'affiliate', 'addpurchase'])->default('web');
+            $table->enum('order_from', ['androidapp', 'iosapp', 'web', 'pos', 'sales', 'affiliate', 'purchases'])->default('web');
             $table->string('full_name')->nullable();
             $table->longText('address')->nullable();
             $table->integer('country_id')->nullable();
@@ -32,17 +32,17 @@ return new class extends Migration
             $table->longText('special_mark')->nullable();
             $table->longText('notes')->nullable();
 
-            $table->double('total_price', 8, 2)->default(0);
-            $table->double('subtotal_price', 8, 2)->default(0);
+            $table->double('total_price', 12, 2)->default(0);
+            $table->double('subtotal_price', 12, 2)->default(0);
 
-            $table->double('total_price_affiliate', 8, 2)->default(0);
+            $table->double('total_price_affiliate', 12, 2)->default(0);
 
-            $table->double('total_commission', 8, 2)->default(0);
-            $table->double('total_profit', 8, 2)->default(0);
+            $table->double('total_commission', 12, 2)->default(0);
+            $table->double('total_profit', 12, 2)->default(0);
 
 
-            $table->double('shipping_amount', 8, 2)->default(0);
-            $table->integer('shipping_method_id')->default(0);
+            $table->double('shipping_amount', 12, 2)->default(0);
+            $table->integer('shipping_method_id')->nullable();
 
             $table->string('status')->default('pending');
 
@@ -54,10 +54,10 @@ return new class extends Migration
             $table->string('payment_method')->default('cash_on_delivery');
             $table->string('transaction_id')->nullable();
 
-            $table->double('total_tax', 8, 2)->default(0);
+            $table->double('total_tax', 12, 2)->default(0);
 
-            $table->double('total_wht_products', 8, 2)->default(0);
-            $table->double('total_wht_services', 8, 2)->default(0);
+            $table->double('total_wht_products', 12, 2)->default(0);
+            $table->double('total_wht_services', 12, 2)->default(0);
 
 
             $table->longText('description')->nullable();
@@ -65,11 +65,15 @@ return new class extends Migration
 
             $table->boolean('is_seen')->default('0')->comment('1 for seen & 0 for unseen');
             $table->string('coupon_code')->nullable();
-            $table->double('coupon_amount', 8, 2)->default(0);
-            $table->double('discount_amount', 8, 2)->default(0);
+            $table->double('coupon_amount', 12, 2)->default(0);
+            $table->double('discount_amount', 12, 2)->default(0);
 
             $table->string('session_id')->nullable();
             $table->bigInteger('orderId')->nullable();
+
+
+
+
 
 
             $table->timestamps();

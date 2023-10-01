@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('categories', function (Blueprint $table) {
-            $table->double('vendor_profit', 8, 2)->default(0);
+            $table->double('vendor_profit', 12, 2)->default(0);
         });
     }
 

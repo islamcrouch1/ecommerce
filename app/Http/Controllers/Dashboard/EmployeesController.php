@@ -6,17 +6,29 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Attendance;
 use App\Models\Branch;
+use App\Models\Category;
+use App\Models\Country;
 use App\Models\EmployeeInfo;
 use App\Models\EmployeeInfoImage;
 use App\Models\EmployeePermission;
 use App\Models\Entry;
+use App\Models\Message;
+use App\Models\Note;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\Query;
 use App\Models\Reward;
+use App\Models\Role;
 use App\Models\SalaryCard;
 use App\Models\User;
+use App\Models\VendorOrder;
+use App\Models\Withdrawal;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Request as ModelsRequest;
+
 
 class EmployeesController extends Controller
 {
@@ -43,28 +55,32 @@ class EmployeesController extends Controller
             $branches = Branch::where('id', $user->branch_id)->get();
         }
 
-        $users = User::whereHas('roles', function ($query) {
-            $query->where('name', 'administrator');
-        })->get();
+        if (!$request->has('from') || !$request->has('to')) {
 
-
-        foreach ($users as $u) {
-
-            if (getEmployeeInfo($u) == null) {
-                $employee_info = EmployeeInfo::create([
-                    'user_id' => $u->id,
-                ]);
-            }
+            $request->merge(['from' => Carbon::now()->subDay(365)->toDateString()]);
+            $request->merge(['to' => Carbon::now()->toDateString()]);
         }
 
-        // where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
-        //     ->
 
-        $employees = EmployeeInfo::whenSearch(request()->search)
+        $countries = Country::all();
+
+        $roles = Role::WhereRoleNot('superadministrator')->get();
+        $users = User::whereDate('created_at', '>=', request()->from)
+            ->whereDate('created_at', '<=', request()->to)
+            ->whereRoleNot('superadministrator')
+            ->whereRole('administrator')
+            ->whenSearch(request()->search)
+            ->whenRole(request()->role_id)
+            ->whenCountry(request()->country_id)
             ->whenBranch(request()->branch_id)
+            ->whenStatus(request()->status)
+            ->with('roles')
             ->latest()
             ->paginate(100);
-        return view('dashboard.employees.index', compact('branches', 'employees'));
+
+
+
+        return view('dashboard.employees.index', compact('users', 'roles', 'countries', 'branches'));
     }
 
 
@@ -160,8 +176,10 @@ class EmployeesController extends Controller
 
         $permissions = EmployeePermission::where('user_id', $user->id)
             ->where('status', 'confirmed')
-            ->whereYear('date', '=', Carbon::parse($request->date)->format('Y'))
-            ->whereMonth('date', '=', Carbon::parse($request->date)->format('m'))
+            ->whereYear('start_date', '<=', Carbon::parse($request->date)->format('Y'))
+            ->whereMonth('start_date', '<=', Carbon::parse($request->date)->format('m'))
+            ->whereYear('end_date', '>=', Carbon::parse($request->date)->format('Y'))
+            ->whereMonth('end_date', '>=', Carbon::parse($request->date)->format('m'))
             ->get();
 
         $employee_info = getEmployeeInfo($user);
@@ -199,7 +217,8 @@ class EmployeesController extends Controller
             $permission = EmployeePermission::where('user_id', $user->id)
                 ->where('status', 'confirmed')
                 ->where('type', 'vacation')
-                ->whereDate('date', '=', $key)
+                ->whereDate('start_date', '<=', $key)
+                ->whereDate('end_date', '>=', $key)
                 ->first();
 
 
@@ -442,5 +461,90 @@ class EmployeesController extends Controller
 
 
         return $data;
+    }
+
+
+    public function show(EmployeeInfo $employee)
+    {
+
+
+        $user = $employee->user;
+
+        $withdrawals = Withdrawal::where('user_id', $user->id)
+            ->whenSearch(request()->search)
+            ->whenCountry(request()->country_id)
+            ->whenStatus(request()->status)
+            ->latest()
+            ->paginate(50);
+
+        $orders = Order::where('customer_id', $user->id)
+            ->whenSearch(request()->search_order)
+            ->whenCountry(request()->country_id)
+            ->whenStatus(request()->status)
+            ->whenPaymentStatus(request()->payment_status)
+            ->latest()
+            ->paginate(100);
+
+        $vendor_orders = VendorOrder::where('user_id', $user->id)
+            ->whenSearch(request()->search)
+            ->whenStatus(request()->status)
+            ->latest()
+            ->paginate(100);
+
+        $requests = ModelsRequest::where('user_id', $user->id)->latest()
+            ->paginate(50);
+
+        $products = Product::where('created_by', $user->id)
+            ->whenSearch(request()->search)
+            ->whenCategory(request()->category_id)
+            ->whenCountry(request()->country_id)
+            ->whenStatus(request()->status)
+            ->latest()
+            ->paginate(100);
+
+
+        if ($user->hasRole('administrator')) {
+            $messages = Message::where([
+                ['user_id', '=', $user->id],
+                ['sender_id', '=', Auth::user()->id],
+            ])
+                ->orwhere([
+                    ['user_id', '=', Auth::user()->id],
+                    ['sender_id', '=', $user->id],
+                ])
+                ->whenSearch(request()->search)
+                ->latest()
+                ->paginate(20);
+        } else {
+            $messages = Message::where([
+                ['user_id', '=', $user->id],
+            ])
+                ->orwhere([
+                    ['sender_id', '=', $user->id],
+                ])
+                ->whenSearch(request()->search)
+                ->latest()
+                ->paginate(20);
+        }
+
+
+
+
+        $notes = Note::where('user_id', $user->id)
+            ->latest()
+            ->paginate(20);
+
+        $queries = Query::where('user_id', $user->id)
+            ->latest()
+            ->paginate(20);
+
+        $countries = Country::all();
+
+        $categories = Category::all();
+
+        $roles = Role::WhereRoleNot('superadministrator')->WhereRoleNot('administrator')->WhereRoleNot('vendor')->WhereRoleNot('affiliate')->get();
+
+
+        return view('dashboard.users.show', compact('roles', 'user', 'withdrawals', 'orders', 'countries', 'vendor_orders', 'requests', 'products', 'categories', 'notes', 'messages', 'queries'));
     }
 }

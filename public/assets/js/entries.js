@@ -42,7 +42,7 @@ $(document).ready(function(){
             cache: false,
             success: function(data) {
 
-                console.log(data.elements);
+
 
                 if(data.status == 1){
 
@@ -84,7 +84,7 @@ $(document).ready(function(){
         var locale = $('.purchasesorders-field').data('locale');
 
 
-        getOrderss(supplier_id , type , url , locale);
+        getInvoices(supplier_id , type , url , locale);
     });
 
 
@@ -99,7 +99,7 @@ $(document).ready(function(){
         var salary_url = $('.employees-field').data('salary_url');
         var locale = $('.employees-field').data('locale');
 
-        console.log(users , type , url , locale);
+
 
         getSalaryCards(users , type , url , locale);
         getSalary(users , type , salary_url , locale);
@@ -118,7 +118,7 @@ $(document).ready(function(){
         var locale = $('.purchasesorders-field').data('locale');
 
 
-        getOrderss(supplier_id , type, url , locale);
+        getInvoices(supplier_id , type, url , locale);
     });
 
 
@@ -136,7 +136,7 @@ $(document).ready(function(){
 
 
 
-        console.log(user_id ,  url , locale);
+
 
 
 
@@ -153,7 +153,7 @@ $(document).ready(function(){
             cache: false,
             success: function(data) {
 
-                console.log(data);
+
 
                 if(data.status == 1){
 
@@ -170,7 +170,7 @@ $(document).ready(function(){
     }
 
 
-    function getOrderss(supplier_id  , type, url , locale){
+    function getInvoices(supplier_id  , type, url , locale){
         var formData = new FormData();
         formData.append('supplier_id' , supplier_id );
         formData.append('type' , type );
@@ -183,11 +183,9 @@ $(document).ready(function(){
             cache: false,
             success: function(data) {
 
-                console.log(data.elements);
-
                 if(data.status == 1){
 
-                   if(type == 'addpurchase'){
+                   if(type == 'purchases'){
                     $('.purchasesorders-field').children().remove().end()
                     $('.salesorders-field').children().remove().end();
                     $('.withdrawals-field').children().remove().end();
@@ -195,14 +193,13 @@ $(document).ready(function(){
                     var array = data.elements;
                     array.forEach(element => {
 
-                        var text = (locale == 'ar' ? 'اوردر رقم : ' + ' ' + element.id + ' - ' + 'اجمالي قيمة الاوردر' + ' : ' + element.total_amount + ' - ' + 'المبلغ المتبقي' + ' : ' + element.due_amount : 'order No : ' + ' ' .  element.id  + ' - ' + 'total order amount' + ' : ' + element.total_amount + ' - ' + 'due amount' + ' : ' + element.due_amount)
+                        var text = getInvoiceText(element , locale);
 
                         $('.purchasesorders-field').append(
                             `<option value="`+ element.id +`">`+ text +`</option>`
                         )
                     });
 
-                    console.log(data.withdrawals);
 
                     var array = data.withdrawals;
                     array.forEach(element => {
@@ -222,7 +219,8 @@ $(document).ready(function(){
                     var array = data.elements;
                     array.forEach(element => {
 
-                        var text = (locale == 'ar' ? 'اوردر رقم : ' + ' ' + element.id + ' - ' + 'اجمالي قيمة الاوردر' + ' : ' + element.total_amount + ' - ' + 'المبلغ المتبقي' + ' : ' + element.due_amount : 'order No : ' + ' ' .  element.id  + ' - ' + 'total order amount' + ' : ' + element.total_amount + ' - ' + 'due amount' + ' : ' + element.due_amount)
+                        var text = getInvoiceText(element , locale);
+
 
                         $('.salesorders-field').append(
                             `<option value="`+ element.id +`">`+ text +`</option>`
@@ -241,7 +239,17 @@ $(document).ready(function(){
         });
     }
 
+    function getInvoiceText(element , locale){
 
+        var text = '';
+        var invoice_serial = element.type + ': ' + element.serial + ' ';
+        var order_serial = element.order_serial != null ? ( (locale == 'ar' ? 'رقم الطلب: ' : 'order no: ' ) + element.order_serial + ' ' ) : '';
+        var total_amount = (locale == 'ar' ? 'المبلغ الاجمالي: ' : 'total amount: ') + element.total_amount + element.symbol + ' ';
+        var due_amount = (locale == 'ar' ? 'المبلغ المستحق: ' : 'due amount: ') + element.due_amount + element.symbol + ' ';
+        text = invoice_serial + order_serial + total_amount + due_amount;
+
+        return text;
+    }
 
 
     function getSalaryCards(users , type , url , locale){
@@ -261,7 +269,7 @@ $(document).ready(function(){
             cache: false,
             success: function(data) {
 
-                console.log(data.elements);
+
 
                 if(data.status == 1){
 
@@ -304,7 +312,7 @@ $(document).ready(function(){
             cache: false,
             success: function(data) {
 
-                console.log(data.elements);
+
 
                 if(data.status == 1){
 
@@ -344,24 +352,8 @@ $(document).ready(function(){
         }
 
 
-        if(type == "employee_loan") {
-            $('.employee').show();
-            $('.employee-field').attr('required' , true);
-
-        }else{
-            $('.employee').hide();
-            $('.employee-field').attr('required' , false);
-        }
 
 
-        if(type == "petty_cash") {
-            $('.employee').show();
-            $('.employee-field').attr('required' , true);
-
-        }else{
-            $('.employee').hide();
-            $('.employee-field').attr('required' , false);
-        }
 
         if(type == "payment_receipts_purchases") {
             $('.purchasesorders').show();
@@ -448,14 +440,14 @@ $(document).ready(function(){
 
         }else if(type == "petty_cash_settlement"){
 
-            $('.employee').show();
-            $('.employee-field').attr('required' , true);
             $('.amount').hide();
             $('.amount-field').attr('required' , false);
             $('.operation_type').hide();
             $('.operation_type-field').attr('required' , false);
             $('.petty_cash').show();
             $('.petty_cash-field').attr('required' , true);
+
+            $('.petty_cash_title').show();
 
             $('.expenses_account').show();
             $('.expenses_account-field').attr('required' , true);
@@ -478,6 +470,8 @@ $(document).ready(function(){
             $('.petty_cash').hide();
             $('.petty_cash-field').attr('required' , false);
 
+            $('.petty_cash_title').hide();
+
             $('.expenses_account').hide();
             $('.expenses_account-field').attr('required' , false);
 
@@ -485,8 +479,146 @@ $(document).ready(function(){
 
 
 
+        if(type == "employee_loan" || type == "petty_cash" || type == "petty_cash_settlement") {
+            $('.employee').show();
+            $('.employee-field').attr('required' , true);
+
+        }else{
+            $('.employee').hide();
+            $('.employee-field').attr('required' , false);
+        }
+
+
+
+
 
     }
+
+
+
+
+
+
+        // add accounts
+        var maxField = 50; //Input fields increment limitation
+        var addButton = $('.add_expenses_account'); //Add button selector
+        var wrapper = $('.field_wrapper'); //Input field wrapper
+
+        var x = 1; //Initial field counter is 1
+
+        //Once add button is clicked
+        $(addButton).click(function(){
+            //Check maximum number of input fields
+            if(x < maxField){
+                x++; //Increment field counter
+
+                const  accounts = $('.add_expenses_account').data('accounts');
+                var locale = $('.add_expenses_account').data('locale');
+                var text1 = locale == 'ar' ? 'حدد الحساب' : 'select account';
+                var text2 = '';
+
+
+                 accounts.forEach(function(element) {
+                    text2 += '<option value="'+ element.id +'">'+ (locale == 'ar' ? element.name_ar : element.name_en) +'</option>';
+                });
+
+
+
+
+
+
+                var fieldHTML = `
+                <div class="input-group mt-3">
+                    <select
+                        class="form-select from-account-select"
+                        aria-label="" name="expenses_accounts[]"  data-level="1"
+                        required>
+                        <option value="">`+ text1  +`</option>`+ text2 +`
+                    </select>
+                    <input name="expenses_amounts[]" class="form-control"  type="number"
+                    placeholder="`+ (locale == 'ar' ? 'المبلغ' : 'amount') +`" min="0" step="0.01" required />
+                    <a href="javascript:void(0);" class="remove_button">
+                        <span class="input-group-text" id="basic-addon1">
+                            <span class="far fa-trash-alt text-danger fs-2"></span>
+                        </span>
+                    </a>
+                </div>`; //New input field html
+
+                $(wrapper).append(fieldHTML); //Add field html
+            }
+        });
+
+        //Once remove button is clicked
+        $(wrapper).on('click', '.remove_button', function(e){
+            e.preventDefault();
+            $(this).parent('div').remove(); //Remove field html
+            x--; //Decrement field counter
+        });
+
+
+        $('.field_wrapper').on('change' , '.from-account-select' , function(e){
+            e.preventDefault();
+            var elem = $(this);
+            getAccounts(elem , 'from');
+
+        });
+
+
+        function getAccounts(elem , dir){
+
+
+            var url = $('.add_expenses_account').data('url');
+            var locale = $('.add_expenses_account').data('locale');
+            var account_id = elem.find(":selected").val();
+            var account_name = elem.find(":selected").text();
+            var level = elem.data('level');
+
+            var formData = new FormData();
+            formData.append('account_id' , account_id );
+            $.ajax({
+                url: url,
+                data: formData,
+                method: 'POST',
+                processData: false,
+                contentType: false,
+                cache: false,
+                success: function(data) {
+
+                    if(data.status == 1){
+                        for (var i = 20; i >= level; i--) {
+                            $('.'+dir+'-account'+i).remove();
+                          }
+
+                        var array = data.elements;
+                        if(array.length == 0){
+                            return;
+                        }
+                        var options = '';
+
+                        array.forEach(element => {
+                            options += `<option value="`+element.id+`">
+                                        `+element.name+`
+                                        </option>`;
+                        });
+
+                        elem.parent().prepend(
+                            `<select
+                                class="form-select `+dir+`-account-select"
+                                aria-label="" name="expenses_accounts[]" required>
+                                    <option value="">`+(locale == 'ar' ? 'حدد الحساب' : 'select account')+`</option>`
+                                +options+
+                            `</select>
+                            `
+                        );
+
+                        elem.closest('.form-select').remove();
+
+
+
+                    }
+                }
+            });
+        }
 
 
 

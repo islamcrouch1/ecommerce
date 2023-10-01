@@ -284,7 +284,7 @@ class OrdersController extends Controller
 
 
         $description_ar = "تم تغيير حالة الطلب الى ملغي" . ' طلب رقم ' . ' #' . $order->id;
-        $description_en  = "order status has been changed to cancelled" . ' order No ' . ' #' . $order->id;
+        $description_en  = "order status has been changed to canceled" . ' order No ' . ' #' . $order->id;
 
         addLog('affiliate', 'orders', $description_ar, $description_en);
 

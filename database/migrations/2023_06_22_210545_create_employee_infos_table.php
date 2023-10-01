@@ -15,9 +15,9 @@ return new class extends Migration
     {
         Schema::create('employee_infos', function (Blueprint $table) {
             $table->id();
-            $table->double('basic_salary', 8, 2)->default(0);
-            $table->double('variable_salary', 8, 2)->default(0);
-            $table->double('work_hours', 8, 2)->default(0);
+            $table->double('basic_salary', 12, 2)->default(0);
+            $table->double('variable_salary', 12, 2)->default(0);
+            $table->double('work_hours', 12, 2)->default(0);
             $table->longText('address')->nullable();
             $table->longText('name')->nullable();
             $table->longText('job_title')->nullable();

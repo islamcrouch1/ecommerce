@@ -815,6 +815,18 @@
                                 @enderror
                             </div>
 
+                            <div class="mb-3">
+                                <label class="form-label" for="start_time">{{ __('start time') }}</label>
+                                <div class="d-inline-block">
+                                    <input type="time" id="start_time" name="start_time" class="form-control"
+                                        value="{{ getEmployeeInfo($user) != null ? getEmployeeInfo($user)->start_time : null }}">
+                                </div>
+
+                                @error('start_time')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
 
                             <div class="mb-3">
                                 <label class="form-label" for="Weekend_days">{{ __('Weekend days') }}</label>

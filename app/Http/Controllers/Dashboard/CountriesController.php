@@ -78,7 +78,7 @@ class CountriesController extends Controller
             'phone_digits' => $request['phone_digits'],
             'currency' => $request['currency'],
             'shipping_amount' => $request['shipping_amount'],
-            'status' => $request['is_default'] == 'on' ? 'active' : $request['status'],
+            'status' => $request['status'] == 'on' ? 'active' : $request['status'],
             'media_id' => $media_id,
             'is_default' => $request['is_default'] == 'on' ? '1' : '0',
 
@@ -151,7 +151,7 @@ class CountriesController extends Controller
             'code' => $request['code'],
             'phone_digits' => $request['phone_digits'],
             'shipping_amount' => $request['shipping_amount'],
-            'status' => $request['is_default'] == 'on' ? 'active' : $request['status'],
+            'status' => $request['status'] == 'on' ? 'active' : $request['status'],
             'media_id' => isset($media_id) ? $media_id : $country->media_id,
             'is_default' => $request['is_default'] == 'on' ? '1' : '0',
         ]);

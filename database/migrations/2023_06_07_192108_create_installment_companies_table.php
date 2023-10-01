@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('name_ar');
             $table->string('name_en');
             $table->enum('type', ['percentage', 'amount'])->default('amount');
-            $table->double('admin_expenses', 8, 2)->default(0);
-            $table->double('amount', 8, 2)->default(0);
+            $table->double('admin_expenses', 12, 2)->default(0);
+            $table->double('amount', 12, 2)->default(0);
             $table->longText('months')->nullable();
             $table->timestamps();
         });

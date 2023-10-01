@@ -16,7 +16,7 @@
                 <div class="col-md-12 d-flex flex-center">
                     <div class="p-4 p-md-5 flex-grow-1">
                         <form method="POST"
-                            action="{{ route('orders.store.new', ['order_from' => 'addpurchase', 'returned' => 'true']) }}"
+                            action="{{ route('orders.store.new', ['order_from' => 'purchases', 'returned' => 'true']) }}"
                             enctype="multipart/form-data">
                             @csrf
 
@@ -109,8 +109,8 @@
 
                                 <select data-url_com="{{ route('purchases.combinations') }}"
                                     data-url_cal="{{ route('purchases.combinations.cal') }}"
-                                    data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                    data-url="{{ route('products.search') }}" data-locale="{{ app()->getLocale() }}"
+                                    multiple="multiple"
                                     class="form-select product-select @error('products') is-invalid @enderror"
                                     aria-label="" name="products[]" id="products" required>
 
@@ -125,8 +125,8 @@
                             <div style="display: none" class="mb-3 combinations-select">
                                 <label class="form-label" for="combinations">{{ __('Select combination') }}</label>
 
-                                <select data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                <select data-url="{{ route('products.search') }}" data-locale="{{ app()->getLocale() }}"
+                                    multiple="multiple"
                                     class="form-select com-select @error('combinations') is-invalid @enderror"
                                     aria-label="" name="combinations[]" id="combinations">
 
@@ -180,7 +180,7 @@
                                         <label class="form-label" for="taxes">{{ __('taxes') }}</label>
 
                                         <select
-                                            class="form-select purchase-tax js-choice @error('taxes') is-invalid @enderror"
+                                            class="form-select tax-select js-choice @error('taxes') is-invalid @enderror"
                                             aria-label="" name="taxes[]" id="taxes" multiple>
 
                                             @foreach ($taxes as $tax)
@@ -204,14 +204,14 @@
                                 <div class="mb-3">
                                     <div class="form-check">
                                         <input name="tax[]"
-                                            class="form-check-input purchase-tax @error('tax') is-invalid @enderror"
+                                            class="form-check-input tax-select @error('tax') is-invalid @enderror"
                                             id="flexCheckDefault" type="checkbox" value="vat" />
                                         <label class="form-check-label"
                                             for="flexCheckDefault">{{ __('added value tax') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input name="tax[]"
-                                            class="form-check-input purchase-tax @error('tax') is-invalid @enderror"
+                                            class="form-check-input tax-select @error('tax') is-invalid @enderror"
                                             id="flexCheckChecked" type="checkbox" value="wht" />
                                         <label class="form-check-label"
                                             for="flexCheckChecked">{{ __('withholding and collect tax') }}</label>

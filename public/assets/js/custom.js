@@ -7,26 +7,7 @@ $(document).ready(function(){
 
     $('.colorpicker').colorpicker();
 
-    $('.btn').on('click' , function(e){
 
-        e.preventDefault
-
-        var check = 0;
-
-        $(this).closest('form').find('input').each(function() {
-            if ($(this).prop('required') && $(this).val() == '' ) {
-                check++;
-            }
-        });
-
-          if(check == 0){
-            $(this).closest('form').submit(function () {
-                $('.btn').attr("disabled", true);
-            });
-        }
-
-
-    });
 
 
     $('.country-select').on('change' , function(e){
@@ -727,6 +708,19 @@ $(document).ready(function(){
         }
     });
 
+
+    $(".image").change(function() {
+        var id = $(this).data('id');
+        if (this.files && this.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                $('.img-prev-' + id).attr('src', e.target.result);
+            }
+            reader.readAsDataURL(this.files[0]); // convert to base64 string
+        }
+    });
+
+
     $(".cover").change(function() {
         if (this.files && this.files[0]) {
             var reader = new FileReader();
@@ -957,6 +951,43 @@ $(document).ready(function(){
 
 });
 
+
+$('.btn').on('click' , function(e){
+
+    e.preventDefault
+
+    var check = 0;
+
+    $(this).closest('form').find('input').each(function() {
+        if ($(this).prop('required') && $(this).val() == '' ) {
+            check++;
+        }
+    });
+
+    $(this).closest('form').find('select').each(function() {
+        if ($(this).prop('required') && $(this).val() == '' ) {
+            check++;
+        }
+    });
+
+
+    if(check == 0){
+        $(this).closest('form').submit(function () {
+
+            $(this).find('input').each(function() {
+                $(this).prop('disabled', false);
+            });
+
+            $(this).find('select').each(function() {
+                $(this).prop('disabled', false);
+            });
+
+            $('.btn').attr("disabled", true);
+        });
+    }
+
+
+});
 
 $('.sonoo-search').change(function(){
     $(this).closest('form').submit();
@@ -1250,30 +1281,3 @@ function getSalary(){
 
 }
 
-navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
-
-function successCallback(position) {
-
-  var latitude = position.coords.latitude;
-  var longitude = position.coords.longitude;
-
-  $(".latitude-input").val(latitude);
-  $(".longitude-input").val(longitude);
-}
-
-function errorCallback(error) {
-    switch (error.code) {
-        case error.PERMISSION_DENIED:
-          alert("User denied the request for Geolocation.");
-          break;
-        case error.POSITION_UNAVAILABLE:
-            alert("Location information is unavailable.");
-          break;
-        case error.TIMEOUT:
-            alert("The request to get user location timed out.");
-          break;
-        case error.UNKNOWN_ERROR:
-            alert("An unknown error occurred.");
-          break;
-      }
-}

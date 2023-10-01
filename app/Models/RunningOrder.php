@@ -11,8 +11,15 @@ class RunningOrder extends Model
 
 
     protected $fillable = [
-        'product_combination_id', 'warehouse_id', 'product_id', 'requested_qty', 'approved_qty', 'returned_qty', 'user_id', 'stock_status', 'reference_id', 'stock_type', 'created_by', 'updated_by', 'status', 'notes', 'stock_id'
+        'product_combination_id', 'unit_id', 'warehouse_id', 'product_id', 'requested_qty', 'approved_qty', 'returned_qty', 'user_id', 'stock_status', 'reference_id', 'stock_type', 'created_by', 'updated_by', 'status', 'notes', 'stock_id'
     ];
+
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
+    }
+
 
 
     public function product()

@@ -104,6 +104,26 @@
 
 
                             <div class="mb-3">
+                                <label class="form-label" for="branch_id">{{ __('select branch') }}</label>
+
+                                <select class="form-select @error('branch_id') is-invalid @enderror" aria-label=""
+                                    name="branch_id" id="branch_id" required>
+                                    <option value="">
+                                        {{ __('select branch') }}
+                                    </option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}">
+                                            {{ getName($branch) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('branch_id')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+
+                            <div class="mb-3">
                                 <label class="form-label" for="gender">{{ __('Gender') }}</label>
 
                                 <br>

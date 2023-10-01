@@ -126,11 +126,7 @@
                                                     </td>
 
                                                     <td>
-                                                        @if ($combination->costs->where('branch_id', getUserBranchId(Auth::user()))->first())
-                                                            {{ $cost = $combination->costs->where('branch_id', getUserBranchId(Auth::user()))->first()->cost }}
-                                                        @else
-                                                            {{ 0 }}
-                                                        @endif
+                                                        {{ $cost = getCost($combination->product, getUserBranchId(Auth::user()), $combination) }}
                                                     </td>
 
 

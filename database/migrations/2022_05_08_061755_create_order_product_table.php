@@ -22,27 +22,27 @@ return new class extends Migration
             $table->integer('product_combination_id')->nullable();
 
 
-            $table->double('product_price', 8, 2)->default(0);
-            $table->double('product_tax', 8, 2)->default(0);
-            $table->double('product_wht', 8, 2)->default(0);
-            $table->double('product_discount', 8, 2)->default(0);
-            $table->double('total', 8, 2)->default(0);
+            $table->double('product_price', 12, 2)->default(0);
+            $table->double('product_tax', 12, 2)->default(0);
+            $table->double('product_wht', 12, 2)->default(0);
+            $table->double('product_discount', 12, 2)->default(0);
+            $table->double('total', 12, 2)->default(0);
 
-            $table->double('cost', 8, 2)->default(0);
+            $table->double('cost', 12, 2)->default(0);
 
 
-            $table->integer('qty')->default(0);
+            $table->double('qty', 12, 2)->default(0);
             $table->enum('product_type', ['simple', 'variable', 'digital', 'service']);
 
-            $table->double('affiliate_price', 8, 2)->default(0);
-            $table->double('total_affiliate_price', 8, 2)->default(0);
+            $table->double('affiliate_price', 12, 2)->default(0);
+            $table->double('total_affiliate_price', 12, 2)->default(0);
 
-            $table->double('commission_per_item', 8, 2)->default(0);
-            $table->double('profit_per_item', 8, 2)->default(0);
-            $table->double('total_commission', 8, 2)->default(0);
-            $table->double('total_profit', 8, 2)->default(0);
+            $table->double('commission_per_item', 12, 2)->default(0);
+            $table->double('profit_per_item', 12, 2)->default(0);
+            $table->double('total_commission', 12, 2)->default(0);
+            $table->double('total_profit', 12, 2)->default(0);
 
-            $table->double('extra_shipping_amount', 8, 2)->default(0);
+            $table->double('extra_shipping_amount', 12, 2)->default(0);
             $table->integer('shipping_method_id')->nullable();
 
             $table->timestamps();

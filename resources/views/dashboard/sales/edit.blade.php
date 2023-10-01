@@ -6,7 +6,8 @@
         <div class="card-header">
             <div class="row flex-between-center">
                 <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
-                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">{{ __('sales') . ' #' . getOrderSerial($order) }}</h5>
+                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
+                        {{ ($returned == 'false' ? __('sales') : __('Add return')) . ' #' . $order->serial }}</h5>
                 </div>
             </div>
         </div>
@@ -16,7 +17,7 @@
                 <div class="col-md-12 d-flex flex-center">
                     <div class="p-4 p-md-5 flex-grow-1">
                         <form method="POST"
-                            action="{{ route('orders.store.new', ['order_from' => 'addsale', 'returned' => 'false', 'selected_order' => $order->id]) }}"
+                            action="{{ route('sales.store', ['order_from' => 'sales', 'returned' => $returned, 'selected_order' => $order->id]) }}"
                             enctype="multipart/form-data">
                             @csrf
 
@@ -31,7 +32,8 @@
                                         <label class="form-label" for="order_type">{{ __('select order status') }}</label>
 
                                         <select class="form-select @error('order_type') is-invalid @enderror" aria-label=""
-                                            name="order_type" id="order_type" required>
+                                            name="order_type" id="order_type" required
+                                            {{ $returned == 'true' ? 'disabled' : '' }}>
 
                                             <option value="Q" {{ $order->order_type == 'Q' ? 'selected' : '' }}>
                                                 {{ __('quotation') }}
@@ -53,7 +55,8 @@
                                         <label class="form-label" for="warehouse_id">{{ __('warehouse') }}</label>
 
                                         <select class="form-select @error('warehouse_id') is-invalid @enderror"
-                                            aria-label="" name="warehouse_id" id="warehouse_id" required>
+                                            aria-label="" name="warehouse_id" id="warehouse_id" required
+                                            {{ $returned == 'true' ? 'disabled' : '' }}>
                                             <option value="">{{ __('select warehouse') }}</option>
                                             @foreach ($warehouses as $warehouse)
                                                 <option value="{{ $warehouse->id }}"
@@ -73,7 +76,8 @@
                                         <label class="form-label" for="user_id">{{ __('customer') }}</label>
 
                                         <select class="form-select js-choice @error('user_id') is-invalid @enderror"
-                                            aria-label="" name="user_id" id="user_id" required>
+                                            aria-label="" name="user_id" id="user_id" required
+                                            {{ $returned == 'true' ? 'disabled' : '' }}>
                                             <option value="">{{ __('select customer') }}</option>
                                             @foreach ($users as $user)
                                                 <option value="{{ $user->id }}"
@@ -96,8 +100,27 @@
 
                                         <input type="datetime-local" id="expected_delivery" name="expected_delivery"
                                             class="form-control @error('expected_delivery') is-invalid @enderror"
-                                            value="{{ $order->expected_delivery }}">
+                                            value="{{ $order->expected_delivery }}"
+                                            {{ $returned == 'true' ? 'disabled' : '' }}>
                                         @error('expected_delivery')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="currency_id">{{ __('select currency') }}</label>
+                                        <select class="form-select currency @error('currency_id') is-invalid @enderror"
+                                            aria-label="" name="currency_id" id="currency_id" required>
+                                            @foreach ($currencies as $currency)
+                                                <option value="{{ $currency->id }}"
+                                                    {{ $order->currency_id == $currency->id ? 'selected' : '' }}>
+                                                    {{ getName($currency) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('currency_id')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -106,20 +129,22 @@
                             </div>
 
 
+                            <div style="display:none" class="data"
+                                data-products_search_url="{{ route('products.search') }}"
+                                data-locale="{{ app()->getLocale() }}"
+                                data-get_combinations_url="{{ route('combinations.get') }}"
+                                data-get_units="{{ route('units.get') }}"
+                                data-calculate_total="{{ route('total.calculate') }}"></div>
 
 
                             <div class="mb-3">
                                 <label class="form-label" for="products">{{ __('Select product') }}</label>
 
-                                <select data-url_com="{{ route('sales.combinations') }}"
-                                    data-url_cal="{{ route('sales.combinations.cal') }}"
-                                    data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                <select data-returned="{{ $returned }}" multiple="multiple"
                                     data-products="{{ $order->products }}"
                                     class="form-select product-select @error('products') is-invalid @enderror"
-                                    aria-label="" name="products[]" id="products" required>
-
-
+                                    aria-label="" name="products[]" id="products" required
+                                    {{ $returned == 'true' ? 'disabled' : '' }}>
 
                                 </select>
                                 @error('products')
@@ -130,10 +155,10 @@
                             <div style="display: none" class="mb-3 combinations-select">
                                 <label class="form-label" for="combinations">{{ __('Select combination') }}</label>
 
-                                <select data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                <select multiple="multiple"
                                     class="form-select com-select @error('combinations') is-invalid @enderror"
-                                    aria-label="" name="combinations[]" id="combinations">
+                                    aria-label="" name="combinations[]" id="combinations"
+                                    {{ $returned == 'true' ? 'disabled' : '' }}>
 
                                 </select>
                                 @error('combinations')
@@ -185,8 +210,10 @@
                                     <div class="mb-3">
                                         <label class="form-label" for="taxes">{{ __('taxes') }}</label>
 
-                                        <select class="form-select sale-tax js-choice @error('taxes') is-invalid @enderror"
-                                            aria-label="" name="taxes[]" id="taxes" multiple>
+                                        <select
+                                            class="form-select tax-select js-choice @error('taxes') is-invalid @enderror"
+                                            aria-label="" name="taxes[]" id="taxes" multiple
+                                            {{ $returned == 'true' ? 'disabled' : '' }}>
 
                                             @foreach ($taxes as $tax)
                                                 <option value="{{ $tax->id }}"
@@ -207,6 +234,11 @@
 
                             <div class="row justify-content-start mt-3">
                                 <div class="col-auto">
+
+                                    @if ($returned == 'true')
+                                        <h4>{{ __('Returns value') . ' :' }}</h4>
+                                    @endif
+
                                     <table class="table table-sm table-borderless fs--1 text-start taxes-table">
                                         <tr>
                                             <th class="text-900">{{ __('total without tax:') }}</th>
@@ -236,21 +268,26 @@
                             </div>
 
 
-                            <div class="mb-3 mt-3">
-                                <label class="form-label mb-2" for="notes">{{ __('notes and conditions') }}</label>
+                            @if ($returned == 'false')
+                                <div class="mb-3 mt-3">
+                                    <label class="form-label mb-2"
+                                        for="notes">{{ __('notes and conditions') }}</label>
 
-                                <textarea id="notes" class="form-control tinymce d-none @error('notes') is-invalid @enderror" name="notes">{!! $order->notes !!}</textarea>
+                                    <textarea id="notes" class="form-control tinymce d-none @error('notes') is-invalid @enderror" name="notes">{!! $order->notes !!}</textarea>
 
 
-                                @error('notes')
-                                    <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
+                                    @error('notes')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endif
 
-                            @if ($order->order_type == 'Q')
+
+
+                            @if (($order->order_type == 'Q' && $order->status == 'pending') || $returned == 'true')
                                 <div class="mb-3">
                                     <button class="btn btn-primary d-block w-100 mt-3" type="submit"
-                                        name="submit">{{ __('save') }}</button>
+                                        name="submit">{{ $returned == 'true' ? __('Add return') : __('save') }}</button>
                                 </div>
                             @endif
                         </form>

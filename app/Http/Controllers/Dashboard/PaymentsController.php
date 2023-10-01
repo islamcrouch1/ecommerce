@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\Entry;
+use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
@@ -25,10 +26,10 @@ class PaymentsController extends Controller
 
 
 
-    public function create(Order $order)
+    public function create(Invoice $invoice)
     {
-        $branch_id = $order->branch_id;
-        return view('dashboard.payments.create', compact('order'));
+        $branch_id = $invoice->branch_id;
+        return view('dashboard.payments.create', compact('invoice'));
     }
 
     public function store(Request $request, Order $order)
@@ -82,7 +83,7 @@ class PaymentsController extends Controller
             }
         }
 
-        if ($order_from == 'addpurchase') {
+        if ($order_from == 'purchases') {
             $account = getItemAccount($order->customer_id, null, 'suppliers_account', $branch_id);
 
             if ($amount > 0) {
@@ -143,7 +144,7 @@ class PaymentsController extends Controller
             }
         }
 
-        if ($order_from == 'addsale') {
+        if ($order_from == 'sales') {
 
 
             $account = getItemAccount($order->customer_id, null, 'customers_account', $branch_id);

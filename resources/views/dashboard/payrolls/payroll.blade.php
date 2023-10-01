@@ -61,7 +61,7 @@
                     </div>
                 </div>
 
-                <div class="card-body p-0">
+                <div class="card-body p-0 m-3">
                     <div class="table-responsive scrollbar">
                         <table class="table table-sm table-striped fs--1 mb-0 overflow-hidden">
                             <thead class="bg-200 text-900">
@@ -75,7 +75,11 @@
                                     </th>
 
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
-                                        {{ __('permission date') }}
+                                        {{ __('permission start date') }}
+                                    </th>
+
+                                    <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
+                                        {{ __('permission end date') }}
                                     </th>
 
                                     <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
@@ -105,8 +109,13 @@
 
 
                                         <td class="phone align-middle white-space-nowrap py-2">
-                                            {{ $permission->date }}
+                                            {{ $permission->start_date }}
                                         </td>
+
+                                        <td class="phone align-middle white-space-nowrap py-2">
+                                            {{ $permission->end_date }}
+                                        </td>
+
 
 
                                         <td class="phone align-middle white-space-nowrap py-2">
@@ -134,6 +143,27 @@
                     </div>
                 </div>
             @endif
+
+
+            <div class="row m-3">
+                <div class="col-md-4">
+                    <div class="alert alert-danger" role="alert">
+                        {{ __('late attendance') . ': ' . getAllLateTime($user, request()->date) . ' ' . __('Minute') }}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="alert alert-danger" role="alert">
+                        {{ __('early leave') . ': ' . getAllEarlyTime($user, request()->date) . ' ' . __('Minute') }}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="alert alert-success" role="alert">
+                        {{ __('over time') . ': ' . getAllOverTime($user, request()->date) . ' ' . __('Minute') }}
+                    </div>
+                </div>
+            </div>
 
             <div class="row g-0 h-100">
                 <div class="col-md-12 d-flex flex-center">

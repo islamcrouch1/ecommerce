@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('admin_id')->nullable();
             $table->integer('branch_id')->nullable();
             $table->string('name')->nullable();
-            $table->double('amount', 8, 2)->default(0);
+            $table->double('amount', 12, 2)->default(0);
             $table->timestamps();
         });
     }

@@ -12,10 +12,14 @@
                         $remainig_amount = $sheet->amount - $records_amount;
                     @endphp
 
-                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
-                        {{ __('Add expenses to petty cash sheet settlement') . ' - ' . __('petty cash amount') . ' : ' . $sheet->amount . ' - ' . __('remaining amount') . ' : ' . $remainig_amount }}
 
-                    </h5>
+                    <div class="alert alert-info border-2 d-flex align-items-center" role="alert">
+                        <p style="width:90%;word-wrap: break-word" class="mb-0 flex-1">
+                            {{ __('Add expenses to petty cash sheet settlement') . ' - ' . __('petty cash amount') . ' : ' . $sheet->amount . ' - ' . __('remaining amount') . ' : ' . $remainig_amount }}
+                        </p>
+                    </div>
+
+
                 </div>
             </div>
         </div>

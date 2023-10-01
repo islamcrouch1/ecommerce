@@ -15,7 +15,7 @@ class EmployeePermission extends Model
 
 
     protected $fillable = [
-        'user_id', 'admin_id', 'media_id', 'status',  'type', 'reason', 'date'
+        'user_id', 'admin_id', 'media_id', 'status',  'type', 'reason', 'start_date', 'end_date'
     ];
 
 

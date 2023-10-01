@@ -43,11 +43,21 @@
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="date">{{ __('permission date') }}</label>
-                                <input type="datetime-local" id="date" name="date"
-                                    class="form-control @error('date') is-invalid @enderror" value="{{ old('date') }}"
-                                    required>
-                                @error('date')
+                                <label class="form-label" for="start_date">{{ __('permission start date') }}</label>
+                                <input type="datetime-local" id="start_date" name="start_date"
+                                    class="form-control @error('start_date') is-invalid @enderror"
+                                    value="{{ old('start_date') }}" required>
+                                @error('start_date')
+                                    <div class="alert alert-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="end_date">{{ __('permission end date') }}</label>
+                                <input type="datetime-local" id="end_date" name="end_date"
+                                    class="form-control @error('end_date') is-invalid @enderror"
+                                    value="{{ old('end_date') }}" required>
+                                @error('end_date')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>

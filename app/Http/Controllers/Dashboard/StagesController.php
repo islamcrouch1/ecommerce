@@ -63,7 +63,6 @@ class StagesController extends Controller
             'options' => "required|array",
         ]);
 
-
         $stage = Stage::create([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
@@ -150,6 +149,7 @@ class StagesController extends Controller
             'field_score' => "required|array",
             'is_required' => "required|array",
             'options' => "required|array",
+            'field_id' => "required|array",
         ]);
 
 
@@ -159,9 +159,11 @@ class StagesController extends Controller
             'score' => $request['score'],
         ]);
 
-        foreach ($stage->fields as $filed) {
-            $filed->delete();
-        }
+        // foreach ($stage->fields as $filed) {
+        //     $filed->delete();
+        // }
+
+        $fields = $stage->fields->pluck('id')->toArray();
 
         $score = 0;
 
@@ -173,18 +175,36 @@ class StagesController extends Controller
                 $is_required = '0';
             }
 
-            $field = Field::create([
-                'stage_id' => $stage->id,
-                'type' => $request['type'][$index],
-                'name_ar' => $request['field_name_ar'][$index],
-                'name_en' => $request['field_name_en'][$index],
-                'score' => $request['field_score'][$index],
-                'is_required' => $is_required,
-                'data' => implode(',', $request['options'][$request['level'][$index]])
-            ]);
+            $field = $stage->fields->where('id', isset($request->field_id[$index]) ? $request->field_id[$index] : null)->first();
+
+            if ($field != null) {
+                $field->update([
+                    'name_ar' => $request['field_name_ar'][$index],
+                    'name_en' => $request['field_name_en'][$index],
+                    'score' => $request['field_score'][$index],
+                    'is_required' => $is_required,
+                    'data' => implode(',', $request['options'][$request['level'][$index]])
+                ]);
+                unset($fields[array_search($field->id, $fields)]);
+            } else {
+                $field = Field::create([
+                    'stage_id' => $stage->id,
+                    'type' => $request['type'][$index],
+                    'name_ar' => $request['field_name_ar'][$index],
+                    'name_en' => $request['field_name_en'][$index],
+                    'score' => $request['field_score'][$index],
+                    'is_required' => $is_required,
+                    'data' => implode(',', $request['options'][$request['level'][$index]])
+                ]);
+            }
 
             $score += $request['field_score'][$index];
         }
+
+        foreach ($fields as $index => $field) {
+            $stage->fields->where('id', $field)->first()->delete();
+        }
+
 
         $stage->update([
             'total_score' => $score,
@@ -214,7 +234,7 @@ class StagesController extends Controller
             $stage->forceDelete();
             alertSuccess('stage deleted successfully', 'تم حذف المرحلة بنجاح');
             return redirect()->route('stages.trashed');
-        } elseif (!$stage->trashed() && auth()->user()->hasPermission('stages-trash') && checkstageForTrash($stage)) {
+        } elseif (!$stage->trashed() && auth()->user()->hasPermission('stages-trash') && checkStageForTrash($stage)) {
             $stage->delete();
             alertSuccess('stage trashed successfully', 'تم حذف المرحلة مؤقتا');
             return redirect()->route('stages.index');
@@ -229,7 +249,6 @@ class StagesController extends Controller
     {
         $stages = Stage::onlyTrashed()
             ->whenSearch(request()->search)
-            ->whenCountry(request()->country_id)
             ->paginate(100);
         return view('dashboard.stages.index', ['stages' => $stages]);
     }

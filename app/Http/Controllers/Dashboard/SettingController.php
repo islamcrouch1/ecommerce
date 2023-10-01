@@ -78,6 +78,8 @@ class SettingController extends Controller
             'administrative_expense_account',
             'expenses_account_shipping',
             'revenue_account_shipping',
+            'stock_interim_received_account',
+            'stock_interim_delivered_account',
         );
 
         foreach ($shipping_companies as $company) {
@@ -96,13 +98,14 @@ class SettingController extends Controller
         $liability_accounts = Account::where('account_type', 'liability')->where('reference_id', null)->get();
         $revenue_accounts = Account::where('account_type', 'revenue')->where('reference_id', null)->get();
         $expenses_accounts = Account::where('account_type', 'expenses')->where('reference_id', null)->get();
+        $owners_equity_accounts = Account::where('account_type', 'owners_equity')->where('reference_id', null)->get();
         $roles = Role::WhereRoleNot(['superadministrator', 'administrator', 'user', 'vendor', 'affiliate'])->get();
 
 
 
 
 
-        return view('dashboard.settings.index', compact('branches', 'roles', 'warehouses', 'countries', 'shipping_methods', 'assets_accounts', 'taxes', 'liability_accounts', 'revenue_accounts', 'expenses_accounts', 'shipping_companies'));
+        return view('dashboard.settings.index', compact('branches', 'owners_equity_accounts', 'roles', 'warehouses', 'countries', 'shipping_methods', 'assets_accounts', 'taxes', 'liability_accounts', 'revenue_accounts', 'expenses_accounts', 'shipping_companies'));
     }
 
 
@@ -197,12 +200,27 @@ class SettingController extends Controller
             'administrative_expense_account' => "nullable|array",
             'expenses_account_shipping' => "nullable|array",
             'revenue_account_shipping' => "nullable|array",
-
+            'stock_interim_received_account' => "nullable|array",
+            'stock_interim_delivered_account' => "nullable|array",
 
 
 
             'serial_prefix_PO' => "nullable|string",
             'serial_prefix_SO' => "nullable|string",
+
+            'serial_prefix_Q' => "nullable|string",
+            'serial_prefix_RFQ' => "nullable|string",
+
+            'serial_prefix_inv' => "nullable|string",
+            'serial_prefix_bill' => "nullable|string",
+
+            'serial_prefix_payment' => "nullable|string",
+            'serial_prefix_receipt' => "nullable|string",
+
+
+            'serial_prefix_credit_note' => "nullable|string",
+            'serial_prefix_debit_note' => "nullable|string",
+
 
 
 
@@ -218,6 +236,10 @@ class SettingController extends Controller
                 'shipping_company_' . $company->id => "nullable|array",
             ]);
         }
+
+
+        updateAccountSetting('stock_interim_received_account', $request);
+        updateAccountSetting('stock_interim_delivered_account', $request);
 
 
         updateAccountSetting('allowed_discount_account', $request);
@@ -278,6 +300,16 @@ class SettingController extends Controller
 
         updateSetting('serial_prefix_PO', $request);
         updateSetting('serial_prefix_SO', $request);
+        updateSetting('serial_prefix_Q', $request);
+        updateSetting('serial_prefix_RFQ', $request);
+        updateSetting('serial_prefix_inv', $request);
+        updateSetting('serial_prefix_bill', $request);
+        updateSetting('serial_prefix_payment', $request);
+        updateSetting('serial_prefix_receipt', $request);
+
+        updateSetting('serial_prefix_credit_note', $request);
+        updateSetting('serial_prefix_debit_note', $request);
+
 
 
 

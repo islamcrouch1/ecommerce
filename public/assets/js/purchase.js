@@ -16,6 +16,12 @@ $('.com-select').on('change' , function(e){
 
 
         if(!combinations.includes(option.value)){
+
+
+            data = $(option).data('custom-properties');
+
+            var class_name = 'units-select-' + data + '-' + option.value;
+
             $('.combinations-div').append(
 
                 `<div class="row item">
@@ -37,12 +43,20 @@ $('.com-select').on('change' , function(e){
                     </div>
                     <div class="col-md-2">
                         <div class="mb-3">
+                            <label class="form-label" for="qty">` + (locale == 'ar' ? 'وحدة القياس' : 'UoM') +`</label>
+                            <select class="form-select `+ class_name +`" name="units[]" id="units">
+
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
                             <label class="form-label" for="price">` + (locale == 'ar' ? 'السعر' : 'price')+`</label>
                             <input name="price[]" class="form-control com-price" min="0" step="0.01" value="0" type="number"
                             id="price" required />
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="mb-3">
                             <label class="form-label" for="total">` + (locale == 'ar' ? 'الاجمالي' : 'total')+`</label>
                             <input name="total[]" class="form-control com-total" min="0" step="0.01" value="0" type="number"
@@ -62,6 +76,10 @@ $('.com-select').on('change' , function(e){
 
                 </div>`
             );
+
+            getUnits(data , option.value);
+
+
         }
     });
 
@@ -105,7 +123,7 @@ $('.combinations-div').on('input', '.com-price', function(e){
     getTotal();
 });
 
-$('.purchase-tax').on('change' , function(e){
+$('.tax-select').on('change' , function(e){
     e.preventDefault();
     getTotal();
 });
@@ -122,91 +140,29 @@ $('.shipping').on('input' , function(e){
     getTotal();
 });
 
-const element = document.querySelector('.product-select');
-const choices = new Choices(element , {"removeItemButton":true});
 
-element.addEventListener(
-    'search',
-    function(event) {
-
-
-        var search = event.detail.value;
-        var url = $('.product-select').data('url');
-        var locale = $('.product-select').data('locale');
-
-        var formData = new FormData();
-
-        formData.append('search' , search );
-
-        $.ajax({
-            url: url,
-            data: formData,
-            method: 'POST',
-            processData: false,
-            contentType: false,
-            cache: false,
-            success: function(data) {
-
-                console.log(data);
-
-                if(data.status == 1){
-
-                    choices.clearChoices();
-
-                    var array = data.elements;
-                    array.forEach(element => {
-
-                        choices.setChoices(
-                            [
-                              { value: element.id , label: (locale == 'ar' ? element.name_ar : element.name_en) ,  disabled: (element.product_type == 'digital' || element.product_type == 'service') ? true : false  }
-
-                            ],
-                            'value',
-                            'label',
-                            false,
-                          );
-
-                    });
-
-                }else{
-                    choices.clearChoices();
-                }
-
-            }
-        });
-
-    },
-    false,
-  );
-
-const element_2 = document.querySelector('.com-select');
-const choices_2 = new Choices(element_2 , {"removeItemButton":true});
-
-
-$('.product-select').on('change' , function(e){
+$('.currency').on('change' , function(e){
     e.preventDefault();
-
-    var count = 0;
-    choices_2.clearChoices();
-    $(this).find('option').each(function() {
-        getCom($(this).val());
-        count++;
-        console.log(count)
-
-    });
-    // if(count == 0){
-    //     $('.combinations-div').children().remove().end()
-    // }
-
+    getTotal();
 });
 
 
 
-function getCom(product_id , combinations = []){
 
-    var url = $('.product-select').data('url_com');
+
+function getUnits(units_category_id , compination_id , combinationsData = []){
+
+    var url = $('.product-select').data('url_units');
+    var select = '.units-select-' + units_category_id + '-' + compination_id;
+    var locale = $('.product-select').data('locale');
+
     var formData = new FormData();
-    formData.append('product_id' , product_id );
+
+    formData.append('units_category_id' , units_category_id );
+
+
+    console.log(url , select , combinationsData);
+
     $.ajax({
         url: url,
         data: formData,
@@ -217,22 +173,33 @@ function getCom(product_id , combinations = []){
         success: function(data) {
 
             if(data.status == 1){
-                $('.combinations-select').show()
-                $('.com-select').attr('required' , true);
+                $(select).children().remove().end()
                 var array = data.elements;
+                var selected = '';
+
                 array.forEach(element => {
-                    choices_2.setChoices(
-                        [{ value: element.id , label:  element.name  ,  selected : combinations.includes(element.id) ? true : false }],
-                        'value',
-                        'label',
-                        false,
-                      );
+
+                    if(combinationsData.length > 0){
+                        selected = combinationsData[compination_id].unit_id == element.id ? 'selected' : '';
+                    }else{
+                        selected = element.type == 'default' ? 'selected' : '';
+                    }
+
+                    $(select).append(
+                        `<option value="`+ element.id +`" `+ selected +`>`+ (locale == 'ar' ? element.name_ar : element.name_en) +`</option>`
+                    )
                 });
+            }else{
+                $(select).children().remove().end()
             }
+
         }
     });
 
 }
+
+
+
 
 
 function getTotal(){
@@ -244,6 +211,7 @@ function getTotal(){
     var url = $('.product-select').data('url_cal');
     var discount = $('.discount').val();
     var shipping = $('.shipping').val();
+    var currency_id = $('.currency').find(":selected").val();
 
 
     $("input[name^=qty]").each(function() {
@@ -262,11 +230,11 @@ function getTotal(){
         combinations.push($(sel).val());
     });
 
-    $('.purchase-tax :selected').each(function(i, sel){
+    $('.tax-select :selected').each(function(i, sel){
         tax.push($(sel).val());
     });
 
-    // $('input.purchase-tax:checkbox:checked').each(function () {
+    // $('input.tax-select:checkbox:checked').each(function () {
     //     tax.push($(this).val());
     // });
 
@@ -278,6 +246,8 @@ function getTotal(){
     formData.append('tax' , tax);
     formData.append('discount' , discount);
     formData.append('shipping' , shipping);
+    formData.append('currency_id' , currency_id);
+
 
     $.ajax({
         url: url,
@@ -291,12 +261,11 @@ function getTotal(){
 
                 console.log(data.total , data.subtotal ,data.vat_amount ,data.wht_amount  ,data.discount);
 
-                $('.subtotal').text(data.subtotal);
-                $('.total').text(data.total);
-                $('.vat-amount').text(data.vat_amount);
-                $('.wht-amount').text(data.wht_amount);
-                $('.discount-value').text(data.discount);
-                $('.shipping-value').text(data.shipping);
+
+                $('.subtotal').text(printAmountWithSymbol(data.subtotal , data.symbol));
+                $('.total').text(printAmountWithSymbol(data.total, data.symbol));
+                $('.discount-value').text(printAmountWithSymbol(data.discount, data.symbol));
+                $('.shipping-value').text(printAmountWithSymbol(data.shipping, data.symbol));
 
 
 
@@ -307,7 +276,7 @@ function getTotal(){
 
                         var fieldHTML = `<tr class="taxes-data">
                                             <th class="text-900">`+ element.name +`:</th>
-                                            <td class="fw-semi-bold vat-amount">`+ element.tax_amount +`</td>
+                                            <td class="fw-semi-bold vat-amount">`+  printAmountWithSymbol(element.tax_amount, data.symbol) +`</td>
                                         </tr>`;
 
                         $('.taxes-table tr:first').after(fieldHTML)
@@ -317,6 +286,10 @@ function getTotal(){
             }
         }
     });
+}
+
+function printAmountWithSymbol(amount , symbol){
+    return amount + ' ' + symbol;
 }
 
 
@@ -365,6 +338,9 @@ $(document).ready(function(){
 
             console.log(option.value)
 
+            data = $(option).data('custom-properties');
+            var class_name = 'units-select-' + data + '-' + option.value;
+
             $('.combinations-div').append(
 
                 `<div class="row item">
@@ -386,12 +362,20 @@ $(document).ready(function(){
                     </div>
                     <div class="col-md-2">
                         <div class="mb-3">
+                            <label class="form-label" for="qty">` + (locale == 'ar' ? 'وحدة القياس' : 'UoM') +`</label>
+                            <select class="form-select `+ class_name +`" name="units[]" id="units">
+
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
                             <label class="form-label" for="price">` + (locale == 'ar' ? 'السعر' : 'price')+`</label>
                             <input name="price[]" class="form-control com-price" min="0" step="0.01" value="` + combinationsData[option.value].product_price  +`" type="number"
                             id="price" required />
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="mb-3">
                             <label class="form-label" for="total">` + (locale == 'ar' ? 'الاجمالي' : 'total')+`</label>
                             <input name="total[]" class="form-control com-total" min="0" step="0.01" value="` + combinationsData[option.value].total  +`" type="number"
@@ -411,6 +395,10 @@ $(document).ready(function(){
 
                 </div>`
             );
+
+            getUnits(data , option.value , combinationsData);
+
+
         });
 
 

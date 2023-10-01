@@ -123,6 +123,15 @@
                                                     'payroll',
                                                     'employee_permissions',
                                                     'contacts',
+                                                    'units_categories',
+                                                    'units',
+                                                    'boms',
+                                                    'manufacturing_orders',
+                                                    'quotations',
+                                                    'rfq',
+                                                    'currencies',
+                                                    'exchange_rates',
+                                                    'invoices',
                                                 ];
                                                 $models_ar = [
                                                     'المستخدمين',
@@ -195,6 +204,15 @@
                                                     'كشف الرواتب',
                                                     'اذونات الموظفين',
                                                     'تواصل معنا',
+                                                    'اقسام وحدات القياس',
+                                                    'وحدات القياس',
+                                                    'قائمة مكونات المواد',
+                                                    'اوامر التصنيع',
+                                                    'عروض الاسعار',
+                                                    'طلبات عروض الاسعار',
+                                                    'العملات',
+                                                    'اسعار الصرف',
+                                                    'الفواتير',
                                                 ];
                                             @endphp
 

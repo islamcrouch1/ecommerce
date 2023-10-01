@@ -5,7 +5,7 @@
         <div class="card-body">
             <div class="row justify-content-between align-items-center">
                 <div class="col-md">
-                    <h5 class="mb-2 mb-md-0">{{ __('Order #') }}{{ getOrderSerial($order) }}</h5>
+                    <h5 class="mb-2 mb-md-0">{{ __('Order ') }}{{ $order->serial }}</h5>
                 </div>
                 <div class="col-auto">
                     <button onclick="printInvoice();" class="btn btn-falcon-default btn-sm me-1 mb-2 mb-sm-0"
@@ -63,7 +63,7 @@
                             <tbody>
                                 <tr>
                                     <th class="text-sm-end">{{ __('Order Number:') }}</th>
-                                    <td>#{{ getOrderSerial($order) }}</td>
+                                    <td>{{ $order->serial }}</td>
                                 </tr>
                                 <tr>
                                     <th class="text-sm-end">{{ __('Invoice Date:') }}</th>
@@ -72,7 +72,8 @@
 
                                 <tr class="alert-success fw-bold">
                                     <th class="text-sm-end">{{ __('Total Price:') }}</th>
-                                    <td>{{ $order->total_price . ' ' . $order->country->currency }}</td>
+                                    <td>{{ $order->total_price + $order->shipping_amount . ' ' . $order->currency->symbol }}
+                                    </td>
                                 </tr>
 
                             </tbody>
@@ -110,15 +111,16 @@
                                         @endif
                                     </span>
                                 </td>
-                                <td class="align-middle text-center">{{ $product->pivot->qty }}</td>
+                                <td class="align-middle text-center">
+                                    {{ $product->pivot->qty . ' ' . getName(getUnitByID($product->pivot->unit_id)) }}</td>
                                 <td class="align-middle text-end">
-                                    {{ $product->pivot->product_price . ' ' . $product->country->currency }}</td>
+                                    {{ $product->pivot->product_price . ' ' . $order->currency->symbol }}</td>
                                 <td class="align-middle text-end">
-                                    {{ $product->pivot->total . ' ' . $product->country->currency }}</td>
+                                    {{ $product->pivot->total . ' ' . $order->currency->symbol }}</td>
                                 {{-- <td class="align-middle text-end">
-                                    {{ $product->pivot->commission_per_item . ' ' . $product->country->currency }}</td>
+                                    {{ $product->pivot->commission_per_item . ' ' . $order->currency->symbol }}</td>
                                 <td class="align-middle text-end">
-                                    {{ $product->pivot->profit_per_item . ' ' . $product->country->currency }}</td> --}}
+                                    {{ $product->pivot->profit_per_item . ' ' . $order->currency->symbol }}</td> --}}
                             </tr>
                         @endforeach
                     </tbody>
@@ -130,32 +132,33 @@
                         <tr>
                             <th class="text-900">{{ __('Total Without Tax:') }}</th>
                             <td class="fw-semi-bold">
-                                {{ $order->subtotal_price + $order->discount_amount . ' ' . $order->country->currency }}
+                                {{ $order->subtotal_price . ' ' . $order->currency->symbol }}
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <th class="text-900">{{ __('discount') }}</th>
+                            <td class="fw-semi-bold">{{ $order->discount_amount * -1 . ' ' . $order->currency->symbol }}
                             </td>
                         </tr>
 
                         @foreach ($order->taxes as $tax)
                             <tr>
                                 <th class="text-sm-end">{{ getName($tax) }}</th>
-                                <td>{{ $tax->pivot->amount . ' ' . $order->country->currency }}</td>
+                                <td>{{ $tax->pivot->amount . ' ' . $order->currency->symbol }}</td>
                             </tr>
                         @endforeach
 
                         <tr>
-                            <th class="text-900">{{ __('discount') }}</th>
-                            <td class="fw-semi-bold">{{ $order->discount_amount * -1 . ' ' . $order->country->currency }}
-                            </td>
-                        </tr>
-
-                        <tr>
                             <th class="text-900">{{ __('shipping fees') }}</th>
-                            <td class="fw-semi-bold">{{ $order->shipping_amount . ' ' . $order->country->currency }}</td>
+                            <td class="fw-semi-bold">{{ $order->shipping_amount . ' ' . $order->currency->symbol }}</td>
                         </tr>
 
 
                         <tr class="alert-success fw-bold">
                             <th class="text-sm-end">{{ __('Total:') }}</th>
-                            <td>{{ $order->total_price + $order->shipping_amount . ' ' . $order->country->currency }}</td>
+                            <td>{{ $order->total_price + $order->shipping_amount . ' ' . $order->currency->symbol }}</td>
                         </tr>
                     </table>
                 </div>

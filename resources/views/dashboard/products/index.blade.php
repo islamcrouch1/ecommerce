@@ -163,9 +163,9 @@
 
                                             @if (!$product->trashed())
                                                 @if ($product->vendor_id == null)
-                                                    {{ productQuantity($product->id, null, null, $user->hasPermission('branches-read') ? null : $user->branch->warehouses) }}
+                                                    {{ productQuantity($product->id, null, null, $user->hasPermission('branches-read') ? null : $user->branch->warehouses) . ' ' . getName(getUnitByID($product->unit_id)) }}
                                                 @else
-                                                    {{ productQuantity($product->id, null, null, null) }}
+                                                    {{ productQuantity($product->id, null, null, null) . ' ' . getName(getUnitByID($product->unit_id)) }}
                                                 @endif
                                             @endif
 

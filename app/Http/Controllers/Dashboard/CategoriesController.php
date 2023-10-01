@@ -61,43 +61,43 @@ class CategoriesController extends Controller
         $request->validate([
             'name_ar' => "required|string|max:255|unique:categories",
             'name_en' => "required|string|max:255|unique:categories",
-            'image' => "required|image",
-            'description_ar' => "required|string",
-            'description_en' => "required|string",
+            'image' => "nullable|image",
+            'description_ar' => "nullable|string",
+            'description_en' => "nullable|string",
             'country' => "required",
             'parent_id' => "nullable|string",
             'category_slug' => "nullable|string|max:255",
-            'profit' => "required|numeric",
-            'sort_order' => "nullable|numeric",
+            'profit' => "nullable|numeric|gte:0",
+            'sort_order' => "nullable|numeric|gte:0",
             'subtitle_en' => "nullable|string",
             'subtitle_ar' => "nullable|string",
-            'vendor_profit' => "required|numeric",
+            'vendor_profit' => "nullable|numeric|gte:0",
             'status' => "required|string",
 
         ]);
 
-        $media_id = saveMedia('image', $request['image'], 'categories');
+        $slug = createSlug($request->category_slug ? $request->category_slug : ($request->name_ar . '-' . $request->name_en));
 
+        if ($request->hasFile('image')) {
+            $media_id = saveMedia('image', $request['image'], 'categories');
+        }
 
-
-        $Category = Category::create([
+        $category = Category::create([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
-            'description_ar' => $request['description_ar'],
-            'description_en' => $request['description_en'],
-            'media_id' => $media_id,
+            'description_ar' => $request['description_ar'] ? $request['description_ar'] : ' ',
+            'description_en' => $request['description_en'] ? $request['description_en'] : ' ',
+            'media_id' => isset($media_id) ? $media_id : null,
             'country_id' => $request['country'],
             'parent_id' => isset($request['parent_id']) ? $request['parent_id'] : null,
-            'profit' => $request['profit'],
-            'vendor_profit' => $request['vendor_profit'],
-            'category_slug' => createSlug($request['category_slug']),
-            'sort_order' => $request['sort_order'],
+            'profit' => $request['profit'] ? $request['profit'] : 0,
+            'vendor_profit' => $request['vendor_profit'] ? $request['vendor_profit'] : 0,
+            'category_slug' => $slug,
+            'sort_order' => $request['sort_order'] ? $request['sort_order'] : 0,
             'created_by' => Auth::id(),
             'subtitle_ar' => $request['subtitle_ar'],
             'subtitle_en' => $request['subtitle_en'],
             'status' => $request['status'],
-
-
         ]);
 
         alertSuccess('Category created successfully', 'تم إضافة القسم بنجاح');
@@ -141,45 +141,49 @@ class CategoriesController extends Controller
         $request->validate([
             'name_ar' => "required|string|max:255|unique:categories,name_ar," . $category->id,
             'name_en' => "required|string|max:255|unique:categories,name_en," . $category->id,
-            'image' => "image",
-            'description_ar' => "required|string",
-            'description_en' => "required|string",
+            'image' => "nullable|image",
+            'description_ar' => "nullable|string",
+            'description_en' => "nullable|string",
             'country' => "required",
             'parent_id' => "nullable|string",
-            'profit' => "required|numeric",
-            'vendor_profit' => "required|numeric",
             'category_slug' => "nullable|string|max:255",
-            'sort_order' => "nullable|numeric",
+            'profit' => "nullable|numeric|gte:0",
+            'sort_order' => "nullable|numeric|gte:0",
             'subtitle_en' => "nullable|string",
             'subtitle_ar' => "nullable|string",
+            'vendor_profit' => "nullable|numeric|gte:0",
             'status' => "required|string",
-
         ]);
 
+        $slug = createSlug($request->category_slug ? $request->category_slug : ($request->name_ar . '-' . $request->name_en));
+
         if ($request->hasFile('image')) {
-            deleteImage($category->media_id);
+            if ($category->media_id != null) {
+                deleteImage($category->media_id);
+            }
             $media_id = saveMedia('image', $request['image'], 'categories');
             $category->update([
                 'media_id' => $media_id,
             ]);
         }
 
+
         $category->update([
             'name_ar' => $request['name_ar'],
             'name_en' => $request['name_en'],
-            'description_ar' => $request['description_ar'],
-            'description_en' => $request['description_en'],
+            'description_ar' => $request['description_ar'] ? $request['description_ar'] : ' ',
+            'description_en' => $request['description_en'] ? $request['description_en'] : ' ',
+            'media_id' => isset($media_id) ? $media_id : null,
             'country_id' => $request['country'],
             'parent_id' => isset($request['parent_id']) ? $request['parent_id'] : null,
-            'profit' => $request['profit'],
-            'vendor_profit' => $request['vendor_profit'],
-            'category_slug' => createSlug($request['category_slug']),
-            'sort_order' => $request['sort_order'],
-            'updated_by' => Auth::id(),
+            'profit' => $request['profit'] ? $request['profit'] : 0,
+            'vendor_profit' => $request['vendor_profit'] ? $request['vendor_profit'] : 0,
+            'category_slug' => $slug,
+            'sort_order' => $request['sort_order'] ? $request['sort_order'] : 0,
+            'created_by' => Auth::id(),
             'subtitle_ar' => $request['subtitle_ar'],
             'subtitle_en' => $request['subtitle_en'],
             'status' => $request['status'],
-
         ]);
 
         // foreach ($category->products as $product) {

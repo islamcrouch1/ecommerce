@@ -16,16 +16,16 @@ return new class extends Migration
         Schema::create('salary_cards', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id')->nullable();
-            $table->double('penalties', 8, 2)->default(0);
-            $table->double('insurance', 8, 2)->default(0);
-            $table->double('loans', 8, 2)->default(0);
-            $table->double('rewards', 8, 2)->default(0);
-            $table->double('basic_salary', 8, 2)->default(0);
-            $table->double('variable_salary', 8, 2)->default(0);
-            $table->double('day_salary', 8, 2)->default(0);
-            $table->double('total_absence', 8, 2)->default(0);
-            $table->double('total_deduction', 8, 2)->default(0);
-            $table->double('net_salary', 8, 2)->default(0);
+            $table->double('penalties', 12, 2)->default(0);
+            $table->double('insurance', 12, 2)->default(0);
+            $table->double('loans', 12, 2)->default(0);
+            $table->double('rewards', 12, 2)->default(0);
+            $table->double('basic_salary', 12, 2)->default(0);
+            $table->double('variable_salary', 12, 2)->default(0);
+            $table->double('day_salary', 12, 2)->default(0);
+            $table->double('total_absence', 12, 2)->default(0);
+            $table->double('total_deduction', 12, 2)->default(0);
+            $table->double('net_salary', 12, 2)->default(0);
             $table->integer('absence_days')->default(0);
             $table->string('status')->nullable();
             $table->string('date')->nullable();

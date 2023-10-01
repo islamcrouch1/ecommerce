@@ -21,7 +21,7 @@ return new class extends Migration
             $table->integer('from_account')->nullable();
             $table->integer('to_account')->nullable();
             $table->enum('type', ['sales', 'purchases', 'installment']);
-            $table->double('amount', 8, 2)->default(0);
+            $table->double('amount', 12, 2)->default(0);
             $table->integer('created_by')->nullable();
             $table->integer('updated_by')->nullable();
             $table->timestamps();

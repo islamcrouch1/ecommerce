@@ -3,11 +3,12 @@
 
 
 use App\Models\Account;
+use App\Models\Currency;
 use App\Models\Entry;
 use App\Models\Setting;
 use App\Models\ShippingCompany;
 use Illuminate\Support\Facades\Auth;
-
+use PhpOffice\PhpSpreadsheet\Calculation\DateTimeExcel\Current;
 
 // check accounts settings
 if (!function_exists('checkAccounts')) {
@@ -28,12 +29,12 @@ if (!function_exists('checkOrderAccounts')) {
     function checkOrderAccounts($order_from, $branch_id)
     {
         $check = true;
-        if ($order_from == 'addpurchase') {
+        if ($order_from == 'purchases') {
 
             if (!checkAccounts($branch_id, ['suppliers_account', 'vat_purchase_account', 'wct_account', 'revenue_account', 'earned_discount_account'])) {
                 $check = false;
             }
-        } elseif ($order_from == 'addsale') {
+        } elseif ($order_from == 'sales') {
             if (!checkAccounts($branch_id, ['vat_sales_account', 'wst_account', 'customers_account', 'revenue_account', 'allowed_discount_account'])) {
                 $check = false;
             }
@@ -54,9 +55,36 @@ if (!function_exists('getEntryDetailsCr')) {
         $entries = Entry::where('description', $entry->description)->where('dr_amount', 0)
             ->get();
 
+        $currency = getDefaultCurrency();
+        foreach ($entries as $entry) {
+            if ($entry->currency_id == null) {
+                $entry->update([
+                    'currency_id' => $currency->id,
+                ]);
+            }
+        }
+
         return $entries;
     }
 }
+
+
+if (!function_exists('getEntryAmountInCurrency')) {
+    function getEntryAmountInCurrency($entry, $type)
+    {
+
+        $data = '';
+        $amount = $type == 'dr' ? $entry->dr_amount : $entry->cr_amount;
+
+        if ($entry->foreign_currency_id != null && $amount > 0) {
+            $currency = Currency::findOrFail($entry->foreign_currency_id);
+            $data = ' ( ' . $entry->amount_in_foreign_currency . ' ' . $currency->symbol . ' ) ';
+        }
+
+        return $data;
+    }
+}
+
 
 
 // check order accounts
@@ -66,10 +94,33 @@ if (!function_exists('getEntryDetailsDr')) {
         $entries = Entry::where('description', $entry->description)->where('cr_amount', 0)
             ->get();
 
+        $currency = getDefaultCurrency();
+        foreach ($entries as $entry) {
+            if ($entry->currency_id == null) {
+                $entry->update([
+                    'currency_id' => $currency->id,
+                ]);
+            }
+        }
+
         return $entries;
     }
 }
 
+
+if (!function_exists('getEntryAmount')) {
+    function getEntryAmount($entry)
+    {
+        $entries = getEntryDetailsDr($entry);
+        $amount = 0;
+
+        foreach ($entries as $entry) {
+            $amount += $entry->dr_amount;
+        }
+
+        return $amount;
+    }
+}
 
 
 
@@ -155,8 +206,8 @@ if (!function_exists('getAccountNameForSetting')) {
                     $name['ar'] = 'حساب ضريبة الموردين';
                     break;
                 case 'funding_assets_account':
-                    $name['en'] = 'Assets Funding Account';
-                    $name['ar'] = 'حساب تمويل الاصول';
+                    $name['en'] = 'Undistributed Profits/Losses';
+                    $name['ar'] = 'حساب ارباح وخسائر غير موزعة';
                     break;
                 case 'dep_expenses_account':
                     $name['en'] = 'Depreciation Expenses Account';
@@ -262,6 +313,14 @@ if (!function_exists('getAccountNameForSetting')) {
                     $name['en'] = 'revenue account for shipping';
                     $name['ar'] = 'حساب ايرادات الشحن';
                     break;
+                case 'stock_interim_received_account':
+                    $name['en'] = 'stock interim received account';
+                    $name['ar'] = 'حساب وسيط لمراقبة المشتريات';
+                    break;
+                case 'stock_interim_delivered_account':
+                    $name['en'] = 'stock interim delivered account';
+                    $name['ar'] = 'حساب وسيط لمراقبة المبيعات';
+                    break;
 
 
 
@@ -304,7 +363,7 @@ if (!function_exists('getAccountTypeForSetting')) {
                     $account_type = 'liability';
                     break;
                 case 'funding_assets_account':
-                    $account_type = 'assets';
+                    $account_type = 'owners_equity';
                     break;
                 case 'dep_expenses_account':
                     $account_type = 'expenses';
@@ -313,7 +372,7 @@ if (!function_exists('getAccountTypeForSetting')) {
                     $account_type = 'assets';
                     break;
                 case 'cs_account':
-                    $account_type = 'liability';
+                    $account_type = 'expenses';
                     break;
                 case 'expenses_account':
                     $account_type = 'expenses';
@@ -384,7 +443,12 @@ if (!function_exists('getAccountTypeForSetting')) {
                 case 'revenue_account_shipping':
                     $account_type = 'revenue';
                     break;
-
+                case 'stock_interim_received_account':
+                    $account_type = 'assets';
+                    break;
+                case 'stock_interim_delivered_account':
+                    $account_type = 'assets';
+                    break;
 
                 default:
                     $account_type = '';

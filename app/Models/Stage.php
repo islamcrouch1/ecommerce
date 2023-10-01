@@ -25,6 +25,11 @@ class Stage extends Model
         return $this->hasMany(Field::class);
     }
 
+    public function previews()
+    {
+        return $this->belongsToMany(Preview::class);
+    }
+
 
     public function scopeWhenSearch($query, $search)
     {

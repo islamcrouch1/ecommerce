@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('product_combinations', function (Blueprint $table) {
-            $table->double('purchase_price', 8, 2)->default(0);
+            $table->double('purchase_price', 12, 2)->default(0);
         });
     }
 

@@ -7,7 +7,7 @@
             <div class="row flex-between-center">
                 <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
                     <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
-                        {{ __('Payments') . ' - ' . __('Order Id') . ': ' . $order->id }}
+                        {{ __('Payments') . ' - ' . __($invoice->status) . ': ' . $invoice->serial }}
                     </h5>
                 </div>
             </div>
@@ -20,28 +20,30 @@
                     <div class="p-4 p-md-5 flex-grow-1">
                         <div class="list-group">
                             <a class="list-group-item list-group-item-action disabled" href="#">
-                                @if ($order->order_from == 'addsale')
-                                    {{ __('pay for sales invoice') }}
-                                @elseif($order->order_from == 'addpurchase')
-                                    {{ __('pay for purchase invoice') }}
-                                @endif
+                                {{ __($invoice->status) }}
                             </a>
                             <a class="list-group-item list-group-item-action"
-                                href="{{ route('users.show', ['user' => $order->customer_id]) }}" target="_blank">
+                                href="{{ route('users.show', ['user' => $invoice->customer_id]) }}" target="_blank">
 
-                                @if ($order->order_from == 'addsale')
-                                    {{ __('Customer Name') . ': ' . $order->customer->name }}
-                                @elseif($order->order_from == 'addpurchase')
-                                    {{ __('Supplier Name') . ': ' . $order->customer->name }}
+                                @if ($invoice->status == 'invoice' || $invoice->status == 'credit_note')
+                                    {{ __('Customer Name') . ': ' . $invoice->customer->name }}
+                                @else
+                                    {{ __('Supplier Name') . ': ' . $invoice->customer->name }}
                                 @endif
+
+
                             </a>
                             <a class="list-group-item list-group-item-action"
-                                href="{{ route('purchases.show', ['purchase' => $order->id]) }}" target="_blank">
-                                {{ __('Order Id') . ': ' . $order->id }}
+                                href="{{ route('invoices.show', ['invoice' => $invoice->id]) }}" target="_blank">
+                                {{ __('ducument serial') . ': ' . $invoice->serial }}
                             </a>
                             <a class="list-group-item list-group-item-action disabled"
-                                href="#">{{ __('The total amount due') . ': ' . (getOrderDue($order) - getTotalPayments($order)) . ' ' . $order->country->currency }}</a>
+                                href="#">{{ __('The total document amount') . ': ' . getInvoiceTotalAmount($invoice) . ' ' . $invoice->currency->symbol }}</a>
+                            <a class="list-group-item list-group-item-action disabled"
+                                href="#">{{ __('The total amount due') . ': ' . (getInvoiceTotalAmount($invoice) - (getInvoiceTotalPayments($invoice) - getInvoiceTotalReturns($invoice))) . ' ' . $invoice->currency->symbol }}</a>
                         </div>
+
+
                     </div>
                 </div>
 
@@ -112,9 +114,9 @@
             <div class="row flex-between-center">
                 <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
                     <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
-                        @if ($order->order_from == 'addsale')
+                        @if ($invoice->status == 'invoice' || $invoice->status == 'credit_note')
                             {{ __('Previous receipts') }}
-                        @elseif($order->order_from == 'addpurchase')
+                        @else
                             {{ __('Previous payment receipts') }}
                         @endif
                     </h5>
@@ -128,7 +130,7 @@
                     <div class="p-4 p-md-5 flex-grow-1">
 
                         <div class="table-responsive scrollbar">
-                            @if ($order->payments->count() > 0)
+                            @if ($invoice->payments->count() > 0)
                                 <table class="table table-sm table-striped fs--1 mb-0 overflow-hidden">
                                     <thead class="bg-200 text-900">
                                         <tr>
@@ -136,9 +138,9 @@
                                                 {{ __('ID') }}
                                             </th>
                                             <th class="sort pe-1 align-middle white-space-nowrap" data-sort="name">
-                                                @if ($order->order_from == 'addsale')
+                                                @if ($invoice->status == 'invoice' || $invoice->status == 'credit_note')
                                                     {{ __('Customer Name') }}
-                                                @elseif($order->order_from == 'addpurchase')
+                                                @else
                                                     {{ __('Supplier Name') }}
                                                 @endif
                                             </th>
@@ -155,7 +157,7 @@
                                         </tr>
                                     </thead>
                                     <tbody class="list" id="table-customers-body">
-                                        @foreach ($order->payments as $payment)
+                                        @foreach ($invoice->payments as $payment)
                                             <tr class="btn-reveal-trigger">
 
                                                 <td class="name align-middle white-space-nowrap py-2">
@@ -184,12 +186,12 @@
 
                                                 </td>
                                                 <td class="phone align-middle white-space-nowrap py-2">
-                                                    {{ $payment->amount . ' ' . $order->country->currency }}
+                                                    {{ $payment->amount . ' ' . $invoice->currency->symbol }}
                                                 </td>
 
 
-                                                <td class="joined align-middle py-2">{{ $order->created_at }} <br>
-                                                    {{ interval($order->created_at) }} </td>
+                                                <td class="joined align-middle py-2">{{ $payment->created_at }} <br>
+                                                    {{ interval($payment->created_at) }} </td>
 
                                             </tr>
                                         @endforeach

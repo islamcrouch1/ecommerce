@@ -10,12 +10,17 @@ class Stock extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_combination_id', 'warehouse_id', 'product_id', 'qty', 'customer_id', 'stock_status', 'reference_id', 'stock_type', 'created_by', 'updated_by', 'reference_price'
+        'product_combination_id', 'unit_id', 'warehouse_id', 'product_id', 'qty', 'customer_id', 'stock_status', 'reference_id', 'stock_type', 'created_by', 'updated_by', 'reference_price'
     ];
 
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
     }
 
 

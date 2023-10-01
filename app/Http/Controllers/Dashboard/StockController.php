@@ -117,21 +117,7 @@ class StockController extends Controller
         return view('dashboard.stocks.add');
     }
 
-    public function search(Request $request)
-    {
 
-        $search = $request->search;
-
-        $products = Product::where('vendor_id', null)->whenSearch($search)
-            ->get();
-
-        $data = [];
-        $data['status'] = 1;
-        $data['elements'] = $products;
-
-
-        return $data;
-    }
 
     public function searchReturn(Request $request)
     {

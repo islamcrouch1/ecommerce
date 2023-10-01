@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->integer('order_id');
             $table->integer('tax_id');
-            $table->double('amount', 8, 2)->default(0);
+            $table->double('amount', 12, 2)->default(0);
             $table->timestamps();
         });
     }

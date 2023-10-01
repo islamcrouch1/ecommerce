@@ -19,8 +19,8 @@ return new class extends Migration
             $table->integer('order_id')->nullable();
             $table->string('user_name')->nullable();
             $table->integer('country_id')->nullable();
-            $table->double('total_price', 8, 2)->default(0);
-            $table->double('total_commission', 8, 2)->default(0);
+            $table->double('total_price', 12, 2)->default(0);
+            $table->double('total_commission', 12, 2)->default(0);
             $table->string('status')->default('pending');
             $table->timestamps();
         });

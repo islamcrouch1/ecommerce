@@ -90,6 +90,9 @@
                                 @foreach ($stage->fields as $index => $field)
                                     <div class="row div-{{ $index + 1 }}">
 
+                                        <input style="display:none" name="field_id[]" class="form-control stage-field"
+                                            value="{{ $field->id }}" type="text" />
+
                                         <div class="col-md-2 mt-2">
                                             <label class="form-label" for="field_name_en">{{ __('field type') }}</label>
                                             <input name="type[]" class="form-control stage-field"

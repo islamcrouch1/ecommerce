@@ -62,12 +62,19 @@ class PermissionsController extends Controller
 
         $request->validate([
             'type' => "required|string",
-            'date' => "required|string",
+            'start_date' => "required|string",
+            'end_date' => "required|string",
             'reason' => "required|string",
             'status' => "required|string",
             'media' => "nullable|image",
         ]);
 
+
+
+        if (($request->end_date <= $request->start_date)) {
+            alertError('The permission date is invalid, please check the data', 'تاريخ الاذن غير مناسب يرجى مراجعة البيانات');
+            return redirect()->back()->withInput();
+        }
 
         if ($request->hasFile('media')) {
 
@@ -81,7 +88,8 @@ class PermissionsController extends Controller
 
         $permit->update([
             'type' => $request['type'],
-            'date' => $request['date'],
+            'start_date' => $request['start_date'],
+            'end_date' => $request['end_date'],
             'reason' => $request['reason'],
             'status' => $request['status'],
             'admin_id' => Auth::id(),

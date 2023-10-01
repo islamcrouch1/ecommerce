@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::table('vendor_orders', function (Blueprint $table) {
-            $table->double('total_tax', 8, 2)->default(0);
+            $table->double('total_tax', 12, 2)->default(0);
         });
     }
 

@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::table('offers', function (Blueprint $table) {
             $table->string('type')->nullable();
-            $table->integer('qty')->default(0);
-            $table->double('amount', 8, 2)->default(0);
+            $table->double('qty', 12, 2)->default(0);
+            $table->double('amount', 12, 2)->default(0);
         });
     }
 

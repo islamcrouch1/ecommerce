@@ -24,22 +24,22 @@ return new class extends Migration
             $table->string('sku')->nullable();
             $table->longText('description_en')->nullable();
             $table->longText('description_ar')->nullable();
-            $table->double('sale_price', 8, 2)->default(0);
-            $table->double('max_price', 8, 2)->default(0);
-            $table->double('extra_fee', 8, 2)->default(0);
-            $table->double('affiliate_price', 8, 2)->default(0);
-            $table->double('total_profit', 8, 2)->default(0);
+            $table->double('sale_price', 12, 2)->default(0);
+            $table->double('max_price', 12, 2)->default(0);
+            $table->double('extra_fee', 12, 2)->default(0);
+            $table->double('affiliate_price', 12, 2)->default(0);
+            $table->double('total_profit', 12, 2)->default(0);
             $table->integer('unlimited')->default(0);
             $table->enum('product_type', ['simple', 'variable', 'digital', 'service']);
             $table->string('product_slug')->nullable()->unique();
             $table->Text('video_url')->nullable();
-            $table->double('discount_price', 8, 2)->default(0);
+            $table->double('discount_price', 12, 2)->default(0);
 
-            $table->double('product_weight', 8, 2)->default(0);
-            $table->double('product_height', 8, 2)->default(0);
-            $table->double('product_width', 8, 2)->default(0);
-            $table->double('product_length', 8, 2)->default(0);
-            $table->double('shipping_amount', 8, 2)->default(0);
+            $table->double('product_weight', 12, 2)->default(0);
+            $table->double('product_height', 12, 2)->default(0);
+            $table->double('product_width', 12, 2)->default(0);
+            $table->double('product_length', 12, 2)->default(0);
+            $table->double('shipping_amount', 12, 2)->default(0);
             $table->integer('shipping_method_id')->nullable();
 
             $table->string('digital_file')->nullable();

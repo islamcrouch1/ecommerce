@@ -250,7 +250,7 @@
                                         </td>
 
                                         <td class="address align-middle white-space-nowrap py-2">
-                                            {!! getPaymentStatus($order->payment_status) !!}
+                                            {!! getPaymentStatus($order) !!}
                                         </td>
                                         {{-- <td class="address align-middle white-space-nowrap py-2">
                                             {{ $order->total_commission . ' ' . $order->country->currency }}

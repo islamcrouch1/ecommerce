@@ -21,9 +21,9 @@ return new class extends Migration
             $table->integer('customer_id')->nullable();
             $table->enum('stock_status', ['IN', 'OUT']);
             $table->integer('qty');
-            $table->double('reference_price', 8, 2)->default(0);
+            $table->double('reference_price', 12, 2)->default(0);
             $table->integer('reference_id')->nullable()->comment('purchase id, sale id, order id & stock transfer');
-            $table->enum('stock_type', ['StockAdjustment', 'Purchase', 'Sale', 'Order', 'StockTransfer', 'SaleReturn', 'PurchaseReturn', 'ManualSale', 'Installment']);
+            $table->enum('stock_type', ['StockAdjustment', 'purchases', 'sales', 'Order', 'StockTransfer', 'SaleReturn', 'PurchaseReturn', 'ManualSale', 'Installment']);
             $table->integer('created_by')->nullable();
             $table->integer('updated_by')->nullable();
             $table->timestamps();

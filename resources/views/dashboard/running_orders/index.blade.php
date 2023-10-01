@@ -69,7 +69,7 @@
 
                                 <div class="col-md-4">
                                     <div class="">
-                                        <select data-url="{{ route('stock.management.search') }}"
+                                        <select data-url="{{ route('products.search') }}"
                                             data-locale="{{ app()->getLocale() }}"
                                             class="form-select product-search @error('product') is-invalid @enderror"
                                             aria-label="" name="product" id="product"
@@ -168,15 +168,15 @@
                                         </td>
 
                                         <td class="phone align-middle white-space-nowrap py-2">
-                                            {{ $stock->requested_qty }}
+                                            {{ $stock->requested_qty . ' ' . getName(getUnitByID($stock->unit_id)) }}
                                         </td>
 
                                         <td class="phone align-middle white-space-nowrap py-2">
-                                            {{ $stock->approved_qty }}
+                                            {{ $stock->approved_qty . ' ' . getName(getUnitByID($stock->unit_id)) }}
                                         </td>
 
                                         <td class="phone align-middle white-space-nowrap py-2">
-                                            {{ $stock->returned_qty }}
+                                            {{ $stock->returned_qty . ' ' . getName(getUnitByID($stock->unit_id)) }}
                                         </td>
                                         <td class="phone align-middle white-space-nowrap py-2">
                                             {!! getRunningStatus($stock->status) !!}
@@ -184,6 +184,8 @@
                                         </td>
                                         <td class="phone align-middle white-space-nowrap py-2">
                                             {{ __($stock->stock_type) }}
+                                            <br>
+                                            {!! getRunningReference($stock) !!}
                                         </td>
 
                                         <td class="joined align-middle py-2">{{ $stock->created_at }} <br>
@@ -200,7 +202,7 @@
                                                     aria-labelledby="customer-dropdown-0">
                                                     <div class="bg-white py-2">
                                                         @if (auth()->user()->hasPermission('running_orders-update'))
-                                                            <a class="dropdown-item" target="_blank"
+                                                            <a class="dropdown-item"
                                                                 href="{{ route('running_orders.edit', ['running_order' => $stock->id]) }}">{{ __('quantity validate') }}</a>
                                                         @endif
                                                     </div>

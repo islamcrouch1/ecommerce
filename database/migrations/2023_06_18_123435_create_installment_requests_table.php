@@ -45,13 +45,13 @@ return new class extends Migration
             $table->integer('product_combination_id')->nullable();
 
 
-            $table->double('product_price', 8, 2)->default(0);
+            $table->double('product_price', 12, 2)->default(0);
             $table->integer('installment_company_id')->nullable();
-            $table->double('advanced_amount', 8, 2)->default(0);
-            $table->double('admin_expenses', 8, 2)->default(0);
+            $table->double('advanced_amount', 12, 2)->default(0);
+            $table->double('admin_expenses', 12, 2)->default(0);
             $table->integer('months')->nullable();
 
-            $table->double('installment_amount', 8, 2)->default(0);
+            $table->double('installment_amount', 12, 2)->default(0);
 
 
 

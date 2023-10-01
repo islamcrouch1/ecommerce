@@ -12,7 +12,7 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'affiliate_id', 'order_deadline', 'serial', 'is_sent', 'expected_delivery', 'order_type', 'address', 'status', 'country_id', 'customer_id', 'warehouse_id', 'order_from', 'total_commission', 'total_profit', 'notes', 'full_name', 'total_price', 'special_mark', 'house',  'shipping_amount', 'city_id', 'state_id', 'subtotal_price', 'total_price_affiliate', 'phone', 'shipping_method_id', 'payment_status', 'payment_method', 'transaction_id', 'total_tax', 'is_seen', 'coupon_code', 'coupon_amount', 'branch_id', 'session_id', 'orderId', 'total_wht_products', 'total_wht_services', 'discount_amount', 'avenue', 'block', 'description', 'phone2', 'floor_no', 'delivery_time'
+        'affiliate_id', 'order_deadline', 'invoice_status', 'serial', 'is_sent', 'expected_delivery', 'order_type', 'address', 'status', 'country_id', 'customer_id', 'warehouse_id', 'order_from', 'total_commission', 'total_profit', 'notes', 'full_name', 'total_price', 'special_mark', 'house',  'shipping_amount', 'city_id', 'state_id', 'subtotal_price', 'total_price_affiliate', 'phone', 'shipping_method_id', 'payment_status', 'payment_method', 'transaction_id', 'total_tax', 'is_seen', 'coupon_code', 'coupon_amount', 'branch_id', 'session_id', 'orderId', 'total_wht_products', 'total_wht_services', 'discount_amount', 'avenue', 'block', 'description', 'phone2', 'floor_no', 'delivery_time', 'order_id', 'currency_id', 'admin_id'
     ];
 
 
@@ -31,6 +31,12 @@ class Order extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class);
     }
 
 
@@ -66,6 +72,11 @@ class Order extends Model
         return $this->hasMany(Request::class);
     }
 
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
     public function order_notes()
     {
         return $this->hasMany(OrderNote::class);
@@ -76,10 +87,15 @@ class Order extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class)
-            ->withPivot('order_id', 'product_id', 'warehouse_id', 'product_combination_id', 'product_price', 'product_tax', 'product_discount', 'total', 'qty', 'affiliate_price', 'total_affiliate_price', 'commission_per_item', 'profit_per_item', 'total_commission', 'total_profit', 'extra_shipping_amount', 'shipping_method_id', 'product_type', 'cost', 'product_wht')
+            ->withPivot('order_id', 'product_id', 'warehouse_id', 'product_combination_id', 'product_price', 'product_tax', 'product_discount', 'total', 'qty', 'unit_id', 'affiliate_price', 'total_affiliate_price', 'commission_per_item', 'profit_per_item', 'total_commission', 'total_profit', 'extra_shipping_amount', 'shipping_method_id', 'product_type', 'cost', 'product_wht')
             ->withTimestamps();
     }
 
+
+    public function orders()
+    {
+        return $this->hasMany(self::class, 'order_id');
+    }
 
 
     public function shipping_rate()
@@ -205,9 +221,9 @@ class Order extends Model
         return $query->when($search, function ($q) use ($search) {
             return $q->where('id', 'like', "%$search%")
                 ->orWhere('total_price', 'like', "%$search%")
-                ->orWhere('user_name', 'like', "%$search%")
                 ->orWhere('full_name', 'like', "%$search%")
-                ->orWhere('client_phone', 'like', "%$search%")
+                ->orWhere('phone', 'like', "%$search%")
+                ->orWhere('phone2', 'like', "%$search%")
                 ->orWhere('serial', 'like', "%$search%");
         });
     }
@@ -232,6 +248,13 @@ class Order extends Model
     {
         return $query->when($payment_status, function ($q) use ($payment_status) {
             return $q->where('payment_status', 'like', "%$payment_status%");
+        });
+    }
+
+    public function scopeWhenInvoiceStatus($query, $invoice_status)
+    {
+        return $query->when($invoice_status, function ($q) use ($invoice_status) {
+            return $q->where('invoice_status', 'like', "%$invoice_status%");
         });
     }
 }

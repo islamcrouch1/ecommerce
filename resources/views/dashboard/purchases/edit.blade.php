@@ -6,7 +6,8 @@
         <div class="card-header">
             <div class="row flex-between-center">
                 <div class="col-4 col-sm-auto d-flex align-items-center pe-0">
-                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">{{ __('purchases') . ' #' . getOrderSerial($order) }}
+                    <h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">
+                        {{ ($returned == 'false' ? __('purchases') : __('Add return')) . ' #' . $order->serial }}
                     </h5>
                 </div>
             </div>
@@ -17,7 +18,7 @@
                 <div class="col-md-12 d-flex flex-center">
                     <div class="p-4 p-md-5 flex-grow-1">
                         <form method="POST"
-                            action="{{ route('orders.store.new', ['order_from' => 'addpurchase', 'returned' => 'false', 'selected_order' => $order->id]) }}"
+                            action="{{ route('purchases.store', ['order_from' => 'purchases', 'returned' => $returned, 'selected_order' => $order->id]) }}"
                             enctype="multipart/form-data">
                             @csrf
 
@@ -102,21 +103,41 @@
                                     </div>
                                 </div>
 
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="currency_id">{{ __('select currency') }}</label>
+                                        <select class="form-select currency @error('currency_id') is-invalid @enderror"
+                                            aria-label="" name="currency_id" id="currency_id" required>
+                                            @foreach ($currencies as $currency)
+                                                <option value="{{ $currency->id }}"
+                                                    {{ $order->currency_id == $currency->id ? 'selected' : '' }}>
+                                                    {{ getName($currency) }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('currency_id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
                             </div>
+
+                            <div style="display:none" class="data"
+                                data-products_search_url="{{ route('products.search') }}"
+                                data-locale="{{ app()->getLocale() }}"
+                                data-get_combinations_url="{{ route('combinations.get') }}"
+                                data-get_units="{{ route('units.get') }}"
+                                data-calculate_total="{{ route('total.calculate') }}"></div>
 
 
                             <div class="mb-3">
                                 <label class="form-label" for="products">{{ __('Select product') }}</label>
 
-                                <select data-url_com="{{ route('purchases.combinations') }}"
-                                    data-url_cal="{{ route('purchases.combinations.cal') }}"
-                                    data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                <select multiple="multiple"
                                     class="form-select product-select @error('products') is-invalid @enderror"
                                     aria-label="" name="products[]" id="products" data-products="{{ $order->products }}"
                                     required>
-
-
 
                                 </select>
                                 @error('products')
@@ -127,8 +148,7 @@
                             <div style="display: none" class="mb-3 combinations-select">
                                 <label class="form-label" for="combinations">{{ __('Select combination') }}</label>
 
-                                <select data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}" multiple="multiple"
+                                <select multiple="multiple"
                                     class="form-select com-select @error('combinations') is-invalid @enderror"
                                     aria-label="" name="combinations[]" id="combinations">
 
@@ -183,7 +203,7 @@
                                         <label class="form-label" for="taxes">{{ __('taxes') }}</label>
 
                                         <select
-                                            class="form-select purchase-tax js-choice @error('taxes') is-invalid @enderror"
+                                            class="form-select tax-select js-choice @error('taxes') is-invalid @enderror"
                                             aria-label="" name="taxes[]" id="taxes" multiple>
 
                                             @foreach ($taxes as $tax)
@@ -208,14 +228,14 @@
                                 <div class="mb-3">
                                     <div class="form-check">
                                         <input name="tax[]"
-                                            class="form-check-input purchase-tax @error('tax') is-invalid @enderror"
+                                            class="form-check-input tax-select @error('tax') is-invalid @enderror"
                                             id="flexCheckDefault" type="checkbox" value="vat" />
                                         <label class="form-check-label"
                                             for="flexCheckDefault">{{ __('added value tax') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input name="tax[]"
-                                            class="form-check-input purchase-tax @error('tax') is-invalid @enderror"
+                                            class="form-check-input tax-select @error('tax') is-invalid @enderror"
                                             id="flexCheckChecked" type="checkbox" value="wht" />
                                         <label class="form-check-label"
                                             for="flexCheckChecked">{{ __('withholding and collect tax') }}</label>
@@ -264,21 +284,24 @@
                             </div>
 
 
-                            <div class="mb-3 mt-3">
-                                <label class="form-label mb-2" for="notes">{{ __('notes and conditions') }}</label>
+                            @if ($returned == 'false')
+                                <div class="mb-3 mt-3">
+                                    <label class="form-label mb-2"
+                                        for="notes">{{ __('notes and conditions') }}</label>
 
-                                <textarea id="notes" class="form-control tinymce d-none @error('notes') is-invalid @enderror" name="notes">{!! $order->notes !!}</textarea>
+                                    <textarea id="notes" class="form-control tinymce d-none @error('notes') is-invalid @enderror" name="notes">{!! $order->notes !!}</textarea>
 
 
-                                @error('notes')
-                                    <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
+                                    @error('notes')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endif
 
-                            @if ($order->order_type == 'RFQ')
+                            @if (($order->order_type == 'RFQ' && $order->status == 'pending') || $returned == 'true')
                                 <div class="mb-3">
                                     <button class="btn btn-primary d-block w-100 mt-3" type="submit"
-                                        name="submit">{{ __('save') }}</button>
+                                        name="submit">{{ $returned == 'true' ? __('Add return') : __('save') }}</button>
                                 </div>
                             @endif
 

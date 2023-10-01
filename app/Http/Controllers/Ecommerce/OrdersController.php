@@ -302,7 +302,7 @@ class OrdersController extends Controller
                     }
 
                     // add stock and running order
-                    stockCreate($combination, $warehouse_id, $product->pivot->qty, 'Sale', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
+                    RunningOrderCreate($combination, $warehouse_id, $product->pivot->qty, $combination->product->unit_id, 'sales', 'IN', $order, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
                 }
 
                 if ($product->vendor_id == null) {
@@ -348,7 +348,7 @@ class OrdersController extends Controller
             }
         }
 
-        alertSuccess('Your order has been successfully cancelled', 'تم الغاء طلبك بنجاح');
+        alertSuccess('Your order has been successfully canceled', 'تم الغاء طلبك بنجاح');
         return redirect()->back();
     }
 
@@ -502,7 +502,7 @@ class OrdersController extends Controller
             $product = $item->product;
 
             if ($item->product->vendor_id == null) {
-                $cost = getProductCost($product, $combination, $branch_id, null, $item->qty, false);
+                $cost = getCost($product, $branch_id, $combination);
                 $warehouse = getWarehousForOrder(setting('website_branch'), $request->city_id, $combination, $item->qty);
             } else {
                 $warehouse = Warehouse::where('vendor_id', $item->product->vendor_id)->first();
@@ -563,11 +563,11 @@ class OrdersController extends Controller
                 if ($item->product->vendor_id == null) {
 
                     $warehouse_id = $warehouse->id;
-                    $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
-                    $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
+                    // $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $branch_id);
+                    // $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $branch_id);
 
-                    createEntry($product_account, 'sales', 0, ($cost * $item->qty), $branch_id, $order);
-                    createEntry($cs_product_account, 'sales', ($cost * $item->qty),  0, $branch_id, $order);
+                    // createEntry($product_account, 'sales', 0, ($cost * $item->qty), $branch_id, $order);
+                    // createEntry($cs_product_account, 'sales', ($cost * $item->qty),  0, $branch_id, $order);
                 }
 
                 if ($item->product->vendor_id != null) {
@@ -636,7 +636,9 @@ class OrdersController extends Controller
                 }
 
                 // add stock and running order
-                stockCreate($combination, $warehouse_id, $item->qty, 'Sale', 'OUT', $order->id, Auth::check() ? Auth::id() : null, productPrice($item->product, $item->product_combination_id, 'vat'));
+
+
+                RunningOrderCreate($combination, $warehouse_id, $item->qty,  $combination->product->unit_id, 'sales', 'OUT', $order, Auth::check() ? Auth::id() : null, productPrice($item->product, $item->product_combination_id, 'vat'));
 
                 // add noty for stock limit
 

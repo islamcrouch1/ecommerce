@@ -37,7 +37,7 @@
 
                                 <div class="col-md-7">
                                     <div class="">
-                                        <select data-url="{{ route('stock.management.search') }}"
+                                        <select data-url="{{ route('products.search') }}"
                                             data-locale="{{ app()->getLocale() }}"
                                             class="form-select product-search @error('product') is-invalid @enderror"
                                             aria-label="" name="product" id="product"

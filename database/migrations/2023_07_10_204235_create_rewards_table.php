@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('rewards', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id')->nullable();
-            $table->double('amount', 8, 2)->default(0);
+            $table->double('amount', 12, 2)->default(0);
             $table->enum('type', ['reward', 'penalty'])->nullable();
             $table->longText('note')->nullable();
             $table->timestamps();

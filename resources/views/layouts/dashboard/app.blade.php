@@ -94,6 +94,10 @@
             padding-bottom: 0px !important;
 
         }
+
+        .ltr {
+            direction: ltr !important;
+        }
     </style>
 </head>
 
@@ -185,18 +189,25 @@
     @endif
 
 
+    @if (Route::is('admin.home') && isMobileDevice())
+        <script src="{{ asset('assets/js/attendances.js') }}"></script>
+    @endif
+
+
     @if (!Route::is('admin.home') && !Route::is('login'))
         <script src="{{ asset('assets/js/menu.js') }}"></script>
     @endif
 
-    @if (Route::is('purchases.create') || Route::is('purchases.create.return') || Route::is('purchases.edit'))
-        <script src="{{ asset('assets/js/purchase.js') }}"></script>
+    @if (Route::is('invoices.create') ||
+            Route::is('purchases.create') ||
+            Route::is('purchases.create.return') ||
+            Route::is('purchases.edit') ||
+            Route::is('sales.create') ||
+            Route::is('sales.create.return') ||
+            Route::is('sales.edit'))
+        <script src="{{ asset('assets/js/orders.js') }}"></script>
     @endif
 
-
-    @if (Route::is('sales.create') || Route::is('sales.create.return') || Route::is('sales.edit'))
-        <script src="{{ asset('assets/js/sale.js') }}"></script>
-    @endif
 
     @if (setting('affiliate_modal') == 'on')
         <script>

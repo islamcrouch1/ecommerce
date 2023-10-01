@@ -6,6 +6,7 @@ use App\Http\Controllers\Dashboard\AccountsController;
 use App\Http\Controllers\Dashboard\AssetsController;
 use App\Http\Controllers\Dashboard\AttendancesController;
 use App\Http\Controllers\Dashboard\AttributesController;
+use App\Http\Controllers\Dashboard\BomsController;
 use App\Http\Controllers\Dashboard\BonusController;
 use App\Http\Controllers\Dashboard\BranchesController;
 use App\Http\Controllers\Dashboard\BrandsController;
@@ -18,14 +19,18 @@ use App\Http\Controllers\Dashboard\ColorsController;
 use App\Http\Controllers\Dashboard\ContactsController;
 use App\Http\Controllers\Dashboard\CountriesController;
 use App\Http\Controllers\Dashboard\CouponController;
+use App\Http\Controllers\Dashboard\CurrenciesController;
 use App\Http\Controllers\Dashboard\EmployeesController;
 use App\Http\Controllers\Dashboard\EntriesController;
+use App\Http\Controllers\Dashboard\ExchangeRatesController;
 use App\Http\Controllers\Dashboard\ExportController;
 use App\Http\Controllers\Dashboard\FinancesController;
 use App\Http\Controllers\Dashboard\HomeController;
 use App\Http\Controllers\Dashboard\InstallmentRequestsController;
 use App\Http\Controllers\Dashboard\InstallmentsCompaniesController;
+use App\Http\Controllers\Dashboard\InvoicesController;
 use App\Http\Controllers\Dashboard\LogsController;
+use App\Http\Controllers\Dashboard\ManufacturingOrdersController;
 use App\Http\Controllers\Dashboard\MediasController;
 use App\Http\Controllers\Dashboard\MessagesController;
 use App\Http\Controllers\Dashboard\NotesController;
@@ -55,6 +60,8 @@ use App\Http\Controllers\Dashboard\StockController;
 use App\Http\Controllers\Dashboard\StockTransferController;
 use App\Http\Controllers\Dashboard\TaxesController;
 use App\Http\Controllers\Dashboard\TestimonialsControllers;
+use App\Http\Controllers\Dashboard\UnitsCategoriesController;
+use App\Http\Controllers\Dashboard\UnitsController;
 use App\Http\Controllers\Dashboard\UsersCartsController;
 use App\Http\Controllers\Dashboard\UsersController;
 use App\Http\Controllers\Dashboard\VariationsController;
@@ -245,7 +252,6 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::get('/stock/add', [StockController::class, 'atockAdd'])->name('stock.management.add')->middleware('auth', 'checkverified', 'checkstatus');
     Route::get('/stock/list', [StockController::class, 'stockList'])->name('stock.management.list')->middleware('auth', 'checkverified', 'checkstatus');
 
-    Route::post('/stock/search', [StockController::class, 'search'])->name('stock.management.search')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('/stock/combination', [StockTransferController::class, 'search'])->name('stock.management.com')->middleware('auth', 'checkverified', 'checkstatus');
 
     Route::get('/stock/inventory', [StockController::class, 'inventory'])->name('stock.management.inventory')->middleware('auth', 'checkverified', 'checkstatus');
@@ -301,10 +307,8 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
 
     // purchases routes
     Route::resource('/purchases', PurchasesController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
-    Route::post('/combination/purchase', [PurchasesController::class, 'searchPurchase'])->name('purchases.combinations')->middleware('auth', 'checkverified', 'checkstatus');
-    Route::post('/combination/purchase/calculate', [PurchasesController::class, 'calTotal'])->name('purchases.combinations.cal')->middleware('auth', 'checkverified', 'checkstatus');
 
-    Route::get('/return-purchases', [PurchasesController::class, 'craeteReturn'])->name('purchases.create.return')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/return-purchases/{order}', [PurchasesController::class, 'craeteReturn'])->name('purchases.create.return')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('/return-purchases-post', [PurchasesController::class, 'storeReturn'])->name('purchases.store.return')->middleware('auth', 'checkverified', 'checkstatus');
 
     Route::post('/purchases/status/{order}', [PurchasesController::class, 'updateStatus'])->name('purchases.status')->middleware('auth', 'checkverified', 'checkstatus');
@@ -321,11 +325,13 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
 
     // sales routes
     Route::resource('/sales', SalesController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
-    Route::post('/combination/sales', [SalesController::class, 'searchSales'])->name('sales.combinations')->middleware('auth', 'checkverified', 'checkstatus');
-    Route::post('/combination/sales/calculate', [SalesController::class, 'calTotal'])->name('sales.combinations.cal')->middleware('auth', 'checkverified', 'checkstatus');
 
-    Route::get('/return-sales', [SalesController::class, 'craeteReturn'])->name('sales.create.return')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/return-sales/{order}', [SalesController::class, 'craeteReturn'])->name('sales.create.return')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('/return-sales-post', [SalesController::class, 'storeReturn'])->name('sales.store.return')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    Route::get('/quotations-sales', [SalesController::class, 'quitationsIndex'])->name('sales.quotations')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/quotations-purchases', [PurchasesController::class, 'quitationsIndex'])->name('purchases.quotations')->middleware('auth', 'checkverified', 'checkstatus');
 
 
     Route::post('/return-sales-search', [StockController::class, 'searchReturn'])->name('sales.create.search')->middleware('auth', 'checkverified', 'checkstatus');
@@ -369,7 +375,7 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
 
 
     // payments routes
-    Route::get('/payments/{order}', [PaymentsController::class, 'create'])->name('payments.create')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/payments/{invoice}', [PaymentsController::class, 'create'])->name('payments.create')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('/payments-store/{order}', [PaymentsController::class, 'store'])->name('payments.store')->middleware('auth', 'checkverified', 'checkstatus');
 
 
@@ -458,6 +464,57 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::resource('/contacts', ContactsController::class)->middleware('auth', 'checkverified', 'checkstatus');
     Route::get('/trashed-contacts', [ContactsController::class, 'trashed'])->name('contacts.trashed')->middleware('auth', 'checkverified', 'checkstatus');
     Route::get('/trashed-contacts/{contact}', [ContactsController::class, 'restore'])->name('contacts.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+
+
+    Route::resource('/units_categories', UnitsCategoriesController::class)->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-units_categories', [UnitsCategoriesController::class, 'trashed'])->name('units_categories.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-units_categories/{units_category}', [UnitsCategoriesController::class, 'restore'])->name('units_categories.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    Route::resource('/units', UnitsController::class)->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-units', [UnitsController::class, 'trashed'])->name('units.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-units/{unit}', [UnitsController::class, 'restore'])->name('units.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    Route::resource('/boms', BomsController::class)->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-boms', [BomsController::class, 'trashed'])->name('boms.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-boms/{bom}', [BomsController::class, 'restore'])->name('boms.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    Route::resource('/manufacturing_orders', ManufacturingOrdersController::class)->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-manufacturing_orders', [ManufacturingOrdersController::class, 'trashed'])->name('manufacturing_orders.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-manufacturing_orders/{manufacturing_order}', [ManufacturingOrdersController::class, 'restore'])->name('manufacturing_orders.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    // currencies routes
+    Route::resource('/currencies', CurrenciesController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
+    Route::get('/trashed-currencies', [CurrenciesController::class, 'trashed'])->name('currencies.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-currencies/{currency}', [CurrenciesController::class, 'restore'])->name('currencies.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    // currencies routes
+    Route::resource('/exchange_rates', ExchangeRatesController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
+    Route::get('/trashed-exchange_rates', [ExchangeRatesController::class, 'trashed'])->name('exchange_rates.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-exchange_rates/{exchange_rate}', [ExchangeRatesController::class, 'restore'])->name('exchange_rates.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+    Route::resource('/invoices', InvoicesController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
+
+
+    Route::post('/products/search', [InvoicesController::class, 'productsSearch'])->name('products.search')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('/get/combinations', [InvoicesController::class, 'getCombinations'])->name('combinations.get')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('/get/units', [InvoicesController::class, 'getUnits'])->name('units.get')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('/calculate/total', [InvoicesController::class, 'calTotal'])->name('total.calculate')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+
+
+
+
+    Route::post('/combination/purchase', [PurchasesController::class, 'searchPurchase'])->name('purchases.combinations')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::post('/combination/purchase/calculate', [PurchasesController::class, 'calTotal'])->name('purchases.combinations.cal')->middleware('auth', 'checkverified', 'checkstatus');
+
 
 
     // --------------------------------------------- Vendors Routes ---------------------------------------------

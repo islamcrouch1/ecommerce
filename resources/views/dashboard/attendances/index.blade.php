@@ -14,6 +14,12 @@
 
                     <div id="table-customers-replace-element">
 
+                        @if (auth()->user()->hasPermission('attendances-create'))
+                            <a href="{{ route('attendances.create') }}" class="btn btn-falcon-default btn-sm"
+                                type="button"><span class="fas fa-plus" data-fa-transform="shrink-3 down-2"></span><span
+                                    class="d-none d-sm-inline-block ms-1">{{ __('New') }}</span></a>
+                        @endif
+
                         <form style="display: inline-block" action="">
 
                             {{-- <div class="d-inline-block">
@@ -163,9 +169,9 @@
                                         <td class="joined align-middle py-2">{{ $attendance->attendance_date }} <br>
                                             {{ interval($attendance->attendance_date) }}
 
-                                            @if (getLateTime($attendance) > 0)
+                                            @if (getLateTimeForAttendance($attendance) > 0)
                                                 <span
-                                                    class="badge badge-soft-danger">{{ __('late attendance') . ': ' . getLateTime($attendance) . ' ' . __('Minute') }}
+                                                    class="badge badge-soft-danger">{{ __('late attendance') . ': ' . getLateTimeForAttendance($attendance) . ' ' . __('Minute') }}
                                                 </span>
                                             @endif
 
@@ -175,11 +181,18 @@
                                     @else
                                         <td class="joined align-middle py-2">{{ $attendance->leave_date }} <br>
                                             {{ interval($attendance->leave_date) }}
-                                            @if (getLateTime($attendance) > 0)
+                                            @if (getEarlyTimeForLeave($attendance) > 0)
                                                 <span
-                                                    class="badge badge-soft-danger">{{ __('early leave') . ': ' . getLateTime($attendance) . ' ' . __('Minute') }}
+                                                    class="badge badge-soft-danger">{{ __('early leave') . ': ' . getEarlyTimeForLeave($attendance) . ' ' . __('Minute') }}
                                                 </span>
                                             @endif
+
+                                            @if (getOverTimeForLeave($attendance) > 0)
+                                                <span
+                                                    class="badge badge-soft-success">{{ __('over time') . ': ' . getOverTimeForLeave($attendance) . ' ' . __('Minute') }}
+                                                </span>
+                                            @endif
+
                                         </td>
                                     @endif
 

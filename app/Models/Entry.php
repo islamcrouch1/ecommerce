@@ -10,7 +10,7 @@ class Entry extends Model
     use HasFactory;
 
     protected $fillable = [
-        'account_id', 'reference_id', 'type', 'warehouse_id', 'dr_amount', 'cr_amount', 'description', 'created_by', 'updated_by', 'created_at', 'branch_id', 'media_id', 'doc_num', 'due_date'
+        'account_id', 'reference_id', 'type', 'warehouse_id', 'dr_amount', 'cr_amount', 'description', 'created_by', 'updated_by', 'created_at', 'branch_id', 'media_id', 'doc_num', 'due_date', 'currency_id', 'rate', 'foreign_currency_id', 'amount_in_foreign_currency'
     ];
 
     public function user()
@@ -18,6 +18,16 @@ class Entry extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class);
+    }
+
+    public function foreign_currency()
+    {
+        return $this->belongsTo(Currency::class, 'foreign_currency_id');
+    }
 
     public function branch()
     {

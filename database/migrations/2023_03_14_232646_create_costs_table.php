@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('product_id')->nullable();
             $table->integer('product_combination_id')->nullable();
             $table->integer('branch_id')->nullable();
-            $table->double('cost', 8, 2)->default(0);
+            $table->double('cost', 12, 2)->default(0);
             $table->timestamps();
         });
     }

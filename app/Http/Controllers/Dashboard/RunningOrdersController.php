@@ -67,28 +67,17 @@ class RunningOrdersController extends Controller
 
 
         $request->validate([
-            'approved_qty' => "required|integer|gt:-1",
-            'returned_qty' => "required|integer|gt:-1",
+            'approved_qty' => "required|integer|gt:0",
             'notes' => "nullable|string",
         ]);
 
-        $remaining_qty = $running_order->requested_qty - ($running_order->approved_qty + $running_order->returned_qty);
+        $remaining_qty = $running_order->requested_qty - $running_order->approved_qty - $running_order->returned_qty;
+        $approved_qty = $request->approved_qty;
 
-        $returned_qty = $request->returned_qty -  $running_order->returned_qty;
-        $approved_qty = $request->approved_qty -  $running_order->approved_qty;
-
-        if (($returned_qty < 0) ||  ($approved_qty < 0)) {
-            alertError('The quantities do not match', 'الكميات غير متطابقة');
+        if ($request->approved_qty > $remaining_qty) {
+            alertError('The quantity required for approval is more than the required quantity', 'الكمية المطلوبة للاعتماد اكثر من الكمية المطلوبة');
             return redirect()->back()->withInput();
         }
-
-
-        if (($returned_qty + $approved_qty) >  $remaining_qty) {
-
-            alertError('The quantities do not match', 'الكميات غير متطابقة');
-            return redirect()->back()->withInput();
-        }
-
 
         if ($remaining_qty == 0) {
             alertError('All quantities have been validated', 'تم التحقق من جميع الكميات مسبقا');
@@ -96,63 +85,54 @@ class RunningOrdersController extends Controller
         }
 
 
-        if ($returned_qty > 0 && ($running_order->stock_type == 'Sale' || $running_order->stock_type == 'Purchase')) {
+        // if ($returned_qty > 0 && ($running_order->stock_type == 'sales' || $running_order->stock_type == 'purchases')) {
 
-            // $combinations = [$running_order->product_combination_id];
-            // $prods = [$running_order->product_id];
-            // $qty = [$returned_qty];
-            // $notes = $request->notes;
-            // $warehouse_id = $running_order->warehouse->id;
-            // $supplier_id = $running_order->user_id;
-            // $user_id = $running_order->user_id;
-            // $order_id = $running_order->reference_id;
-            // $order = Order::findOrFail($running_order->reference_id);
-            // $price = [$order->products()->where('product_id', $running_order->product_id)->where('product_combination_id', $running_order->product_combination_id)->first()->pivot->product_price];
-            // $tax = $order->taxes->pluck('id')->toArray();
+        //     $refund = Refund::create([
+        //         'user_id' => Auth::id(),
+        //         'order_id' => $running_order->reference_id,
+        //         'reason' => $request->notes,
+        //         'status' => 'pending',
+        //         'type' => 'warehouse',
+        //         'product_id' => $running_order->product_id,
+        //         'combination_id' => $running_order->product_combination_id,
+        //         'qty' => $returned_qty
+        //     ]);
+        // }
 
-            // $request->merge([
-            //     'combinations' => $combinations,
-            //     'prods' => $prods,
-            //     'qty' => $qty,
-            //     'tax' => $tax,
-            //     'price' => $price,
-            //     'warehouse_id' => $warehouse_id,
-            //     'supplier_id' => $supplier_id,
-            //     'user_id' => $user_id,
-            //     'order_id' => $order_id,
-            //     'running_order' => true,
-            // ]);
 
-            $refund = Refund::create([
-                'user_id' => Auth::id(),
-                'order_id' => $running_order->reference_id,
-                'reason' => $request->notes,
-                'status' => 'pending',
-                'type' => 'warehouse',
-                'product_id' => $running_order->product_id,
-                'combination_id' => $running_order->product_combination_id,
-                'qty' => $returned_qty
-            ]);
+        if ($approved_qty > 0) {
 
-            // if ($running_order->stock_type == 'Purchase') {
-            //     $purchase = new PurchasesController();
-            //     $purchase->storeReturn($request);
-            // } elseif ($running_order->stock_type == 'Sale') {
-            //     $sale = new SalesController();
-            //     $sale->storeReturn($request);
-            // }
+            if ($running_order->stock_type == 'purchases') {
+                $returned = $running_order->stock_status == 'IN' ? false : true;
+                $check = createPurchasesEntries($running_order->product_combination_id, $running_order->reference_id, $returned, $approved_qty, $running_order->unit_id);
+                if ($check == false) {
+                    alertError('Quantities are not available in stock', 'الكميات غير متوفره في المخزون');
+                    return redirect()->back()->withInput();
+                }
+            }
+
+            if ($running_order->stock_type == 'sales') {
+
+                $returned = $running_order->stock_status == 'OUT' ? false : true;
+                $check = createSalesEntries($running_order->product_combination_id, $running_order->reference_id, $returned, $approved_qty, $running_order->unit_id);
+                if ($check == false) {
+                    alertError('Quantities are not available in stock', 'الكميات غير متوفره في المخزون');
+                    return redirect()->back()->withInput();
+                }
+            }
         }
+
 
         $running_order->update([
             'approved_qty' => $running_order->approved_qty +  $approved_qty,
-            'returned_qty' => $running_order->returned_qty + $returned_qty,
+            'notes' => $request->notes,
         ]);
 
-        if (($running_order->approved_qty + $running_order->returned_qty) == $running_order->requested_qty) {
+        if ($running_order->approved_qty == $running_order->requested_qty) {
             $running_order->update([
                 'status' => 'completed',
             ]);
-        } elseif (($running_order->approved_qty + $running_order->returned_qty) < $running_order->requested_qty) {
+        } elseif ($running_order->approved_qty < $running_order->requested_qty) {
             $running_order->update([
                 'status' => 'partial',
             ]);
@@ -160,6 +140,6 @@ class RunningOrdersController extends Controller
 
 
         alertSuccess('Quantities validated successfully', 'تم التحقق من الكميات بنجاح');
-        return redirect()->route('running_orders.edit', ['running_order' => $running_order->id]);
+        return redirect()->route('running_orders.index');
     }
 }

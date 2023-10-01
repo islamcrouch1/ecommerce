@@ -88,7 +88,7 @@
                                     <td class="name align-middle white-space-nowrap py-2">
                                         <div class="d-flex d-flex align-items-center">
                                             <div class="avatar avatar-xl me-2">
-                                                <img class="rounded-circle" src="{{ asset($category->media->path) }}"
+                                                <img class="rounded-circle" src="{{ getCategoryImage($category) }}"
                                                     alt="" />
                                             </div>
                                             <div class="flex-1">

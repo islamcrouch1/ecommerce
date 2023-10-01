@@ -23,8 +23,7 @@
                             <div class="mb-3">
                                 <label class="form-label" for="product">{{ __('Select product') }}</label>
 
-                                <select data-url="{{ route('stock.management.search') }}"
-                                    data-locale="{{ app()->getLocale() }}"
+                                <select data-url="{{ route('products.search') }}" data-locale="{{ app()->getLocale() }}"
                                     class="form-select product-select @error('product') is-invalid @enderror" aria-label=""
                                     name="product" id="product"
                                     data-options='{"removeItemButton":true,"placeholder":true ,addItems: true}' required>

@@ -237,8 +237,8 @@
 
                                         {!! getDivForAccountsSetting(
                                             'cs_account',
-                                            'default liability account for cost of goods sold',
-                                            $liability_accounts,
+                                            'default expenses account for cost of goods sold',
+                                            $expenses_accounts,
                                             $branch->id,
                                         ) !!}
 
@@ -246,9 +246,8 @@
                                         {!! getDivForAccountsSetting(
                                             'funding_assets_account',
                                             'default funding assets account',
-                                            $assets_accounts,
+                                            $owners_equity_accounts,
                                             $branch->id,
-                                            $liability_accounts,
                                         ) !!}
 
 
@@ -460,7 +459,22 @@
                                         {!! getDivForAccountsSetting(
                                             'revenue_account_shipping',
                                             'default revenue account for shipping',
-                                            $expenses_accounts,
+                                            $revenue_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+
+                                        {!! getDivForAccountsSetting(
+                                            'stock_interim_received_account',
+                                            'stock interim received account',
+                                            $assets_accounts,
+                                            $branch->id,
+                                        ) !!}
+
+                                        {!! getDivForAccountsSetting(
+                                            'stock_interim_delivered_account',
+                                            'stock interim delivered account',
+                                            $assets_accounts,
                                             $branch->id,
                                         ) !!}
 
@@ -559,6 +573,54 @@
                                         @enderror
                                     </div>
 
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="serial_prefix_RFQ">{{ __('serial prefix for RFQ') }}</label>
+                                        <input name="serial_prefix_RFQ"
+                                            class="form-control @error('serial_prefix_RFQ') is-invalid @enderror"
+                                            value="{{ setting('serial_prefix_RFQ') }}" type="text" autocomplete="on"
+                                            id="serial_prefix_RFQ" autofocus />
+                                        @error('serial_prefix_RFQ')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="serial_prefix_bill">{{ __('serial prefix for bills') }}</label>
+                                        <input name="serial_prefix_bill"
+                                            class="form-control @error('serial_prefix_bill') is-invalid @enderror"
+                                            value="{{ setting('serial_prefix_bill') }}" type="text" autocomplete="on"
+                                            id="serial_prefix_bill" autofocus />
+                                        @error('serial_prefix_bill')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="serial_prefix_debit_note">{{ __('serial prefix for debit notes') }}</label>
+                                        <input name="serial_prefix_debit_note"
+                                            class="form-control @error('serial_prefix_debit_note') is-invalid @enderror"
+                                            value="{{ setting('serial_prefix_debit_note') }}" type="text"
+                                            autocomplete="on" id="serial_prefix_debit_note" autofocus />
+                                        @error('serial_prefix_debit_note')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="serial_prefix_payment">{{ __('serial prefix for payments') }}</label>
+                                        <input name="serial_prefix_payment"
+                                            class="form-control @error('serial_prefix_payment') is-invalid @enderror"
+                                            value="{{ setting('serial_prefix_payment') }}" type="text"
+                                            autocomplete="on" id="serial_prefix_payment" autofocus />
+                                        @error('serial_prefix_payment')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
 
 
 
@@ -598,6 +660,55 @@
                                             value="{{ setting('serial_prefix_SO') }}" type="text" autocomplete="on"
                                             id="serial_prefix_SO" autofocus />
                                         @error('serial_prefix_SO')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="serial_prefix_Q">{{ __('serial prefix for Q') }}</label>
+                                        <input name="serial_prefix_Q"
+                                            class="form-control @error('serial_prefix_Q') is-invalid @enderror"
+                                            value="{{ setting('serial_prefix_Q') }}" type="text" autocomplete="on"
+                                            id="serial_prefix_Q" autofocus />
+                                        @error('serial_prefix_Q')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="serial_prefix_inv">{{ __('serial prefix for invoices') }}</label>
+                                        <input name="serial_prefix_inv"
+                                            class="form-control @error('serial_prefix_inv') is-invalid @enderror"
+                                            value="{{ setting('serial_prefix_inv') }}" type="text" autocomplete="on"
+                                            id="serial_prefix_inv" autofocus />
+                                        @error('serial_prefix_inv')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="serial_prefix_credit_note">{{ __('serial prefix for credit notes') }}</label>
+                                        <input name="serial_prefix_credit_note"
+                                            class="form-control @error('serial_prefix_credit_note') is-invalid @enderror"
+                                            value="{{ setting('serial_prefix_credit_note') }}" type="text"
+                                            autocomplete="on" id="serial_prefix_credit_note" autofocus />
+                                        @error('serial_prefix_credit_note')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="serial_prefix_receipt">{{ __('serial prefix for receipts') }}</label>
+                                        <input name="serial_prefix_receipt"
+                                            class="form-control @error('serial_prefix_receipt') is-invalid @enderror"
+                                            value="{{ setting('serial_prefix_receipt') }}" type="text"
+                                            autocomplete="on" id="serial_prefix_receipt" autofocus />
+                                        @error('serial_prefix_receipt')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>

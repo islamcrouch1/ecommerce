@@ -1,6 +1,5 @@
 @extends('layouts.dashboard.app')
 @section('adminContent')
-
     <div class="row g-3 mb-3">
         <div class="col-lg-7 col-xxl-8">
             <form style="display: inline-block" action="">
@@ -123,7 +122,7 @@
             $account = getItemAccount(Auth::id(), null, 'petty_cash_account', Auth::user()->branch_id);
             $petty_amount = getTrialBalance($account->id, null, null);
             $settlement_amount = getSettlementAmount(Auth::user());
-            
+
         @endphp
 
         @if ($petty_amount > 0)
@@ -140,7 +139,7 @@
                                             aria-label="Emoji">📢</span>
 
                                         <span style="font-size:15px"
-                                            class="badge badge-soft-info ">{{ __('your petty cash amount') . ' : ' . $petty_amount }}</span>
+                                            class="badge badge-soft-info ">{{ __('your petty cash amount') . ' : ' . $petty_amount . ' - ' . __('remaining amount') . ' : ' . getPettyRemainingAmount($user) }}</span>
                                 </p>
 
 
@@ -1067,9 +1066,4 @@
             </div>
         </div>
     @endif
-
-
-
-
-
 @endsection

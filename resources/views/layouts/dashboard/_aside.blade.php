@@ -93,7 +93,7 @@
                         @endif
 
 
-                        @if (checkPer(['employees', 'attendances', 'rewards', 'payroll']))
+                        @if (checkPer(['employees', 'attendances', 'rewards', 'payroll', 'employee_permissions']))
 
                             <li class="nav-item">
                                 <!-- label-->
@@ -573,7 +573,16 @@
                         @endif
 
 
-                        @if (checkPer(['categories', 'brands', 'attributes', 'variations', 'products', 'vendor_products']))
+                        @if (checkPer([
+                                'categories',
+                                'brands',
+                                'attributes',
+                                'variations',
+                                'products',
+                                'vendor_products',
+                                'units_categories',
+                                'units',
+                            ]))
 
                             <li class="nav-item">
                                 <!-- label-->
@@ -629,6 +638,30 @@
                                         <div class="d-flex align-items-center"><span class="nav-link-icon"><span
                                                     class="fas fa-sitemap"></span></span><span
                                                 class="nav-link-text ps-1">{{ __('variations') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('units_categories-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('units_categories*') ? 'active' : '' }}"
+                                        href="{{ route('units_categories.index') }}" role="button"
+                                        data-bs-toggle="" aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-sitemap"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('units categories') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+
+                                @if (auth()->user()->hasPermission('units-read'))
+                                    <!-- parent pages--><a class="nav-link {{ Route::is('units*') ? 'active' : '' }}"
+                                        href="{{ route('units.index') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-sitemap"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('units') }}</span>
                                         </div>
                                     </a>
                                 @endif
@@ -772,6 +805,44 @@
                         @endif
 
 
+                        @if (checkPer(['boms', 'manufacturing_orders']))
+
+                            <li class="nav-item">
+                                <!-- label-->
+                                <div class="row navbar-vertical-label-wrapper mt-3 mb-2">
+                                    <!-- users - roles - countries - settings -->
+                                    <div class="col-auto navbar-vertical-label">{{ __('manufacturing') }}
+                                    </div>
+                                    <div class="col ps-0">
+                                        <hr class="mb-0 navbar-vertical-divider" />
+                                    </div>
+                                </div>
+                                @if (auth()->user()->hasPermission('boms-read'))
+                                    <!-- parent pages--><a class="nav-link {{ Route::is('boms*') ? 'active' : '' }}"
+                                        href="{{ route('boms.index') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-sitemap"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('bills of materials') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('manufacturing_orders-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('manufacturing_orders*') ? 'active' : '' }}"
+                                        href="{{ route('manufacturing_orders.index') }}" role="button"
+                                        data-bs-toggle="" aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-sitemap"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('manufacturing orders') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+                            </li>
+
+                        @endif
+
 
                         @if (checkPer(['orders', 'vendor_orders', 'installment_requests']))
 
@@ -825,7 +896,7 @@
                         @endif
 
 
-                        @if (checkPer(['purchases']))
+                        @if (checkPer(['purchases', 'rfq']))
 
                             <li class="nav-item">
                                 <!-- label-->
@@ -837,6 +908,18 @@
                                         <hr class="mb-0 navbar-vertical-divider" />
                                     </div>
                                 </div>
+                                @if (auth()->user()->hasPermission('rfq-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('purchases.quotations*') ? 'active' : '' }}"
+                                        href="{{ route('purchases.quotations') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-receipt"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('Requests for quotaions') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
                                 @if (auth()->user()->hasPermission('purchases-read'))
                                     <!-- parent pages--><a
                                         class="nav-link {{ Route::is('purchases*') ? 'active' : '' }}"
@@ -853,7 +936,7 @@
                         @endif
 
 
-                        @if (checkPer(['sales']))
+                        @if (checkPer(['sales', 'quotations']))
 
 
                             <li class="nav-item">
@@ -866,6 +949,20 @@
                                         <hr class="mb-0 navbar-vertical-divider" />
                                     </div>
                                 </div>
+
+
+                                @if (auth()->user()->hasPermission('quotations-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('sales.quotations') ? 'active' : '' }}"
+                                        href="{{ route('sales.quotations') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-receipt"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('Quotations') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
                                 @if (auth()->user()->hasPermission('sales-read'))
                                     <!-- parent pages--><a class="nav-link {{ Route::is('sales*') ? 'active' : '' }}"
                                         href="{{ route('sales.index') }}" role="button" data-bs-toggle=""
@@ -891,6 +988,8 @@
                                 'taxes',
                                 'cash_accounts',
                                 'petty_cash',
+                                'currencies',
+                                'exchange_rates',
                             ]))
 
 
@@ -1013,6 +1112,30 @@
                                         <div class="d-flex align-items-center"><span class="nav-link-icon"><span
                                                     class="fas fa-credit-card"></span></span><span
                                                 class="nav-link-text ps-1">{{ __('Balance sheet') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('currencies-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('currencies*') ? 'active' : '' }}"
+                                        href="{{ route('currencies.index') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-credit-card"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('Currencies') }}</span>
+                                        </div>
+                                    </a>
+                                @endif
+
+                                @if (auth()->user()->hasPermission('exchange_rates-read'))
+                                    <!-- parent pages--><a
+                                        class="nav-link {{ Route::is('exchange_rates*') ? 'active' : '' }}"
+                                        href="{{ route('exchange_rates.index') }}" role="button" data-bs-toggle=""
+                                        aria-expanded="false">
+                                        <div class="d-flex align-items-center"><span class="nav-link-icon"><span
+                                                    class="fas fa-credit-card"></span></span><span
+                                                class="nav-link-text ps-1">{{ __('Exchange rates') }}</span>
                                         </div>
                                     </a>
                                 @endif

@@ -109,7 +109,6 @@ class PreviewsClientsController extends Controller
     {
 
 
-
         $phone = getPhoneWithCode($request->phone, Auth::user()->country_id);
         $request->merge(['phone' => $phone]);
 
@@ -366,7 +365,7 @@ class PreviewsClientsController extends Controller
 
         if ($preview->stage_count >= $stages->count()) {
             alertSuccess('preview endded successfully', 'تم الانتهاء من المعاينة بنجاح');
-            return redirect()->route('previews_clients.index');
+            return redirect()->route('previews.index');
         }
 
         if ($score >= $stage->score) {

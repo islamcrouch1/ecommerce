@@ -78,7 +78,7 @@
                             {{ __('Notes:') . $order->notes }}<br>
                         @endif
 
-                        {{ __('Payment Status') }} {!! getPaymentStatus($order->payment_status) !!}<br>
+                        {{ __('Payment Status') }} {!! getPaymentStatus($order) !!}<br>
 
                     </p>
                     <p class="fs--1"><a href="tel:{{ $order->client_phone }}">{{ $order->client_phone }}</a>

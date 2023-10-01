@@ -120,7 +120,11 @@
                                 </th>
 
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
-                                    {{ __('permission date') }}
+                                    {{ __('permission start date') }}
+                                </th>
+
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
+                                    {{ __('permission end date') }}
                                 </th>
 
 
@@ -182,7 +186,11 @@
 
 
                                     <td class="phone align-middle white-space-nowrap py-2">
-                                        {{ $permission->date }}
+                                        {{ $permission->start_date }}
+                                    </td>
+
+                                    <td class="phone align-middle white-space-nowrap py-2">
+                                        {{ $permission->end_date }}
                                     </td>
 
 

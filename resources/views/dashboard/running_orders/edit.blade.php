@@ -25,20 +25,26 @@
 
                             <div class="mb-3">
                                 <label class="form-label"
-                                    for="account">{{ __('requested quantity') . ': ' . $running_order->requested_qty }}</label>
+                                    for="account">{{ __('requested quantity') . ': ' . $running_order->requested_qty . ' ' . getName(getUnitByID($running_order->unit_id)) }}
+                                    <br>
+                                    {{ __('approved quantity') . ': ' . $running_order->approved_qty . ' ' . getName(getUnitByID($running_order->unit_id)) }}
+                                    <br>
+                                    {{ __('returned quantity') . ': ' . $running_order->returned_qty . ' ' . getName(getUnitByID($running_order->unit_id)) }}
+                                </label>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label" for="approved_qty">{{ __('approved quantity') }}</label>
+                                <label class="form-label"
+                                    for="approved_qty">{{ __('Enter the quantity required for approval') }}</label>
                                 <input name="approved_qty" class="form-control @error('approved_qty') is-invalid @enderror"
-                                    value="{{ $running_order->approved_qty }}" min="0" type="number"
-                                    autocomplete="on" id="approved_qty" autofocus required />
+                                    value="{{ $running_order->requested_qty - $running_order->approved_qty - $running_order->returned_qty }}"
+                                    min="0" type="number" autocomplete="on" id="approved_qty" autofocus required />
                                 @error('approved_qty')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <div class="mb-3">
+                            {{-- <div class="mb-3">
                                 <label class="form-label" for="returned_qty">{{ __('returned quantity') }}</label>
                                 <input name="returned_qty" class="form-control @error('returned_qty') is-invalid @enderror"
                                     value="{{ $running_order->returned_qty }}" min="0" type="number"
@@ -46,7 +52,7 @@
                                 @error('returned_qty')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
-                            </div>
+                            </div> --}}
 
                             <div class="mb-3">
                                 <label class="form-label" for="notes">{{ __('notes') }}</label>

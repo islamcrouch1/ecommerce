@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->integer('product_id')->nullable();
             $table->string('sku')->nullable();
-            $table->double('sale_price', 8, 2)->default(0);
-            $table->double('discount_price', 8, 2)->default(0);
+            $table->double('sale_price', 12, 2)->default(0);
+            $table->double('discount_price', 12, 2)->default(0);
             $table->integer('media_id')->nullable();
             $table->integer('limit')->nullable();
             $table->timestamps();

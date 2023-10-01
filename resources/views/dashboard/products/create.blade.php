@@ -74,6 +74,25 @@
                                 </div>
 
 
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="unit_id">{{ __('unit of measure') }}</label>
+
+                                    <select class="form-select js-choice @error('unit_id') is-invalid @enderror"
+                                        name="unit_id" id="unit_id" required>
+                                        <option value="">
+                                            {{ __('Select unit of measure') }}</option>
+                                        @foreach ($units as $unit)
+                                            <option value="{{ $unit->id }}">
+                                                {{ getName($unit) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('unit_id')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+
                                 <hr class="my-4">
 
 
@@ -108,8 +127,8 @@
                                     <div>
                                         <label class="switch">
                                             <input id="can_sold"
-                                                class="form-control @error('limited') is-invalid @enderror" name="can_sold"
-                                                type="checkbox">
+                                                class="form-control @error('limited') is-invalid @enderror"
+                                                name="can_sold" type="checkbox">
                                             <span class="slider round"></span>
                                         </label>
                                         @error('can_sold')

@@ -20,7 +20,8 @@ return new class extends Migration
             $table->integer('media_id')->nullable();
             $table->string('status')->default('pending');
             $table->string('type')->nullable();
-            $table->timestamp('date')->nullable();
+            $table->timestamp('start_date')->nullable();
+            $table->timestamp('end_date')->nullable();
             $table->longText('reason')->nullable();
             $table->timestamps();
         });

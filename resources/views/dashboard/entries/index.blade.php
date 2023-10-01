@@ -184,6 +184,9 @@
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
                                     {{ __('entry description') }}</th>
 
+                                <th class="sort pe-1 align-middle white-space-nowrap" data-sort="phone">
+                                    {{ __('entry amount') }}</th>
+
 
                                 <th class="sort pe-1 align-middle white-space-nowrap" data-sort="email">
                                     {{ __('document number') }}</th>
@@ -208,6 +211,11 @@
 
                                     <td class="phone align-middle white-space-nowrap py-2">
                                         {{ $entry->description . ($entry->due_date ? ' - ' . __('due date: ') . $entry->due_date : '') }}
+                                    </td>
+
+
+                                    <td class="phone align-middle white-space-nowrap py-2">
+                                        {{ getEntryAmount($entry) . ' ' . $entry->currency->symbol }}
                                     </td>
 
                                     <td class="phone align-middle white-space-nowrap py-2">
@@ -332,11 +340,13 @@
                                                                 <td class="phone align-middle white-space-nowrap py-2">
                                                                     {{ $entry->doc_num }}
                                                                 </td>
-                                                                <td class="phone align-middle white-space-nowrap py-2">
-                                                                    {{ round($entry->dr_amount, 2) }}
+                                                                <td class="phone align-middle white-space-nowrap py-2 ltr">
+                                                                    {{ round($entry->dr_amount, 2) . ' ' . $entry->currency->symbol }}
+                                                                    {{ getEntryAmountInCurrency($entry, 'dr') }}
                                                                 </td>
-                                                                <td class="phone align-middle white-space-nowrap py-2">
-                                                                    {{ round($entry->cr_amount, 2) }}
+                                                                <td class="phone align-middle white-space-nowrap py-2 ltr">
+                                                                    {{ round($entry->cr_amount, 2) . ' ' . $entry->currency->symbol }}
+                                                                    {{ getEntryAmountInCurrency($entry, 'cr') }}
                                                                 </td>
 
 
@@ -371,11 +381,13 @@
                                                                 <td class="phone align-middle white-space-nowrap py-2">
                                                                     {{ $entry->doc_num }}
                                                                 </td>
-                                                                <td class="phone align-middle white-space-nowrap py-2">
-                                                                    {{ round($entry->dr_amount, 2) }}
+                                                                <td class="phone align-middle white-space-nowrap py-2 ltr">
+                                                                    {{ round($entry->dr_amount, 2) . ' ' . $entry->currency->symbol }}
+                                                                    {{ getEntryAmountInCurrency($entry, 'dr') }}
                                                                 </td>
-                                                                <td class="phone align-middle white-space-nowrap py-2">
-                                                                    {{ round($entry->cr_amount, 2) }}
+                                                                <td class="phone align-middle white-space-nowrap py-2 ltr">
+                                                                    {{ round($entry->cr_amount, 2) . ' ' . $entry->currency->symbol }}
+                                                                    {{ getEntryAmountInCurrency($entry, 'cr') }}
                                                                 </td>
 
 

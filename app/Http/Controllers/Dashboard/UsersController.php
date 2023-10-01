@@ -36,10 +36,10 @@ class UsersController extends Controller
     {
         $this->middleware('role:superadministrator|administrator');
         $this->middleware('permission:users-read')->only('index', 'show', 'trashed');
-        $this->middleware('permission:users-create')->only('create', 'store');
-        $this->middleware('permission:users-update')->only('edit', 'update');
-        $this->middleware('permission:users-delete|users-trash')->only('destroy', 'trashed');
-        $this->middleware('permission:users-restore')->only('restore');
+        $this->middleware('permission:users-create|employees-create')->only('create', 'store');
+        $this->middleware('permission:users-update|employees-update')->only('edit', 'update');
+        $this->middleware('permission:users-delete|users-trash|employees-delete|employees-trash')->only('destroy', 'trashed');
+        $this->middleware('permission:users-restore|employees-restore')->only('restore');
     }
 
 
@@ -84,9 +84,15 @@ class UsersController extends Controller
      */
     public function create()
     {
+        $user = Auth::user();
         $countries = Country::all();
         $roles = Role::WhereRoleNot(['superadministrator', 'administrator'])->get();
-        return view('dashboard.users.create')->with('roles', $roles)->with('countries', $countries);
+        if ($user->hasPermission('branches-read')) {
+            $branches = Branch::all();
+        } else {
+            $branches = Branch::where('id', $user->branch_id)->get();
+        }
+        return view('dashboard.users.create', compact('branches', 'roles', 'countries'));
     }
 
     /**
@@ -98,11 +104,8 @@ class UsersController extends Controller
     public function store(Request $request)
     {
 
-
-
         $phone = getPhoneWithCode($request->phone, $request->country);
         $request->merge(['phone' => $phone]);
-
 
         $request->validate([
             'name' => "required|string|max:255",
@@ -112,7 +115,8 @@ class UsersController extends Controller
             'phone' => "required|string|unique:users",
             'gender' => "required",
             'profile' => "image",
-            'role' => "required|string"
+            'role' => "required|string",
+            'branch_id' => "required|integer",
         ]);
 
 
@@ -142,6 +146,7 @@ class UsersController extends Controller
             'phone' => $request->phone,
             'gender' => $request['gender'],
             'profile' => $profile,
+            'branch_id' => $request->branch_id,
         ]);
 
 
@@ -149,6 +154,12 @@ class UsersController extends Controller
             $user->attachRole($request['role']);
         } else {
             $user->attachRoles(['administrator', $request['role']]);
+
+            if (getEmployeeInfo($user) == null) {
+                $employee_info = EmployeeInfo::create([
+                    'user_id' => $user->id,
+                ]);
+            }
         }
 
 
@@ -168,7 +179,12 @@ class UsersController extends Controller
 
 
         alertSuccess('user created successfully', 'تم إضافة المستخدم بنجاح');
-        return redirect()->route('users.index');
+
+        if ($user->hasRole('administrator')) {
+            return redirect()->route('employees.index');
+        } else {
+            return redirect()->route('users.index');
+        }
     }
 
 
@@ -256,7 +272,11 @@ class UsersController extends Controller
             $user->attachRoles(['administrator', $request['role']]);
         }
         alertSuccess('user updated successfully', 'تم تعديل المستخدم بنجاح');
-        return redirect()->route('users.index');
+        if ($user->hasRole('administrator')) {
+            return redirect()->route('employees.index');
+        } else {
+            return redirect()->route('users.index');
+        }
     }
 
 
@@ -343,7 +363,11 @@ class UsersController extends Controller
         } else {
             markPhoneAsVerified($user);
         }
-        return redirect()->route('users.index');
+        if ($user->hasRole('administrator')) {
+            return redirect()->route('employees.index');
+        } else {
+            return redirect()->route('users.index');
+        }
     }
 
 
@@ -352,7 +376,11 @@ class UsersController extends Controller
         $user->forceFill([
             'status' => $user->status == 0 ? 1 : 0,
         ])->save();
-        return redirect()->route('users.index');
+        if ($user->hasRole('administrator')) {
+            return redirect()->route('employees.index');
+        } else {
+            return redirect()->route('users.index');
+        }
     }
 
 
