@@ -25,8 +25,11 @@
                                     <option value="">
                                         {{ __('select slider') }}
                                     </option>
-                                    <option value="3" {{ old('slider_id') == 3 ? 'selected' : '' }}>
+                                    <option value="4" {{ old('slider_id') == 4 ? 'selected' : '' }}>
                                         {{ __('home page Slider') }}
+                                    </option>
+                                    <option value="3" {{ old('slider_id') == 3 ? 'selected' : '' }}>
+                                        {{ __('ecommerce Slider') }}
                                     </option>
                                 </select>
                                 @error('slider_id')
@@ -37,8 +40,8 @@
                             <div class="mb-3">
                                 <label class="form-label" for="url">{{ __('Slide URL') }}</label>
                                 <input name="url" class="form-control @error('url') is-invalid @enderror"
-                                    value="{{ old('url') }}" type="text" autocomplete="on" id="url" autofocus
-                                    required />
+                                    value="{{ old('url') ? old('url') : '#' }}" type="text" autocomplete="on"
+                                    id="url" autofocus required />
                                 @error('url')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
@@ -109,17 +112,17 @@
                             <div class="mb-3">
                                 <label class="form-label" for="sort_order">{{ __('Sort Order') }}</label>
                                 <input name="sort_order" class="form-control @error('sort_order') is-invalid @enderror"
-                                    value="{{ old('sort_order') }}" type="number" min="0" autocomplete="on"
-                                    id="sort_order" />
+                                    value="{{ old('sort_order') ? old('sort_order') : 0 }}" type="number"
+                                    min="0" autocomplete="on" id="sort_order" />
                                 @error('sort_order')
                                     <div class="alert alert-danger">{{ $message }}</div>
                                 @enderror
                             </div>
 
 
+                            {{-- . ' ' . '(1370 * 510)' --}}
                             <div class="mb-3">
-                                <label class="form-label"
-                                    for="image">{{ __('Slide image') . ' ' . '(1370 * 510)' }}</label>
+                                <label class="form-label" for="image">{{ __('Slide image') }}</label>
                                 <input name="image" class="img form-control @error('image') is-invalid @enderror"
                                     type="file" id="image" required />
                                 @error('image')

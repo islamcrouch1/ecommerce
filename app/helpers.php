@@ -452,6 +452,30 @@ if (!function_exists('checkUnitsCategoryForTrash')) {
 }
 
 
+if (!function_exists('checkWebsiteCategoryForTrash')) {
+    function checkWebsiteCategoryForTrash($website_category)
+    {
+        if ($website_category->posts()->withTrashed()->count() > '0') {
+            return false;
+        } else {
+            return true;
+        }
+    }
+}
+
+
+if (!function_exists('checPostForTrash')) {
+    function checPostForTrash($website_category)
+    {
+        return true;
+    }
+}
+
+
+
+
+
+
 if (!function_exists('checkUnitForTrash')) {
     function checkUnitForTrash($unit)
     {
@@ -3260,7 +3284,12 @@ if (!function_exists('getItemAccount')) {
                         'reference_id' =>  $user->id,
                         'type' => $type,
                         'branch_id' => $branch_id,
+                        'currency_id' => getDefaultCurrency()->id,
                         'created_by' => Auth::id(),
+                    ]);
+                } else {
+                    $account->update([
+                        'currency_id' => getDefaultCurrency()->id,
                     ]);
                 }
             } else {
@@ -3281,8 +3310,13 @@ if (!function_exists('getItemAccount')) {
                         'account_type' => $main_account->account_type,
                         'reference_id' =>  null,
                         'type' => $type,
+                        'currency_id' => getDefaultCurrency()->id,
                         'branch_id' => $branch_id,
                         'created_by' => Auth::id(),
+                    ]);
+                } else {
+                    $account->update([
+                        'currency_id' => getDefaultCurrency()->id,
                     ]);
                 }
             }
@@ -3303,8 +3337,13 @@ if (!function_exists('getItemAccount')) {
                     'account_type' => $main_account->account_type,
                     'reference_id' =>  null,
                     'type' => $type,
+                    'currency_id' => getDefaultCurrency()->id,
                     'branch_id' => $branch_id,
                     'created_by' => Auth::id(),
+                ]);
+            } else {
+                $account->update([
+                    'currency_id' => getDefaultCurrency()->id,
                 ]);
             }
         } else {
@@ -3324,8 +3363,13 @@ if (!function_exists('getItemAccount')) {
                     'account_type' => $main_account->account_type,
                     'reference_id' =>  $parent->id,
                     'type' => $type,
+                    'currency_id' => getDefaultCurrency()->id,
                     'branch_id' => $branch_id,
                     'created_by' => Auth::id(),
+                ]);
+            } else {
+                $parent_account->update([
+                    'currency_id' => getDefaultCurrency()->id,
                 ]);
             }
 
@@ -3348,8 +3392,13 @@ if (!function_exists('getItemAccount')) {
                     'account_type' => $parent_account->account_type,
                     'reference_id' =>  $item->id,
                     'type' => $new_type,
+                    'currency_id' => getDefaultCurrency()->id,
                     'branch_id' => $branch_id,
                     'created_by' => Auth::id(),
+                ]);
+            } else {
+                $account->update([
+                    'currency_id' => getDefaultCurrency()->id,
                 ]);
             }
         }

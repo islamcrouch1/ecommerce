@@ -43,18 +43,14 @@
 
                         <div id="home-carousel" class="carousel slide" data-bs-ride="carousel">
                             <div class="carousel-inner">
-                                <div class="carousel-item active">
-                                    <img src="{{ asset('/assets/img/elkomy/slide1.png') }}" class="d-block w-100"
-                                        alt="...">
-                                </div>
-                                <div class="carousel-item">
-                                    <img src="{{ asset('/assets/img/elkomy/slide2.png') }}" class="d-block w-100"
-                                        alt="...">
-                                </div>
-                                <div class="carousel-item">
-                                    <img src="{{ asset('/assets/img/elkomy/slide3.png') }}" class="d-block w-100"
-                                        alt="...">
-                                </div>
+
+                                @foreach ($slides as $slide)
+                                    <div class="carousel-item {{ $loop->first ? 'active' : '' }} ">
+                                        <a href="{{ $slide->url }}">
+                                            <img src="{{ getImageAsset($slide) }}" class="d-block w-100" alt="...">
+                                        </a>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
 
@@ -290,68 +286,9 @@
         <!-- end partners -->
 
 
-        <!-- start projects -->
-        <section class="tc-projects-style39">
-            <div class="container-fluid p-0">
-                <div class="content">
-                    <div class="info wow fadeInUp slow">
-                        <h2 class="float-title"> Portfolio </h2>
-                        <h6 class="fsz-14 ltspc-1 color-blue6 text-uppercase"> portfolio </h6>
-                        <h3 class="fsz-50"> What We Did Already </h3>
-                        <div class="arrows">
-                            <a href="#0" class="swiper-prev"> <i
-                                    class="fal fa-long-arrow-{{ app()->getLocale() == 'ar' ? 'right' : 'left' }}"></i>
-                            </a>
-                            <a href="#0" class="swiper-next"> <i
-                                    class="fal fa-long-arrow-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }}"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="tc-projects-slider39 wow fadeInUp slow" data-wow-delay="0.5s">
-                        <div class="swiper-wrapper">
-                            <div class="swiper-slide">
-                                <div class="project-card">
-                                    <div class="img img-cover">
-                                        <img src="{{ asset('assets/img/projects/1.jpg') }}" alt="">
-                                    </div>
-                                    <div class="inf pt-40">
-                                        <h6 class="fsz-14 ltspc-1 color-blue6 text-uppercase mb-10"> software </h6>
-                                        <h5 class="fsz-24 fw-bold"> <a href="#" class="hover-underLine"> Yokoli App
-                                                Development </a> </h5>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <div class="project-card">
-                                    <div class="img img-cover">
-                                        <img src="{{ asset('assets/img/projects/2.jpg') }}" alt="">
-                                    </div>
-                                    <div class="inf pt-40">
-                                        <h6 class="fsz-14 ltspc-1 color-blue6 text-uppercase mb-10"> app, ux </h6>
-                                        <h5 class="fsz-24 fw-bold"> <a href="#" class="hover-underLine"> Mikando
-                                                Website Design </a> </h5>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <div class="project-card">
-                                    <div class="img img-cover">
-                                        <img src="{{ asset('assets/img/projects/3.jpg') }}" alt="">
-                                    </div>
-                                    <div class="inf pt-40">
-                                        <h6 class="fsz-14 ltspc-1 color-blue6 text-uppercase mb-10"> design </h6>
-                                        <h5 class="fsz-24 fw-bold"> <a href="#" class="hover-underLine"> Humble
-                                                Game Design </a> </h5>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- end projects -->
-
+        @include('front._portfolio', [
+            'posts' => $portfolio_posts,
+        ])
 
         <!-- Start video -->
         <section class="tc-video-style39">

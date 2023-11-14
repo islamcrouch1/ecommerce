@@ -5,7 +5,7 @@
     <header class="tc-header-style10">
         <div style="z-index: 0" class="container">
             <div class="title text-capitalize text-center text-white">
-                <h1 class="fsz-60"> {{ __('About Elkomy') }} </h1>
+                <h1 class="fsz-60"> {{ $post != null ? getName($post) : '' }} </h1>
             </div>
             <p class="fsz-18 mt-30 text-white op-6">{{ __('We are building tomorrow') }}</p>
         </div>
@@ -13,7 +13,7 @@
         <div class="head-links">
             <a href="{{ route('front.index') }}"> {{ __('Home') }} </a>
             <span class="icon mx-2"> <i class="fal fa-angle-right"></i> </span>
-            <a href="{{ route('front.about') }}" class="active gold"> {{ __('About Elkomy') }} </a>
+            <a href="{{ route('front.about') }}" class="active gold"> {{ $post != null ? getName($post) : '' }} </a>
         </div>
     </header>
     <!-- end header -->
@@ -30,16 +30,29 @@
             <div class="container">
                 <div class="cards">
                     <div class="row">
-                        <div class="col-lg-6">
-                            <div class="img img-cover">
-                                <img src="{{ asset('/assets/img/elkomy/about1.jpg') }}" alt="">
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="img img-cover">
-                                <img src="{{ asset('/assets/img/elkomy/about2.jpg') }}" alt="">
-                            </div>
-                        </div>
+
+                        @if ($post != null)
+                            @if ($post->media_id != null)
+                                <div class="col-lg-12">
+                                    <div style="height:100% !important" class="img img-cover">
+                                        <img src="{{ asset($post->media->path) }}" alt="">
+                                    </div>
+                                </div>
+                            @endif
+
+
+                            @if ($post->images->count() > 0)
+                                @foreach ($post->images as $image)
+                                    <div class="col-lg-6">
+                                        <div class="img img-cover">
+                                            <img src="{{ asset($image->media->path) }}" alt="">
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endif
+                        @endif
+
+
                     </div>
                 </div>
                 <div class="info">
@@ -50,7 +63,15 @@
                                     <img src="{{ asset('/assets/img/elkomy/elkomy-logo.png') }}" alt="">
                                 </div>
                                 <div class="text">
-                                    {{ __('In the late 1970s, Elkomy holding was founded by opening its own currency exchange agency. In 1995, Elkomy decided to start another professional business by opening the Suez iron factory at Suez Industrial Zone. Our success didn’t stop here; Elkomy continued to move forward and entered the real estate market, conquering it by constructing, developing, and investing in several real estate projects since 2002. And now, joining the education sector, contributing with our expertise and global vision to build a new well-educated generation. Elkomy aims to spread strength, quality, and innovation to contribute to building the future.') }}
+
+                                    @if ($post != null)
+                                        @if (app()->getLocale() == 'ar')
+                                            {!! $post->description_ar !!}
+                                        @else
+                                            {!! $post->description_en !!}
+                                        @endif
+                                    @endif
+
                                 </div>
                                 <div class="btns">
                                     <div class="button_su shadow-lg radius-3 me-3">
@@ -119,7 +140,7 @@
         <!-- end tc-page-about-clients -->
 
 
-        <!-- start tc-page-about-timeline -->
+        {{-- <!-- start tc-page-about-timeline -->
         <section class="tc-page-about-timeline">
             <div class="container">
                 <div class="section-title section-title-style24 text-center mb-50">
@@ -216,7 +237,7 @@
                 </div>
             </div>
         </section>
-        <!-- end tc-page-about-numbers -->
+        <!-- end tc-page-about-numbers --> --}}
 
 
         <!-- start tc-testimonials-style24 -->

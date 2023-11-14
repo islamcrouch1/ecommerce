@@ -764,6 +764,55 @@
 
                                     <div class="mb-3">
                                         <label class="form-label"
+                                            for="default_lang">{{ __('default language') }}</label>
+
+                                        <select class="form-select @error('default_lang') is-invalid @enderror"
+                                            aria-label="" name="default_lang" id="default_lang">
+                                            <option value="">
+                                                {{ __('select language') }}
+                                            </option>
+                                            <option value="ar"
+                                                {{ setting('default_lang') == 'ar' ? 'selected' : '' }}>
+                                                {{ __('arabic') }}
+                                            </option>
+                                            <option value="en"
+                                                {{ setting('default_lang') == 'en' ? 'selected' : '' }}>
+                                                {{ __('english') }}
+                                            </option>
+                                        </select>
+                                        @error('default_lang')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="main_route">{{ __('main link redirection') }}</label>
+
+                                        <select class="form-select @error('main_route') is-invalid @enderror"
+                                            aria-label="" name="main_route" id="main_route">
+                                            <option value="admin_login"
+                                                {{ setting('main_route') == 'admin_login' ? 'selected' : '' }}>
+                                                {{ __('admin login') }}
+                                            </option>
+                                            <option value="ecommerce_home"
+                                                {{ setting('main_route') == 'ecommerce_home' ? 'selected' : '' }}>
+                                                {{ __('ecommerce home') }}
+                                            </option>
+                                            <option value="presentation_website"
+                                                {{ setting('main_route') == 'presentation_website' ? 'selected' : '' }}>
+                                                {{ __('presentation website') }}
+                                            </option>
+                                        </select>
+                                        @error('default_lang')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <label class="form-label"
                                             for="compression_ratio">{{ __('Image Compression Ratio') }}</label>
                                         <input name="compression_ratio"
                                             class="form-control @error('compression_ratio') is-invalid @enderror"

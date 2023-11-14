@@ -148,7 +148,9 @@
         </section>
         <!-- end tc-services-content -->
 
-
+        @include('front._portfolio', [
+            'posts' => $portfolio_posts,
+        ])
 
 
     </main>

@@ -19,244 +19,51 @@
                             enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
-                            <div class="mb-3">
-                                <label class="form-label" for="name">{{ __('role name') }}</label>
-                                <input name="name" class="form-control @error('name') is-invalid @enderror"
-                                    value="{{ $role->name }}" type="text" autocomplete="on" id="name" autofocus
-                                    required />
-                                @error('name')
-                                    <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
 
-                            <div class="mb-3">
-                                <label class="form-label" for="description">{{ __('role description') }}</label>
-                                <input name="description" class="form-control @error('description') is-invalid @enderror"
-                                    value="{{ $role->description }}" type="text" autocomplete="on" id="description"
-                                    autofocus required />
-                                @error('description')
-                                    <div class="alert alert-danger">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            <div class="row">
 
-                            <div class="mb-3">
-                                <label class="form-label" for="code">{{ __('Permissions') }}</label>
-
-                                <div class="table-responsive scrollbar">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">{{ __('Module') }}</th>
-                                                <th scope="col">{{ __('Permissions') }}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @php
-                                                $models = [
-                                                    'users',
-                                                    'roles',
-                                                    'settings',
-                                                    'countries',
-                                                    'categories',
-                                                    'orders',
-                                                    'vendor_orders',
-                                                    'products',
-                                                    'shipping_rates',
-                                                    'withdrawals',
-                                                    'notes',
-                                                    'queries',
-                                                    'messages',
-                                                    'orders_report',
-                                                    'slides',
-                                                    'orders_notes',
-                                                    'logs',
-                                                    'bonus',
-                                                    'warehouses',
-                                                    'add_stock',
-                                                    'stock_lists',
-                                                    'stock_inventory',
-                                                    'stock_transfers',
-                                                    'stock_shortages',
-                                                    'running_orders',
-                                                    'brands',
-                                                    'attributes',
-                                                    'variations',
-                                                    'website_setting',
-                                                    'states',
-                                                    'cities',
-                                                    'shipping_methods',
-                                                    'medias',
-                                                    'accounts',
-                                                    'taxes',
-                                                    'petty_cash',
-                                                    'entries',
-                                                    'quick_entries',
-                                                    'purchases',
-                                                    'income_statement',
-                                                    'sales',
-                                                    'branches',
-                                                    'credit_management',
-                                                    'stages',
-                                                    'previews',
-                                                    'previews_clients',
-                                                    'previews_score',
-                                                    'assets',
-                                                    'cash_accounts',
-                                                    'accounting_operations',
-                                                    'balance_statement',
-                                                    'crm',
-                                                    'vendor_products',
-                                                    'trial_balance',
-                                                    'payments',
-                                                    'coupons',
-                                                    'carts',
-                                                    'website_traffic',
-                                                    'offers',
-                                                    'testimonials',
-                                                    'reviews',
-                                                    'installment_companies',
-                                                    'installment_requests',
-                                                    'shipping_companies',
-                                                    'employees',
-                                                    'attendances',
-                                                    'rewards',
-                                                    'payroll',
-                                                    'employee_permissions',
-                                                    'contacts',
-                                                    'units_categories',
-                                                    'units',
-                                                    'boms',
-                                                    'manufacturing_orders',
-                                                    'quotations',
-                                                    'rfq',
-                                                    'currencies',
-                                                    'exchange_rates',
-                                                    'invoices',
-                                                ];
-                                                $models_ar = [
-                                                    'المستخدمين',
-                                                    'الصلاحيات',
-                                                    'الاعدادات',
-                                                    'الدول',
-                                                    'الأقسام ',
-                                                    'الطلبات',
-                                                    'طلبات التجار',
-                                                    'المنتجات',
-                                                    'أسعار الشحن',
-                                                    'طلبات سحب الرصيد',
-                                                    'الملاحظات',
-                                                    'الاستفسارات',
-                                                    'الرسائل والدعم',
-                                                    'تقرير الطلبات',
-                                                    'سلايدر',
-                                                    'ملاحظات الاوردرات',
-                                                    'سجل الأنشطة',
-                                                    'البونص',
-                                                    'المخازن',
-                                                    'أضافة مخزون',
-                                                    'سجلات المخزون',
-                                                    'جرد المخزون',
-                                                    'تحويلات المخزون',
-                                                    'نواقص المخزون',
-                                                    'اوامر تشعيل المخازن',
-                                                    'العلامات التجارية',
-                                                    'سمات المنتجات',
-                                                    'متغيرات المنتجات',
-                                                    'اعدادات الموقع',
-                                                    'المحافظات',
-                                                    'المدن',
-                                                    'طرق الشحن',
-                                                    'الوسائط',
-                                                    'الحسابات',
-                                                    'الضرائب',
-                                                    'العهد',
-                                                    'القيود اليومية',
-                                                    'القيود السريعة',
-                                                    'المشتريات',
-                                                    'قوائم الدخل',
-                                                    'المبيعات',
-                                                    'الفروع',
-                                                    'ادارة الائتمان',
-                                                    'مراحل المعاينات',
-                                                    'المعاينات',
-                                                    'عملاء المعاينات',
-                                                    'نتيجة المعاينات',
-                                                    'ادارة الاصول',
-                                                    'حسابات الخزينة',
-                                                    'العمليات المحاسبية',
-                                                    'الميزانية العمومية',
-                                                    'ادارة العملاء',
-                                                    'منتجات التجار',
-                                                    'ميزان المراجعة',
-                                                    'الدفغ',
-                                                    'الكوبونات',
-                                                    'سلات التسوق',
-                                                    'زوار الموقع الالكتروني',
-                                                    'العروض',
-                                                    'اراء العملاء',
-                                                    'تقييمات المنتجات',
-                                                    'شركات التقسيط',
-                                                    'طلبات التقسيط',
-                                                    'شركات الشحن',
-                                                    'الموظفين',
-                                                    'الحضور والانصراف',
-                                                    'المكافآت',
-                                                    'كشف الرواتب',
-                                                    'اذونات الموظفين',
-                                                    'تواصل معنا',
-                                                    'اقسام وحدات القياس',
-                                                    'وحدات القياس',
-                                                    'قائمة مكونات المواد',
-                                                    'اوامر التصنيع',
-                                                    'عروض الاسعار',
-                                                    'طلبات عروض الاسعار',
-                                                    'العملات',
-                                                    'اسعار الصرف',
-                                                    'الفواتير',
-                                                ];
-                                            @endphp
-
-                                            @foreach ($models as $index => $model)
-                                                <tr>
-                                                    <td>{{ app()->getLocale() == 'ar' ? $models_ar[$index] : $model }}
-                                                    </td>
-                                                    <td>
-                                                        @php
-                                                            $permissions_maps = ['create', 'update', 'read', 'delete', 'trash', 'restore'];
-                                                            $permissions_maps_ar = ['انشاء', 'تعديل', 'مشاهدة', 'حذف نهائي', 'حذف مؤقت', 'استعادة'];
-                                                        @endphp
-
-                                                        @if ($model == 'settings')
-                                                            @php
-                                                                $permissions_maps = ['read', 'update'];
-                                                                $permissions_maps_ar = ['مشاهدة', 'تعديل'];
-                                                            @endphp
-                                                        @endif
-                                                        <div class="mb-3">
-                                                            <select
-                                                                class="form-select @error('permissions') is-invalid @enderror js-choice"
-                                                                name="permissions[]" multiple="multiple"
-                                                                data-options='{"removeItemButton":true,"placeholder":true}'>
-                                                                @foreach ($permissions_maps as $index => $permissions_map)
-                                                                    <option
-                                                                        {{ $role->hasPermission($model . '-' . $permissions_map) ? 'selected' : '' }}
-                                                                        value="{{ $model . '-' . $permissions_map }}">
-                                                                        {{ app()->getLocale() == 'ar' ? $permissions_maps_ar[$index] : $permissions_map }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                            @error('permissions')
-                                                                <div class="alert alert-danger">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-
-                                        </tbody>
-                                    </table>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="name">{{ __('role name') }}</label>
+                                    <input name="name" class="form-control @error('name') is-invalid @enderror"
+                                        value="{{ $role->name }}" type="text" autocomplete="on" id="name"
+                                        autofocus required />
+                                    @error('name')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
                                 </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="description">{{ __('role description') }}</label>
+                                    <input name="description"
+                                        class="form-control @error('description') is-invalid @enderror"
+                                        value="{{ $role->description }}" type="text" autocomplete="on" id="description"
+                                        autofocus required />
+                                    @error('description')
+                                        <div class="alert alert-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+
+
+
+                                @foreach ($data['models'] as $key => $model)
+                                    <hr class="my-4">
+
+                                    <div class="mb-3">
+                                        <h5>{{ __($key) }}</h5>
+                                    </div>
+
+                                    @include('dashboard.roles._select_input', [
+                                        'models' => $data['models'][$key],
+                                        'permissions' => $data['permissions'],
+                                    ])
+                                @endforeach
+
+                                <hr class="my-4">
+
+
                             </div>
+
 
                             <div class="mb-3">
                                 <button class="btn btn-primary d-block w-100 mt-3" type="submit"

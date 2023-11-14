@@ -18,10 +18,12 @@ class SetLocale
      */
     public function handle(Request $request, Closure $next)
     {
+
+
         if (DB::connection()->getDatabaseName() != '' && Auth::check()) {
             app()->setLocale(Auth::user()->lang);
         } else {
-            session('lang') == null ?  app()->setLocale('ar') :  app()->setLocale(session('lang'));
+            session('lang') == null ?  app()->setLocale(setting('default_lang') == null ? 'ar' : setting('default_lang')) :  app()->setLocale(session('lang'));
         }
         return $next($request);
     }

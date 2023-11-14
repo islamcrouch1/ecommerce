@@ -24,3 +24,4 @@ Route::get('/front/videos', [FrontController::class, 'videos'])->name('front.vid
 
 
 Route::get('/front/careers', [FrontController::class, 'careers'])->name('front.careers');
+Route::get('/front/post/{post}/{slug}', [FrontController::class, 'post'])->name('front.posts');

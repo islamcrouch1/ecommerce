@@ -44,7 +44,145 @@ class RoleController extends Controller
      */
     public function create()
     {
-        return view('dashboard.roles.create');
+
+        $data = $this->getModels();
+        return view('dashboard.roles.create', compact('data'));
+    }
+
+
+    private function getModels()
+    {
+
+
+        $models['en'] = [
+            'categories',
+            'orders',
+            'vendor_orders',
+            'products',
+            'shipping_rates',
+            'withdrawals',
+            'messages',
+            'orders_report',
+            'slides',
+            'logs',
+            'bonus',
+            'warehouses',
+            'add_stock',
+            'stock_lists',
+            'stock_inventory',
+            'stock_transfers',
+            'stock_shortages',
+            'running_orders',
+            'brands',
+            'attributes',
+            'variations',
+            'shipping_methods',
+            'medias',
+            'accounts',
+            'taxes',
+            'petty_cash',
+            'entries',
+            'quick_entries',
+            'purchases',
+            'income_statement',
+            'sales',
+            'credit_management',
+            'stages',
+            'previews',
+            'previews_clients',
+            'previews_score',
+            'assets',
+            'cash_accounts',
+            'accounting_operations',
+            'balance_statement',
+            'crm',
+            'vendor_products',
+            'trial_balance',
+            'payments',
+            'coupons',
+            'carts',
+            'website_traffic',
+            'offers',
+            'testimonials',
+            'reviews',
+            'installment_companies',
+            'installment_requests',
+            'employees',
+            'attendances',
+            'rewards',
+            'payroll',
+            'employee_permissions',
+            'contacts',
+            'units_categories',
+            'units',
+            'boms',
+            'manufacturing_orders',
+            'quotations',
+            'rfq',
+            'currencies',
+            'exchange_rates',
+            'invoices',
+        ];
+
+
+        $data['models'] = [
+            'Users & Roles' => [
+                'users', 'roles',
+            ],
+            'Users pages' => [
+                'user_permissions', 'notifications',
+            ],
+            'Settings' => [
+                'settings', 'website_setting', 'logs', 'messages', 'bonus'
+            ],
+            'Countries && Shipping' => [
+                'countries', 'states', 'cities', 'shipping_companies', 'branches',
+            ],
+            'HR' => [
+                'employees', 'attendances', 'rewards', 'payroll', 'employee_permissions'
+            ],
+            'website management' => [
+                'website_categories',  'slides', 'posts'
+            ],
+            'Medias' => [
+                'medias'
+            ],
+            'Marketing' => [
+                'carts', 'coupons', 'website_traffic', 'offers', 'testimonials'
+            ],
+            'CRM' => [
+                'crm', 'contacts', 'notes', 'queries',
+            ],
+            'Credit Management' => [
+                'credit_management', 'stages', 'previews_clients', 'previews'
+            ],
+            'Products && categories' => [
+                'categories', 'brands', 'attributes', 'variations', 'products', 'vendor_products', 'units_categories', 'units',
+            ],
+            'Warehouses Management' => [
+                'warehouses', 'add_stock', 'stock_lists', 'stock_inventory', 'stock_transfers', 'stock_shortages', 'running_orders',
+            ],
+            'Website orders' => [
+                'orders', 'vendor_orders', 'installment_requests', 'withdrawals', 'orders_report', 'orders_notes',
+
+            ],
+            'Purchases' => [
+                'purchases', 'rfq'
+            ],
+            'Sales' => [
+                'sales', 'quotations', 'invoices'
+            ],
+            'Accounts' => [
+                'accounts', 'assets', 'entries', 'trial_balance', 'income_statement', 'balance_statement', 'taxes', 'cash_accounts', 'petty_cash', 'currencies', 'exchange_rates',
+            ],
+            'manufacturing' => [
+                'boms', 'manufacturing_orders'
+            ],
+        ];
+
+        $data['permissions'] = ['create', 'update', 'read', 'delete', 'trash', 'restore'];
+
+        return $data;
     }
 
     /**
@@ -98,7 +236,8 @@ class RoleController extends Controller
     public function edit($role)
     {
         $role = Role::find($role);
-        return view('dashboard.roles.edit')->with('role', $role);
+        $data = $this->getModels();
+        return view('dashboard.roles.edit', compact('role', 'data'));
     }
 
     /**

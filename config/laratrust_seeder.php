@@ -94,6 +94,7 @@ return [
             'currencies' => 'c,r,u,d,t,s',
             'exchange_rates' => 'c,r,u,d,t,s',
             'invoices' => 'c,r,u,d,t,s',
+            'website_categories' => 'c,r,u,d,t,s',
         ],
         'administrator' => [],
         'vendor' => [],

@@ -1434,9 +1434,6 @@ if (!function_exists('createInvoice')) {
 
             try {
 
-
-
-
                 //we will not use combination if product type is service or digital
                 $combination = ProductCombination::find($request->selected_combinations[$index]);
                 $product = Product::findOrFAil($request->prods[$index]);
@@ -1463,9 +1460,6 @@ if (!function_exists('createInvoice')) {
                     'total_price' => $subtotal,
                     'subtotal_price' => $subtotal,
                 ]);
-
-
-
 
                 if ($product->product_type == 'variable' || $product->product_type == 'simple') {
                     if ($request->status == 'invoice' || $request->status == 'credit_note') {
@@ -1553,6 +1547,30 @@ if (!function_exists('createInvoice')) {
 }
 
 
+
+if (!function_exists('getTotalorders')) {
+    function getTotalorders($user)
+    {
+
+        $total = 0;
+        $orders = $user->orders;
+        $currency = getDefaultCurrency();
+
+        foreach ($orders as $order) {
+            if ($order->status == 'completed') {
+
+                if ($order->currency_id != $currency->id) {
+                    $exchange_rate = getExchangeRate($order->currency_id);
+                } else {
+                    $exchange_rate = 1;
+                }
+                $total += ($order->total_price + $order->shipping_amount) * $exchange_rate;
+            }
+        }
+
+        return $total;
+    }
+}
 
 
 

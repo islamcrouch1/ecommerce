@@ -38,6 +38,7 @@ use App\Http\Controllers\Dashboard\OffersController;
 use App\Http\Controllers\Dashboard\OrdersController;
 use App\Http\Controllers\Dashboard\PasswordResetController;
 use App\Http\Controllers\Dashboard\PaymentsController;
+use App\Http\Controllers\Dashboard\PostsController;
 use App\Http\Controllers\Dashboard\PreviewsClientsController;
 use App\Http\Controllers\Dashboard\PreviewsController;
 use App\Http\Controllers\Dashboard\PurchasesController;
@@ -66,6 +67,7 @@ use App\Http\Controllers\Dashboard\UsersCartsController;
 use App\Http\Controllers\Dashboard\UsersController;
 use App\Http\Controllers\Dashboard\VariationsController;
 use App\Http\Controllers\Dashboard\WarehousesController;
+use App\Http\Controllers\Dashboard\WebsiteCategoriesController;
 use App\Http\Controllers\Dashboard\WebsitesettingController;
 use App\Http\Controllers\Dashboard\WithdrawalsController;
 use Illuminate\Support\Facades\Route;
@@ -508,13 +510,22 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::post('/calculate/total', [InvoicesController::class, 'calTotal'])->name('total.calculate')->middleware('auth', 'checkverified', 'checkstatus');
 
 
-
-
-
-
     Route::post('/combination/purchase', [PurchasesController::class, 'searchPurchase'])->name('purchases.combinations')->middleware('auth', 'checkverified', 'checkstatus');
     Route::post('/combination/purchase/calculate', [PurchasesController::class, 'calTotal'])->name('purchases.combinations.cal')->middleware('auth', 'checkverified', 'checkstatus');
 
+
+    // website categories routes
+    Route::resource('/website_categories', WebsiteCategoriesController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
+    Route::get('/trashed-website_categories', [WebsiteCategoriesController::class, 'trashed'])->name('website_categories.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-website_categories/{website_category}', [WebsiteCategoriesController::class, 'restore'])->name('website_categories.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+
+    // website categories routes
+    Route::resource('/posts', PostsController::class)->middleware('auth', 'verifiedphone', 'checkstatus');
+    Route::get('/trashed-posts', [PostsController::class, 'trashed'])->name('posts.trashed')->middleware('auth', 'checkverified', 'checkstatus');
+    Route::get('/trashed-posts/{post}', [PostsController::class, 'restore'])->name('posts.restore')->middleware('auth', 'checkverified', 'checkstatus');
+
+    Route::post('/delete-media-posts', [PostsController::class, 'deleteMedia'])->name('posts.delete.media')->middleware('auth', 'checkverified', 'checkstatus');
 
 
     // --------------------------------------------- Vendors Routes ---------------------------------------------

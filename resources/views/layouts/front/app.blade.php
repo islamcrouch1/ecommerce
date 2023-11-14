@@ -19,12 +19,12 @@
     <!-- ===============================================-->
     <!--    Favicons-->
     <!-- ===============================================-->
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/fevicon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/fevicon.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/img/fevicon.png') }}">
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/img/fevicon.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset(websiteSettingMedia('header_icon')) }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset(websiteSettingMedia('header_icon')) }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset(websiteSettingMedia('header_icon')) }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ asset(websiteSettingMedia('header_icon')) }}">
     <link rel="manifest" href="{{ asset('/assets/img/favicons/manifest.json') }}">
-    <meta name="msapplication-TileImage" content="{{ asset('assets/img/fevicon.png') }}">
+    <meta name="msapplication-TileImage" content="{{ asset(websiteSettingMedia('header_icon')) }}">
     <meta name="theme-color" content="#ffffff">
 
 

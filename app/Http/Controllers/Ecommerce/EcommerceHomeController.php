@@ -50,7 +50,7 @@ class EcommerceHomeController extends Controller
         // $categories = Category::whereNull('parent_id')->where('country_id', $country->id)->orderBy('sort_order', 'asc')->get();
 
 
-        $slides = Slide::orderBy('sort_order', 'asc')->get();
+        $slides = Slide::where('slider_id', '3')->orderBy('sort_order', 'asc')->get();
 
         // $products = Product::whereHas('stocks', function ($query) {
         //     $query->where('qty', '!=', '0');

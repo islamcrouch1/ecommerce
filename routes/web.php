@@ -35,7 +35,16 @@ if (!file_exists(storage_path('installed'))) {
 
 
 Route::get('/', function () {
-    return redirect()->route('ecommerce.home');
+
+    if (setting('main_route') == 'admin_login') {
+        return redirect()->route('login');
+    } elseif (setting('main_route') == 'ecommerce_home') {
+        return redirect()->route('ecommerce.home');
+    } elseif (setting('main_route') == 'presentation_website') {
+        return redirect()->route('front.index');
+    } else {
+        return redirect()->route('login');
+    }
 })->name('base.url');
 
 

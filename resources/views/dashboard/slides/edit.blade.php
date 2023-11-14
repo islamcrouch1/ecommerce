@@ -24,12 +24,14 @@
 
                                 <select class="form-select select-slider @error('slider_id') is-invalid @enderror"
                                     aria-label="" name="slider_id" id="slider_id" required>
-                                    <option value="">
-                                        {{ __('select slider') }}
-                                    </option>
-                                    <option value="3" {{ $slide->slider_id == 3 ? 'selected' : '' }}>
+
+                                    <option value="4" {{ $slide->slider_id == 4 ? 'selected' : '' }}>
                                         {{ __('home page Slider') }}
                                     </option>
+                                    <option value="3" {{ $slide->slider_id == 3 ? 'selected' : '' }}>
+                                        {{ __('ecommerce Slider') }}
+                                    </option>
+
                                 </select>
                                 @error('slider_id')
                                     <div class="alert alert-danger">{{ $message }}</div>

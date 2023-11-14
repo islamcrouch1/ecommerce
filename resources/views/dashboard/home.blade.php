@@ -20,6 +20,108 @@
     </div>
 
 
+
+    <div class="row g-3 mb-3">
+        <div class="col">
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <div class="card overflow-hidden" style="min-width: 12rem">
+                        <div class="bg-holder bg-card"
+                            style="background-image:url(../assets/img/icons/spot-illustrations/corner-3.png);">
+                        </div>
+                        <!--/.bg-holder-->
+
+                        <div class="card-body position-relative">
+                            <h6>{{ __('users') }}</h6>
+                            <div class="display-4 fs-4 mb-2 fw-normal font-sans-serif text-success">
+                                {{ $users_count }}
+                            </div>
+                            <a class="fw-semi-bold fs--1 text-nowrap" href="{{ route('users.index') }}">
+                                {{ __('all users') }}
+                                <span class="fas fa-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }} ms-1"
+                                    data-fa-transform="down-1"></span></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card overflow-hidden" style="min-width: 12rem">
+                        <div class="bg-holder bg-card"
+                            style="background-image:url(../assets/img/icons/spot-illustrations/corner-2.png);">
+                        </div>
+                        <!--/.bg-holder-->
+
+
+
+                        <div class="card-body position-relative">
+                            <h6>{{ __('sales orders') }}
+                            </h6>
+                            <div class="display-4 fs-4 mb-2 fw-normal font-sans-serif text-info">
+                                {{ $sales_count }}
+                            </div>
+                            <a class="fw-semi-bold fs--1 text-nowrap" href="{{ route('sales.index') }}">
+                                {{ __('all sales orders') }}
+                                <span class="fas fa-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }} ms-1"
+                                    data-fa-transform="down-1"></span></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card overflow-hidden" style="min-width: 12rem">
+                        <div class="bg-holder bg-card"
+                            style="background-image:url(../assets/img/icons/spot-illustrations/corner-1.png);">
+                        </div>
+                        <!--/.bg-holder-->
+
+
+
+                        <div class="card-body position-relative">
+                            <h6>{{ __('purchases orders') }}
+                            </h6>
+                            <div class="display-4 fs-4 mb-2 fw-normal font-sans-serif text-danger">
+                                {{ $purchases_count }}
+                            </div>
+                            <a class="fw-semi-bold fs--1 text-nowrap" href="{{ route('purchases.index') }}">
+                                {{ __('all purchases orders') }}
+                                <span class="fas fa-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }} ms-1"
+                                    data-fa-transform="down-1"></span></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card overflow-hidden" style="min-width: 12rem">
+                        <div class="bg-holder bg-card"
+                            style="background-image:url(../assets/img/icons/spot-illustrations/corner-4.png);">
+                        </div>
+                        <!--/.bg-holder-->
+
+
+
+                        <div class="card-body position-relative">
+                            <h6>{{ __('products') }}
+                            </h6>
+                            <div class="display-4 fs-4 mb-2 fw-normal font-sans-serif text-warning">
+                                {{ $products_count }}
+                            </div>
+                            <a class="fw-semi-bold fs--1 text-nowrap" href="{{ route('products.index') }}">
+                                {{ __('all products') }}
+                                <span class="fas fa-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }} ms-1"
+                                    data-fa-transform="down-1"></span></a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+
     @if (Auth::user()->hasRole('administrator'))
 
 

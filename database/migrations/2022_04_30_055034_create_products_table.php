@@ -50,7 +50,7 @@ return new class extends Migration
             $table->enum('best_selling', ['0', '1'])->default('0')->comment('0 for not sale & 1 for on sale');
             $table->integer('product_min_order')->nullable();
             $table->integer('product_max_order')->nullable();
-            $table->string('seo_meta_tag')->nullable();
+            $table->longText('seo_meta_tag')->nullable();
             $table->longText('seo_desc')->nullable();
             $table->integer('created_by')->nullable();
             $table->integer('updated_by')->nullable();

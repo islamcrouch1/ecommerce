@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
+use App\Models\Slide;
+use App\Models\WebsiteCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Symfony\Component\DomCrawler\Crawler;
@@ -12,7 +15,16 @@ class FrontController extends Controller
 {
     public function index()
     {
-        return view('front.home');
+
+        $slides = Slide::where('slider_id', '4')->orderBy('sort_order', 'asc')->get();
+
+
+        $portfolio_posts = Post::whereHas('website_category', function ($query) {
+            $query->where('type', 'portfolio');
+        })->inRandomOrder()->limit(7)->get();
+
+
+        return view('front.home', compact('slides', 'portfolio_posts'));
     }
 
     public function fqs()
@@ -26,7 +38,12 @@ class FrontController extends Controller
     }
     public function about()
     {
-        return view('front.about');
+
+        $post = Post::whereHas('website_category', function ($query) {
+            $query->where('type', 'about');
+        })->inRandomOrder()->first();
+
+        return view('front.about', compact('post'));
     }
     public function strategy()
     {
@@ -46,7 +63,11 @@ class FrontController extends Controller
 
     public function real()
     {
-        return view('front.real');
+
+        $category = WebsiteCategory::where('type', 'portfolio')->where('name_en', 'Real estate investmnet')->first();
+        $portfolio_posts = $category->posts()->orderBy('sort_order', 'asc')->inRandomOrder()->limit(10)->get();
+
+        return view('front.real', compact('portfolio_posts'));
     }
 
 
@@ -72,6 +93,17 @@ class FrontController extends Controller
     public function careers()
     {
         return view('front.careers');
+    }
+
+
+    public function post(Post $post, $slug)
+    {
+
+
+        $category = $post->website_category;
+        $portfolio_posts = $category->posts()->orderBy('sort_order', 'asc')->inRandomOrder()->limit(10)->get();
+
+        return view('front.post', compact('post', 'portfolio_posts'));
     }
 
 

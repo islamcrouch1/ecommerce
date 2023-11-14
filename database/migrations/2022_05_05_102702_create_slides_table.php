@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('slider_id');
             $table->string('url')->nullable();
             $table->string('media_id');
-            $table->integer('sort_order')->default(0);
+            $table->integer('sort_order')->nullable();
             $table->string('text_1_ar')->nullable();
             $table->string('text_1_en')->nullable();
             $table->string('text_2_ar')->nullable();

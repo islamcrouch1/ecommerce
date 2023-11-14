@@ -223,6 +223,10 @@ class SettingController extends Controller
 
 
 
+            'default_lang' => "nullable|string",
+            'main_route' => "nullable|string",
+
+
 
 
 
@@ -371,6 +375,10 @@ class SettingController extends Controller
 
         updateSetting('product_review', $request);
         updateSetting('order_review', $request);
+
+
+        updateSetting('default_lang', $request);
+        updateSetting('main_route', $request);
 
 
 

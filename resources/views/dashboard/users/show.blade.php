@@ -1,7 +1,7 @@
 @extends('layouts.dashboard.app')
 
 @section('adminContent')
-    <div class="row">
+    {{-- <div class="row">
         <div class="col-12">
             <div class="card mb-3 btn-reveal-trigger">
                 <div class="card-header position-relative min-vh-25 mb-8">
@@ -19,45 +19,220 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
 
-    <div class="row g-0">
-        <div class="col-lg-12 pe-lg-2">
-            <div class="card mb-3 overflow-hidden">
-                <div class="card-header">
-                    <h5 class="mb-0">{{ __('Account Information') }}</h5>
+
+
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <div class="row">
+
+                <div class="bg-white dark__bg-1100 p-3 h-100"><img
+                        class="img-thumbnail img-fluid rounded-circle mb-3 shadow-sm"
+                        src="{{ asset('storage/images/users/' . $user->profile) }}" alt="" width="100" />
                 </div>
-                <div class="card-body bg-light">
 
-
-                    <h6 class="fw-bold">{{ __('User ID') . ': #' . $user->id }}</h6>
-                    <h6 class="mt-2 fw-bold">{{ __('User Name') . ': ' . $user->name }}</h6>
-                    <h6 class="mt-2 fw-bold">{{ __('User Type') . ': ' }}
+                <div class="col">
+                    <h5 class="mb-2">{{ $user->name }} (<a href="mailto:{{ $user->email }}">{{ $user->email }}</a>)
+                    </h5><a class="btn btn-falcon-default btn-sm" href="#!"><span
+                            class="fas fa-plus fs--2 me-1"></span>Add
+                        note</a>
+                    <button class="btn btn-falcon-default btn-sm dropdown-toggle ms-2 dropdown-caret-none" type="button"
+                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span
+                            class="fas fa-ellipsis-h"></span></button>
+                    <div class="dropdown-menu dropdown-menu-end border py-0" aria-labelledby="customer-dropdown-0">
+                        <div class="bg-white py-2">
+                            @if (
+                                $user->trashed() &&
+                                    auth()->user()->hasPermission('users-restore'))
+                                <a class="dropdown-item"
+                                    href="{{ route('users.restore', ['user' => $user->id]) }}">{{ __('Restore') }}</a>
+                            @elseif(auth()->user()->hasPermission('users-update'))
+                                <a class="dropdown-item"
+                                    href="{{ route('users.edit', ['user' => $user->id]) }}">{{ __('Edit') }}</a>
+                                <a class="dropdown-item"
+                                    href="{{ route('users.activate', ['user' => $user->id]) }}">{{ hasVerifiedPhone($user) ? __('Deactivate') : __('Activate') }}</a>
+                                <a class="dropdown-item"
+                                    href="{{ route('users.block', ['user' => $user->id]) }}">{{ $user->status == 0 ? __('Block') : __('Unblock') }}</a>
+                                <a href="" class="dropdown-item" data-bs-toggle="modal"
+                                    data-bs-target="#bonus-modal-{{ $user->id }}">{{ __('Add bonus') }}</a>
+                            @endif
+                            @if (auth()->user()->hasPermission('users-delete') ||
+                                    auth()->user()->hasPermission('users-trash'))
+                                <form method="POST" action="{{ route('users.destroy', ['user' => $user->id]) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="dropdown-item text-danger"
+                                        type="submit">{{ $user->trashed() ? __('Delete') : __('Trash ') }}</button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div class="col-auto d-none d-sm-block">
+                    <h6 class="text-uppercase text-600">
                         @if ($user->hasRole('affiliate'))
                             {{ __('Affiliate') }}
                         @elseif($user->hasRole('vendor'))
                             {{ __('Vendor') }}
                         @elseif($user->hasRole('user'))
                             {{ __('user') }}
+                        @elseif($user->hasRole('administrator'))
+                            {{ __('administrator') }}
                         @endif
+                        <span class="fas fa-user ms-2"></span>
                     </h6>
-                    <h6 class="mt-2 fw-bold">
-                        {{ __('Country') . ': ' . App()->getLocale() == 'ar' ? $user->country->name_ar : $user->country->name_en }}
-                    </h6>
-                    <h6 class="mt-2 fw-bold">{{ __('Phone') . ': ' . $user->phone }}</h6>
-                    <h6 class="mt-2 fw-bold">{{ __('Gender') . ': ' . $user->gender }}</h6>
-                    <h6 class="mt-2 fw-bold">{{ __('Verification Code') . ': ' . $user->verification_code }}</h6>
-                    <h6 class="mt-2 fw-bold">{{ __('Created At') . ': ' . $user->created_at }}</h6>
-                    <h6 class="mt-2 fw-bold">{{ __('Updated At') . ': ' . $user->updated_at }}</h6>
-                    <h6 class="mt-2 fw-bold">{{ __('Email') . ': ' . $user->email }}</h6>
-                    <div class="border-dashed-bottom my-3"></div>
-                    <h6 class="mt-2 fw-bold"><a href="{{ route('users.edit', ['user' => $user->id]) }}"
-                            class="btn btn-falcon-primary me-1 mb-1" type="button">{{ __('Edit') }}
-                        </a></h6>
-
                 </div>
             </div>
+        </div>
+        <div class="card-body border-top">
+            <div class="d-flex"><span class="fas fa-user text-success me-2" data-fa-transform="down-5"></span>
+                <div class="flex-1">
+                    <p class="mb-0">{{ __('Customer was created') }}</p>
+                    <p class="fs--1 mb-0 text-600">{{ $user->created_at }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">{{ __('Details') }}</h5>
+                </div>
+                <div class="col-auto"><a class="btn btn-falcon-default btn-sm"
+                        href="{{ route('users.edit', ['user' => $user->id]) }}"><span
+                            class="fas fa-pencil-alt fs--2 me-1"></span>{{ __('Update') }}</a></div>
+            </div>
+        </div>
+        <div class="card-body bg-light border-top">
+            <div class="row">
+                <div class="col-lg col-xxl-5">
+                    <h6 class="fw-semi-bold ls mb-3 text-uppercase">{{ __('Account Information') }}</h6>
+                    <div class="row">
+                        <div class="col-5 col-sm-4">
+                            <p class="fw-semi-bold mb-1">ID</p>
+                        </div>
+                        <div class="col">{{ $user->id }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5 col-sm-4">
+                            <p class="fw-semi-bold mb-1">{{ __('Created At') }}</p>
+                        </div>
+                        <div class="col">{{ $user->created_at }}</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-5 col-sm-4">
+                            <p class="fw-semi-bold mb-1">{{ __('Updated At') }}</p>
+                        </div>
+                        <div class="col">{{ $user->updated_at }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5 col-sm-4">
+                            <p class="fw-semi-bold mb-1">{{ __('Email') }}</p>
+                        </div>
+                        <div class="col"><a href="mailto:{{ $user->email }}">{{ $user->email }}</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5 col-sm-4">
+                            <p class="fw-semi-bold mb-1">{{ __('Gender') }}</p>
+                        </div>
+                        <div class="col">
+                            <p class="fst-italic text-400 mb-1"> {{ $user->gender }}</p>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-lg col-xxl-5 mt-4 mt-lg-0 offset-xxl-1">
+                    {{-- <h6 class="fw-semi-bold ls mb-3 text-uppercase">Billing Information</h6> --}}
+                    <div class="row">
+                        <div class="col-5 col-sm-4">
+                            <p class="fw-semi-bold mb-1">{{ __('Verification Code') }}</p>
+                        </div>
+                        <div class="col">{{ $user->verification_code }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5 col-sm-4">
+                            <p class="fw-semi-bold mb-1">{{ __('Phone') }}</p>
+                        </div>
+                        <div class="col"><a href="tel:{{ $user->phone }}">{{ $user->phone }}</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{-- <div class="card-footer border-top text-end"><a class="btn btn-falcon-default btn-sm" href="#!"><span
+                    class="fas fa-dollar-sign fs--2 me-1"></span>Refund</a><a class="btn btn-falcon-default btn-sm ms-2"
+                href="#!"><span class="fas fa-check fs--2 me-1"></span>Save changes</a></div> --}}
+    </div>
+
+
+
+    @if ($user->hasRole('vendor') || ($user->hasRole('user') && $user->orders()->count() > 0))
+        @php
+            $user_account = getItemAccount($user->id, null, $user->hasRole('vendor') ? 'suppliers_account' : 'customers_account', $user->orders()->first()->branch_id);
+        @endphp
+
+        <div class="row g-3 mb-3">
+            <div class="col">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <div class="card overflow-hidden" style="min-width: 12rem">
+                            <div class="bg-holder bg-card"
+                                style="background-image:url(../assets/img/icons/spot-illustrations/corner-3.png);">
+                            </div>
+                            <!--/.bg-holder-->
+
+                            <div class="card-body position-relative">
+                                <h6>{{ getName($user_account) }}</h6>
+                                <div class="display-4 fs-4 mb-2 fw-normal font-sans-serif text-success">
+                                    {{ getTrialBalance($user_account->id, null, null) . ' ' . $user_account->currency->symbol }}
+                                </div>
+                                <a class="fw-semi-bold fs--1 text-nowrap" target="_blank"
+                                    href="{{ route('entries.index', ['account_id' => $user_account->id]) }}">
+                                    {{ __('Account statement') }}<span
+                                        class="fas fa-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }} ms-1"></span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card overflow-hidden" style="min-width: 12rem">
+                            <div class="bg-holder bg-card"
+                                style="background-image:url(../assets/img/icons/spot-illustrations/corner-2.png);">
+                            </div>
+                            <!--/.bg-holder-->
+
+                            @php
+                                $total_orders = getTotalorders($user);
+                            @endphp
+
+                            <div class="card-body position-relative">
+                                <h6>{{ __('Total Orders') }} <span class="badge badge-soft-info rounded-pill ms-2">
+                                        {{ $user->orders()->count() }}
+                                    </span>
+                                </h6>
+                                <div class="display-4 fs-4 mb-2 fw-normal font-sans-serif text-info">
+                                    {{ $total_orders . ' ' . getDefaultCurrency()->symbol }}</div>
+                                <a class="fw-semi-bold fs--1 text-nowrap" target="_blank"
+                                    href="{{ route($user->hasRole('vendor') ? 'purchases' : 'sales' . '.index', ['search' => $user->name]) }}">
+                                    {{ __('Display orders') }}<span
+                                        class="fas fa-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }} ms-1"></span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <div class="row g-0">
+        <div class="col-lg-12 pe-lg-2">
 
             @if ($user->hasRole('vendor'))
                 <div class="card py-3 mb-3">

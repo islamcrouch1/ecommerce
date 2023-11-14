@@ -14,7 +14,7 @@ class Account extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'name_ar', 'name_en', 'code', 'account_type', 'status', 'parent_id', 'reference_id', 'type', 'created_by', 'updated_by', 'dep_rate', 'branch_id'
+        'name_ar', 'name_en', 'code', 'account_type', 'status', 'parent_id', 'reference_id', 'type', 'created_by', 'updated_by', 'dep_rate', 'branch_id', 'currency_id'
     ];
 
 
@@ -32,6 +32,12 @@ class Account extends Model
     public function accounts()
     {
         return $this->hasMany(Account::class, 'parent_id');
+    }
+
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class);
     }
 
     public function parent()
