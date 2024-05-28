@@ -1281,3 +1281,36 @@ function getSalary(){
 
 }
 
+
+
+    // add accounts
+    var addSerialButton = $('.add_serial'); //Add button selector
+    var serialWrapper = $('.serial_wrapper'); //Input field wrapper
+
+    var x = 1; //Initial field counter is 1
+
+    //Once add button is clicked
+    $(addSerialButton).click(function(){
+
+            var fieldHTML = `
+            <div class="input-group mt-3">
+
+                <input name="serials[]" class="form-control"  type="text"
+                placeholder="add serial" required />
+
+                <a href="javascript:void(0);" class="remove_button">
+                    <span class="input-group-text" id="basic-addon1">
+                        <span class="far fa-trash-alt text-danger fs-2"></span>
+                    </span>
+                </a>
+            </div>`; //New input field html
+
+            $(serialWrapper).append(fieldHTML); //Add field html
+
+    });
+
+    //Once remove button is clicked
+    $(serialWrapper).on('click', '.remove_button', function(e){
+        e.preventDefault();
+        $(this).parent('div').remove(); //Remove field html
+    });

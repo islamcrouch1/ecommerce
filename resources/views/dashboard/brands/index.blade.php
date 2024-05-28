@@ -119,17 +119,14 @@
                                             <div class="dropdown-menu dropdown-menu-end border py-0"
                                                 aria-labelledby="customer-dropdown-0">
                                                 <div class="bg-white py-2">
-                                                    @if (
-                                                        $brand->trashed() &&
-                                                            auth()->user()->hasPermission('brands-restore'))
+                                                    @if ($brand->trashed() && auth()->user()->hasPermission('brands-restore'))
                                                         <a class="dropdown-item"
                                                             href="{{ route('brands.restore', ['brand' => $brand->id]) }}">{{ __('Restore') }}</a>
                                                     @elseif(auth()->user()->hasPermission('brands-update'))
                                                         <a class="dropdown-item"
                                                             href="{{ route('brands.edit', ['brand' => $brand->id]) }}">{{ __('Edit') }}</a>
                                                     @endif
-                                                    @if (auth()->user()->hasPermission('brands-delete') ||
-                                                            auth()->user()->hasPermission('brands-trash'))
+                                                    @if (auth()->user()->hasPermission('brands-delete') || auth()->user()->hasPermission('brands-trash'))
                                                         <form method="POST"
                                                             action="{{ route('brands.destroy', ['brand' => $brand->id]) }}">
                                                             @csrf

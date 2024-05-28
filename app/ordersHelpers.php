@@ -15,6 +15,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductCombination;
 use App\Models\RunningOrder;
+use App\Models\Serial;
 use App\Models\Stock;
 use App\Models\Tax;
 use App\Models\User;
@@ -616,12 +617,15 @@ if (!function_exists('calcTaxIfExist')) {
 if (!function_exists('calcTax')) {
     function calcTax($price, $type)
     {
+
+
+
         $tax_amount = 0;
         $rate = 0;
         if (setting($type)) {
             $tax = Tax::find(setting($type));
         }
-        if ($tax) {
+        if ($tax && setting('website_vat') != null) {
             $rate = $tax->tax_rate;
             $tax_amount = ($price * $rate) / 100;
         }
@@ -666,7 +670,6 @@ if (!function_exists('calcTaxByID')) {
 if (!function_exists('RunningOrderCreate')) {
     function RunningOrderCreate($combination, $warehouse_id, $qty, $unit_id,  $type, $stock_type, $order = null, $user_id = null, $price = 0)
     {
-
 
 
 
@@ -777,7 +780,8 @@ if (!function_exists('calcDiscount')) {
                 foreach ($cart_items as $item) {
 
                     $product_discount = 0;
-                    $product_price = productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty;
+                    $product_price = productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty * $item->days;
+
 
                     if ($products == null) {
                         $products = [];
@@ -789,6 +793,8 @@ if (!function_exists('calcDiscount')) {
 
                     if (in_array($item->product->id, $products) || in_array($item->product->category_id, $categories)) {
 
+
+
                         if ($coupon->type == 'percentage') {
 
                             $product_discount = ($product_price * $coupon->amount) / 100;
@@ -796,9 +802,11 @@ if (!function_exists('calcDiscount')) {
                         }
                         if ($coupon->type == 'amount') {
                             $product_discount = ($coupon->amount);
+                            $discount += $product_discount;
                         }
                     }
                 }
+
 
                 if ($coupon->type == 'percentage' && $price >= $coupon->min_value) {
                     if ($discount > $coupon->max_value) {
@@ -806,7 +814,9 @@ if (!function_exists('calcDiscount')) {
                     }
                 }
 
+
                 if ($coupon->type == 'amount' && $price >= $coupon->min_value) {
+
                     if ($discount > (($price * $coupon->max_value) / 100)) {
                         $discount =  (($price * $coupon->max_value) / 100);
                     }
@@ -843,7 +853,7 @@ if (!function_exists('calcDiscount')) {
 
                 $product_discount = 0;
                 // update it to save product price in the array becase the price may be change in variables
-                $product_price = productPrice($item->product, $item->product_combination_id, 'vat');
+                $product_price = productPrice($item->product, $item->product_combination_id, 'vat') * $item->days;
 
                 if (isset($offer) && $date <= $offer->ended_at) {
 
@@ -876,7 +886,7 @@ if (!function_exists('calcDiscount')) {
                 $bundle_offer = getOffers('bundles_offer', $item->product, $date)->first();
 
                 $product_discount = 0;
-                $product_price = productPrice($item->product, $item->product_combination_id, 'vat');
+                $product_price = productPrice($item->product, $item->product_combination_id, 'vat') * $item->days;
 
 
                 if (isset($bundle_offer) && $date <= $bundle_offer->ended_at) {
@@ -983,7 +993,7 @@ if (!function_exists('getOfferProducts')) {
 
 
 if (!function_exists('createPurchasesEntries')) {
-    function createPurchasesEntries($combination_id, $order_id, $returned, $qty, $unit_id)
+    function createPurchasesEntries($combination_id, $order_id, $returned, $qty, $unit_id, $serials = [])
     {
 
         $combination = ProductCombination::find($combination_id);
@@ -1000,7 +1010,23 @@ if (!function_exists('createPurchasesEntries')) {
 
             $check = createStock($combination, $warehouse_id, $qty, $unit_id, 'purchases', $returned == true ? 'OUT' : 'IN', $order, $price);
 
+
             if ($check) {
+
+
+                if ($returned == false) {
+
+                    for ($i = 0; $i < $qty; $i++) {
+                        Serial::create([
+                            'product_combination_id' => $combination->id,
+                            'product_id' => $product->id,
+                            'warehouse_id' => $warehouse_id,
+                            'unit_id' => $product->unit_id,
+                            'serial' => isset($serials[$i]) ? $serials[$i] : null,
+                        ]);
+                    }
+                }
+
                 $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $order->branch_id);
                 $stock_interim_received_account = Account::findOrFail(settingAccount(getAccountNameForOrder('purchases', 'interim'), $order->branch_id));
                 createEntry($product_account, $returned == true ? 'purchase_return' : 'purchase', $returned == true ? 0 : ($price * $qty), $returned == true ? ($price * $qty) : 0, $order->branch_id, $order);
@@ -1016,11 +1042,13 @@ if (!function_exists('createSalesEntries')) {
     function createSalesEntries($combination_id, $order_id, $returned, $qty, $unit_id)
     {
 
+
+
+
         $combination = ProductCombination::find($combination_id);
         $product = $combination->product;
         $order = Order::findOrFail($order_id);
         $ref_product =  $order->products()->wherePivot('product_id', $product->id)->wherePivot('product_combination_id', $combination->id)->first();
-
 
         $cost = getCostForOrder($order, $product, $combination);
 
@@ -1036,12 +1064,14 @@ if (!function_exists('createSalesEntries')) {
             $check = createStock($combination, $warehouse_id, $qty, $unit_id, 'sales', $returned == true ? 'IN' : 'OUT', $order, $price);
 
             if ($check) {
-                $qty = getQtyByUnit($qty, $unit_id);
-                $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $order->branch_id);
-                createEntry($product_account, $returned == true ? 'sales_return' : 'sales', $returned == true ? ($cost * $qty) :  0, $returned == true ? 0 : ($cost * $qty), $order->branch_id, $order, null, getDefaultCurrency()->id);
-                $stock_interim_delivered_account = Account::findOrFail(settingAccount(getAccountNameForOrder('sales', 'interim'), $order->branch_id));
-                createEntry($stock_interim_delivered_account, $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($cost * $qty), $returned == true ? ($cost * $qty) : 0, $order->branch_id, $order, null, getDefaultCurrency()->id);
 
+                if ($product->can_rent == null) {
+                    $qty = getQtyByUnit($qty, $unit_id);
+                    $product_account = getItemAccount($combination, $combination->product->category, 'assets_account', $order->branch_id);
+                    createEntry($product_account, $returned == true ? 'sales_return' : 'sales', $returned == true ? ($cost * $qty) :  0, $returned == true ? 0 : ($cost * $qty), $order->branch_id, $order, null, getDefaultCurrency()->id);
+                    $stock_interim_delivered_account = Account::findOrFail(settingAccount(getAccountNameForOrder('sales', 'interim'), $order->branch_id));
+                    createEntry($stock_interim_delivered_account, $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($cost * $qty), $returned == true ? ($cost * $qty) : 0, $order->branch_id, $order, null, getDefaultCurrency()->id);
+                }
 
                 // $cs_product_account = getItemAccount($combination, $combination->product->category, 'cs_account', $order->branch_id);
                 // createEntry($cs_product_account,  $returned == true ? 'sales_return' : 'sales', $returned == true ? 0 : ($cost * $qty), $returned == true ? ($cost * $qty) : 0, $order->branch_id, $order);
@@ -1068,6 +1098,30 @@ if (!function_exists('createStock')) {
 
             if ($qtyInDefaultUnit > $av_qty) {
                 $check = false;
+            }
+
+            if ($order) {
+                $serial = Serial::where('product_combination_id', $combination->id)->where('warehouse_id', $warehouse_id)->where('status', '0')->first();
+
+                if ($serial == null) {
+                    $check = false;
+                } else {
+                    $serial->update([
+                        'order_id' => $order->id,
+                        'status' => '2',
+                    ]);
+                }
+            }
+        }
+
+
+        if ($stock_type == 'IN' && $order != null) {
+            $serial = Serial::where('order_id', $order->id)->first();
+            if ($serial != null) {
+                $serial->update([
+                    'order_id' => null,
+                    'status' => '0',
+                ]);
             }
         }
 
@@ -1184,6 +1238,7 @@ if (!function_exists('createQuotation')) {
                 'status' => 'pending',
                 'serial' => getLastOrderSerial($request->order_type),
                 'expected_delivery' => $request->expected_delivery,
+                'expiration_date' => $request->expiration_date,
                 'currency_id' => $request->currency_id,
                 'admin_id' => Auth::id(),
             ]);
@@ -1199,6 +1254,7 @@ if (!function_exists('createQuotation')) {
                 'branch_id' => $branch_id,
                 'status' => ($request->order_type == 'SO' || $request->order_type == 'PO') ? 'completed' : 'pending',
                 'expected_delivery' => $request->expected_delivery,
+                'expiration_date' => $request->expiration_date,
                 'currency_id' => $request->currency_id,
             ]);
         }
@@ -1221,7 +1277,7 @@ if (!function_exists('createQuotation')) {
                 $combination = ProductCombination::find($request->selected_combinations[$index]);
                 $product = Product::findOrFAil($request->prods[$index]);
 
-                $product_price = ($request->qty[$index] * $request->price[$index]);
+                $product_price = ($request->qty[$index] * $request->price[$index] * $request->days[$index]);
                 $subtotal += $product_price;
 
                 $order->products()->attach(
@@ -1234,9 +1290,14 @@ if (!function_exists('createQuotation')) {
                         // 'product_wht' => (isset($request->tax) && in_array('wht', $request->tax) && $sub > setting('wht_invoice_amount')) ? $wht_amount_product : 0,
                         'qty' => $request->qty[$index],
                         'unit_id' => $request->units[$index],
-                        'total' => $request->price[$index] * $request->qty[$index],
+                        'total' => $request->price[$index] * $request->qty[$index] * $request->days[$index],
                         'product_type' => $product->product_type,
                         // 'cost' => $cost,
+
+                        'start_date' => $request->start_date[$index],
+                        'end_date' => getEndDate($request->start_date[$index], $request->days[$index]),
+                        'days' => $request->days[$index],
+
                     ]
                 );
 

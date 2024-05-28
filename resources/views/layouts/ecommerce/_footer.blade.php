@@ -6,7 +6,7 @@
                 <div class="row footer-theme partition-f">
                     <div class="col-lg-4 col-md-6 sub-title">
                         <div class="footer-title footer-mobile-title">
-                            <h4>{{ __('about') }}</h4>
+                            <h4>{{ __('contact us') }}</h4>
                         </div>
                         <div class="footer-contant">
                             <div class="footer-logo"><img style="width:130px"
@@ -20,14 +20,17 @@
                                     </li>
                                 @endif
                                 @if (websiteSettingAr('footer_phone'))
-                                    <li><i
-                                            class="fa fa-phone"></i>{{ __('Call Us:') . ' ' . websiteSettingAr('footer_phone') }}
+                                    <li><i class="fa fa-phone"></i>{{ __('Call Us:') . ' ' }}
+                                        <a
+                                            href="tel:{{ websiteSettingAr('footer_phone') }}">{{ websiteSettingAr('footer_phone') }}</a>
+
                                     </li>
                                 @endif
 
                                 @if (websiteSettingAr('footer_email'))
                                     <li><i class="fa fa-envelope"></i>{{ __('Email Us:') . ' ' }}<a
-                                            href="#">{{ websiteSettingAr('footer_email') }}</a></li>
+                                            href="mailto:{{ websiteSettingAr('footer_email') }}">{{ websiteSettingAr('footer_email') }}</a>
+                                    </li>
                                 @endif
 
                             </ul>
@@ -187,7 +190,7 @@
                             </p>
                         </div>
                     </div>
-                    <div class="col-xl-6 col-md-6 col-sm-12">
+                    {{-- <div class="col-xl-6 col-md-6 col-sm-12">
                         <div class="payment-card-bottom">
                             <ul>
                                 <li>
@@ -213,7 +216,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>

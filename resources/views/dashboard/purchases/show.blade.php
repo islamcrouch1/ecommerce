@@ -183,7 +183,7 @@
         <div class="card-footer bg-light">
             <p class="fs--1 mb-0">
 
-                {{ 'unitedtoys-eg.com' . ' - ' }}
+                {{ Request::root() }}
                 {{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_address') : websiteSettingEn('footer_address') }}
 
             </p>

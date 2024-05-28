@@ -56,7 +56,7 @@
                                         <th scope="col">{{ __('product') }}</th>
                                         <th scope="col">{{ __('price') }}</th>
                                         <th scope="col">{{ __('Qty') }}</th>
-                                        <th scope="col">{{ __('total') }}</th> 
+                                        <th scope="col">{{ __('total') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -64,6 +64,17 @@
                                         <tr>
                                             <th scope="row">{{ $index }}</th>
                                             <td>{{ getProductName($product, getCombination($product->pivot->product_combination_id)) }}
+
+                                                @if ($product->pivot->start_date != null && $product->can_rent != null)
+                                                    <span
+                                                        class="badge bg-info rental-span">{{ __('Rental start date') . ' ' . $product->pivot->start_date }}</span>
+                                                    <span
+                                                        class="badge bg-info rental-span">{{ __('No. of Days:') . ' ' . $product->pivot->days }}</span>
+                                                    <span
+                                                        class="badge bg-info rental-span">{{ __('Rental end date') . ': ' . $product->pivot->end_date }}</span>
+                                                    <span
+                                                        class="badge bg-info rental-span">{{ __('Note') . ': ' . __('rental day = 12 Hours') }}</span>
+                                                @endif
 
 
                                                 @if ($product->product_type == 'digital' && $order->payment_status == 'Paid')

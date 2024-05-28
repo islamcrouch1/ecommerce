@@ -23,7 +23,7 @@
                     <h2 class="mb-3">
                         @if ($order->order_type == 'Q')
                             {{ __('quotation') }}
-                        @elseif($order->order_type == 'PO')
+                        @elseif($order->order_type == 'SO')
                             {{ __('sales order') }}
                         @endif
                     </h2>
@@ -51,11 +51,20 @@
                             {{ __('Country:') . ' ' . getName($order->country) }}<br>
                         @endif
 
+                        @if ($order->country_id)
+                            {{ __('Email:') . ' ' . $order->customer->email }}<br>
+                        @endif
+
+                        @if ($order->country_id)
+                            {{ __('Phone:') . ' ' }} <a
+                                href="tel:{{ $order->customer->phone }}">{{ $order->customer->phone }}</a> <br>
+                        @endif
+
 
 
                     </p>
-                    <p class="fs--1"><a href="tel:{{ $order->customer->phone }}">{{ $order->customer->phone }}</a>
-                    </p>
+                    {{-- <p class="fs--1"><a href="tel:{{ $order->customer->phone }}">{{ $order->customer->phone }}</a>
+                    </p> --}}
                 </div>
                 <div class="col-sm-auto ms-auto">
                     <div class="table-responsive">
@@ -68,6 +77,11 @@
                                 <tr>
                                     <th class="text-sm-end">{{ __('Invoice Date:') }}</th>
                                     <td>{{ $order->created_at }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th class="text-sm-end">{{ __('The qoutation is valid until:') }}</th>
+                                    <td>{{ $order->expiration_date }}</td>
                                 </tr>
 
                                 <tr class="alert-success fw-bold">
@@ -103,18 +117,39 @@
                                     </h6>
 
 
+                                    {{-- @if ($product->product_type == 'variable' || $product->product_type == 'simple')
+                                        <span class="badge badge-soft-info">
+                                            Serial:{{ getProductSerial($product->pivot->product_combination_id, $order->id) }}
+                                        </span>
+                                    @endif
+
                                     <span class="badge badge-soft-info">
                                         @if ($product->product_type == 'digital' || $product->product_type == 'service')
                                             SKU:{{ $product->sku }}
                                         @else
                                             SKU:{{ getCombination($product->pivot->product_combination_id)->sku }}
                                         @endif
-                                    </span>
+                                    </span> --}}
+
+
+                                    @if ($product->pivot->start_date != null && $product->can_rent != null)
+                                        <span
+                                            class="badge badge-soft-info">{{ __('Rental start date') . ': ' . $product->pivot->start_date }}</span>
+                                        <span style="font-size: 11px"
+                                            class="badge badge-soft-info">{{ __('No. of Days:') . ' ' . $product->pivot->days }}</span>
+                                        <span style="font-size: 11px"
+                                            class="badge badge-soft-info">{{ __('Rental end date') . ': ' . $product->pivot->end_date }}</span>
+                                        <span style="font-size: 11px"
+                                            class="badge badge-soft-info">{{ __('Note') . ': ' . __('rental day = 12 Hours') }}</span>
+                                    @endif
+
+
                                 </td>
                                 <td class="align-middle text-center">
                                     {{ $product->pivot->qty . ' ' . getName(getUnitByID($product->pivot->unit_id)) }}</td>
                                 <td class="align-middle text-end">
-                                    {{ $product->pivot->product_price . ' ' . $order->currency->symbol }}</td>
+                                    {{ $product->pivot->product_price * $product->pivot->days . ' ' . $order->currency->symbol }}
+                                </td>
                                 <td class="align-middle text-end">
                                     {{ $product->pivot->total . ' ' . $order->currency->symbol }}</td>
                                 {{-- <td class="align-middle text-end">
@@ -179,7 +214,7 @@
         <div class="card-footer bg-light">
             <p class="fs--1 mb-0">
 
-                {{ 'unitedtoys-eg.com' . ' - ' }}
+                {{ Request::root() }}
                 {{ app()->getLocale() == 'ar' ? websiteSettingAr('footer_address') : websiteSettingEn('footer_address') }}
 
             </p>

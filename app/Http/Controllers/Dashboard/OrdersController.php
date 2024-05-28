@@ -26,7 +26,7 @@ class OrdersController extends Controller
     {
         $this->middleware('role:superadministrator|administrator');
         $this->middleware('permission:orders-read')->only('index', 'show');
-        $this->middleware('permission:orders-create')->only('create', 'store');
+        $this->middleware('permission:orders-create')->only('create');
         $this->middleware('permission:orders-update')->only('edit', 'update');
         $this->middleware('permission:orders-delete|orders-trash')->only('destroy', 'trashed');
         $this->middleware('permission:orders-restore')->only('restore');
@@ -108,10 +108,10 @@ class OrdersController extends Controller
 
             foreach ($order->products as $product) {
 
+                $combination = ProductCombination::findOrFail($product->pivot->product_combination_id);
+
+
                 if ($product->product_type == 'variable' || $product->product_type == 'simple') {
-
-
-                    $combination = ProductCombination::findOrFail($product->pivot->product_combination_id);
 
 
                     if ($product->vendor_id == null) {
@@ -124,8 +124,11 @@ class OrdersController extends Controller
                         // get cost and update combination cost
                         $cost = getProductCost($product, $combination, $branch_id, $order, $product->pivot->qty, true);
 
-                        createEntry($product_account, 'sales_return', ($product->pivot->cost * $product->pivot->qty), 0, $branch_id, $order);
-                        createEntry($cs_product_account, 'sales_return', 0, ($product->pivot->cost * $product->pivot->qty), $branch_id, $order);
+
+                        if ($product->can_rent == null) {
+                            createEntry($product_account, 'sales_return', ($product->pivot->cost * $product->pivot->qty), 0, $branch_id, $order);
+                            createEntry($cs_product_account, 'sales_return', 0, ($product->pivot->cost * $product->pivot->qty), $branch_id, $order);
+                        }
                     }
 
                     if ($product->vendor_id != null) {
@@ -152,7 +155,7 @@ class OrdersController extends Controller
                     }
 
                     // add stock and running order
-                    RunningOrderCreate($combination, $warehouse_id, $product->pivot->qty, 'sales', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
+                    RunningOrderCreate($combination, $warehouse_id, $product->pivot->qty, $product->pivot->unit_id, 'sales', 'IN', $order, $order->custumer_id != null ? $order->custumer_id : null, $product->pivot->product_price);
                 }
 
 
@@ -176,7 +179,7 @@ class OrdersController extends Controller
             createEntry($customer_account, 'sales_return', 0, $order->total_price, $branch_id, $order);
 
             $order->update([
-                'payment_status' => 'faild',
+                'payment_status' => 'uninvoiced',
             ]);
 
             if ($order->total_tax > 0) {
@@ -236,8 +239,10 @@ class OrdersController extends Controller
                         // get cost and update combination cost
                         $cost = getProductCost($product, $combination, $branch_id, $order, $product->pivot->qty, true);
 
-                        createEntry($product_account, 'sales_return', ($product->pivot->cost * $product->pivot->qty), 0, $branch_id, $order);
-                        createEntry($cs_product_account, 'sales_return', 0, ($product->pivot->cost * $product->pivot->qty), $branch_id, $order);
+                        if ($product->can_rent == null) {
+                            createEntry($product_account, 'sales_return', ($product->pivot->cost * $product->pivot->qty), 0, $branch_id, $order);
+                            createEntry($cs_product_account, 'sales_return', 0, ($product->pivot->cost * $product->pivot->qty), $branch_id, $order);
+                        }
                     }
 
                     if ($product->vendor_id != null) {
@@ -264,8 +269,9 @@ class OrdersController extends Controller
                         }
                     }
 
+
                     // add stock and running order
-                    RunningOrderCreate($combination, $warehouse_id, $product->pivot->qty, 'sales', 'IN', $order->id, $order->custumer_id != null ? $order->custumer_id : null, productPrice($product, $product->pivot->product_combination_id, 'vat'));
+                    RunningOrderCreate($combination, $warehouse_id, $product->pivot->qty, $product->pivot->unit_id, 'sales', 'IN', $order, $order->custumer_id != null ? $order->custumer_id : null, $product->pivot->product_price);
                 }
 
 
@@ -308,7 +314,7 @@ class OrdersController extends Controller
 
 
             $order->update([
-                'payment_status' => 'faild',
+                'payment_status' => 'uninvoiced',
             ]);
 
             // changeAvailableBalance($order->user, $order->total_commission, $order->id, $order->status, 'sub');
@@ -333,7 +339,7 @@ class OrdersController extends Controller
             createEntry($cash_account, 'sales', $order->total_price, 0, $branch_id, $order);
 
             $order->update([
-                'payment_status' => 'paid',
+                'payment_status' => 'invoiced',
             ]);
 
             // $mystock_price = 0;

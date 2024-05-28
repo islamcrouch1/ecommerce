@@ -59,9 +59,12 @@
                                 <tr>
                                     <td>
                                         <a
-                                            href="{{ route('ecommerce.product', ['product' => $item->product->id, 'slug' => createSlug(getName($item->product))]) }}"><img
-                                                src="{{ asset($item->product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $item->product->images[0]->media->path) }}"
-                                                alt=""></a>
+                                            href="{{ route('ecommerce.product', ['product' => $item->product->id, 'slug' => createSlug(getName($item->product))]) }}">
+
+                                            <img class="rounded-circle" src="{{ getProductImage($item->product) }}"
+                                                alt="" />
+
+                                        </a>
                                     </td>
                                     <td>
                                         <a
@@ -70,7 +73,9 @@
                                             {{ getProductName($item->product, $item->combination) }}
 
 
+
                                         </a>
+
                                         <div class="mobile-cart-content row">
                                             <div class="col-12">
                                                 <div style="min-width: 150px !important" class="qty-box">
@@ -103,7 +108,7 @@
                                             <div class="col p-2">
                                                 <h2 class="td-color">
                                                     <span
-                                                        class="total-{{ $item->product_id . '-' . $item->product_combination_id }}">{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . getCurrency() }}</span>
+                                                        class="total-{{ $item->product_id . '-' . $item->product_combination_id }}">{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty * $item->days . getCurrency() }}</span>
 
                                                 </h2>
 
@@ -115,12 +120,23 @@
                                                 </h2>
                                             </div>
                                         </div>
+
+                                        @if ($item->start_date != null && $item->product->can_rent != null)
+                                            <span
+                                                class="badge bg-info rental-span">{{ __('Rental start date') . ' ' . $item->start_date }}</span>
+                                            <span
+                                                class="badge bg-info rental-span">{{ __('No. of Days:') . ' ' . $item->days }}</span>
+                                            <span
+                                                class="badge bg-info rental-span">{{ __('Rental end date') . ': ' . $item->end_date }}</span>
+                                            <span
+                                                class="badge bg-info rental-span">{{ __('Note') . ': ' . __('rental day = 12 Hours') }}</span>
+                                        @endif
                                     </td>
 
 
 
                                     <td>
-                                        <h2>{{ productPrice($item->product, $item->product_combination_id, 'vat') . getCurrency() }}
+                                        <h2>{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->days . getCurrency() }}
                                         </h2>
                                     </td>
                                     <td>
@@ -156,7 +172,7 @@
                                     <td>
                                         <h2 class="td-color">
                                             <span
-                                                class="total-{{ $item->product_id . '-' . $item->product_combination_id }}">{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . getCurrency() }}</span>
+                                                class="total-{{ $item->product_id . '-' . $item->product_combination_id }}">{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty * $item->days . getCurrency() }}</span>
 
                                         </h2>
                                     </td>

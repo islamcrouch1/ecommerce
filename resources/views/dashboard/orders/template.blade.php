@@ -214,6 +214,18 @@
                                     <h5 style="margin-top: 15px;">
                                         {{ getProductName($product, getCombination($product->pivot->product_combination_id)) }}
                                     </h5>
+
+                                    @if ($product->pivot->start_date != null && $product->can_rent != null)
+                                        <span
+                                            class="badge bg-info rental-span">{{ __('Rental start date') . ' ' . $product->pivot->start_date }}</span><br>
+                                        <span
+                                            class="badge bg-info rental-span">{{ __('No. of Days:') . ' ' . $product->pivot->days }}</span><br>
+                                        <span
+                                            class="badge bg-info rental-span">{{ __('Rental end date') . ': ' . $product->pivot->end_date }}</span><br>
+                                        <span
+                                            class="badge bg-info rental-span">{{ __('Note') . ': ' . __('rental day = 12 Hours') }}</span><br>
+                                    @endif
+
                                 </td>
                                 <td class="padding" valign="top" style="padding-left: 15px;">
 

@@ -6,10 +6,10 @@
 
         <!--  start contact  -->
         <section class="conatct-form">
-            <div class="container">
+            <div style="z-index: 0" class="container">
                 <div class="content">
                     <div class="section_title3 text-white mb-80">
-                        <h2> {{ __('start your career at Elkomy group') }} </h2>
+                        <h2> {{ __('start your career at Elkomy Holding') }} </h2>
                         {{-- <p class="color-999 mt-60"> Give us a chance to serve and bring magic to your brand. </p> --}}
                     </div>
                     <div class="row gx-5">

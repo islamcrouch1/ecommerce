@@ -30,17 +30,18 @@
                     <div class="col-lg-8">
                         <div class="main-content">
                             <div class="main-img img-cover mb-50">
-                                <img src="{{ asset('/assets/img/elkomy/main_img.jpg') }}" alt="">
+                                <img src="{{ asset('/assets/img/elkomy/real1.jpg') }}" alt="">
                             </div>
 
                             @if (app()->getLocale() == 'en')
                                 <div class="text fsz-18 color-777 mb-30">
-                                    Elkomy holding’s activity in real state started in 2002.<br>
+                                    Elkomy Holding’s activity in real estate started in 2002.<br>
                                     Our company works in several fields of real estate from construction, contracting,
-                                    developing to real estate and industrial investment, with capital of 20,000,000 EGP.<br>
+                                    and developing to real estate and industrial investment, with a capital of 20,000,000
+                                    EGP.<br>
                                     Elkomy is currently working on multiple construction projects.<br>
                                     Our purpose is to build innovative and safe spaces to bring our clients together in
-                                    exciting ways, and this requires expert team to keep their eyes on our developments.
+                                    exciting ways, and this requires an expert team to keep their eyes on our developments.
 
 
                                 </div>
@@ -62,8 +63,8 @@
                             <div class="vision-card mb-70 overflow-hidden">
                                 <div class="row align-items-center gx-5">
                                     <div class="col-lg-5">
-                                        <div class="img img-cover th-350 radius-3 overflow-hidden">
-                                            <img src="{{ asset('/assets/img/elkomy/vision.jpg') }}" alt="">
+                                        <div class="img img-cover  radius-3 overflow-hidden">
+                                            <img src="{{ asset('/assets/img/elkomy/real2.jpg') }}" alt="">
                                         </div>
                                     </div>
                                     <div class="col-lg-7">
@@ -75,7 +76,7 @@
                                                 <li class="mb-2">
                                                     <span class="fsz-14 ">
                                                         <span class="fw-bold gold">{{ __('Safety:') }}</span>
-                                                        {{ __('Achieving solid safety record to improve our clients’ experience.') }}
+                                                        {{ __('Achieving a solid safety record to improve our clients’ experience.') }}
                                                     </span>
                                                 </li>
                                                 <li class="mb-2">
@@ -87,13 +88,13 @@
                                                     <span class="fsz-14 ">
                                                         <span
                                                             class="fw-bold gold">{{ __('Continuous improvement:') }}</span>
-                                                        {{ __('Big improvements is what we seek for.') }}
+                                                        {{ __('Big improvements are what we seek for.') }}
                                                     </span>
                                                 </li>
                                                 <li class="mb-2">
                                                     <span class="fsz-14 ">
                                                         <span class="fw-bold gold">{{ __('Commitment:') }}</span>
-                                                        {{ __('We are committed to work diligently to remain the best and achieve more success.') }}
+                                                        {{ __('We are committed to working diligently to remain the best and achieve more success.') }}
                                                     </span>
                                                 </li>
 

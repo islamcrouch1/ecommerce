@@ -173,7 +173,7 @@ class RoleController extends Controller
                 'sales', 'quotations', 'invoices'
             ],
             'Accounts' => [
-                'accounts', 'assets', 'entries', 'trial_balance', 'income_statement', 'balance_statement', 'taxes', 'cash_accounts', 'petty_cash', 'currencies', 'exchange_rates',
+                'accounts', 'assets', 'entries', 'trial_balance', 'income_statement', 'balance_statement', 'taxes', 'cash_accounts', 'petty_cash', 'currencies', 'exchange_rates', 'quick_entries' , 'accounting_operations'
             ],
             'manufacturing' => [
                 'boms', 'manufacturing_orders'

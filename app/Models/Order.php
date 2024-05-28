@@ -12,8 +12,24 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'affiliate_id', 'order_deadline', 'invoice_status', 'serial', 'is_sent', 'expected_delivery', 'order_type', 'address', 'status', 'country_id', 'customer_id', 'warehouse_id', 'order_from', 'total_commission', 'total_profit', 'notes', 'full_name', 'total_price', 'special_mark', 'house',  'shipping_amount', 'city_id', 'state_id', 'subtotal_price', 'total_price_affiliate', 'phone', 'shipping_method_id', 'payment_status', 'payment_method', 'transaction_id', 'total_tax', 'is_seen', 'coupon_code', 'coupon_amount', 'branch_id', 'session_id', 'orderId', 'total_wht_products', 'total_wht_services', 'discount_amount', 'avenue', 'block', 'description', 'phone2', 'floor_no', 'delivery_time', 'order_id', 'currency_id', 'admin_id'
+        'affiliate_id', 'passport_id', 'id_id', 'permit_id', 'pickup_branch_id', 'order_deadline', 'invoice_status', 'serial', 'is_sent', 'expected_delivery', 'order_type', 'address', 'status', 'country_id', 'customer_id', 'warehouse_id', 'order_from', 'total_commission', 'total_profit', 'notes', 'full_name', 'total_price', 'special_mark', 'house',  'shipping_amount', 'city_id', 'state_id', 'subtotal_price', 'total_price_affiliate', 'phone', 'shipping_method_id', 'payment_status', 'payment_method', 'transaction_id', 'total_tax', 'is_seen', 'coupon_code', 'coupon_amount', 'branch_id', 'session_id', 'orderId', 'total_wht_products', 'total_wht_services', 'discount_amount', 'avenue', 'block', 'description', 'phone2', 'floor_no', 'delivery_time', 'order_id', 'currency_id', 'admin_id', 'expiration_date'
     ];
+
+
+    public function passport()
+    {
+        return $this->belongsTo(Media::class, 'passport_id');
+    }
+
+    public function idMedia()
+    {
+        return $this->belongsTo(Media::class, 'id_id');
+    }
+
+    public function permit()
+    {
+        return $this->belongsTo(Media::class, 'permit_id');
+    }
 
 
 
@@ -87,7 +103,7 @@ class Order extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class)
-            ->withPivot('order_id', 'product_id', 'warehouse_id', 'product_combination_id', 'product_price', 'product_tax', 'product_discount', 'total', 'qty', 'unit_id', 'affiliate_price', 'total_affiliate_price', 'commission_per_item', 'profit_per_item', 'total_commission', 'total_profit', 'extra_shipping_amount', 'shipping_method_id', 'product_type', 'cost', 'product_wht')
+            ->withPivot('order_id', 'product_id', 'warehouse_id', 'product_combination_id', 'product_price', 'product_tax', 'product_discount', 'total', 'qty', 'unit_id', 'affiliate_price', 'total_affiliate_price', 'commission_per_item', 'profit_per_item', 'total_commission', 'total_profit', 'extra_shipping_amount', 'shipping_method_id', 'product_type', 'cost', 'product_wht', 'start_date', 'end_date', 'days')
             ->withTimestamps();
     }
 

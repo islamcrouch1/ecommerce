@@ -43,9 +43,7 @@
                             class="fas fa-ellipsis-h"></span></button>
                     <div class="dropdown-menu dropdown-menu-end border py-0" aria-labelledby="customer-dropdown-0">
                         <div class="bg-white py-2">
-                            @if (
-                                $user->trashed() &&
-                                    auth()->user()->hasPermission('users-restore'))
+                            @if ($user->trashed() && auth()->user()->hasPermission('users-restore'))
                                 <a class="dropdown-item"
                                     href="{{ route('users.restore', ['user' => $user->id]) }}">{{ __('Restore') }}</a>
                             @elseif(auth()->user()->hasPermission('users-update'))
@@ -58,8 +56,7 @@
                                 <a href="" class="dropdown-item" data-bs-toggle="modal"
                                     data-bs-target="#bonus-modal-{{ $user->id }}">{{ __('Add bonus') }}</a>
                             @endif
-                            @if (auth()->user()->hasPermission('users-delete') ||
-                                    auth()->user()->hasPermission('users-trash'))
+                            @if (auth()->user()->hasPermission('users-delete') || auth()->user()->hasPermission('users-trash'))
                                 <form method="POST" action="{{ route('users.destroy', ['user' => $user->id]) }}">
                                     @csrf
                                     @method('DELETE')
@@ -171,9 +168,16 @@
 
 
 
-    @if ($user->hasRole('vendor') || ($user->hasRole('user') && $user->orders()->count() > 0))
+    @if (
+        ($user->hasRole('vendor') || ($user->hasRole('user') && $user->orders()->count() > 0)) &&
+            $user->orders()->first() != null)
         @php
-            $user_account = getItemAccount($user->id, null, $user->hasRole('vendor') ? 'suppliers_account' : 'customers_account', $user->orders()->first()->branch_id);
+            $user_account = getItemAccount(
+                $user->id,
+                null,
+                $user->hasRole('vendor') ? 'suppliers_account' : 'customers_account',
+                $user->orders()->first()->branch_id,
+            );
         @endphp
 
         <div class="row g-3 mb-3">
@@ -219,7 +223,7 @@
                                 <div class="display-4 fs-4 mb-2 fw-normal font-sans-serif text-info">
                                     {{ $total_orders . ' ' . getDefaultCurrency()->symbol }}</div>
                                 <a class="fw-semi-bold fs--1 text-nowrap" target="_blank"
-                                    href="{{ route($user->hasRole('vendor') ? 'purchases' : 'sales' . '.index', ['search' => $user->name]) }}">
+                                    href="{{ route(($user->hasRole('vendor') ? 'purchases' : 'sales') . '.index', ['search' => $user->name]) }}">
                                     {{ __('Display orders') }}<span
                                         class="fas fa-angle-{{ app()->getLocale() == 'ar' ? 'left' : 'right' }} ms-1"></span>
                                 </a>
@@ -881,9 +885,7 @@
     @endif
 
 
-    @if (
-        $user->hasRole('administrator') &&
-            auth()->user()->hasPermission('employees-read'))
+    @if ($user->hasRole('administrator') && auth()->user()->hasPermission('employees-read'))
         <div class="row">
             <div class="col-lg-12">
                 <div class="alert alert-info" role="alert">

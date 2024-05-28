@@ -115,7 +115,7 @@
                                     </a>
                                 </div>
                                 <p class="fsz-14 color-777 ms-lg-4 mt-4 mt-lg-0"> {{ __('Discover more about our') }} <br>
-                                    {{ __('Elkomy Group') }} </p>
+                                    {{ __('Elkomy Holding') }} </p>
                             </div>
                         </div>
                         <div class="col-lg-5 text-center mt-4 mt-lg-0 d-none d-lg-block">
@@ -151,7 +151,7 @@
                         <div class="col-lg-6 ps-lg-5 mt-4 mt-lg-0 align-middle">
                             <div class="info mt-4">
                                 <h6 class="fsz-14 text-uppercase color-blue4 mb-30 ltspc-1 gold">
-                                    {{ __('mission & vission') }}
+                                    {{ __('Mission & Vision') }}
                                 </h6>
 
                                 <h6>{{ __('Mission') }}</h6>

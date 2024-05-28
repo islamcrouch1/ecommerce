@@ -81,6 +81,8 @@ class StockController extends Controller
     {
 
 
+
+
         $user = Auth::user();
 
 
@@ -107,6 +109,10 @@ class StockController extends Controller
         $warehouses = Warehouse::where('branch_id', $user->hasPermission('branches-read') ? '!=' : '=', $user->hasPermission('branches-read') ? null : $user->branch_id)
             ->where('vendor_id', null)
             ->get();
+
+
+
+
 
         return view('dashboard.stocks.list', compact('stocks', 'warehouses'));
     }

@@ -305,6 +305,65 @@
                                 @endif
 
 
+                                @if ($product->can_rent != null)
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <div class="input-group"><span style="border-radius: 0"
+                                                    class="input-group-text"
+                                                    id="frommmm">{{ __('Rental start date') }}</span>
+                                                <input data-url="{{ route('ecommerce.rent.calc') }}"
+                                                    data-product_id="{{ $product->id }}" type="datetime-local"
+                                                    id="from" name="from-{{ $product->id }}"
+                                                    value="{{ getTodayDate() }}" min="{{ getTodayDate() }}"
+                                                    class="form-control rent-date from-{{ $product->id }}">
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <div class="input-group"><span style="border-radius: 0"
+                                                    class="input-group-text"
+                                                    id="tooooo">{{ __('Number of days') }}</span>
+                                                <input data-url="{{ route('ecommerce.rent.calc') }}"
+                                                    data-product_id="{{ $product->id }}" pattern="\d*" type="number"
+                                                    id="to" name="to-{{ $product->id }}"
+                                                    class="form-control rent-date to-{{ $product->id }}" value="1"
+                                                    min="1">
+                                            </div>
+                                        </div>
+
+
+                                        <div class="col-md-12 mb-3">
+                                            <div class="input-group"><span style="border-radius: 0"
+                                                    class="input-group-text"
+                                                    id="end-date">{{ __('Rental end date') }}</span>
+                                                <input type="datetime-local" id="end"
+                                                    name="end-{{ $product->id }}" value="{{ getRentalEndDate() }}"
+                                                    class="form-control end-{{ $product->id }}" disabled>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="rent-div mb-2">
+                                        <div class="row p-2">
+
+                                            <div class="col-md-6">
+                                                <h5>{{ __('VAT:') . ' ' }} <span
+                                                        class="vat-{{ $product->id }}">{{ productPrice($product, null, 'vat') - productPrice($product) . getDefaultCurrency()->symbol }}</span>
+                                                </h5>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <h5> {{ __('Total:') . ' ' }} <span
+                                                        class="total-{{ $product->id }}">{{ productPrice($product, null, 'vat') . getDefaultCurrency()->symbol }}</span>
+                                                </h5>
+                                            </div>
+
+                                            <span class="m-1 rent-span">{{ __('rental day = 12 Hours') }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+
 
 
 
@@ -332,7 +391,7 @@
 
 
                             <div class="product-buttons"><a href="javascript:void(0)" id="cartEffect"
-                                    class="btn btn-solid hover-solid btn-animation add-to-cart"
+                                    class="btn btn-solid btn-a7a hover-solid btn-animation add-to-cart"
                                     data-url="{{ route('ecommerce.cart.store') }}"
                                     data-locale="{{ app()->getLocale() }}" data-product_id="{{ $product->id }}"
                                     data-image="{{ getProductImage($product) }}">
@@ -356,9 +415,11 @@
                                 </a>
 
                                 <a style="display: none" href="{{ route('ecommerce.checkout') }}"
-                                    class="btn btn-solid pay-now"><i class="fa fa-money fz-16 me-2"
+                                    class="btn btn-solid btn-a7a pay-now"><i class="fa fa-money fz-16 me-2"
                                         aria-hidden="true"></i>{{ __('pay now') }}</a>
 
+                                <a type="button" data-bs-dismiss="modal" aria-label="Close"
+                                    class="btn btn-solid btn-sm">{{ __('Continue shopping') }}</a>
 
                                 <a href="#"
                                     data-url="{{ route('ecommerce.fav.add', ['product' => $product->id]) }}"
@@ -501,11 +562,11 @@
                                     </ul>
                                 </div>
                             </div> --}}
-                            <div class="border-product">
+                            {{-- <div class="border-product">
                                 <h6 class="product-title">{{ __('100% secure payment') }}</h6>
                                 <img src="{{ asset('e-assets/images/payment.png') }}" class="img-fluid mt-1"
                                     alt="">
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                 </div>

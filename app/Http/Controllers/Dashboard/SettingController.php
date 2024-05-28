@@ -174,9 +174,10 @@ class SettingController extends Controller
             'snapchat_pixel_id' => "nullable|string",
             'snapchat_token' => "nullable|string",
             'hotjar_id' => "nullable|string",
-            'orders_email' => 'nullable|string|email',
+            'orders_email' => 'nullable|string',
             'google_analytics_id' => "nullable|string",
             'tiktok_id' => "nullable|string",
+            'tiktok_token' => "nullable|string",
             'facebook_id' => "nullable|string",
             'facebook_token' => "nullable|string",
             'bank_accounts' => "nullable|array",
@@ -324,6 +325,7 @@ class SettingController extends Controller
         updateSetting('hotjar_id', $request);
         updateSetting('google_analytics_id', $request);
         updateSetting('tiktok_id', $request);
+        updateSetting('tiktok_token', $request);
         updateSetting('facebook_id', $request);
         updateSetting('tagmanager_id', $request);
         updateSetting('facebook_token', $request);

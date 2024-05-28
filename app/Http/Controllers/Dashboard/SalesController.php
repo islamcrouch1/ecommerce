@@ -236,7 +236,11 @@ class SalesController extends Controller
             'order_from' => "required|string",
             'returned' => "required|string",
             'currency_id' => "required|integer",
+            'expiration_date' => "nullable|string",
+
         ]);
+
+
 
 
         $returned = isset($request->returned) ? $request->returned : null;

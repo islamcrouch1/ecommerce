@@ -54,7 +54,7 @@
                                             aria-hidden="true"></i> {{ __('Back') }}</span>
                                 </div>
 
-                                <div class="collection-collapse-block open">
+                                {{-- <div class="collection-collapse-block open">
                                     <h3 class="collapse-block-title">{{ __('sorting') }}</h3>
                                     <div class="collection-collapse-block-content">
                                         <div class="collection-brand-filter">
@@ -123,7 +123,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> --}}
 
                                 <div class="collection-collapse-block open">
                                     <h3 class="collapse-block-title">{{ __('brands') }}</h3>
@@ -208,8 +208,8 @@
                                                                 </li>
                                                             </label>
 
-                                                            <input style="display:none" name="variations[]"
-                                                                type="checkbox" value="{{ $variation->id }}"
+                                                            <input style="display:none" name="variations[]" type="checkbox"
+                                                                value="{{ $variation->id }}"
                                                                 {{ in_array($variation->id, request()->variations) ? 'checked' : '' }}
                                                                 class="form-check-input filter"
                                                                 id="color-{{ $variation->id }}">
@@ -238,8 +238,8 @@
                                                                 </li>
                                                             </label>
 
-                                                            <input style="display:none" name="variations[]"
-                                                                type="checkbox" value="{{ $variation->id }}"
+                                                            <input style="display:none" name="variations[]" type="checkbox"
+                                                                value="{{ $variation->id }}"
                                                                 {{ in_array($variation->id, request()->variations) ? 'checked' : '' }}
                                                                 class="form-check-input filter"
                                                                 id="variation-{{ $variation->id }}">
@@ -257,7 +257,7 @@
 
 
                                 <!-- price filter start here -->
-                                <div class="collection-collapse-block border-0 open">
+                                {{-- <div class="collection-collapse-block border-0 open">
                                     <h3 class="collapse-block-title">{{ __('price') }}</h3>
                                     <div class="collection-collapse-block-content">
                                         <div class="collection-brand-filter">
@@ -298,7 +298,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> --}}
 
                                 {{-- <div class="collection-collapse-block border-0 open">
                                     <h3 class="collapse-block-title">{{ __('price') }}</h3>

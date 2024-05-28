@@ -86,7 +86,7 @@
                                 </div>
 
 
-                                <div class="col-md-6">
+                                {{-- <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label"
                                             for="expected_delivery">{{ __('expected delivery time') }}</label>
@@ -95,6 +95,20 @@
                                             class="form-control @error('expected_delivery') is-invalid @enderror"
                                             value="{{ old('expected_delivery') }}">
                                         @error('expected_delivery')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div> --}}
+
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="expiration_date">{{ __('Expiration date') }}</label>
+
+                                        <input type="datetime-local" id="expiration_date" name="expiration_date"
+                                            class="form-control @error('expiration_date') is-invalid @enderror"
+                                            value="{{ getTodayDate(3) }}">
+                                        @error('expiration_date')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>

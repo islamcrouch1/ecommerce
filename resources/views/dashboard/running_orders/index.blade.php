@@ -144,9 +144,11 @@
                                         <td class="name align-middle white-space-nowrap py-2">
                                             <div class="d-flex d-flex align-items-center">
                                                 <div class="avatar avatar-xl me-2">
+
                                                     <img class="rounded-circle"
-                                                        src="{{ asset($stock->product->images->count() == 0 ? 'public/images/products/place-holder.jpg' : $stock->product->images[0]->media->path) }}"
-                                                        alt="" />
+                                                        src="{{ getProductImage($stock->product) }}" alt="" />
+
+
                                                 </div>
                                                 <div class="flex-1">
                                                     <h5 class="mb-0 fs--1">

@@ -377,6 +377,7 @@ class AssetsController extends Controller
                 'media_id' => $media_id,
                 'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
+                'currency_id' => getDefaultCurrency()->id,
             ]);
 
             Entry::create([
@@ -389,6 +390,8 @@ class AssetsController extends Controller
                 'media_id' => $media_id,
                 'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
+                'currency_id' => getDefaultCurrency()->id,
+
             ]);
 
 
@@ -404,6 +407,8 @@ class AssetsController extends Controller
                     'media_id' => $media_id,
                     'doc_num' => $request->doc_num,
                     'created_by' => Auth::id(),
+                    'currency_id' => getDefaultCurrency()->id,
+
                 ]);
             }
 
@@ -418,6 +423,8 @@ class AssetsController extends Controller
                 'media_id' => $media_id,
                 'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
+                'currency_id' => getDefaultCurrency()->id,
+
             ]);
         }
 
@@ -433,6 +440,8 @@ class AssetsController extends Controller
                 'media_id' => $media_id,
                 'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
+                'currency_id' => getDefaultCurrency()->id,
+
             ]);
 
             if (abs($acc_balance) > 0) {
@@ -447,6 +456,8 @@ class AssetsController extends Controller
                     'media_id' => $media_id,
                     'doc_num' => $request->doc_num,
                     'created_by' => Auth::id(),
+                    'currency_id' => getDefaultCurrency()->id,
+
                 ]);
             }
 
@@ -460,6 +471,8 @@ class AssetsController extends Controller
                 'media_id' => $media_id,
                 'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
+                'currency_id' => getDefaultCurrency()->id,
+
             ]);
         }
 
@@ -475,6 +488,8 @@ class AssetsController extends Controller
                 'media_id' => $media_id,
                 'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
+                'currency_id' => getDefaultCurrency()->id,
+
             ]);
 
 
@@ -488,6 +503,8 @@ class AssetsController extends Controller
                 'media_id' => $media_id,
                 'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
+                'currency_id' => getDefaultCurrency()->id,
+
             ]);
 
             if (abs($acc_balance) > 0) {
@@ -502,6 +519,8 @@ class AssetsController extends Controller
                     'media_id' => $media_id,
                     'doc_num' => $request->doc_num,
                     'created_by' => Auth::id(),
+                    'currency_id' => getDefaultCurrency()->id,
+
                 ]);
             }
 
@@ -515,6 +534,8 @@ class AssetsController extends Controller
                 'media_id' => $media_id,
                 'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
+                'currency_id' => getDefaultCurrency()->id,
+
             ]);
         }
 
@@ -588,6 +609,8 @@ class AssetsController extends Controller
                 'media_id' => $media_id,
                 'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
+                'currency_id' => getDefaultCurrency()->id,
+
             ]);
 
 
@@ -601,6 +624,8 @@ class AssetsController extends Controller
                 'media_id' => $media_id,
                 'doc_num' => $request->doc_num,
                 'created_by' => Auth::id(),
+                'currency_id' => getDefaultCurrency()->id,
+
             ]);
 
             $dep_rate = $account->dep_rate;
@@ -637,7 +662,9 @@ class AssetsController extends Controller
                         'created_by' => Auth::id(),
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
-                        'created_at' => $date->toDateString()
+                        'created_at' => $date->toDateString(),
+                        'currency_id' => getDefaultCurrency()->id,
+
                     ]);
 
                     Entry::create([
@@ -650,7 +677,9 @@ class AssetsController extends Controller
                         'created_by' => Auth::id(),
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
-                        'created_at' => $date->toDateString()
+                        'created_at' => $date->toDateString(),
+                        'currency_id' => getDefaultCurrency()->id,
+
                     ]);
                 }
             }

@@ -411,6 +411,8 @@ class EntriesController extends Controller
                     'media_id' => $media_id,
                     'doc_num' => $request->doc_num,
                     'created_by' => Auth::id(),
+                    'currency_id' => getDefaultCurrency()->id,
+
                 ]);
             }
         }
@@ -610,6 +612,8 @@ class EntriesController extends Controller
                     'media_id' => $media_id,
                     'doc_num' => $request->doc_num,
                     'created_by' => Auth::id(),
+                    'currency_id' => getDefaultCurrency()->id,
+
                 ]);
 
 
@@ -624,6 +628,8 @@ class EntriesController extends Controller
                     'doc_num' => $request->doc_num,
                     'created_by' => Auth::id(),
                     'due_date' => ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null,
+                    'currency_id' => getDefaultCurrency()->id,
+
                 ]);
 
 
@@ -667,7 +673,9 @@ class EntriesController extends Controller
                             'created_by' => Auth::id(),
                             'media_id' => $media_id,
                             'doc_num' => $request->doc_num,
-                            'created_at' => $date->toDateString()
+                            'created_at' => $date->toDateString(),
+                            'currency_id' => getDefaultCurrency()->id,
+
                         ]);
 
                         Entry::create([
@@ -680,7 +688,9 @@ class EntriesController extends Controller
                             'created_by' => Auth::id(),
                             'media_id' => $media_id,
                             'doc_num' => $request->doc_num,
-                            'created_at' => $date->toDateString()
+                            'created_at' => $date->toDateString(),
+                            'currency_id' => getDefaultCurrency()->id,
+
                         ]);
                     }
                 }
@@ -858,6 +868,8 @@ class EntriesController extends Controller
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
                         'created_by' => Auth::id(),
+                        'currency_id' => getDefaultCurrency()->id,
+
                     ]);
 
                     Entry::create([
@@ -870,6 +882,8 @@ class EntriesController extends Controller
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
                         'created_by' => Auth::id(),
+                        'currency_id' => getDefaultCurrency()->id,
+
                     ]);
 
 
@@ -885,6 +899,8 @@ class EntriesController extends Controller
                             'media_id' => $media_id,
                             'doc_num' => $request->doc_num,
                             'created_by' => Auth::id(),
+                            'currency_id' => getDefaultCurrency()->id,
+
                         ]);
                     }
 
@@ -899,6 +915,8 @@ class EntriesController extends Controller
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
                         'created_by' => Auth::id(),
+                        'currency_id' => getDefaultCurrency()->id,
+
                         'due_date' => ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null,
                     ]);
                 }
@@ -915,6 +933,8 @@ class EntriesController extends Controller
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
                         'created_by' => Auth::id(),
+                        'currency_id' => getDefaultCurrency()->id,
+
                     ]);
 
                     if (abs($acc_balance) > 0) {
@@ -929,6 +949,8 @@ class EntriesController extends Controller
                             'media_id' => $media_id,
                             'doc_num' => $request->doc_num,
                             'created_by' => Auth::id(),
+                            'currency_id' => getDefaultCurrency()->id,
+
                         ]);
                     }
 
@@ -942,6 +964,8 @@ class EntriesController extends Controller
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
                         'created_by' => Auth::id(),
+                        'currency_id' => getDefaultCurrency()->id,
+
                         'due_date' => ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null,
                     ]);
                 }
@@ -958,6 +982,8 @@ class EntriesController extends Controller
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
                         'created_by' => Auth::id(),
+                        'currency_id' => getDefaultCurrency()->id,
+
                     ]);
 
 
@@ -970,6 +996,8 @@ class EntriesController extends Controller
                         'branch_id' => $branch_id,
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
+                        'currency_id' => getDefaultCurrency()->id,
+
                         'created_by' => Auth::id(),
                         'due_date' => ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null,
                     ]);
@@ -986,6 +1014,8 @@ class EntriesController extends Controller
                             'media_id' => $media_id,
                             'doc_num' => $request->doc_num,
                             'created_by' => Auth::id(),
+                            'currency_id' => getDefaultCurrency()->id,
+
                         ]);
                     }
 
@@ -999,6 +1029,8 @@ class EntriesController extends Controller
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
                         'created_by' => Auth::id(),
+                        'currency_id' => getDefaultCurrency()->id,
+
                     ]);
                 }
 
@@ -1188,6 +1220,8 @@ class EntriesController extends Controller
                         'doc_num' => $request->doc_num,
                         'reference_id' => $withdrawal->id,
                         'created_by' => Auth::check() ? Auth::id() : null,
+                        'currency_id' => getDefaultCurrency()->id,
+
                     ]);
 
                     Entry::create([
@@ -1201,6 +1235,8 @@ class EntriesController extends Controller
                         'doc_num' => $request->doc_num,
                         'reference_id' => $withdrawal->id,
                         'created_by' => Auth::check() ? Auth::id() : null,
+                        'currency_id' => getDefaultCurrency()->id,
+
                     ]);
                 }
 
@@ -1242,6 +1278,8 @@ class EntriesController extends Controller
                                 'media_id' => $media_id,
                                 'doc_num' => $request->doc_num,
                                 'created_by' => Auth::id(),
+                                'currency_id' => getDefaultCurrency()->id,
+
                             ]);
 
                             Entry::create([
@@ -1254,6 +1292,8 @@ class EntriesController extends Controller
                                 'media_id' => $media_id,
                                 'doc_num' => $request->doc_num,
                                 'created_by' => Auth::id(),
+                                'currency_id' => getDefaultCurrency()->id,
+
                             ]);
                         }
 
@@ -1270,6 +1310,8 @@ class EntriesController extends Controller
                                 'media_id' => $media_id,
                                 'doc_num' => $request->doc_num,
                                 'created_by' => Auth::id(),
+                                'currency_id' => getDefaultCurrency()->id,
+
                             ]);
 
 
@@ -1287,6 +1329,8 @@ class EntriesController extends Controller
                                     'media_id' => $media_id,
                                     'doc_num' => $request->doc_num,
                                     'created_by' => Auth::id(),
+                                    'currency_id' => getDefaultCurrency()->id,
+
                                 ]);
                             }
 
@@ -1305,6 +1349,8 @@ class EntriesController extends Controller
                                     'media_id' => $media_id,
                                     'doc_num' => $request->doc_num,
                                     'created_by' => Auth::id(),
+                                    'currency_id' => getDefaultCurrency()->id,
+
                                 ]);
                             }
 
@@ -1323,6 +1369,8 @@ class EntriesController extends Controller
                                     'media_id' => $media_id,
                                     'doc_num' => $request->doc_num,
                                     'created_by' => Auth::id(),
+                                    'currency_id' => getDefaultCurrency()->id,
+
                                 ]);
                             }
                         }
@@ -1340,6 +1388,8 @@ class EntriesController extends Controller
                                 'media_id' => $media_id,
                                 'doc_num' => $request->doc_num,
                                 'created_by' => Auth::id(),
+                                'currency_id' => getDefaultCurrency()->id,
+
                             ]);
 
 
@@ -1353,6 +1403,8 @@ class EntriesController extends Controller
                                 'media_id' => $media_id,
                                 'doc_num' => $request->doc_num,
                                 'created_by' => Auth::id(),
+                                'currency_id' => getDefaultCurrency()->id,
+
                             ]);
                         }
 
@@ -1399,6 +1451,8 @@ class EntriesController extends Controller
                                 'media_id' => $media_id,
                                 'doc_num' => $request->doc_num,
                                 'created_by' => Auth::id(),
+                                'currency_id' => getDefaultCurrency()->id,
+
                             ]);
 
                             Entry::create([
@@ -1411,6 +1465,8 @@ class EntriesController extends Controller
                                 'media_id' => $media_id,
                                 'doc_num' => $request->doc_num,
                                 'created_by' => Auth::id(),
+                                'currency_id' => getDefaultCurrency()->id,
+
                             ]);
                         }
 
@@ -1477,6 +1533,8 @@ class EntriesController extends Controller
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
                         'created_by' => Auth::id(),
+                        'currency_id' => getDefaultCurrency()->id,
+
                         'due_date' => ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null,
                     ]);
                 }
@@ -1494,6 +1552,8 @@ class EntriesController extends Controller
                             'media_id' => $media_id,
                             'doc_num' => $request->doc_num,
                             'created_by' => Auth::id(),
+                            'currency_id' => getDefaultCurrency()->id,
+
                             'due_date' => ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null,
                         ]);
                     }
@@ -1511,6 +1571,8 @@ class EntriesController extends Controller
                         'media_id' => $media_id,
                         'doc_num' => $request->doc_num,
                         'created_by' => Auth::id(),
+                        'currency_id' => getDefaultCurrency()->id,
+
                         'due_date' => ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null,
                     ]);
                 }
@@ -1535,6 +1597,8 @@ class EntriesController extends Controller
                     'media_id' => $media_id,
                     'doc_num' => $request->doc_num,
                     'created_by' => Auth::id(),
+                    'currency_id' => getDefaultCurrency()->id,
+
                     'due_date' => ($request->type == 'receipt_notes' || $request->type == 'payment_notes') ? $request->due_date : null,
                 ]);
 
@@ -1548,6 +1612,8 @@ class EntriesController extends Controller
                     'media_id' => $media_id,
                     'doc_num' => $request->doc_num,
                     'created_by' => Auth::id(),
+                    'currency_id' => getDefaultCurrency()->id,
+
                 ]);
             }
         }
@@ -1602,6 +1668,8 @@ class EntriesController extends Controller
             'cr_amount' => $cr_amount,
             'description' => $request->description,
             'created_by' => Auth::id(),
+            'currency_id' => getDefaultCurrency()->id,
+
         ]);
 
 

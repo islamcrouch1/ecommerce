@@ -81,7 +81,7 @@
                     <div class="nav-side">
                         {{-- <div class="inf-card text-lg-end me-30">
                             <p class="gold">{{ __('Consultation') }}</p>
-                            <h6 style="direction:ltr !important"> 02-26908603 </h6>
+                            <h6 style="direction:ltr !important"> 01223991811  </h6>
                         </div> --}}
                         <div class="button_su rounded-0 border-1 border-white">
                             <span class="su_button_circle bg-000 desplode-circle"></span>

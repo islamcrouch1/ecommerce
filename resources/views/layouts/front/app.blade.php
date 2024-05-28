@@ -14,7 +14,7 @@
     <meta name="author" content="" />
 
     <!-- Title  -->
-    <title>Elkomy Group</title>
+    <title>Elkomy Holding</title>
 
     <!-- ===============================================-->
     <!--    Favicons-->
@@ -219,6 +219,10 @@
 
         .ltr {
             direction: ltr !important
+        }
+
+        .tc-blog-style39 .blog-card::after {
+            background-image: linear-gradient(to top, #bb975e, transparent) !important;
         }
     </style>
 

@@ -24,7 +24,11 @@ class FrontController extends Controller
         })->inRandomOrder()->limit(7)->get();
 
 
-        return view('front.home', compact('slides', 'portfolio_posts'));
+        $blog_posts = Post::whereHas('website_category', function ($query) {
+            $query->where('type', 'blog');
+        })->inRandomOrder()->limit(5)->get();
+
+        return view('front.home', compact('slides', 'portfolio_posts', 'blog_posts'));
     }
 
     public function fqs()
@@ -41,9 +45,15 @@ class FrontController extends Controller
 
         $post = Post::whereHas('website_category', function ($query) {
             $query->where('type', 'about');
-        })->inRandomOrder()->first();
+        })->first();
 
-        return view('front.about', compact('post'));
+        $category = WebsiteCategory::where('type', 'about')->where('name_en', 'team')->first();
+
+
+        $members = $category->posts()->orderBy('sort_order', 'asc')->get();
+
+
+        return view('front.about', compact('post', 'members'));
     }
     public function strategy()
     {
@@ -86,6 +96,10 @@ class FrontController extends Controller
     {
         return view('front.photos');
     }
+
+
+
+
     public function videos()
     {
         return view('front.videos');

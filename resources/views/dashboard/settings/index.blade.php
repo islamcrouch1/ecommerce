@@ -1154,6 +1154,17 @@
                                         @enderror
                                     </div>
 
+                                    <div class="mb-3">
+                                        <label class="form-label"
+                                            for="tiktok_token">{{ __('tiktok pixel token') }}</label>
+                                        <input name="tiktok_token"
+                                            class="form-control @error('tiktok_token') is-invalid @enderror"
+                                            type="text" id="tiktok_token" value="{{ setting('tiktok_token') }}">
+                                        @error('tiktok_token')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
 
                                     <div class="mb-3">
                                         <label class="form-label"

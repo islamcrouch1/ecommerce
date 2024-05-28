@@ -213,6 +213,9 @@ class ProductController extends Controller
             'variations' => "nullable|string",
             'product_id' => "required|string",
             'qty' => "required|string",
+            'from' => "nullable|string",
+            'to' => "nullable|string",
+            'can_rent' => "nullable|string",
         ]);
 
 
@@ -342,8 +345,12 @@ class ProductController extends Controller
             if ($cart_item) {
 
                 $product_qty = $cart_item->qty;
+
                 $cart_item->update([
-                    'qty' => $request->qty + $product_qty,
+                    'qty' => $request->can_rent != null ?  $request->qty : ($request->qty + $product_qty),
+                    'start_date' => $request->from,
+                    'days' => $request->to != null ? $request->to : 1,
+                    'end_date' => $request->can_rent != null ?  (Carbon::parse($request->from)->addHours($request->to * 12)->toDateTimeString()) : null,
                 ]);
 
                 $data['status'] = 1;
@@ -358,7 +365,7 @@ class ProductController extends Controller
 
             foreach ($product->combinations as $com) {
 
-                addToCart($request->product_id, $request->qty, $user_id, $com->id, $session_id);
+                addToCart($request->product_id, $request->qty, $user_id, $com->id, $session_id, $request->from, $request->to);
             }
 
 
@@ -409,6 +416,52 @@ class ProductController extends Controller
         }
     }
 
+    public function calcRentData(Request $request)
+    {
+
+        $request->validate([
+            'product_id' => "required|string",
+            'qty' => "required|string",
+            'from' => "nullable|string",
+            'to' => "nullable|numeric",
+        ]);
+
+
+        $start = Carbon::parse($request->from);
+        $days = $request->to;
+
+        $product = Product::findOrFail($request->product_id);
+
+
+        if ($days <= 0) {
+            $days = 1;
+        }
+
+        $data = [];
+
+        // Check if date 1 is before date 2
+        // if ($start->isAfter($end)) {
+        //     $data['status'] = 1;
+        //     $data['start'] = $request->from;
+        //     $data['end'] = $request->from;
+        //     return $data;
+        // }
+
+        // for ($i=0; $i < $days ; $i++) {
+        //     # code...
+        // }
+
+        // $diffInDays = $start->diffInDays($end);
+
+        $diffInDays = $days;
+
+        $data['end'] = $start->addHours($days * 12)->toDateTimeString();
+        $data['days'] = $diffInDays;
+        $data['vat'] = ((productPrice($product, null, 'vat') - productPrice($product)) * $diffInDays * $request->qty) . getDefaultCurrency()->symbol;
+        $data['total'] = (productPrice($product, null, 'vat') * $diffInDays * $request->qty) . getDefaultCurrency()->symbol;
+
+        return $data;
+    }
 
     public function destroy($product)
     {
@@ -433,8 +486,10 @@ class ProductController extends Controller
                 ->first();
         }
 
+        if ($item != null) {
+            $item->delete();
+        }
 
-        $item->delete();
         return redirect()->back()->withInput();
     }
 
@@ -504,6 +559,10 @@ class ProductController extends Controller
                 facebookEvent('AddToWishlist');
             }
 
+            if (setting('tiktok_id') && setting('tiktok_token')) {
+                tiktokEvent('AddToWishlist', $product->id, 1);
+            }
+
             if (url()->previous() == route('ecommerce.wishlist') || url()->previous() == route('ecommerce.account')) {
                 return redirect()->back()->withInput();
             }
@@ -560,7 +619,7 @@ class ProductController extends Controller
         }
 
 
-        $data['product_price'] = round(productPrice($product, $request->combination, 'vat'), 2);
+        $data['product_price'] = round(productPrice($product, $request->combination, 'vat'), 2) * $cart_item->days;
         $data['qty'] = $qty;
 
 
@@ -592,10 +651,16 @@ class ProductController extends Controller
             facebookEvent('InitiateCheckout');
         }
 
+
+
         if (Auth::check()) {
             $cart_items = CartItem::where('user_id', Auth::id())->get();
         } else {
             $cart_items = CartItem::where('session_id', $request->session()->token())->get();
+        }
+
+        if (setting('tiktok_id') && setting('tiktok_token')) {
+            tiktokEvent('InitiateCheckout', null, null, null, null, $cart_items);
         }
 
         $countries = Country::all();
@@ -704,7 +769,9 @@ class ProductController extends Controller
 
 
         $data['currency'] = getCurrency();
-        $data['total'] = round(getCartSubtotal($cart_items), 2);
+        // $data['total'] = round(getCartSubtotal($cart_items), 2);
+        $data['total'] = round(getCartSubtotalWithOutTax($cart_items), 2);
+
         $data['locale'] = app()->getLocale();
 
 
@@ -756,14 +823,16 @@ class ProductController extends Controller
 
             $discount = calcDiscount($cart_items, $coupon, $data['total']);
             $data['coupon_status'] = 1;
-            $data['total'] = round($data['total'] - $discount, 2);
+            // $data['total'] = round($data['total'] - $discount, 2);
             $data['discount'] = round($discount, 2);
         } else {
             $discount = round(calcDiscount($cart_items), 2);
-            $data['total'] = round($data['total'], 2) - $discount;
+            // $data['total'] = round($data['total'], 2) - $discount;
             $data['discount'] = $discount;
         }
 
+
+        $data['total'] = round($data['total'] + (calcTax(($data['total'] - $discount), 'vat')) - $discount, 2);
 
 
 

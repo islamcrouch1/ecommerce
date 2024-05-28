@@ -100,6 +100,59 @@
         <!-- end partners -->
 
 
+        <!-- start tc-testimonials-style24 -->
+        <section class="tc-testimonials-style24">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-9">
+                        <div class="content wow fadeInUp">
+                            {{-- <div class="icon">
+                                <img src="assets/img/testi_icon.png" alt="">
+                            </div> --}}
+                            <div class="testimonials-main-slider">
+
+                            </div>
+                            <div class="testimonials-sub-slider">
+                                <div class="swiper-wrapper">
+
+                                    @foreach ($members as $member)
+                                        <div class="swiper-slide">
+                                            <div style="flex-direction: column;"
+                                                class="client-card d-flex align-items-center">
+                                                <div
+                                                    class="img icon-200 rounded-circle overflow-hidden img-cover me-20 flex-shrink-0">
+                                                    <img src="{{ asset($member->media->path) }}"
+                                                        alt="{{ getName($member) }}">
+                                                </div>
+                                                <div style="text-align: center" class="inf m-2">
+                                                    <h6 class="color-orange3 text-uppercase fsz-12">
+                                                        @if (app()->getLocale() == 'ar')
+                                                            {!! $member->description_ar !!}
+                                                        @else
+                                                            {!! $member->description_en !!}
+                                                        @endif
+                                                    </h6>
+                                                    <h4 class="fsz-20 text-capitalize fw-bold"> {{ getName($member) }}</h4>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+
+
+
+                                </div>
+                            </div>
+                            <div class="swiper-pagination"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <span class="float-text wow fadeInUp" data-wow-delay="0.1s"> {{ __('Our team') }} </span>
+        </section>
+        <!-- end tc-testimonials-style24 -->
+
+
         <!-- start tc-page-about-clients -->
         {{-- <section class="tc-page-about-clients">
             <div class="container">

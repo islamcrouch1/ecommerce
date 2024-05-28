@@ -385,10 +385,15 @@ class PaymentController extends Controller
         }
 
         if (Auth::check()) {
-            sendEmail('order', $order, 'user');
+            sendEmail('order', $order, 'user', $order->customer->email);
         }
 
-        sendEmail('order', $order, 'admin');
+        if (setting('orders_email') != null && strpos(setting('orders_email'), ',')) {
+            $emails = explode(",", setting('orders_email'));
+            foreach ($emails as $email) {
+                sendEmail('order', $order, 'admin', $email);
+            }
+        }
     }
 
 

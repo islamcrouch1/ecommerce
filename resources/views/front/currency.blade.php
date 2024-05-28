@@ -30,17 +30,18 @@
                     <div class="col-lg-8">
                         <div class="main-content">
                             <div class="main-img img-cover mb-50">
-                                <img src="{{ asset('/assets/img/elkomy/main_img.jpg') }}" alt="">
+                                <img src="{{ asset('/assets/img/elkomy/c2.jpg') }}" alt="">
                             </div>
 
                             @if (app()->getLocale() == 'en')
                                 <div class="text fsz-18 color-777 mb-30">
-                                    Elkomy currency exchange activity was started in the late seventies by opening their
-                                    office that was located in down town Cairo, offering all the exchange services.<br>
-                                    Elkomy exchange company covers and exchanges a wide range of currencies to make it
-                                    easier to our customer’s exchanging their money.<br>
+                                    Elkomy currency exchange activity started started in the late seventies by opening
+                                    their
+                                    office which was located in downtown Cairo, offering all the exchange services.<br>
+                                    Elkomy Exchange company covers and exchanges a wide range of currencies to make it
+                                    easier for our customer to exchange their money.<br>
                                     Our objective is to expand our company’s branches all over Egypt, letting our customers
-                                    experience the outstanding service.
+                                    experience outstanding service.
 
 
                                 </div>
@@ -63,12 +64,12 @@
                                 <div class="row align-items-center gx-5">
                                     <div class="col-lg-5">
                                         <div class="img img-cover th-350 radius-3 overflow-hidden">
-                                            <img src="{{ asset('/assets/img/elkomy/vision.jpg') }}" alt="">
+                                            <img src="{{ asset('/assets/img/elkomy/c1.jpg') }}" alt="">
                                         </div>
                                     </div>
                                     <div class="col-lg-7">
                                         <div class="info mt-4 mt-lg-0">
-                                            <h5 class="fsz-24 mb-30">{{ __('mission & vission') }}</h5>
+                                            <h5 class="fsz-24 mb-30">{{ __('Mission & Vision') }}</h5>
 
 
                                             <h6>{{ __('Mission') }}</h6>

@@ -14,7 +14,7 @@ class Product extends Model
     use HasFactory;
     use SoftDeletes;
     protected $fillable = [
-        'seo_meta_tag', 'unit_id', 'code', 'can_sold', 'can_purchased', 'can_manufactured', 'digital_file', 'product_weight', 'product_type', 'discount_price', 'video_url', 'product_slug', 'product_max_order', 'product_min_order', 'is_featured', 'on_sale', 'brand_id', 'seo_desc', 'name_en', 'name_ar', 'description_ar', 'description_en', 'vendor_price', 'max_price', 'extra_fee', 'sale_price', 'total_profit', 'country_id', 'created_by', 'status', 'updated_by', 'sku', 'unlimited', 'best_selling', 'top_collection', 'product_length', 'product_width', 'product_height', 'shipping_amount', 'shipping_method_id', 'cost', 'vendor_id', 'category_id', 'media_id'
+        'seo_meta_tag', 'unit_id', 'can_rent', 'code', 'can_sold', 'can_purchased', 'can_manufactured', 'digital_file', 'product_weight', 'product_type', 'discount_price', 'video_url', 'product_slug', 'product_max_order', 'product_min_order', 'is_featured', 'on_sale', 'brand_id', 'seo_desc', 'name_en', 'name_ar', 'description_ar', 'description_en', 'vendor_price', 'max_price', 'extra_fee', 'sale_price', 'total_profit', 'country_id', 'created_by', 'status', 'updated_by', 'sku', 'unlimited', 'best_selling', 'top_collection', 'product_length', 'product_width', 'product_height', 'shipping_amount', 'shipping_method_id', 'cost', 'vendor_id', 'category_id', 'media_id'
     ];
 
 
@@ -294,6 +294,9 @@ class Product extends Model
     }
 
 
+
+
+
     public function scopeWhenBrand($query, $brands)
     {
         return $query->When($brands, function ($q) use ($brands) {
@@ -303,13 +306,36 @@ class Product extends Model
         });
     }
 
+    // public function scopeWhenCats($query, $categories)
+    // {
+    //     return $query->When($categories, function ($q) use ($categories) {
+    //         return $q->whereHas('categories', function ($q) use ($categories) {
+    //             $q->whereIn('brand_id', $categories);
+    //         });
+    //     });
+    // }
+
 
     public function scopeWhenCategories($query, $cats)
     {
-        return $query->When($cats, function ($q) use ($cats) {
-            return $q->whereIn('category_id', $cats);
+        return $query->When($cats, function ($query) use ($cats) {
+            return $query->whereIn('category_id', $cats)
+                ->orWhereHas('categories', function ($query) use ($cats) {
+                    $query->whereIn('categories.id', $cats);
+                });;
         });
     }
+
+    // public function scopeInCategory($query, $categoryId)
+    // {
+    //     return $query->where(function ($query) use ($categoryId) {
+    //         $query->where('category_id', $categoryId);
+
+    //         $query->orWhereHas('categories', function ($query) use ($categoryId) {
+    //             $query->where('categories.id', $categoryId);
+    //         });
+    //     });
+    // }
 
 
     public function scopeWhenVariations($query, $colors)

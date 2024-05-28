@@ -30,17 +30,17 @@
                     <div class="col-lg-8">
                         <div class="main-content">
                             <div class="main-img img-cover mb-50">
-                                <img src="{{ asset('/assets/img/elkomy/main_img.jpg') }}" alt="">
+                                <img src="{{ asset('/assets/img/elkomy/edu1.jpg') }}" alt="">
                             </div>
 
                             @if (app()->getLocale() == 'en')
                                 <div class="text fsz-18 color-777 mb-30">
-                                    Our aim in elkomy holding is to build a promising future therefor elkomy is joining the
+                                    Our aim in elkomy holding is to build a promising future therefore elkomy is joining the
                                     education sector by having national and international schools under construction.
 
-                                    <h3 class="m-2">Why elkomy is joining the education sector?</h3>
+                                    <h3 class="m-2">Why elkomy is joining the educational sector?</h3>
 
-                                    We are joining the education sector to develop well-rounded and thoughtful students
+                                    We are joining the educational sector to develop well-rounded and thoughtful students
                                     prepared to cope with a rapidly changing and globalized world. <br> Instilling them
                                     lifelong
                                     learning, critical thinking and ethics using the modern and innovative educational
@@ -67,24 +67,24 @@
                             <div class="vision-card mb-70 overflow-hidden">
                                 <div class="row align-items-center gx-5">
                                     <div class="col-lg-5">
-                                        <div class="img img-cover th-350 radius-3 overflow-hidden">
-                                            <img src="{{ asset('/assets/img/elkomy/vision.jpg') }}" alt="">
+                                        <div class="img img-cover radius-3 overflow-hidden">
+                                            <img src="{{ asset('/assets/img/elkomy/edu2.jpg') }}" alt="">
                                         </div>
                                     </div>
                                     <div class="col-lg-7">
                                         <div class="info mt-4 mt-lg-0">
-                                            <h5 class="fsz-24 mb-30">{{ __('mission & vission') }}</h5>
+                                            <h5 class="fsz-24 mb-30">{{ __('Mission & Vision') }}</h5>
 
 
                                             <h6>{{ __('Mission') }}</h6>
 
                                             <p class="fsz-18 color-777 fw-400">
-                                                {{ __('we strive to offer comprehensive and balanced educational programs that enable our students to reach and expand their potential.') }}
+                                                {{ __('We strive to offer comprehensive and balanced educational programs that enable our students to reach and expand their potential.') }}
                                             </p>
                                             <h6>{{ __('Vision') }}</h6>
 
                                             <p class="fsz-18 color-777 fw-400">
-                                                {{ __('serve our society through productive, responsible, ethical, creative citizens.') }}
+                                                {{ __('Serve our society through productive, responsible, ethical, and creative citizens.') }}
                                             </p>
                                         </div>
                                     </div>
@@ -105,7 +105,7 @@
                                     <li class="mb-2">
                                         <span class="fsz-14 ">
                                             <span class="fw-bold gold">{{ __('Concern:') }}</span>
-                                            {{ __('Our concern is to provide a healthy and respectful environment to our students.') }}
+                                            {{ __('Our concern is to provide a healthy and respectful environment for our students.') }}
                                         </span>
                                     </li>
                                     <li class="mb-2">
@@ -117,7 +117,7 @@
                                     <li class="mb-2">
                                         <span class="fsz-14 ">
                                             <span class="fw-bold gold">{{ __('Modernity:') }}</span>
-                                            {{ __('Having a global perspective, using modern and innovative educational system.') }}
+                                            {{ __('Having a global perspective, using a modern and innovative educational system.') }}
                                         </span>
                                     </li>
 

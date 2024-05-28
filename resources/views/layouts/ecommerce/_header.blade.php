@@ -715,10 +715,10 @@
                     <div class="col-lg-6">
                         <div class="header-contact text-end">
                             <ul>
-                                <a href="{{ route('register') }}" target="_blank">
+                                {{-- <a href="{{ route('register') }}" target="_blank">
                                     <li> <i class="fa fa-user" aria-hidden="true"></i>{{ __('become a seller') }}
                                     </li>
-                                </a>
+                                </a> --}}
                                 {{-- <li><i class="fa fa-truck" aria-hidden="true"></i>Track Order</li>
                                 <li class="pe-0"><i class="fa fa-gift" aria-hidden="true"></i>Gift Cards</li> --}}
                             </ul>

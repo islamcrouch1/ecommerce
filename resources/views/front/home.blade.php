@@ -8,7 +8,7 @@
             <div class="row align-items-center">
                 <div class="col-lg-6">
                     <div class="info wow fadeInUp slow" data-wow-delay="0.5s">
-                        <h1>{{ __('Elkomy Group') }}</h1>
+                        <h1>{{ __('Elkomy Holding') }}</h1>
                         <h3 class="gold">{{ __('We are building tomorrow') }}</h3>
 
                         <ul>
@@ -149,7 +149,7 @@
                                 </div>
                                 <div class="info">
                                     <h6> {{ __('Educational services') }} </h6>
-                                    <p> {{ __('Our aim in elkomy holding is to build a promising future therefor elkomy is joining the education sector by having national and international schools under construction.') }}
+                                    <p> {{ __('Our aim in elkomy holding is to build a promising future therefore elkomy is joining the educational sector by having national and international schools under construction.') }}
                                     </p>
                                     <div class="link">
                                         <a href="{{ route('front.educational') }}"> {{ __('read more') }} <i
@@ -293,9 +293,9 @@
         <!-- Start video -->
         <section class="tc-video-style39">
             <div class="img">
-                <img src="{{ asset('assets/img/video.png') }}" alt="">
-                <a href="https://www.youtube.com/watch?v=pGbIOC83-So&t=21s" class="play-btn wow zoomIn slow"
-                    data-lity=""> play </a>
+                <img src="{{ asset('assets/img/videocover.png') }}" alt="">
+                <a href="https://www.youtube.com/watch?v=OzK30cMsnX4" class="play-btn wow zoomIn slow" data-lity=""> play
+                </a>
             </div>
         </section>
         <!-- End video -->
@@ -403,65 +403,9 @@
 
 
 
-        <!-- Start blog -->
-        <section class="tc-blog-style39">
-            <h2 class="float-title"> Insights </h2>
-            <div class="container">
-                <div class="title text-center mb-60 wow fadeInUp slow">
-                    <h6 class="fsz-14 ltspc-1 color-blue6 text-uppercase"> insights </h6>
-                    <h3 class="fsz-50"> Blog & Insights </h3>
-                </div>
-                <div class="row gx-0 wow fadeInUp slow" data-wow-delay="0.2s">
-                    <div class="col-lg-4">
-                        <div class="blog-card">
-                            <div class="img img-cover">
-                                <img src="{{ asset('assets/img/blog/1.png') }}" alt="">
-                            </div>
-                            <div class="info">
-                                <div class="cont">
-                                    <div class="date text-uppercase mb-15 fsz-14 "> <span class="me-30"> corporate
-                                        </span> <a href="#"> jan 21, 2023 </a> </div>
-                                    <h6 class="fsz-20 fw-500 lh-4"> <a href="../page-single-post-3.html"> iteck IT allows
-                                            your business and technology </a> </h6>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="blog-card">
-                            <div class="img img-cover">
-                                <img src="{{ asset('assets/img/blog/2.png') }}" alt="">
-                            </div>
-                            <div class="info">
-                                <div class="cont">
-                                    <div class="date text-uppercase mb-15 fsz-14 "> <span class="me-30"> business </span>
-                                        <a href="#"> feb 08, 2023 </a>
-                                    </div>
-                                    <h6 class="fsz-20 fw-500 lh-4"> <a href="../page-single-post-3.html"> Schedule a
-                                            meeting to take your business </a> </h6>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="blog-card">
-                            <div class="img img-cover">
-                                <img src="{{ asset('assets/img/blog/3.png') }}" alt="">
-                            </div>
-                            <div class="info">
-                                <div class="cont">
-                                    <div class="date text-uppercase mb-15 fsz-14 "> <span class="me-30"> corporate
-                                        </span> <a href="#"> mar 01, 2023 </a> </div>
-                                    <h6 class="fsz-20 fw-500 lh-4"> <a href="../page-single-post-3.html"> Highly flexible,
-                                            adaptable, and scalable projects </a> </h6>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- End blog -->
+        @include('front._blog', [
+            'posts' => $blog_posts,
+        ])
 
 
     </main>

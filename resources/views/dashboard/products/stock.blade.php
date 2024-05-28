@@ -136,6 +136,22 @@
 
                                         </tbody>
                                     </table>
+
+                                    <div class="row">
+                                        <div class="mb-3 mt-5">
+                                            <label class="form-label"
+                                                for="serials">{{ __('Add product serials') }}</label><br>
+                                            <button href="javascript:void(0);"
+                                                class="btn btn-outline-primary btn-sm add_serial me-1 mb-1 mt-1"
+                                                type="button">{{ __('add serial') }}
+                                            </button>
+                                            <div class="serial_wrapper">
+
+                                            </div>
+
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
 

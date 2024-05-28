@@ -139,6 +139,7 @@ class InvoicesController extends Controller
             foreach ($combinations as $combination) {
                 $combination->name = getProductName($product, $combination);
                 $combination->price = productPrice($product, $combination->id);
+                $combination->can_rent = $product->can_rent != null ? $product->can_rent : 'off';
             }
 
             $data['elements'] = $combinations;
@@ -183,6 +184,7 @@ class InvoicesController extends Controller
 
 
         $qty = explode(',', $request->qty);
+        $days = explode(',', $request->days);
         $price = explode(',', $request->price);
         $taxes = explode(',', $request->tax);
         $compinations = explode(',', $request->compinations);
@@ -202,9 +204,17 @@ class InvoicesController extends Controller
         $taxes_data = [];
 
 
+
         foreach ($qty as $index => $q) {
-            $subtotal = $subtotal + ($q * $price[$index]);
+
+            if ($days[$index] <= 0) {
+                $days[$index] = 1;
+            }
+
+            $subtotal = $subtotal + ($q * $price[$index] * $days[$index]);
         }
+
+
 
         if ($discount > $subtotal) {
             $discount = $subtotal;

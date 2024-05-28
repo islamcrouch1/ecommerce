@@ -6,7 +6,7 @@
 
         <!--  start contact  -->
         <section class="conatct-form">
-            <div class="container">
+            <div style="z-index: 0" class="container">
                 <div class="content">
                     <div class="section_title3 text-white mb-80">
                         <h2> Connect, Communicate, and Collaborate: Reach out to our Expert Team and <span class="fw-100">
@@ -92,7 +92,7 @@
                                     <small class="text-uppercase color-999 mb-20 fsz-12"> Egypt Office</small>
                                     <a href="#"> 4 Ebn Elmotawag . Elkalifa Elmamon Heliopolis </a>
                                     <a href="#"> contact@elkomyholding.com </a>
-                                    <a href="#"> 02 26908603</a>
+                                    <a href="#"> 01223991811 </a>
                                 </div>
                                 {{-- <div class="info-card mt-60 fsz-18">
                                     <small class="text-uppercase color-999 mb-20 fsz-12"> Egypt Office 2 </small>

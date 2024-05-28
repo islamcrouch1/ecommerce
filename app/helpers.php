@@ -35,6 +35,7 @@ use App\Models\Reward;
 use App\Models\Role;
 use App\Models\RunningOrder;
 use App\Models\SalaryCard;
+use App\Models\Serial;
 use App\Models\SettlementSheet;
 use App\Models\Stock;
 use App\Models\Tax;
@@ -70,6 +71,8 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise;
 
 use Stevebauman\Location\Facades\Location;
+use Illuminate\Support\Facades\Http;
+
 
 
 if (!function_exists('saveMedia')) {
@@ -176,12 +179,19 @@ if (!function_exists('getProductPrice')) {
                 }
             }
 
-            return $h4 = getProductPriceForView($combination_s->sale_price, $combination_s->discount_price);
+            $h4 = getProductPriceForView($combination_s->sale_price, $combination_s->discount_price);
         } elseif ($product->product_type == 'variable' && $combination != null) {
-            return $h4 = getProductPriceForView($combination->sale_price, $combination->discount_price);
+            $h4 = getProductPriceForView($combination->sale_price, $combination->discount_price);
         } else {
-            return $h4 = getProductPriceForView($product->sale_price, $product->discount_price);
+            $h4 = getProductPriceForView($product->sale_price, $product->discount_price);
         }
+
+
+        if ($product->can_rent != null) {
+            $h4 = '<h4>' . $h4 . ' (' . __('price per day') . ') ' . '</h4>';
+        }
+
+        return $h4;
     }
 }
 
@@ -191,7 +201,7 @@ if (!function_exists('getProductPriceForView')) {
     {
         $h4 = '';
         if ($discount == 0) {
-            return    '<h4>' . calcWebsiteTax($price)  . getCurrency() . '</h4>';
+            return     calcWebsiteTax($price)  . getCurrency();
         } else {
             return '<h4>' . calcWebsiteTax($discount)  . getCurrency() . ' ' . '<del>' . calcWebsiteTax($price)  . getCurrency() . '</del>
             </h4>' . getProductDiscountForView($price, $discount);
@@ -236,6 +246,38 @@ if (!function_exists('calcWebsiteTax')) {
         return $price;
     }
 }
+
+
+if (!function_exists('getTodayDate')) {
+    function getTodayDate($days = 0)
+    {
+        return Carbon::today()->addDays($days)->toDateTimeString();
+    }
+}
+
+if (!function_exists('getEndDate')) {
+    function getEndDate($start_date, $days)
+    {
+        $start = Carbon::parse($start_date);
+        $days = $days;
+
+
+        if ($days <= 0) {
+            $days = 1;
+        }
+
+        return $end_date = $start->addHours($days * 12)->toDateTimeString();
+    }
+}
+
+if (!function_exists('getRentalEndDate')) {
+    function getRentalEndDate()
+    {
+        return Carbon::today()->addHours(12)->toDateTimeString();
+    }
+}
+
+
 
 
 
@@ -311,6 +353,17 @@ if (!function_exists('getProductCostAccount')) {
 
 
 
+if (!function_exists('getCartSubtotalWithOutTax')) {
+    function getCartSubtotalWithOutTax($cart_items)
+    {
+        $subtotal = 0;
+        foreach ($cart_items as $item) {
+            $subtotal +=  ($item->qty *  productPrice($item->product, $item->product_combination_id) * $item->days);
+        }
+
+        return $subtotal;
+    }
+}
 
 
 if (!function_exists('getCartSubtotal')) {
@@ -318,10 +371,18 @@ if (!function_exists('getCartSubtotal')) {
     {
         $subtotal = 0;
         foreach ($cart_items as $item) {
-            $subtotal +=  $item->qty *  productPrice($item->product, $item->product_combination_id, 'vat');
+            $subtotal +=  ($item->qty *  productPrice($item->product, $item->product_combination_id, 'vat') * $item->days);
         }
 
         return $subtotal;
+    }
+}
+
+if (!function_exists('getBranch')) {
+    function getBranch($id)
+    {
+        $branch = Branch::find($id);
+        return $branch;
     }
 }
 
@@ -433,6 +494,15 @@ if (!function_exists('getbranches')) {
         return $branches;
     }
 }
+
+if (!function_exists('getAllBranches')) {
+    function getAllBranches()
+    {
+        $branches = Branch::all();
+        return $branches;
+    }
+}
+
 
 
 
@@ -1059,7 +1129,7 @@ if (!function_exists('callToVerify')) {
 
 // send sms for verification
 if (!function_exists('sendEmail')) {
-    function sendEmail($type, $data, $email_type)
+    function sendEmail($type, $data, $email_type, $email)
     {
         try {
             if ($type == 'order') {
@@ -1070,10 +1140,10 @@ if (!function_exists('sendEmail')) {
                 //     $message->from('devnote@gmail.com', 'Joi die');
                 // });
 
-                Mail::send(new NewOrder($data, $email_type));
+                Mail::send(new NewOrder($data, $email_type, $email));
             }
         } catch (Exception $e) {
-            alertError('There was an error sending email', 'حدث خطأ في ارسال الايميل');
+            // alertError('There was an error sending email', 'حدث خطأ في ارسال الايميل');
         }
     }
 }
@@ -1566,10 +1636,46 @@ if (!function_exists('productQuantity')) {
         }
 
         $quantity = $quantity_in - $quantity_out;
+
+
+
         return $quantity;
     }
 }
 
+
+// get product quantity for simple , variable and vendor product for website
+if (!function_exists('productQuantityWebsite')) {
+    function productQuantityWebsite($product_id, $combination_id = null, $warehouse_id = null, $warehouses = [])
+    {
+
+        $quantity_in = 0;
+        $quantity_out = 0;
+        $quantity = 0;
+
+        $product = Product::findOrFail($product_id);
+
+        // if product belong to vendor then get vendor warehouse and calculate quantity
+        if ($product->vendor_id != null) {
+            $warehouse = Warehouse::where('vendor_id', $product->vendor_id)->first();
+            $warehouse_id = $warehouse->id;
+        }
+
+        foreach ($product->stocks->where('product_combination_id', $combination_id ? '==' : '!=', $combination_id)->where('warehouse_id', $warehouse_id ? '==' : '!=', $warehouse_id)->whereIn('warehouse_id', $warehouses) as $stock) {
+
+            checkStockUnit($stock);
+
+            if ($stock->stock_status == 'IN') {
+                $quantity_in += getQtyByUnit($stock->qty, $stock->unit_id);
+            } else {
+                $quantity_out += getQtyByUnit($stock->qty, $stock->unit_id);
+            }
+        }
+
+        $quantity = $quantity_in - $quantity_out;
+        return $quantity;
+    }
+}
 
 
 if (!function_exists('checkProductUnit')) {
@@ -1584,6 +1690,25 @@ if (!function_exists('checkProductUnit')) {
         }
     }
 }
+
+
+if (!function_exists('getProductSerial')) {
+    function getProductSerial($product_combination_id, $order_id)
+    {
+        $serial = Serial::where('product_combination_id', $product_combination_id)
+            ->where('order_id', $order_id)->first();
+
+        if ($serial != null) {
+            $serial = $serial->serial;
+        } else {
+            $serial = null;
+        }
+
+        return $serial;
+    }
+}
+
+
 
 if (!function_exists('checkStockUnit')) {
     function checkStockUnit($stock)
@@ -1690,38 +1815,7 @@ if (!function_exists('getQtyInDefaultUnit')) {
 }
 
 
-// get product quantity for simple , variable and vendor product for website
-if (!function_exists('productQuantityWebsite')) {
-    function productQuantityWebsite($product_id, $combination_id = null, $warehouse_id = null, $warehouses = [])
-    {
 
-        $quantity_in = 0;
-        $quantity_out = 0;
-        $quantity = 0;
-
-        $product = Product::findOrFail($product_id);
-
-        // if product belong to vendor then get vendor warehouse and calculate quantity
-        if ($product->vendor_id != null) {
-            $warehouse = Warehouse::where('vendor_id', $product->vendor_id)->first();
-            $warehouse_id = $warehouse->id;
-        }
-
-        foreach ($product->stocks->where('product_combination_id', $combination_id ? '==' : '!=', $combination_id)->where('warehouse_id', $warehouse_id ? '==' : '!=', $warehouse_id)->whereIn('warehouse_id', $warehouses) as $stock) {
-
-            checkStockUnit($stock);
-
-            if ($stock->stock_status == 'IN') {
-                $quantity_in += getQtyByUnit($stock->qty, $stock->unit_id);
-            } else {
-                $quantity_out += getQtyByUnit($stock->qty, $stock->unit_id);
-            }
-        }
-
-        $quantity = $quantity_in - $quantity_out;
-        return $quantity;
-    }
-}
 
 
 
@@ -3839,6 +3933,7 @@ if (!function_exists('getCombinations')) {
 if (!function_exists('getUnitByID')) {
     function getUnitByID($unit_id)
     {
+
         $unit = Unit::findOrFail($unit_id);
         return $unit;
     }
@@ -3876,7 +3971,7 @@ if (!function_exists('getWhatsappButton')) {
 
         $tag .= '<a href="https://api.whatsapp.com/send?phone=' . $phone . '&text=' . $text . ' - ' . $url . '" class="float"
                     target="_blank">
-                    <i class="fa fa-whatsapp my-float"></i>
+                    <i class="fa-brands fa-whatsapp my-float"></i>
                 </a>';
 
         return $tag;
@@ -4039,7 +4134,7 @@ if (!function_exists('getItemById')) {
 
 // get item
 if (!function_exists('addToCart')) {
-    function addToCart($product_id, $qty, $user_id = null, $product_combination_id = null, $session_id = null)
+    function addToCart($product_id, $qty, $user_id = null, $product_combination_id = null, $session_id = null, $from = null, $to = null)
     {
 
         if (setting('snapchat_pixel_id') && setting('snapchat_token')) {
@@ -4050,13 +4145,22 @@ if (!function_exists('addToCart')) {
             facebookEvent('AddToCart');
         }
 
+        if (setting('tiktok_id') && setting('tiktok_token')) {
+            tiktokEvent('AddToCart', $product_id, $qty);
+        }
+
+        if ($to != null) {
+        }
 
         CartItem::create([
             'user_id' => $user_id,
             'product_id' => $product_id,
             'qty' => $qty,
             'product_combination_id' => $product_combination_id,
-            'session_id' => $session_id
+            'session_id' => $session_id,
+            'start_date' => $from,
+            'end_date' => $to != null ? (Carbon::parse($from)->addHours($to * 12)->toDateTimeString()) : null,
+            'days' => $to != null ? $to : 1,
         ]);
     }
 }
@@ -4231,6 +4335,118 @@ if (!function_exists('facebookEvent')) {
 }
 
 
+
+// create snap chat event
+if (!function_exists('tiktokEvent')) {
+    function tiktokEvent($type, $product_id = null, $qty = null, $price = null, $currency = null, $items = [], $products = [])
+    {
+
+
+        $pixel_id = setting('tiktok_id');
+        $access_token = setting('tiktok_token');
+
+
+        $date = Carbon::now();
+        $ip =  request()->ip();
+        $device = strval(request()->userAgent());
+        $url = request()->url();
+        $phone = null;
+        $id = null;
+
+        if (Auth::check()) {
+            $phone = Auth::user()->phone;
+            $hashedPhoneNumber = hash('sha256', $phone);
+            $id = Auth::user()->id;
+            $hashedPID = hash('sha256', $id);
+        } else {
+            $id = Request()->session()->token();
+            $hashedPID = hash('sha256', $id);
+            $hashedPhoneNumber = hash('sha256', '011');;
+        }
+
+
+        $url = 'https://business-api.tiktok.com/open_api/v1.2/pixel/track/';
+
+
+
+        if ($product_id != null) {
+            $product = Product::find($product_id);
+            $price = productPrice($product, null, 'vat');
+            $product_name = $product->name_en;
+            $product_id = $product->id;
+        }
+
+        $contents = [];
+
+        foreach ($items as $item) {
+            $contents[] = [
+                'content_id' => strval($item->product->id),
+                'content_name' => $item->product->name_en,
+                // Add more properties as needed
+            ];
+        }
+
+        foreach ($products as $product) {
+            $contents[] = [
+                'content_id' => strval($product->id),
+                'content_name' => $product->name_en,
+                // Add more properties as needed
+            ];
+        }
+
+        if ($product_id != null) {
+            $contents[] = [
+                'content_id' => strval($product_id) ?? '0',
+                'content_name' => $product_name ?? 'not provided',
+                // Add more properties as needed
+            ];
+        }
+
+
+
+        $data = [
+            'pixel_code' => $pixel_id,
+            'test_event_code' => 'TEST43804',
+            'event' => $type,
+            'timestamp' => $date,
+
+            'context' => [
+                'user' => [
+                    'external_id' => $hashedPID ?? null,
+                    'phone_number' => $hashedPhoneNumber,
+                ],
+                'page' => [
+                    'url' => $url,
+                ],
+                'ip' => $ip,
+                'user_agent' => request()->userAgent(),
+            ],
+
+
+            'properties' => [
+                'contents' => $contents,
+                'content_id' => $product_id ?? null,
+                'content_name' => $product_name ?? null,
+                'content_type' => $product_name ?? null,
+                'quantity' => $qty ?? null,
+                'price' => $price ?? null, // Example price, replace with actual price
+                'user_id' => $id ?? null,
+                'value' => $price ?? 0,
+                'currency' => $currency ?? 'AED',
+
+            ],
+        ];
+
+        $response = Http::withHeaders([
+            'Access-Token' => $access_token,
+            'Content-Type' => 'application/json',
+        ])->post($url, $data);
+
+        // dd($response->json());
+    }
+}
+
+
 // add view record
 if (!function_exists('addViewRecord')) {
     function addViewRecord()
@@ -4366,6 +4582,22 @@ if (!function_exists('getUserDaySalary')) {
         }
 
         return $day_salary;
+    }
+}
+
+if (!function_exists('getDiffDays')) {
+    function getDiffDays($start, $end)
+    {
+
+        if ($start == null || $end == null) {
+            return 1;
+        }
+
+        $start = Carbon::parse($start);
+        $end = Carbon::parse($end);
+        $diffInDays = $start->diffInDays($end);
+        $diffInDays = $diffInDays + 1;
+        return $diffInDays;
     }
 }
 
@@ -4811,5 +5043,26 @@ if (!function_exists('getAllOverTime')) {
 
 
         return $late_time;
+    }
+}
+
+
+
+
+if (!function_exists('getYoutubeEmbedUrl')) {
+    function getYoutubeEmbedUrl($url)
+    {
+
+        $shortUrlRegex = '/youtu.be\/([a-zA-Z0-9_-]+)\??/i';
+        $longUrlRegex = '/youtube.com\/((?:embed)|(?:watch))((?:\?v\=)|(?:\/))([a-zA-Z0-9_-]+)/i';
+
+        if (preg_match($longUrlRegex, $url, $matches)) {
+            $youtube_id = $matches[count($matches) - 1];
+        }
+
+        if (preg_match($shortUrlRegex, $url, $matches)) {
+            $youtube_id = $matches[count($matches) - 1];
+        }
+        return 'https://www.youtube.com/embed/' . $youtube_id;
     }
 }

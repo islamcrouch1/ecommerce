@@ -5,7 +5,7 @@
               <div class="info wow fadeInUp slow">
                   <h2 class="float-title"> {{ __('Our Projects') }} </h2>
                   <h6 class="fsz-14 ltspc-1 color-blue6 text-uppercase"> {{ __('portfolio') }} </h6>
-                  <h3 class="fsz-50"> {{ __('What We Did Already') }} </h3>
+                  <h3 class="fsz-50"> {{ __('Projects') }} </h3>
                   <div class="arrows">
                       <a href="#0" class="swiper-prev"> <i
                               class="fal fa-long-arrow-{{ app()->getLocale() == 'ar' ? 'right' : 'left' }}"></i>

@@ -23,7 +23,7 @@
                                 </div>
                                 <div class="cont">
                                     <h6 class="fsz-14 color-777 text-uppercase mb-2"> {{ __('Phone Number') }} </h6>
-                                    <h5 class="fsz-18 text-uppercase ltr"> 02 26908603 </h5>
+                                    <h5 class="fsz-18 text-uppercase ltr"> 01223991811 </h5>
                                 </div>
                             </div>
                             <div class="call-card">
@@ -32,7 +32,7 @@
                                 </div>
                                 <div class="cont">
                                     <h6 class="fsz-14 color-777 text-uppercase mb-2"> {{ __('Email Address') }} </h6>
-                                    <h5 class="fsz-18 text-uppercase"> contact@elkomyholding.com </h5>
+                                    <h6 class="fsz-18 text-uppercase"> contact@elkomyholding.com </h6>
                                 </div>
                             </div>
                         </div>
@@ -84,7 +84,7 @@
                                     <div class="col-lg-4 col-12">
                                         <ul class="fw-600 text-white ltr">
                                             <li> <a href="#"> contact@elkomyholding.com </a> </li>
-                                            <li> <a href="#"> 02 26908603 </a> </li>
+                                            <li> <a href="#"> 01223991811 </a> </li>
                                             <li> <a href="#"> 4 Ebn Elmotawag . Elkalifa Elmamon Heliopolis <br>
                                                     Egypt. </a> </li>
                                         </ul>
@@ -106,8 +106,7 @@
                     </div>
                     <div class="col-lg-6 my-4 m-lg-0">
                         <p class="text-center color-999 ltr"> Copyright <a href="#" class="text-white fw-bold">
-                                Elkomy
-                                Group. </a> All rights reserved. </p>
+                                Elkomy Holding. </a> All rights reserved. </p>
                     </div>
                     <div class="col-lg-3">
                         <div class="links text-center text-lg-end color-999">

@@ -32,6 +32,7 @@ Route::get('/product/{product}/{slug}', [ProductController::class, 'product'])->
 
 
 Route::post('/cart/store', [ProductController::class, 'store'])->name('ecommerce.cart.store');
+Route::post('/cart/clac/rent', [ProductController::class, 'calcRentData'])->name('ecommerce.rent.calc');
 Route::get('/cart/destroy/{product}', [ProductController::class, 'destroy'])->name('ecommerce.cart.destroy');
 
 
@@ -100,6 +101,11 @@ Route::get('/contact', [EcommerceHomeController::class, 'contact'])->name('ecomm
 Route::get('/setCountry/{country_id}', [EcommerceHomeController::class, 'setCountry'])->name('set.country');
 
 Route::get('/whatsapp', [EcommerceHomeController::class, 'whatsapp'])->name('whatsapp.send');
+
+
+Route::get('/products.xml', function () {
+    return response()->file(storage_path('app/products.xml'));
+});
 
 
 // });

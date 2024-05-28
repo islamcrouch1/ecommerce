@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Refund;
 use App\Models\RunningOrder;
+use App\Models\Serial;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -61,6 +62,10 @@ class RunningOrdersController extends Controller
         return view('dashboard.running_orders.edit', compact('running_order'));
     }
 
+    public function store(Request $request)
+    {
+    }
+
 
     public function update(Request $request, RunningOrder $running_order)
     {
@@ -69,6 +74,7 @@ class RunningOrdersController extends Controller
         $request->validate([
             'approved_qty' => "required|integer|gt:0",
             'notes' => "nullable|string",
+            'serials' => "nullable|array",
         ]);
 
         $remaining_qty = $running_order->requested_qty - $running_order->approved_qty - $running_order->returned_qty;
@@ -84,6 +90,10 @@ class RunningOrdersController extends Controller
             return redirect()->back()->withInput();
         }
 
+        if (isset($request->serials) && (count($request->serials) > $approved_qty)) {
+            alertError('The number of serials entered is greater than the quantity of products', 'عدد السيريال المدخلة اكبر من كمية المنتجات ');
+            return redirect()->back()->withInput();
+        }
 
         // if ($returned_qty > 0 && ($running_order->stock_type == 'sales' || $running_order->stock_type == 'purchases')) {
 
@@ -104,7 +114,10 @@ class RunningOrdersController extends Controller
 
             if ($running_order->stock_type == 'purchases') {
                 $returned = $running_order->stock_status == 'IN' ? false : true;
-                $check = createPurchasesEntries($running_order->product_combination_id, $running_order->reference_id, $returned, $approved_qty, $running_order->unit_id);
+
+
+
+                $check = createPurchasesEntries($running_order->product_combination_id, $running_order->reference_id, $returned, $approved_qty, $running_order->unit_id, $request->serials);
                 if ($check == false) {
                     alertError('Quantities are not available in stock', 'الكميات غير متوفره في المخزون');
                     return redirect()->back()->withInput();

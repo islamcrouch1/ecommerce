@@ -127,11 +127,26 @@
                                     <div>
                                         <label class="switch">
                                             <input id="can_sold"
-                                                class="form-control @error('limited') is-invalid @enderror"
+                                                class="form-control @error('can_sold') is-invalid @enderror"
                                                 name="can_sold" type="checkbox">
                                             <span class="slider round"></span>
                                         </label>
                                         @error('can_sold')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 col-md-3">
+                                    <label class="form-label" for="can_rent">{{ __('rental product') }}</label>
+                                    <div>
+                                        <label class="switch">
+                                            <input id="can_rent"
+                                                class="form-control @error('can_rent') is-invalid @enderror"
+                                                name="can_rent" type="checkbox">
+                                            <span class="slider round"></span>
+                                        </label>
+                                        @error('can_rent')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -479,7 +494,7 @@
                                             <label class="form-label" for="image">{{ __('main image') }}</label>
                                             <input name="image"
                                                 class="img form-control @error('image') is-invalid @enderror"
-                                                type="file" id="image" />
+                                                type="file" accept="image/*" id="image" />
                                             @error('image')
                                                 <div class="alert alert-danger">{{ $message }}</div>
                                             @enderror

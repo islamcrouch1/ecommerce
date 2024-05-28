@@ -55,6 +55,9 @@ class OrdersController extends Controller
             facebookEvent('Purchase', $order->total_price, $order->country->currency);
         }
 
+        if (setting('tiktok_id') && setting('tiktok_token')) {
+            tiktokEvent('PlaceAnOrder', null, null, $order->total_price, $order->country->currency, [], $order->products);
+        }
 
 
 
@@ -94,6 +97,9 @@ class OrdersController extends Controller
             'floor_no' => 'nullable|string|max:255',
             'delivery_time' => 'nullable|string|max:255',
             'phone2' => 'nullable|string|max:255',
+            'passport' => "nullable|image",
+            'id' => "nullable|image",
+            'permit' => "nullable|image",
 
         ]);
 
@@ -102,7 +108,7 @@ class OrdersController extends Controller
         if (isset($request->create_account) && $request->create_account == 'create_account') {
 
             $request->merge(['country' => $request->country_id]);
-            $request->merge(['email' => ($request->phone . '@example.com')]);
+            // $request->merge(['email' => ($request->phone . '@example.com')]);
             $request->merge(['check' => 'on']);
 
             $user_cr = new UserController();
@@ -122,7 +128,6 @@ class OrdersController extends Controller
 
         $cart_items = getCartItems();
 
-
         $count = 0;
         $count_product = 0;
 
@@ -140,6 +145,7 @@ class OrdersController extends Controller
                     $warehouse_vendor = Warehouse::where('vendor_id', $item->product->vendor_id)->first();
                     $av_qty = productQuantity($item->product->id, null, $warehouse_vendor->id);
                 }
+
 
 
                 if ($item->qty > $av_qty || $item->qty <= 0 || $item->qty < $min || $item->qty > $max) {
@@ -209,9 +215,18 @@ class OrdersController extends Controller
             $order = $this->attach_order($request, 'cash_on_delivery', $check_coupon);
             alertSuccess('Order added successfully', 'تم عمل الطلب بنجاح');
             if (Auth::check()) {
-                sendEmail('order', $order, 'user');
+                sendEmail('order', $order, 'user', $order->customer->email);
             }
-            sendEmail('order', $order, 'admin');
+
+            if (setting('orders_email') != null && strpos(setting('orders_email'), ',')) {
+                $emails = explode(",", setting('orders_email'));
+                foreach ($emails as $email) {
+                    sendEmail('order', $order, 'admin', $email);
+                }
+            }
+
+
+
             return redirect()->route('ecommerce.order.success', ['order' => $order]);
         }
 
@@ -366,11 +381,11 @@ class OrdersController extends Controller
         if ($request->shipping_option == '2') {
             $shipping_method_id = 2;
             $shipping_amount = 0;
-            $branch_id = $request->branch_id;
+            $pickup_branch_id = $request->branch_id;
         } else {
             $shipping_method_id = setting('shipping_method');
             $shipping_amount = $this->calculateShipping($request);
-            $branch_id = null;
+            $pickup_branch_id = null;
         }
 
         if ($check_coupon == 0) {
@@ -387,6 +402,21 @@ class OrdersController extends Controller
         $warehouses = getWebsiteWarehouses();
         $branch_id = setting('website_branch');
 
+
+
+        if (isset($request->passport) &&  $request->hasFile('passport')) {
+            $passport_id = saveMedia('image', $request['passport'], 'orders');
+        }
+
+        if (isset($request->id) &&  $request->hasFile('id')) {
+            $id_id = saveMedia('image', $request['id'], 'orders');
+        }
+
+        if (isset($request->permit) &&  $request->hasFile('permit')) {
+            $permit_id = saveMedia('image', $request['permit'], 'orders');
+        }
+
+
         $order = Order::create([
             'affiliate_id' => null,
             'customer_id' => Auth::check() ? Auth::id() : null,
@@ -402,6 +432,7 @@ class OrdersController extends Controller
             'notes' => $request->notes,
             'house' => null,
             'special_mark' => null,
+            'pickup_branch_id' => $pickup_branch_id,
 
             'branch_id' => $branch_id,
 
@@ -428,6 +459,12 @@ class OrdersController extends Controller
             'transaction_id' => null,
             // 'total_tax' => null,
             'is_seen' => '0',
+
+            'currency_id' => getDefaultCurrency()->id,
+
+            'passport_id' => isset($passport_id) ? $passport_id : null,
+            'id_id' => isset($id_id) ? $id_id : null,
+            'permit_id' => isset($permit_id) ? $permit_id : null,
 
 
         ]);
@@ -516,7 +553,7 @@ class OrdersController extends Controller
             }
 
             if (setting('website_vat')) {
-                $vat_product = calcTax((productPrice($item->product, $item->product_combination_id) * $item->qty), 'vat');
+                $vat_product = calcTax((productPrice($item->product, $item->product_combination_id) * $item->qty * $item->days), 'vat');
             } else {
                 $vat_product = 0;
             }
@@ -527,11 +564,11 @@ class OrdersController extends Controller
                 [
                     'warehouse_id' => $warehouse_id,
                     'product_combination_id' => $item->product_combination_id,
-                    'product_price' => productPrice($item->product, $item->product_combination_id, 'vat'),
+                    'product_price' => productPrice($item->product, $item->product_combination_id, 'vat') * $item->days,
                     'product_tax' => $vat_product,
                     // 'product_discount' => null,
                     'qty' => $item->qty,
-                    'total' => (productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty),
+                    'total' => (productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty * $item->days),
                     'product_type' => $item->product->product_type,
 
                     'cost' => $cost,
@@ -545,11 +582,15 @@ class OrdersController extends Controller
 
                     'extra_shipping_amount' => $this->calculateShippingForItem($item),
                     'shipping_method_id' => $item->product->shipping_method_id,
+                    'start_date' => $item->start_date,
+                    'end_date' => $item->end_date,
+                    'days' => $item->days,
+                    'unit_id' => $item->product->unit_id,
 
                 ]
             );
 
-            $total_order_price += (productPrice($item->product, $item->product_combination_id) * $item->qty);
+            $total_order_price += (productPrice($item->product, $item->product_combination_id) * $item->qty * $item->days);
 
             // update order after each order product attach
             $order->update([
@@ -656,7 +697,7 @@ class OrdersController extends Controller
                     $revenue_account = getItemAccount($product, $product->category, 'revenue_account_services', $branch_id);
                 }
 
-                createEntry($revenue_account, 'sales', 0, (productPrice($item->product, $item->product_combination_id) * $item->qty), $branch_id, $order);
+                createEntry($revenue_account, 'sales', 0, (productPrice($item->product, $item->product_combination_id) * $item->qty * $item->days), $branch_id, $order);
             }
 
             if ($payment_method == 'cash_on_delivery') {
@@ -923,9 +964,6 @@ class OrdersController extends Controller
     public function installmentStore(Request $request)
     {
 
-
-
-
         $request->validate([
             'name' => 'required|string|max:255',
             'address' => 'required|string|max:255',
@@ -951,11 +989,6 @@ class OrdersController extends Controller
 
 
         ]);
-
-
-
-
-
 
 
         if (isset($request->create_account) && $request->create_account == 'create_account') {
@@ -1049,7 +1082,7 @@ class OrdersController extends Controller
 
 
         // if (Auth::check()) {
-        //     sendEmail('order', $order, 'user');
+        //     sendEmail('order', $order, 'user', $order->customer->email);
         // }
         // sendEmail('order', $order, 'admin');
 

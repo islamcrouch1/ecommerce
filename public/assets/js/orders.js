@@ -84,8 +84,11 @@ function getCom(product_id , combinations = []){
                 $('.com-select').attr('required' , true);
                 var array = data.elements;
                 array.forEach(element => {
+
+                    console.log(element);
+
                     choices_2.setChoices(
-                        [{ value: element.id , label:  element.name , customProperties:  [element.price , element.product_id , data.units_category_id] ,  selected : combinations.includes(element.id) ? true : false }],
+                        [{ value: element.id , label:  element.name , customProperties:  [element.price , element.product_id , data.units_category_id,element.can_rent] ,  selected : combinations.includes(element.id) ? true : false }],
                         'value',
                         'label',
                         false,
@@ -119,6 +122,67 @@ $('.com-select').on('change' , function(e){
             data = $(option).data('custom-properties').split(',');
             var class_name = 'units-select-' + data[2] + '-' + option.value;
 
+            console.log(data);
+
+            const currentDate = getCurrentDate();
+
+
+            if(data[3] == 'on'){
+
+
+
+
+                var days_input = `
+
+
+                                <div class="col-md-1">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="days">` + (locale == 'ar' ? 'عدد الايام' : 'days') +`</label>
+                                        <input name="days[]" class="form-control com-days" min="1" value="1" type="number"
+                                        id="days"  />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="start_date">` + (locale == 'ar' ? 'تاريخ بداية التاجير' : 'start date') +`</label>
+                                        <input name="start_date[]" class="form-control com-start_date" value="`+ currentDate +`" min="`+ currentDate +`" type="datetime-local"
+                                        id="start_date"  />
+                                    </div>
+                                </div>
+
+
+
+                                `;
+            }else{
+
+                var days_input = `
+
+
+                                <div  style="display:none;"  class="col-md-1">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="days">` + (locale == 'ar' ? 'عدد الايام' : 'days') +`</label>
+                                        <input name="days[]" class="form-control com-days" min="1" value="1" type="number"
+                                        id="days" required />
+                                    </div>
+                                </div>
+
+                                <div  style="display:none;"  class="col-md-2">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="start_date">` + (locale == 'ar' ? 'تاريخ بداية التاجير' : 'start date') +`</label>
+                                        <input name="start_date[]" class="form-control com-start_date" value="`+ currentDate +`" min="`+ currentDate +`" type="datetime-local"
+                                        id="start_date"  />
+                                    </div>
+                                </div>
+
+
+
+                                `;
+            }
+
+
+
+
             $('.combinations-div').append(
 
                 `<div class="row item">
@@ -131,14 +195,17 @@ $('.com-select').on('change' , function(e){
                             id="selected_combinations" required />
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <div class="mb-3">
                             <label class="form-label" for="qty">` + (locale == 'ar' ? 'الكمية' : 'quantity') +`</label>
                             <input name="qty[]" class="form-control com-quantity" min="0" value="0" type="number"
                             id="qty" required />
                         </div>
-                    </div>
-                    <div class="col-md-2">
+                    </div>`
+                    +
+                    days_input
+                    +
+                    `<div class="col-md-1">
                         <div class="mb-3">
                             <label class="form-label" for="qty">` + (locale == 'ar' ? 'وحدة القياس' : 'UoM') +`</label>
                             <select class="form-select `+ class_name +`" name="units[]" id="units">
@@ -146,7 +213,7 @@ $('.com-select').on('change' , function(e){
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <div class="mb-3">
                             <label class="form-label" for="price">` + (locale == 'ar' ? 'سعر البيع' : 'sale price')+`</label>
                             <input name="price[]" data-product_id="`+ data[1] +`" class="form-control com-price" min="0" step="0.01" value="0" type="number"
@@ -245,10 +312,17 @@ function getTotal(){
     var shipping = $('.shipping').val();
     var currency_id = $('.currency').find(":selected").val();
 
+    var days = [];
 
     $("input[name^=qty]").each(function() {
         qty.push($(this).val());
     });
+
+    $("input[name^=days]").each(function() {
+        days.push($(this).val());
+    });
+
+    console.log(days);
 
     $("input[name^=price]").each(function() {
         price.push($(this).val());
@@ -268,6 +342,7 @@ function getTotal(){
     var formData = new FormData();
 
     formData.append('qty' , qty);
+    formData.append('days' , days);
     formData.append('price' , price);
     formData.append('products' , products);
     formData.append('compinations' , combinations);
@@ -285,6 +360,10 @@ function getTotal(){
         contentType: false,
         cache: false,
         success: function(data) {
+
+
+            console.log(data);
+
             if(data.status == 1){
 
 
@@ -317,6 +396,18 @@ function printAmountWithSymbol(amount , symbol){
     return amount + ' ' + symbol;
 }
 
+
+function getCurrentDate() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = ('0' + (now.getMonth() + 1)).slice(-2); // Months are zero-indexed
+    const day = ('0' + now.getDate()).slice(-2);
+    const hours = ('0' + now.getHours()).slice(-2);
+    const minutes = ('0' + now.getMinutes()).slice(-2);
+    const seconds = ('0' + now.getSeconds()).slice(-2);
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 $('.combinations-div').on('click', '.delete', function(e){
     e.preventDefault();
     $(this).parent('div').parent('div').parent('div').remove();
@@ -327,7 +418,9 @@ $('.combinations-div').on('input', '.com-quantity', function(e){
     e.preventDefault();
     var quantity = $(this).val();
     var price = $(this).closest('.item').find('.com-price').val();
-    var total = quantity * price ;
+    var days = $(this).closest('.item').find('.com-days').val();
+
+    var total = quantity * price * days;
     $(this).closest('.item').find('.com-total').val(total);
     getTotal();
 });
@@ -336,10 +429,29 @@ $('.combinations-div').on('input', '.com-price', function(e){
     e.preventDefault();
     var price = $(this).val();
     var quantity = $(this).closest('.item').find('.com-quantity').val();
-    var total = quantity * price ;
+    var days = $(this).closest('.item').find('.com-days').val();
+    var total = quantity * price * days;
     $(this).closest('.item').find('.com-total').val(total);
     getTotal();
 });
+
+
+$('.combinations-div').on('input', '.com-days', function(e){
+    e.preventDefault();
+    var days = $(this).val();
+    var quantity = $(this).closest('.item').find('.com-quantity').val();
+    var price = $(this).closest('.item').find('.com-price').val();
+
+    if (days <= 0) {
+        days = 1;
+    }
+
+    var total = quantity * price * days;
+    $(this).closest('.item').find('.com-total').val(total);
+    getTotal();
+});
+
+
 
 $('.tax-select').on('change' , function(e){
     e.preventDefault();
@@ -478,5 +590,13 @@ $(document).ready(function(){
         $(this).parent('div').parent('div').parent('div').remove();
         getTotal();
     });
+
+
+
+
+
+
+
+
 
 });

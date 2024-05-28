@@ -112,9 +112,9 @@ class UserSeeder extends Seeder
 
         $user = User::create([
             'name' => 'superAdmin',
-            'email' => 'admin@sonoo.online',
+            'email' => 'admin@proanglesmedia.com',
             'password' => bcrypt('123456789'),
-            'phone' => '+201121184147',
+            'phone' => '123456789',
             'country_id' => '1',
             'gender' => 'male',
             'profile' => 'avatarmale.png',
@@ -136,7 +136,6 @@ class UserSeeder extends Seeder
             'bonus' => $user->hasRole('affiliate') ?  100 : 0,
         ]);
 
-
         $media = Media::create([
             'created_by' => 1,
             'name' => '9.jpg',
@@ -146,12 +145,11 @@ class UserSeeder extends Seeder
             'path' => 'storage/images/categories/9.jpg',
         ]);
 
-
         $country = Country::create([
-            'name_ar' => 'مصر',
-            'name_en' => 'Egypt',
-            'code' => '+20',
-            'currency' => 'EGP',
+            'name_ar' => 'الامارات العربية المتحدة',
+            'name_en' => 'UAE',
+            'code' => '+971',
+            'currency' => 'AED',
             'media_id' => $media->id,
             'is_default' => '1'
         ]);

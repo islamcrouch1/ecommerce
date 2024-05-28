@@ -31,7 +31,7 @@
 
             <div class="checkout-page">
                 <div class="checkout-form">
-                    <form method="POST" action="{{ route('ecommerce.order.store') }}">
+                    <form method="POST" action="{{ route('ecommerce.order.store') }}" enctype="multipart/form-data">
                         @csrf
                         <div class="row">
                             <div class="col-lg-6 col-sm-12 col-xs-12">
@@ -71,9 +71,9 @@
                                         </div>
                                         <input name="phone2"
                                             class="form-control phone @error('phone2') is-invalid @enderror"
-                                            value="{{ $address ? $address->phone2 : old('phone2') }}" type="tel"
-                                            maxlength="{{ getCountry()->phone_digits }}" autocomplete="on" id="phone2"
-                                            data-phone_digits="{{ getCountry()->phone_digits }}" />
+                                            value="{{ $address ? $address->phone2 : old('phone2') . ' ' . __('(optional)') }}"
+                                            type="tel" maxlength="{{ getCountry()->phone_digits }}" autocomplete="on"
+                                            id="phone2" data-phone_digits="{{ getCountry()->phone_digits }}" />
                                         @error('phone2')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
@@ -124,7 +124,7 @@
                                         @enderror
                                     </div>
 
-                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
+                                    {{-- <div class="form-group col-md-6 col-sm-12 col-xs-12">
                                         <div class="field-label">{{ __('block') . ' *' }}</div>
                                         <input name="block" class="form-control @error('block') is-invalid @enderror"
                                             value="{{ $address ? $address->block : old('block') }}" type="text"
@@ -132,7 +132,7 @@
                                         @error('block')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
-                                    </div>
+                                    </div> --}}
 
                                     <div class="form-group col-md-6 col-sm-12 col-xs-12">
                                         <div class="field-label">{{ __('street address') . ' *' }}</div>
@@ -148,7 +148,7 @@
 
                                     @if (getCountry()->name_en == 'Kuwait' || getCountry()->name_en == 'kuwait')
                                         <div class="form-group col-md-6 col-sm-12 col-xs-12">
-                                            <div class="field-label">{{ __('avenue') }}</div>
+                                            <div class="field-label">{{ __('avenue') . ' ' . __('(optional)') }}</div>
                                             <input name="avenue" class="form-control @error('avenue') is-invalid @enderror"
                                                 value="{{ $address ? $address->avenue : old('avenue') }}" type="text"
                                                 autocomplete="on" id="avenue" />
@@ -169,7 +169,7 @@
                                     </div>
 
                                     <div class="form-group col-md-6 col-sm-12 col-xs-12">
-                                        <div class="field-label">{{ __('floor number') }}</div>
+                                        <div class="field-label">{{ __('floor number') . ' ' . __('(optional)') }}</div>
                                         <input name="floor_no"
                                             class="form-control @error('floor_no') is-invalid @enderror"
                                             value="{{ $address ? $address->floor_no : old('floor_no') }}" type="text"
@@ -180,7 +180,7 @@
                                     </div>
 
 
-                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
+                                    {{-- <div class="form-group col-md-6 col-sm-12 col-xs-12">
                                         <div class="field-label">{{ __('Preferred delivery time') }}</div>
                                         <select class="form-control @error('delivery_time') is-invalid @enderror"
                                             id="delivery_time" name="delivery_time">
@@ -197,7 +197,53 @@
                                         @error('delivery_time')
                                             <div class="alert alert-danger">{{ $message }}</div>
                                         @enderror
+                                    </div> --}}
+
+
+                                    <hr class="style-element">
+
+                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('Please attach your passport or personal ID') }}
+                                        </div>
                                     </div>
+
+                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('passport') . ' ' . __('(optional)') }}</div>
+                                        <input name="passport"
+                                            class="img form-control @error('passport') is-invalid @enderror"
+                                            type="file" accept="image/*" id="passport" />
+                                        @error('passport')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('Emirati ID') . ' ' . __('(optional)') }}</div>
+                                        <input name="id" class="img form-control @error('id') is-invalid @enderror"
+                                            type="file" accept="image/*" id="id" />
+                                        @error('id')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+
+                                    <div class="form-group col-md-12 col-sm-12 col-xs-12">
+                                        <div class="field-label">
+                                            {{ __('If filming is in an outdoor location, please attach a filming Permit') }}
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group col-md-6 col-sm-12 col-xs-12">
+                                        <div class="field-label">{{ __('filming Permit') . ' ' . __('(optional)') }}</div>
+                                        <input name="permit"
+                                            class="img form-control @error('permit') is-invalid @enderror" type="file"
+                                            accept="image/*" id="permit" />
+                                        @error('permit')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
 
 
                                     <div class="form-group col-md-12 col-sm-12 col-xs-12">
@@ -219,6 +265,17 @@
                                         </div>
                                     @endif
 
+
+                                    <div style="display:none"
+                                        class="form-group col-md-12 col-sm-6 col-xs-12 checkout-password">
+                                        <div class="field-label">{{ __('Email') }}</div>
+                                        <input
+                                            class="form-control checkout-password-password @error('email') is-invalid @enderror"
+                                            type="email" autocomplete="on" id="email" name="email" />
+                                        @error('email')
+                                            <div class="alert alert-danger">{{ $message }}</div>
+                                        @enderror
+                                    </div>
 
                                     <div style="display:none"
                                         class="form-group col-md-6 col-sm-6 col-xs-12 checkout-password">
@@ -269,14 +326,30 @@
                                                         {{ getProductName($item->product, getCombination($item->product_combination_id)) }}
                                                         × {{ $item->qty }}
 
+
+
+
+
                                                         @php
                                                             $warehouses = getWebsiteWarehouses();
                                                             $branch_id = setting('website_branch');
                                                             if ($item->product->vendor_id == null) {
-                                                                $av_qty = productQuantityWebsite($item->product->id, $item->combination->id, null, $warehouses);
+                                                                $av_qty = productQuantityWebsite(
+                                                                    $item->product->id,
+                                                                    $item->combination->id,
+                                                                    null,
+                                                                    $warehouses,
+                                                                );
                                                             } else {
-                                                                $warehouse_vendor = App\Models\Warehouse::where('vendor_id', $item->product->vendor_id)->first();
-                                                                $av_qty = productQuantity($item->product->id, null, $warehouse_vendor->id);
+                                                                $warehouse_vendor = App\Models\Warehouse::where(
+                                                                    'vendor_id',
+                                                                    $item->product->vendor_id,
+                                                                )->first();
+                                                                $av_qty = productQuantity(
+                                                                    $item->product->id,
+                                                                    null,
+                                                                    $warehouse_vendor->id,
+                                                                );
                                                             }
                                                         @endphp
 
@@ -287,8 +360,19 @@
 
 
                                                     </div>
-                                                    <span>{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty . getCurrency() }}</span>
+                                                    <span>{{ productPrice($item->product, $item->product_combination_id, 'vat') * $item->qty * $item->days . getCurrency() }}</span>
                                                 </li>
+
+                                                @if ($item->start_date != null && $item->product->can_rent != null)
+                                                    <span
+                                                        class="badge bg-info rental-span">{{ __('Rental start date') . ' ' . $item->start_date }}</span>
+                                                    <span
+                                                        class="badge bg-info rental-span">{{ __('No. of Days:') . ' ' . $item->days }}</span>
+                                                    <span
+                                                        class="badge bg-info rental-span">{{ __('Rental end date') . ': ' . $item->end_date }}</span>
+                                                    <span
+                                                        class="badge bg-info rental-span">{{ __('Note') . ': ' . __('rental day = 12 Hours') }}</span>
+                                                @endif
                                             @endforeach
                                         </ul>
                                         <ul class="sub-total">
@@ -324,8 +408,11 @@
                                                             id="branch_id" name="branch_id">
                                                             <option value="">
                                                                 {{ __('Choose the branch closest to you') }}</option>
-                                                            <option value="1">{{ __('faisal branch') }}</option>
-                                                            <option value="1">{{ __('haram branch') }}</option>
+
+                                                            @foreach (getAllBranches() as $branch)
+                                                                <option value="{{ $branch->id }}">
+                                                                    {{ getName($branch) }}</option>
+                                                            @endforeach
                                                         </select>
                                                     </div>
 
@@ -453,6 +540,18 @@
                                                     @endif
 
 
+
+                                                    <li>
+                                                        <div class="radio-option">
+                                                            <input type="radio" value="agree" name="conditions"
+                                                                id="conditions" required>
+                                                            <label for="conditions"><span class="p-4"
+                                                                    for="check">{{ __('I accept the') }} <a
+                                                                        href="{{ route('ecommerce.terms') }}">{{ __('terms') }}
+                                                                    </a>{{ __('and') }} <a
+                                                                        href="{{ route('ecommerce.terms') }}">{{ __('privacy policy') }}</a></span></label>
+                                                        </div>
+                                                    </li>
 
                                                     {{-- <li>
                                                         <div class="radio-option paypal">

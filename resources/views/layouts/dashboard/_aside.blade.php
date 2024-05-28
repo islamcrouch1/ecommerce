@@ -1071,6 +1071,7 @@
                                 'petty_cash',
                                 'currencies',
                                 'exchange_rates',
+                                'accounting_operations',
                             ]))
 
 

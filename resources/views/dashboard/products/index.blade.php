@@ -78,8 +78,19 @@
                                     data-fa-transform="shrink-3 down-2"></span><span
                                     class="d-none d-sm-inline-block ms-1">{{ __('Export') }}</span></a>
 
+
+                            <a href="{{ route('products.exportXml') }}" class="btn btn-falcon-default btn-sm"
+                                type="button"><span class="fas fa-download"
+                                    data-fa-transform="shrink-3 down-2"></span><span
+                                    class="d-none d-sm-inline-block ms-1">{{ __('Export XML') }}</span></a>
+
+
+
                             <button onclick="printInvoice();" class="btn btn-falcon-default btn-sm me-1 mb-2 mb-sm-0"
                                 type="button"><span class="fas fa-print me-1"> </span>{{ __('Print') }}</button>
+
+
+
                         </div>
                     </div>
                 </div>
@@ -207,9 +218,7 @@
                                                 <div class="dropdown-menu dropdown-menu-end border py-0"
                                                     aria-labelledby="customer-dropdown-0">
                                                     <div class="bg-white py-2">
-                                                        @if (
-                                                            $product->trashed() &&
-                                                                auth()->user()->hasPermission('products-restore'))
+                                                        @if ($product->trashed() && auth()->user()->hasPermission('products-restore'))
                                                             <a class="dropdown-item"
                                                                 href="{{ route('products.restore', ['product' => $product->id]) }}">{{ __('Restore') }}</a>
                                                         @elseif(auth()->user()->hasPermission('products-update'))
@@ -256,8 +265,7 @@
                                                             <a class="dropdown-item"
                                                                 href="{{ route('products.duplicate', ['product' => $product->id]) }}">{{ __('duplicate') }}</a>
                                                         @endif
-                                                        @if (auth()->user()->hasPermission('products-delete') ||
-                                                                auth()->user()->hasPermission('products-trash'))
+                                                        @if (auth()->user()->hasPermission('products-delete') || auth()->user()->hasPermission('products-trash'))
                                                             <form method="POST"
                                                                 action="{{ route('products.destroy', ['product' => $product->id]) }}">
                                                                 @csrf

@@ -58,7 +58,7 @@
             </h6>
         </a>
         {!! getProductPrice($product) !!}
-        @if ($product->product_type != 'variable')
+        @if ($product->product_type != 'variable' && $product->can_rent == null)
             <div class="add-btn">
                 <a href="javascript:void(0)" class="add-to-cart" data-url="{{ route('ecommerce.cart.store') }}"
                     data-locale="{{ app()->getLocale() }}" data-product_id="{{ $product->id }}"

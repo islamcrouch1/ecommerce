@@ -283,6 +283,7 @@ $('.add-to-cart').on('click', function (e) {
     e.preventDefault();
     var url = $(this).data('url');
     var locale = $(this).data('locale');
+    var can_rent = $(this).data('rent');
     var product_id = $(this).data('product_id');
     var loader = '.spin-' + product_id;
     var $qty = $(".qty-input");
@@ -291,6 +292,9 @@ $('.add-to-cart').on('click', function (e) {
     var cart_icon = '.cart-icon-' + product_id;
     var cart_text = '.cart-text-' + product_id;
     var cart_added = '.cart-added-' + product_id;
+
+    var from = '.from-' + product_id;
+    var to = '.to-' + product_id;
 
     if(isNaN(currentVal)){
         currentVal = 1;
@@ -314,6 +318,8 @@ $('.add-to-cart').on('click', function (e) {
     $(cart_icon).hide()
 
 
+    from = $(from).val();
+    to = $(to).val();
 
     var formData = new FormData();
 
@@ -321,6 +327,9 @@ $('.add-to-cart').on('click', function (e) {
     formData.append('variations' , variations );
     formData.append('product_id' , product_id );
     formData.append('qty' , currentVal );
+    formData.append('from' , from );
+    formData.append('to' , to );
+    formData.append('can_rent' , can_rent );
 
     $('.add-to-cart').addClass( "disabled" )
 
@@ -337,7 +346,7 @@ $('.add-to-cart').on('click', function (e) {
         cache: false,
         success: function(data) {
 
-            // console.log(data);
+            //  console.log(data);
 
             if(data.status == 1){
 
@@ -486,6 +495,74 @@ $('.add-to-cart').on('click', function (e) {
 
 
 
+$('.rent-date').on('input', function (e) {
+
+
+    e.preventDefault();
+    var url = $(this).data('url');
+    var product_id = $(this).data('product_id');
+    var from = '.from-' + product_id;
+    var to = '.to-' + product_id;
+    var end = '.end-' + product_id;
+
+    var $qty = $(".qty-input");
+    var currentVal = parseInt($qty.val());
+
+    if(isNaN(currentVal)){
+        currentVal = 1;
+    }
+
+    var fromDate = $(from).val();
+    var toDate = $(to).val();
+
+    console.log(fromDate,toDate);
+
+    var formData = new FormData();
+
+    formData.append('product_id' , product_id );
+    formData.append('qty' , currentVal );
+    formData.append('from' , fromDate );
+    formData.append('to' , toDate );
+
+    $.ajax({
+        url: url,
+        data: formData,
+        method: 'POST',
+        processData: false,
+        contentType: false,
+        cache: false,
+        success: function(data) {
+
+            if(data.status == 1){
+                $(to).val(data.end);
+            }else{
+
+                console.log(data)
+
+                $('.days-'+ product_id).html(data.days);
+                $('.vat-'+ product_id).html(data.vat);
+                $('.total-'+ product_id).html(data.total);
+                $(end).val(data.end);
+                // $(to).val(data.days);
+
+
+            }
+        }
+    })
+});
+
+
+// $('#passport').on('change', function (e) {
+//     if ($('#passport')[0].files.length > 0) {
+//         $('#id').prop('required', false);
+//       }
+// });
+
+// $('#id').on('change', function (e) {
+//     if ($('#id')[0].files.length > 0) {
+//         $('#passport').prop('required', false);
+//       }
+// });
 
 $('.add-fav').on('click' , function(e){
 

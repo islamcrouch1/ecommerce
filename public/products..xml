@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+ <channel>
+  <title>Proanglesmedia - Rent Media Equipment</title>
+  <link>https://proanglesmedia.com/</link>
+  <description>شركه بروانجلز لتآجير معدات تصويرالافلام بالامارات</description>
+  <item>
+   <g:id>1</g:id>
+   <g:title>منتج 1</g:title>
+   <g:description>منتج 1</g:description>
+   <g:link>http://localhost/product/1/%D9%85%D9%86%D8%AA%D8%AC-1</g:link>
+   <g:image_link>http://localhost/storage/images/products/BOjMJD3C5WuFodnp3zKOeOVrLMlwOgx4UYXn4HQs.png</g:image_link>
+   <g:availability>in stock</g:availability>
+   <g:price>570 LE</g:price>
+  </item>
+  <item>
+   <g:id>11</g:id>
+   <g:title>Sony A7 S III Full Frame Camera Body + 2 battery and charger (NO memory card)</g:title>
+   <g:description>Taking the S series to a whole new level of full-frame movie expression, spectacular new speed combines with supreme sensitivity and ultra-low noise to put previously impossible 4K movie shoots on the menu, with high dynamic range, breathtaking focusing, and extra-strong image stabilisation. Your new creative potential awaits.</g:description>
+   <g:link>http://localhost/product/11/sony-a7-s-iii-full-frame-camera-body-+-2-battery-and-charger-%28no-memory-card%29</g:link>
+   <g:image_link>http://localhost/storage/images/products/QGPDqQqVAUiP3y2PiN8Mf6WrBDPdzJWzr2KBcx5s.webp</g:image_link>
+   <g:availability>in stock</g:availability>
+   <g:price>570 LE</g:price>
+  </item>
+ </channel>
+</rss>

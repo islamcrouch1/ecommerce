@@ -17,6 +17,7 @@ use App\Models\ProductCombination;
 use App\Models\ProductCombinationDtl;
 use App\Models\ProductImage;
 use App\Models\ProductVariation;
+use App\Models\Serial;
 use App\Models\ShippingMethod;
 use App\Models\Size;
 use App\Models\Stock;
@@ -31,6 +32,7 @@ use Intervention\Image\ImageManagerStatic as Image;
 use Goutte;
 use Drnxloc\LaravelHtmlDom\HtmlDomParser;
 use Spatie\Crawler\Crawler;
+use Illuminate\Support\Facades\Response;
 
 class ProductsController extends Controller
 {
@@ -83,6 +85,67 @@ class ProductsController extends Controller
     }
 
 
+    public function exportXml()
+    {
+
+
+
+        $country = getCountry();
+        $warehouses = getWebsiteWarehouses();
+
+        $products = Product::where('status', "active")
+            ->where('country_id', $country->id)
+            ->where(function ($query) use ($warehouses) {
+                $query->whereHas('stocks', function ($query) use ($warehouses) {
+                    $query->whereIn('warehouse_id', $warehouses);
+                })->orWhereIn('product_type', ['digital', 'service'])
+                    ->orWhereNotNull('vendor_id');
+            })
+
+            ->get();
+
+
+
+        $xml = new \XMLWriter();
+        $xml->openMemory();
+        $xml->setIndent(true);
+        $xml->startDocument('1.0', 'UTF-8');
+        $xml->startElement('rss');
+        $xml->writeAttribute('version', '2.0');
+        $xml->writeAttribute('xmlns:g', 'http://base.google.com/ns/1.0');
+        $xml->startElement('channel');
+        $xml->writeElement('title', 'Proanglesmedia - Rent Media Equipment');
+        $xml->writeElement('link', 'https://proanglesmedia.com/');
+        $xml->writeElement('description', 'شركه بروانجلز لتآجير معدات تصويرالافلام بالامارات');
+
+
+
+
+        foreach ($products as $product) {
+
+            $xml->startElement('item');
+            $xml->writeElement('g:id', $product->id);
+            $xml->writeElement('g:title',  app()->getLocale() == 'ar' ? $product->name_ar : $product->name_en);
+            $xml->writeElement('g:description', strip_tags(app()->getLocale() == 'ar' ? $product->description_ar : $product->description_en));
+            $xml->writeElement('g:link', route('ecommerce.product', ['product' => $product->id, 'slug' => createSlug(getName($product))]));
+            $xml->writeElement('g:image_link', getProductImage($product));
+            $xml->writeElement('g:availability', 'in stock');
+            $xml->writeElement('g:price', productPrice($product, null, 'vat') . ' ' . getDefaultCurrency()->symbol);
+            // Add more product attributes as needed
+            $xml->endElement();
+        }
+
+        $xml->endElement();
+        $xml->endElement();
+        $xml->endDocument();
+
+        $headers = [
+            'Content-Type' => 'application/xml',
+            'Content-Disposition' => 'attachment; filename="products.xml"',
+        ];
+
+        return Response::make($xml->outputMemory(), 200, $headers);
+    }
 
 
 
@@ -196,6 +259,7 @@ class ProductsController extends Controller
 
             'code' => "nullable|string",
             'can_sold' => "nullable|string",
+            'can_rent' => "nullable|string",
             'can_purchased' => "nullable|string",
             'can_manufactured' => "nullable|string",
 
@@ -281,6 +345,7 @@ class ProductsController extends Controller
 
             'code' => $request['code'],
             'can_sold' => $request['can_sold'],
+            'can_rent' => $request['can_rent'],
             'can_purchased' => $request['can_purchased'],
             'can_manufactured' => $request['can_manufactured'],
 
@@ -505,6 +570,7 @@ class ProductsController extends Controller
 
             'code' => "nullable|string",
             'can_sold' => "nullable|string",
+            'can_rent' => "nullable|string",
             'can_purchased' => "nullable|string",
             'can_manufactured' => "nullable|string",
 
@@ -671,6 +737,7 @@ class ProductsController extends Controller
 
             'code' => $request['code'],
             'can_sold' => $request['can_sold'],
+            'can_rent' => $request['can_rent'],
             'can_purchased' => $request['can_purchased'],
             'can_manufactured' => $request['can_manufactured'],
 
@@ -965,6 +1032,7 @@ class ProductsController extends Controller
             'qty' => "required|array",
             'purchase_price' => "required|array",
             'stock_status' => "required|array",
+            'serials' => "nullable|array",
         ]);
 
 
@@ -988,9 +1056,20 @@ class ProductsController extends Controller
         }
 
 
+
+
         $funding_assets_account = Account::findOrFail(settingAccount('funding_assets_account', $branch_id));
 
+        $all_qty = 0;
+        foreach ($product->combinations as $index => $combination) {
+            $all_qty += $request->qty[$index];
+        }
 
+
+        if (isset($request->serials) && (count($request->serials) > $all_qty)) {
+            alertError('The number of serials entered is greater than the quantity of products', 'عدد السيريال المدخلة اكبر من كمية المنتجات ');
+            return redirect()->back();
+        }
 
 
         foreach ($product->combinations as $index => $combination) {
@@ -1019,9 +1098,22 @@ class ProductsController extends Controller
                     $combination->update([
                         'warehouse_id' => $warehouse->id,
                     ]);
+
+                    for ($i = 0; $i < $request->qty[$index]; $i++) {
+                        Serial::create([
+                            'product_combination_id' => $combination->id,
+                            'product_id' => $product->id,
+                            'warehouse_id' => $warehouse->id,
+                            'unit_id' => $product->unit_id,
+                            'serial' => isset($request->serials[$i]) ? $request->serials[$i] : null,
+                        ]);
+                    }
                 }
 
-                Stock::create([
+
+
+
+                $stock = Stock::create([
                     'product_combination_id' => $combination->id,
                     'product_id' => $product->id,
                     'warehouse_id' => $warehouse->id,
@@ -1029,7 +1121,8 @@ class ProductsController extends Controller
                     'stock_status' => $request->stock_status[$index],
                     'stock_type' => 'StockAdjustment',
                     'reference_price' => $request->purchase_price[$index],
-                    'created_by' => Auth::id()
+                    'created_by' => Auth::id(),
+                    'unit_id' => $product->unit_id,
                 ]);
 
 
@@ -1041,10 +1134,11 @@ class ProductsController extends Controller
                     'type' => $request->stock_status[$index] == 'IN' ? 'stockIN' : 'stockOut',
                     'dr_amount' => $request->stock_status[$index] == 'IN' ? ($request->purchase_price[$index] * $request->qty[$index]) : 0,
                     'cr_amount' => $request->stock_status[$index] == 'OUT' ? ($combination->costs->where('branch_id', $branch_id)->first()->cost * $request->qty[$index]) : 0,
-                    'description' => 'stock adjustment# ' . $combination->id,
+                    'description' => 'stock adjustment# ' . $combination->id . '-' . $stock->id,
                     'reference_id' => $combination->id,
                     'branch_id' => $branch_id,
                     'created_by' => Auth::id(),
+                    'currency_id' => getDefaultCurrency()->id,
                 ]);
 
 
@@ -1055,9 +1149,10 @@ class ProductsController extends Controller
                         'type' => 'stockIN',
                         'dr_amount' => 0,
                         'cr_amount' => ($request->purchase_price[$index] * $request->qty[$index]),
-                        'description' => 'stock adjustment# ' . $combination->id,
+                        'description' => 'stock adjustment# ' . $combination->id . '-' . $stock->id,
                         'branch_id' => $branch_id,
                         'created_by' => Auth::id(),
+                        'currency_id' => getDefaultCurrency()->id,
                     ]);
                 }
 
@@ -1068,10 +1163,11 @@ class ProductsController extends Controller
                         'type' => 'stockOut',
                         'dr_amount' => ($combination->costs->where('branch_id', $branch_id)->first()->cost * $request->qty[$index]),
                         'cr_amount' => 0,
-                        'description' => 'stock adjustment# ' . $combination->id,
+                        'description' => 'stock adjustment# ' . $combination->id . '-' . $stock->id,
                         'reference_id' => $combination->id,
                         'branch_id' => $branch_id,
                         'created_by' => Auth::id(),
+                        'currency_id' => getDefaultCurrency()->id,
                     ]);
                 }
             }

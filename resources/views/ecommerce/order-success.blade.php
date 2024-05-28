@@ -77,13 +77,25 @@
 
                         @foreach ($order->products as $product)
                             <div class="row product-order-detail">
-                                <div class="col-3"><img src="{{ getProductImage($product) }}" alt=""
+                                <div class="col-2"><img src="{{ getProductImage($product) }}" alt=""
                                         class="img-fluid blur-up lazyload"></div>
-                                <div class="col-3 order_detail">
+                                <div class="col-4 order_detail">
                                     <div>
                                         <h4>{{ __('product name') }}</h4>
                                         <h5>{{ getProductName($product, getCombination($product->pivot->product_combination_id)) }}
                                         </h5>
+
+                                        @if ($product->pivot->start_date != null && $product->can_rent != null)
+                                            <span
+                                                class="badge bg-info rental-span">{{ __('Rental start date') . ' ' . $product->pivot->start_date }}</span>
+                                            <span
+                                                class="badge bg-info rental-span">{{ __('No. of Days:') . ' ' . $product->pivot->days }}</span>
+                                            <span
+                                                class="badge bg-info rental-span">{{ __('Rental end date') . ': ' . $product->pivot->end_date }}</span>
+                                            <span
+                                                class="badge bg-info rental-span">{{ __('Note') . ': ' . __('rental day = 12 Hours') }}</span>
+                                        @endif
+
                                         @if ($product->product_type == 'digital' && $order->payment_status == 'Paid')
                                             <a href="{{ route('ecommerce.download', ['product_file' => $product->digital_file]) }}"
                                                 class="btn btn-solid btn-sm btn-xs me-3 m-2"

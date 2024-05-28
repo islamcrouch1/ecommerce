@@ -267,13 +267,13 @@
                                                                         class="theme-color fs-6">{{ $order->total_price . $order->country->currency }}</span>
                                                                 </td>
                                                                 <td>
-                                                                    @if ($order->status == 'pending')
+                                                                    {{-- @if ($order->status == 'pending')
                                                                         <a data-bs-toggle="modal"
                                                                             data-bs-target="#cancle-{{ $order->id }}"
                                                                             class="btn btn-outline btn-sm btn-xs me-3">
                                                                             {{ __('Cancle Order') }}
                                                                         </a>
-                                                                    @endif
+                                                                    @endif --}}
 
                                                                     @if ($order->status == 'delivered' && setting('order_review'))
                                                                         <a data-bs-toggle="modal"

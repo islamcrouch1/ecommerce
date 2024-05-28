@@ -81,6 +81,28 @@
 
 
 
+    @if (setting('tagmanager_id'))
+        <!-- Google Tag Manager -->
+        <script>
+            (function(w, d, s, l, i) {
+                w[l] = w[l] || [];
+                w[l].push({
+                    'gtm.start': new Date().getTime(),
+                    event: 'gtm.js'
+                });
+                var f = d.getElementsByTagName(s)[0],
+                    j = d.createElement(s),
+                    dl = l != 'dataLayer' ? '&l=' + l : '';
+                j.async = true;
+                j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+                f.parentNode.insertBefore(j, f);
+            })(window, document, 'script', 'dataLayer', '{{ setting('tagmanager_id') }}');
+        </script>
+        <!-- End Google Tag Manager -->
+    @endif
+
+
 
 
     @if (setting('hotjar_id'))
@@ -215,19 +237,7 @@
     @endif
 
 
-    @if (setting('tagmanager_id'))
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-B4QJRZ19MH"></script>
-        <script>
-            window.dataLayer = window.dataLayer || [];
 
-            function gtag() {
-                dataLayer.push(arguments);
-            }
-            gtag('js', new Date());
-
-            gtag('config', '{{ setting('tagmanager_id') }}');
-        </script>
-    @endif
 
 
 
@@ -307,6 +317,41 @@
         .theme-color-27 {
             --theme-color: {{ $primary_color }} !important;
             --theme-color2: {{ $secondry_color }} !important;
+        }
+
+        .rent-div {
+            border: 2px solid {{ $primary_color }}
+        }
+
+
+        .text-bbb {
+            color: #212529 !important;
+            text-align: center !important;
+            margin: 15px !important;
+        }
+
+        .input-group-text {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .btn-a7a {
+            background-image: none;
+            background-color: #ff0000;
+            border-color: #ff0000;
+        }
+
+        .rent-span {
+
+            color: #ff0000;
+
+        }
+
+        .rental-span {
+            padding: 5px;
+            margin: 2px;
+            font-size: 12px;
+            background-color: {{ $primary_color }} !important;
         }
 
         .theme-card .offer-slider .media .media-body a h6 {
@@ -534,6 +579,7 @@
                 z-index: 9;
             }
 
+
             .main-menu .menu-right .icon-nav .mobile-setting {
                 position: fixed;
                 bottom: 20px;
@@ -576,8 +622,8 @@
 
         @media screen and (max-width: 600px) {
             .header-logo {
-                width: 80px;
-                height: 84px !important;
+                /* width: 80px; */
+                height: 70px !important;
             }
         }
     </style>
@@ -596,6 +642,12 @@
 <body class="theme-color-27 {{ app()->getLocale() == 'ar' ? 'rtl' : '' }}">
 
 
+    @if (setting('tagmanager_id'))
+        <!-- Google Tag Manager (noscript) -->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ setting('tagmanager_id') }}"
+                height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+    @endif
 
 
     @include('layouts.ecommerce._header')

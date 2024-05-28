@@ -528,6 +528,11 @@ Route::group(['prefix' => 'dashboard', 'middleware' => ['role:superadministrator
     Route::post('/delete-media-posts', [PostsController::class, 'deleteMedia'])->name('posts.delete.media')->middleware('auth', 'checkverified', 'checkstatus');
 
 
+
+    // products export xml file
+    Route::get('/products/export-xml/download', [ProductsController::class, 'exportXml'])->name('products.exportXml');
+
+
     // --------------------------------------------- Vendors Routes ---------------------------------------------
 
     // // vendor product routes

@@ -13,16 +13,18 @@ class NewOrder extends Mailable
 
     public $order;
     public $type;
+    public $email;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($data, $type)
+    public function __construct($data, $type, $email)
     {
         $this->order = $data;
         $this->type = $type;
+        $this->email = $email;
     }
 
     /**
@@ -38,13 +40,13 @@ class NewOrder extends Mailable
             $from_email = env("MAIL_USERNAME", "team@ecommerce.com");
             $from = env("APP_NAME", app()->getLocale() == 'ar' ?  "موقعنا" : 'our website');
             $subject = app()->getLocale() == 'ar' ? 'شكرا على طلبك من' . ' - ' . $from : 'thank you for your order from' . ' - ' . $from;
-            $to = $this->order->customer->email;
+            $to = $this->email;
         } else {
 
             $from_email = env("MAIL_USERNAME", "team@ecommerce.com");
             $from = env("APP_NAME", app()->getLocale() == 'ar' ?  "موقعنا" : 'our website');
             $subject = app()->getLocale() == 'ar' ? 'لديك طلب جديد' : 'you have a new order';
-            $to = setting('orders_email');
+            $to =  $this->email;
         }
 
 

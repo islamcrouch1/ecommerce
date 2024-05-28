@@ -484,6 +484,8 @@ class ProductImport implements
                             'reference_id' => $combination->id,
                             'branch_id' => $branch_id,
                             'created_by' => Auth::id(),
+                            'currency_id' => getDefaultCurrency()->id,
+
                         ]);
 
 
@@ -495,6 +497,8 @@ class ProductImport implements
                             'description' => 'stock adjustment# ' . $combination->id,
                             'branch_id' => $branch_id,
                             'created_by' => Auth::id(),
+                            'currency_id' => getDefaultCurrency()->id,
+
                         ]);
                     }
 
@@ -510,6 +514,8 @@ class ProductImport implements
                     //         'reference_id' => $combination->id,
                     //         'branch_id' => $branch_id,
                     //         'created_by' => Auth::id(),
+                    // 'currency_id' => getDefaultCurrency()->id,
+
                     //     ]);
                     // }
 

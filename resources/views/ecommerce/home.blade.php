@@ -46,20 +46,24 @@
             <div class="row m-0">
                 @foreach (websiteSettingMultiple('categories') as $item)
                     @if (getCatFromSetting($item))
-                        <div class="col-lg-3 col-sm-6 p-0">
+                        <div class="col-lg-6 col-sm-6 p-0">
                             <a href="{{ route('ecommerce.products', ['category' => getCatFromSetting($item)->id]) }}">
                                 <div class="collection-banner p-left">
+
+                                    <h2 class="text-dark text-bbb">
+                                        {{ app()->getLocale() == 'ar' ? getCatFromSetting($item)->name_ar : getCatFromSetting($item)->name_en }}
+                                    </h2>
+
                                     <div class="img-part">
                                         <img src="{{ asset(getImage(getCatFromSetting($item))) }}"
                                             class="img-fluid blur-up lazyload bg-img">
                                     </div>
+
                                     <div class="contain-banner banner-4">
                                         <div>
                                             <h4>{{ app()->getLocale() == 'ar' ? getCatFromSetting($item)->subtitle_ar : getCatFromSetting($item)->subtitle_en }}
                                             </h4>
-                                            <h2 class="text-dark">
-                                                {{ app()->getLocale() == 'ar' ? getCatFromSetting($item)->name_ar : getCatFromSetting($item)->name_en }}
-                                            </h2>
+
                                         </div>
                                     </div>
                                 </div>
@@ -199,7 +203,7 @@
                                                                 </h6>
                                                             </a>
                                                             {!! getProductPrice($product) !!}
-                                                            @if ($product->product_type != 'variable')
+                                                            @if ($product->product_type != 'variable' && $product->can_rent == null)
                                                                 <div class="add-btn">
                                                                     <a href="javascript:void(0)" class="add-to-cart"
                                                                         data-url="{{ route('ecommerce.cart.store') }}"

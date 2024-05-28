@@ -180,7 +180,7 @@ $(document).ready(function(){
     });
 
     // add to cart function
-    $('.add-cart').on('click' , function(e){
+    $('.blo').on('click' , function(e){
       e.preventDefault();
 
       var url = $(this).data('url');
